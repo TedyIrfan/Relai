@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --font-poppins: 'Poppins', system-ui, -apple-system, sans-serif;
+  }
+
+  html {
+    font-family: var(--font-poppins);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-poppins);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Improve readability for dashboard text */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-poppins);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  p, span, div {
+    font-family: var(--font-poppins);
+  }
+}
+
+@layer utilities {
+  .text-poppins {
+    font-family: var(--font-poppins);
+  }
+
+  .font-light {
+    font-weight: 300;
+  }
+
+  .font-medium {
+    font-weight: 500;
+  }
+
+  .font-semibold {
+    font-weight: 600;
+  }
+}
