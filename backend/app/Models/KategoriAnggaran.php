@@ -10,6 +10,7 @@ class KategoriAnggaran extends Model
     use HasFactory;
 
     protected $fillable = [
+        'kode',
         'tahun',
         'nama_kategori',
         'total_anggaran_kategori',

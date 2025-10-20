@@ -6,7 +6,7 @@ import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MasterSbm from './pages/MasterSbm';
-import MasterRja from './pages/MasterRja';
+import MasterRKA from './pages/MasterRKA';
 import Nominatif from './pages/Nominatif';
 
 function App() {
@@ -29,10 +29,10 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
-          <Route path="/master-rja" element={
+          <Route path="/master-rka" element={
             <ProtectedRoute>
               <Layout>
-                <MasterRja />
+                <MasterRKA />
               </Layout>
             </ProtectedRoute>
           } />

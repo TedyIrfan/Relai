@@ -10,7 +10,7 @@ export const ROUTES = {
   login: '/login',
   dashboard: '/dashboard',
   masterSbm: '/master-sbm',
-  masterRja: '/master-rja',
+  masterRka: '/master-rka',
   nominatif: '/nominatif'
 };
 
@@ -30,10 +30,10 @@ export const MENU_ITEMS = [
     active: true
   },
   {
-    id: 'master-rja',
-    name: 'Master RJA',
+    id: 'master-rka',
+    name: 'Master RKA',
     icon: 'FileStack',
-    route: ROUTES.masterRja,
+    route: ROUTES.masterRka,
     active: true
   },
   {

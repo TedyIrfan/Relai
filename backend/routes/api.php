@@ -4,7 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RKADetailsController;
 
+Route::post('/auth/create-user', [AuthController::class, 'createUser']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/user', [AuthController::class, 'user'])->middleware('auth:sanctum');
@@ -24,10 +26,19 @@ Route::post('/kategori/{tahun}/{kategori}/update-terpakai', [DashboardController
 Route::post('/kategori/{tahun}/{kategori}/update-sp2d', [DashboardController::class, 'updateSP2D']);
 Route::post('/kategori/{tahun}/sync', [DashboardController::class, 'syncMainAnggaran']);
 
+// RKA Details API Routes
+Route::get('/rka-details', [RKADetailsController::class, 'index']);
+Route::post('/rka-details/import', [RKADetailsController::class, 'importExcel']);
+Route::get('/rka-details/kategori', [RKADetailsController::class, 'getKategoriList']);
+
 // Dashboard API Routes (Protected - for production)
 Route::get('/secure/dashboard', [DashboardController::class, 'index'])->middleware('auth:sanctum');
 Route::get('/secure/dashboard/kpi', [DashboardController::class, 'kpi'])->middleware('auth:sanctum');
 Route::get('/secure/dashboard/charts', [DashboardController::class, 'charts'])->middleware('auth:sanctum');
+
+// RKA Details API Routes (Protected - for production)
+Route::get('/secure/rka-details', [RKADetailsController::class, 'index'])->middleware('auth:sanctum');
+Route::post('/secure/rka-details/import', [RKADetailsController::class, 'importExcel'])->middleware('auth:sanctum');
 
 Route::get('/test', function () {
     return response()->json([

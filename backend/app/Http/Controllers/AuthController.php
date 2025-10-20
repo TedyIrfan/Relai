@@ -50,6 +50,34 @@ class AuthController extends Controller
         ]);
     }
 
+    public function createUser(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string|unique:users',
+            'password' => 'required|string|min:6',
+            'jabatan' => 'required|string',
+            'is_active' => 'boolean'
+        ]);
+
+        $user = User::create([
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
+            'jabatan' => $request->jabatan,
+            'is_active' => $request->is_active ?? true
+        ]);
+
+        return response()->json([
+            'message' => 'User created successfully',
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'jabatan' => $user->jabatan,
+                'is_active' => $user->is_active,
+                'created_at' => $user->created_at
+            ]
+        ], 201);
+    }
+
     public function user(Request $request)
     {
         return response()->json($request->user());
