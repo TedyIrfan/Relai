@@ -128,10 +128,20 @@ class RKADetailsController extends Controller
                     $anggaranLayanan = $this->cleanNumericValue($anggaranLayanan);
                     $sisaPemakaianAnggaran = floatval(str_replace('%', '', $sisaPemakaianAnggaran));
 
-                    // Cari kategori
-                    $kategori = KategoriAnggaran::where('kode', $kategoriKode)->first();
+                    // Auto-mapping kategori A/B/C ke KA/KB/KC
+                    $kategoriMapping = [
+                        'A' => 'KA',
+                        'B' => 'KB',
+                        'C' => 'KC'
+                    ];
+
+                    // Convert A/B/C to KA/KB/KC, jika sudah KA/KB/KC tetap pakai
+                    $mappedKode = isset($kategoriMapping[$kategoriKode]) ? $kategoriMapping[$kategoriKode] : $kategoriKode;
+
+                    // Cari kategori dengan mapped code
+                    $kategori = KategoriAnggaran::where('kode', $mappedKode)->first();
                     if (!$kategori) {
-                        $errors[] = "Row " . ($i + 1) . ": Kategori '{$kategoriKode}' tidak ditemukan";
+                        $errors[] = "Row " . ($i + 1) . ": Kategori '{$kategoriKode}' tidak ditemukan (mapped to '{$mappedKode}')";
                         continue;
                     }
 

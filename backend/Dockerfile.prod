@@ -1,0 +1,55 @@
+# Multistage build for production
+FROM node:18-alpine AS frontend
+
+# Install frontend dependencies
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Build frontend assets
+RUN npm run build
+
+# Production stage
+FROM php:8.4-fpm-alpine AS production
+
+# Install system dependencies
+RUN apk add --no-cache \
+    postgresql-client \
+    curl \
+    bash \
+    supervisor
+
+# Install PHP extensions
+RUN docker-php-ext-install \
+    pdo_pgsql \
+    pgsql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    zip \
+    intl
+
+# Get Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy Laravel application
+COPY . .
+
+# Install dependencies and optimize
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Copy frontend assets
+COPY --from=frontend /app/public/build public
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Expose port
+EXPOSE 9000
+
+# Start PHP-FPM
+CMD ["php-fpm"]

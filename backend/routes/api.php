@@ -5,11 +5,36 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RKADetailsController;
+use App\Http\Controllers\SwaggerController;
+use App\Http\Controllers\AnggaranController;
 
-Route::post('/auth/create-user', [AuthController::class, 'createUser']);
+// Test endpoint for Swagger
+Route::get('/test', [SwaggerController::class, 'test']);
+
+// Authentication Routes
 Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('/user', [AuthController::class, 'user'])->middleware('auth:sanctum');
+Route::post('/auth/create-user', [AuthController::class, 'createUser']);
+
+// User CRUD Routes (Protected)
+Route::middleware('auth:sanctum')->group(function () {
+    // Authenticated user routes
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    // Complete User CRUD Operations
+    Route::get('/users', [AuthController::class, 'index']);  // GET all users
+    Route::get('/users/{id}', [AuthController::class, 'show']);  // GET single user
+    Route::put('/users/{id}', [AuthController::class, 'update']);  // UPDATE user
+    Route::delete('/users/{id}', [AuthController::class, 'destroy']);  // DELETE user
+    Route::post('/users/bulk-action', [AuthController::class, 'bulkAction']);  // BULK operations
+
+    // Anggaran CRUD Operations
+    Route::get('/anggarans', [AnggaranController::class, 'index']);      // GET all anggarans
+    Route::get('/anggarans/{id}', [AnggaranController::class, 'show']);    // GET single anggaran
+    Route::post('/anggarans', [AnggaranController::class, 'store']);      // CREATE anggaran
+    Route::put('/anggarans/{id}', [AnggaranController::class, 'update']);  // UPDATE anggaran
+    Route::delete('/anggarans/{id}', [AnggaranController::class, 'destroy']); // DELETE anggaran
+});
 
 // Dashboard API Routes (Public - for testing)
 Route::get('/dashboard', [DashboardController::class, 'index']);

@@ -1,0 +1,79 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "RelAI API Documentation",
+    "version": "1.0.0",
+    "description": "API documentation for RelAI - Realisasi Keuangan Kementerian Koordinator Bidang Infrastruktur dan Pembangunan Kewilayahan"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:80/api",
+      "description": "API Server"
+    }
+  ],
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User login",
+        "description": "Authenticate user and return token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "testuser"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Login successful"
+                    },
+                    "user": {
+                      "type": "object"
+                    },
+                    "token": {
+                      "type": "string",
+                      "example": "2|U98SdxbtmbJYFCYnlMcvAF7S5F4bQKlphrVVn06x13d57e77"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and management operations"
+    }
+  ]
+}

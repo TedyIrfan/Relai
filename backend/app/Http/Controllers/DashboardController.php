@@ -2,14 +2,106 @@
 
 namespace App\Http\Controllers;
 
+use OpenApi\Annotations as OA;
 use Illuminate\Http\Request;
 use App\Models\Anggaran;
 use App\Models\KategoriAnggaran;
 
+/**
+ * @OA\Tag(
+ *     name="Dashboard",
+ *     description="Dashboard and budget management operations"
+ * )
+ */
 class DashboardController extends Controller
 {
     /**
-     * Get dashboard data from database
+     * @OA\Get(
+     *     path="/api/dashboard",
+     *     summary="Get dashboard data",
+     *     tags={"Dashboard"},
+     *     @OA\Parameter(
+     *         name="tahun",
+     *         in="path",
+     *         required=false,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Dashboard data retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="success",
+     *                 type="boolean",
+     *                 example=true
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="tahun",
+     *                     type="integer",
+     *                     example=2025
+     *                 ),
+     *                 @OA\Property(
+     *                     property="totalAnggaran",
+     *                     type="number",
+     *                     example=2000000000
+     *                 ),
+     *                 @OA\Property(
+     *                     property="anggaranTerpakai",
+     *                     type="number",
+     *                     example=500000000
+     *                 ),
+     *                 @OA\Property(
+     *                     property="anggaranSP2D",
+     *                     type="number",
+     *                     example=300000000
+     *                 ),
+     *                 @OA\Property(
+     *                     property="sisaAnggaran",
+     *                     type="number",
+     *                     example=1500000000
+     *                 ),
+     *                 @OA\Property(
+     *                     property="kategori",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(
+     *                             property="nama",
+     *                             type="string"
+     *                         ),
+     *                         @OA\Property(
+     *                             property="anggaran",
+     *                             type="number"
+     *                         ),
+     *                         @OA\Property(
+     *                             property="terpakai",
+     *                             type="number"
+     *                         ),
+     *                         @OA\Property(
+     *                             property="sp2d",
+     *                             type="number"
+     *                         ),
+     *                         @OA\Property(
+     *                             property="sisa",
+     *                             type="number"
+     *                         ),
+     *                         @OA\Property(
+     *                             property="percentage",
+     *                             type="number"
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
      */
     public function index($tahun = 2025)
     {
@@ -89,6 +181,7 @@ class DashboardController extends Controller
             return [
                 [
                     'tahun' => 2025,
+                    'kode' => 'KA',
                     'nama_kategori' => 'Kategori A',
                     'total_anggaran_kategori' => 3432039625,
                     'anggaran_terpakai_kategori' => 0,
@@ -97,6 +190,7 @@ class DashboardController extends Controller
                 ],
                 [
                     'tahun' => 2025,
+                    'kode' => 'KB',
                     'nama_kategori' => 'Kategori B',
                     'total_anggaran_kategori' => 1786105495,
                     'anggaran_terpakai_kategori' => 0,
@@ -105,6 +199,7 @@ class DashboardController extends Controller
                 ],
                 [
                     'tahun' => 2025,
+                    'kode' => 'KC',
                     'nama_kategori' => 'Kategori C',
                     'total_anggaran_kategori' => 4007278982275,
                     'anggaran_terpakai_kategori' => 0,

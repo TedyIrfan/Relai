@@ -1,0 +1,1038 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "RelAI API Documentation",
+        "description": "API documentation for RelAI - Realisasi Keuangan Kementerian Koordinator Bidang Infrastruktur dan Pembangunan Kewilayahan",
+        "contact": {
+            "name": "RelAI Admin",
+            "email": "admin@relai.go.id"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost",
+            "description": "API Server"
+        },
+        {
+            "url": "/api"
+        }
+    ],
+    "paths": {
+        "/api/anggarans/{id}": {
+            "get": {
+                "tags": [
+                    "Anggaran"
+                ],
+                "summary": "Get single anggaran by ID",
+                "operationId": "d216d2bf9e1a18ef03872bc76625dcb3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Anggaran details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "tahun": {
+                                                    "type": "integer"
+                                                },
+                                                "total_anggaran": {
+                                                    "type": "number"
+                                                },
+                                                "anggaran_terpakai": {
+                                                    "type": "number"
+                                                },
+                                                "sp2d": {
+                                                    "type": "number"
+                                                },
+                                                "sisa_anggaran": {
+                                                    "type": "number"
+                                                },
+                                                "keterangan": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Anggaran not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Anggaran"
+                ],
+                "summary": "Update anggaran data",
+                "operationId": "1442e8bbce108b7c3cb542cf0cb7afe9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "tahun": {
+                                        "type": "integer",
+                                        "example": 2025
+                                    },
+                                    "total_anggaran": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 2500000000
+                                    },
+                                    "anggaran_terpakai": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 750000000
+                                    },
+                                    "sp2d": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 500000000
+                                    },
+                                    "keterangan": {
+                                        "type": "string",
+                                        "example": "Updated anggaran tahun 2025"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Anggaran updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Anggaran updated successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Anggaran"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Anggaran"
+                ],
+                "summary": "Delete anggaran",
+                "operationId": "7880cf73d13f20c914a4e20579f38033",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Anggaran deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Anggaran deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Anggaran not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/anggarans": {
+            "post": {
+                "tags": [
+                    "Anggaran"
+                ],
+                "summary": "Create new anggaran",
+                "operationId": "34460f2ca474a68d9e382719b97398b8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tahun",
+                                    "total_anggaran"
+                                ],
+                                "properties": {
+                                    "tahun": {
+                                        "type": "integer",
+                                        "example": 2025
+                                    },
+                                    "total_anggaran": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 2000000000
+                                    },
+                                    "anggaran_terpakai": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 0
+                                    },
+                                    "sp2d": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 0
+                                    },
+                                    "keterangan": {
+                                        "type": "string",
+                                        "example": "Anggaran tahun 2025"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Anggaran created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Anggaran created successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Anggaran"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User login",
+                "operationId": "8dcb70df1020986038d098cc08d05dae",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "description": "Username",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "description": "Password",
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login successful"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "eselon1"
+                                                },
+                                                "jabatan": {
+                                                    "type": "string",
+                                                    "example": "eselon 1"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/create-user": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Create new user",
+                "operationId": "48c6e525232416b05b2a872ad965133a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "password",
+                                    "jabatan"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "description": "Username",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "description": "Password",
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "jabatan": {
+                                        "description": "Position/Role",
+                                        "type": "string"
+                                    },
+                                    "is_active": {
+                                        "description": "Account status",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User created successfully"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/user": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get current user",
+                "operationId": "7c1cf647d76fad4b3eb1549fa4fe2f4c",
+                "responses": {
+                    "200": {
+                        "description": "Current user information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User logout",
+                "operationId": "69281b12abb272c76871f19cb17ca563",
+                "responses": {
+                    "200": {
+                        "description": "Logout successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logged out successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get all users",
+                "operationId": "ce757d6a9dd9f3bf15fabb6611112518",
+                "responses": {
+                    "200": {
+                        "description": "Users retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Users retrieved successfully"
+                                        },
+                                        "users": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get single user",
+                "operationId": "b3d27f655646f5454083980a35a6b4f5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User retrieved successfully"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Update user",
+                "operationId": "cc4fdc7b6760cba4a5834742ad7b4426",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "username": {
+                                        "description": "Username (unique)",
+                                        "type": "string"
+                                    },
+                                    "jabatan": {
+                                        "description": "Position/Role",
+                                        "type": "string"
+                                    },
+                                    "is_active": {
+                                        "description": "Account status (true/false)",
+                                        "type": "boolean"
+                                    },
+                                    "password": {
+                                        "description": "New password (min 6 characters, optional)",
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User updated successfully"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Delete user",
+                "operationId": "8d623c822968776003e4d1009d1321b8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "403": {
+                        "description": "Cannot delete your own account"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users/bulk-action": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Bulk user operations",
+                "operationId": "4650d4e4fbca2f88a2d3d63a6e88bbd8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "action",
+                                    "user_ids"
+                                ],
+                                "properties": {
+                                    "action": {
+                                        "type": "string",
+                                        "enum": [
+                                            "activate",
+                                            "deactivate",
+                                            "delete"
+                                        ]
+                                    },
+                                    "user_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Bulk action completed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "affected_users": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard data",
+                "operationId": "f9ae6bf029fd5455620e57be01c3b831",
+                "parameters": [
+                    {
+                        "name": "tahun",
+                        "in": "path",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dashboard data retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "tahun": {
+                                                    "type": "integer",
+                                                    "example": 2025
+                                                },
+                                                "totalAnggaran": {
+                                                    "type": "number",
+                                                    "example": 2000000000
+                                                },
+                                                "anggaranTerpakai": {
+                                                    "type": "number",
+                                                    "example": 500000000
+                                                },
+                                                "anggaranSP2D": {
+                                                    "type": "number",
+                                                    "example": 300000000
+                                                },
+                                                "sisaAnggaran": {
+                                                    "type": "number",
+                                                    "example": 1500000000
+                                                },
+                                                "kategori": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "nama": {
+                                                                "type": "string"
+                                                            },
+                                                            "anggaran": {
+                                                                "type": "number"
+                                                            },
+                                                            "terpakai": {
+                                                                "type": "number"
+                                                            },
+                                                            "sp2d": {
+                                                                "type": "number"
+                                                            },
+                                                            "sisa": {
+                                                                "type": "number"
+                                                            },
+                                                            "percentage": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/test": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Test endpoint",
+                "operationId": "fcf2e96a68d62874a47abb5f7fb1cdd5",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "API is working!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "User": {
+                "title": "User",
+                "description": "User model",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "username": {
+                        "type": "string",
+                        "example": "eselon1"
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "Eselon 1 User"
+                    },
+                    "jabatan": {
+                        "type": "string",
+                        "example": "Eselon 1"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "Anggaran": {
+                "title": "Anggaran",
+                "description": "Anggaran model",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "tahun": {
+                        "type": "integer",
+                        "example": 2025
+                    },
+                    "total_anggaran": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 2000000000
+                    },
+                    "anggaran_terpakai": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 500000000
+                    },
+                    "sp2d": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 300000000
+                    },
+                    "sisa_anggaran": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 1500000000
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "example": "Anggaran tahun 2025"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "responses": {
+            "401": {
+                "description": "Invalid credentials",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "example": "Invalid credentials"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "passport": {
+                "type": "oauth2",
+                "description": "Laravel passport oauth2 security.",
+                "in": "header",
+                "scheme": "https",
+                "flows": {
+                    "password": {
+                        "authorizationUrl": "http://localhost/oauth/authorize",
+                        "tokenUrl": "http://localhost/oauth/token",
+                        "refreshUrl": "http://localhost/token/refresh",
+                        "scopes": []
+                    }
+                }
+            },
+            "sanctum": {
+                "type": "http",
+                "scheme": "bearer",
+                "description": "Enter token in format (Bearer <token>)",
+                "bearerFormat": "JWT"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "User authentication and management operations"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard and budget management operations"
+        },
+        {
+            "name": "Anggaran",
+            "description": "Anggaran"
+        }
+    ],
+    "security": [
+        {
+            "sanctum": []
+        }
+    ]
+}
