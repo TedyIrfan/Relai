@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RKADetailsController;
 use App\Http\Controllers\SwaggerController;
 use App\Http\Controllers\AnggaranController;
+use App\Http\Controllers\SBMController;
 
 // Test endpoint for Swagger
 Route::get('/test', [SwaggerController::class, 'test']);
@@ -55,6 +56,23 @@ Route::post('/kategori/{tahun}/sync', [DashboardController::class, 'syncMainAngg
 Route::get('/rka-details', [RKADetailsController::class, 'index']);
 Route::post('/rka-details/import', [RKADetailsController::class, 'importExcel']);
 Route::get('/rka-details/kategori', [RKADetailsController::class, 'getKategoriList']);
+
+// SBM (Satuan Biaya Manajemen) API Routes (Public - for testing)
+Route::get('/sbm/files', [SBMController::class, 'index']);
+Route::post('/sbm/import', [SBMController::class, 'import']);
+Route::get('/sbm/sheets/{fileId}', [SBMController::class, 'getSheets']);
+Route::get('/sbm/data/{sheetId}', [SBMController::class, 'getSheetData']);
+Route::get('/sbm/statistics', [SBMController::class, 'getStatistics']);
+
+// SBM Delete Routes
+Route::delete('/sbm/sheet/{sheetId}', [SBMController::class, 'deleteSheet']);
+Route::delete('/sbm/file/{fileId}', [SBMController::class, 'deleteFile']);
+Route::post('/sbm/bulk-delete-files', [SBMController::class, 'bulkDeleteFiles']);
+Route::post('/sbm/bulk-delete-sheets', [SBMController::class, 'bulkDeleteSheets']);
+
+// SBM Dynamic Table Routes
+Route::get('/sbm/tables', [SBMController::class, 'getDynamicTables']);
+Route::get('/sbm/table/{tableName}/data', [SBMController::class, 'getDynamicTableData']);
 
 // Dashboard API Routes (Protected - for production)
 Route::get('/secure/dashboard', [DashboardController::class, 'index'])->middleware('auth:sanctum');

@@ -5,7 +5,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import MasterSbm from './pages/MasterSbm';
+import MasterSBM from './pages/MasterSBM';
 import MasterRKA from './pages/MasterRKA';
 import Nominatif from './pages/Nominatif';
 
@@ -25,7 +25,7 @@ function App() {
           <Route path="/master-sbm" element={
             <ProtectedRoute>
               <Layout>
-                <MasterSbm />
+                <MasterSBM />
               </Layout>
             </ProtectedRoute>
           } />
