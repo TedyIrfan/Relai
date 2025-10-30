@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker logs:*)",
+      "Bash(php artisan queue:failed:*)",
+      "Bash(php artisan tinker:*)",
+      "Bash(php artisan queue:work:*)",
+      "Bash(php artisan migrate:status:*)",
+      "Bash(php:*)",
+      "Bash(curl:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker restart:*)",
+      "Bash(npm run dev:*)",
+      "Bash(composer require:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

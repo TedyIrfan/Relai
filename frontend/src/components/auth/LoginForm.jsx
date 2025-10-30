@@ -137,16 +137,6 @@ export const LoginForm = () => {
               {loading ? 'Masuk...' : 'Login'}
             </Button>
           </form>
-
-          {/* Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500"> 
-              username: eselon1
-            </p>
-            <p className="text-sm text-gray-500">
-              password: password123
-            </p>
-          </div>
         </div>
       </div>
 

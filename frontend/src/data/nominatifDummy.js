@@ -33,33 +33,44 @@ export const initialNominatifData = {
   kodeAnggaranRKA: '',
 
   // Section 3: Perjalanan
-  asal: 'Jakarta',
-  tujuan: '',
-  tanggalPergi: '',
+  jumlahHari: 1,
+  rutePerjalanan: [
+    {
+      hari: 1,
+      dari: 'Jakarta',
+      ke: '',
+      tanggal: ''
+    }
+  ],
   tanggalPulang: '',
-  lamaDinas: 0,
+  lamaDinas: 1,
 
-  // Section 4: Transportasi Berangkat
-  transportasiBerangkat: {
-    jenis: '',
-    paguTransportasi: 0,
-    paguTaksi: 0,
-    subtotal: 0
-  },
-
-  // Section 5: Transportasi Pulang
-  transportasiPulang: {
-    jenis: '',
-    paguTransportasi: 0,
-    paguTaksi: 0,
-    subtotal: 0
-  },
+  // Section 4-5: Transportasi Per Hari
+  transportasiPerHari: [
+    {
+      hari: 1,
+      jenisBerangkat: '',
+      paguTransportasiBerangkat: 0,
+      paguTaksiBerangkat: 0,
+      biayaAktualTransportasiBerangkat: 0,
+      biayaAktualTaksiBerangkat: 0,
+      subtotalBerangkat: 0,
+      jenisPulang: '',
+      paguTransportasiPulang: 0,
+      paguTaksiPulang: 0,
+      biayaAktualTransportasiPulang: 0,
+      biayaAktualTaksiPulang: 0,
+      subtotalPulang: 0,
+      totalHari: 0
+    }
+  ],
 
   // Section 6: Penginapan
   penginapan: {
     menginap: false,
     jumlahMalam: 1,
     paguPerMalam: 0,
+    biayaAktualPerMalam: 0,
     total: 0
   },
 

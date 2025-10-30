@@ -59,17 +59,42 @@ const rkaService = {
         item.artiKode.toLowerCase().includes('uang harian')
       );
 
-      // Format untuk dropdown dengan tambahan field untuk search
-      return perjalananData.map(item => ({
-        value: item.codeRka,
-        label: `${item.codeRka} + ${item.artiKode}`,
-        kategori: item.kategoriAnggaran,
-        layanan: item.layanan,
-        wilayah: item.wilayah,
-        artiKode: item.artiKode, // Tambahkan untuk search
-        status: item.status, // Tambahkan untuk filter tambahan
-        codeRka: item.codeRka // Tambahkan untuk display
-      }));
+      // Format untuk dropdown dengan format lengkap: LayananUmum.KodeLayanan1.KodeLayanan2.LayananTataUsaha.Kategori.CodeRKA
+      return perjalananData.map(item => {
+        const kodeAnggaranFormat = `${item.layananUmum}.${item.kodeLayanan1}.${item.kodeLayanan2}.${item.layananTataUsaha}.${item.kategoriAnggaran}.${item.codeRka}`;
+        return {
+          value: kodeAnggaranFormat, // Gunakan format lengkap sebagai value
+          label: `${kodeAnggaranFormat} - ${item.layanan}`, // Tampilkan format + layanan
+          kategori: item.kategoriAnggaran,
+          layanan: item.layanan,
+          wilayah: item.wilayah,
+          artiKode: item.artiKode,
+          status: item.status,
+
+          // Additional fields untuk backward compatibility dan search
+          layananUmum: item.layananUmum,
+          kodeLayanan1: item.kodeLayanan1,
+          kodeLayanan2: item.kodeLayanan2,
+          layananTataUsaha: item.layananTataUsaha,
+          codeRka: item.codeRka,
+
+          // Combined kode lengkap (sama dengan format utama)
+          kodeLengkap: kodeAnggaranFormat,
+
+          // Search terms
+          searchTerms: [
+            kodeAnggaranFormat,
+            item.layanan,
+            item.artiKode,
+            item.wilayah,
+            item.kategoriAnggaran,
+            item.codeRka,
+            `${item.layananUmum}.${item.kodeLayanan1}.${item.kodeLayanan2}`, // format pendek
+            `${item.layananUmum}.${item.kodeLayanan1}.${item.kodeLayanan2}.${item.layananTataUsaha}`, // format medium
+            kodeAnggaranFormat // format lengkap
+          ].join(' ').toLowerCase()
+        };
+      });
     } catch (error) {
       console.warn('API failed, using fallback data:', error);
       // Return fallback data if API fails

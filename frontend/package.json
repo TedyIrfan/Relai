@@ -12,6 +12,8 @@
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
+    "ag-grid-community": "^34.3.0",
+    "ag-grid-react": "^34.3.0",
     "axios": "^1.12.2",
     "lucide-react": "^0.546.0",
     "react": "^19.1.1",
