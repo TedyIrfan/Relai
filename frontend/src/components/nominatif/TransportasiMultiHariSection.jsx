@@ -32,7 +32,7 @@ const TransportasiMultiHariSection = ({
     onChange('transportasiPerHari', newTransportasiPerHari);
   }, [jumlahHari]);
 
-  
+
   // Handle perubahan transportasi per hari
   const handleTransportasiChange = (hari, field, value) => {
     const newTransportasiPerHari = transportasiPerHari.map(transport => {
@@ -49,24 +49,12 @@ const TransportasiMultiHariSection = ({
     // Auto-calculate subtotals and totals
     const updatedTransport = newTransportasiPerHari.find(t => t.hari === hari);
     if (updatedTransport) {
-      // Calculate berangkat subtotal
-      const subtotalBerangkat = (updatedTransport.paguTransportasiBerangkat || 0) + (updatedTransport.paguTaksiBerangkat || 0);
-
-      // Calculate pulang subtotal
-      const subtotalPulang = (updatedTransport.paguTransportasiPulang || 0) + (updatedTransport.paguTaksiPulang || 0);
-
-      // Calculate total hari
-      const totalHari = subtotalBerangkat + subtotalPulang;
-
-      // Update the transport with calculated values
-      const finalTransport = { ...updatedTransport, subtotalBerangkat, subtotalPulang, totalHari };
-
-      const finalTransportasiPerHari = newTransportasiPerHari.map(t =>
-        t.hari === hari ? finalTransport : t
-      );
-
-      onChange('transportasiPerHari', finalTransportasiPerHari);
+      updatedTransport.subtotalBerangkat = (updatedTransport.biayaAktualTransportasiBerangkat || 0) + (updatedTransport.biayaAktualTaksiBerangkat || 0);
+      updatedTransport.subtotalPulang = (updatedTransport.biayaAktualTransportasiPulang || 0) + (updatedTransport.biayaAktualTaksiPulang || 0);
+      updatedTransport.totalHari = updatedTransport.subtotalBerangkat + updatedTransport.subtotalPulang;
     }
+
+    onChange('transportasiPerHari', newTransportasiPerHari);
   };
 
   // Calculate grand total
@@ -78,7 +66,7 @@ const TransportasiMultiHariSection = ({
         <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
         </svg>
-        Section 4-5: Transportasi Per Hari
+        Section 4-5: Transportasi Per Hari (Jakarta → Tujuan)
       </h3>
 
       <div className="space-y-6">
@@ -148,7 +136,7 @@ const TransportasiMultiHariSection = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Biaya Aktual Taxi</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Biaya Aktual</label>
                   <input
                     type="number"
                     value={transport.biayaAktualTaksiBerangkat}
@@ -160,11 +148,11 @@ const TransportasiMultiHariSection = ({
                 </div>
               </div>
 
-              {/* Subtotal */}
-              <div className="pt-3 border-t border-gray-200">
+              {/* Subtotal Berangkat */}
+              <div className="bg-gray-100 p-3 rounded">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">Subtotal Berangkat:</span>
-                  <span className="text-sm font-semibold text-gray-700">
+                  <span className="text-sm font-bold text-gray-900">
                     {formatRupiah(transport.subtotalBerangkat)}
                   </span>
                 </div>
@@ -228,7 +216,7 @@ const TransportasiMultiHariSection = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Biaya Aktual Taxi</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Biaya Aktual</label>
                   <input
                     type="number"
                     value={transport.biayaAktualTaksiPulang}
@@ -240,22 +228,22 @@ const TransportasiMultiHariSection = ({
                 </div>
               </div>
 
-              {/* Subtotal */}
-              <div className="pt-3 border-t border-gray-200">
+              {/* Subtotal Pulang */}
+              <div className="bg-gray-100 p-3 rounded">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">Subtotal Pulang:</span>
-                  <span className="text-sm font-semibold text-gray-700">
+                  <span className="text-sm font-bold text-gray-900">
                     {formatRupiah(transport.subtotalPulang)}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Total Hari */}
-            <div className="mt-4 pt-3 border-t border-gray-300">
+            {/* Total Per Hari */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Total Hari ke-{transport.hari}:</span>
-                <span className="text-lg font-bold text-gray-700">
+                <span className="text-base font-bold text-blue-900">Total Hari ke-{transport.hari}:</span>
+                <span className="text-lg font-bold text-blue-900">
                   {formatRupiah(transport.totalHari)}
                 </span>
               </div>

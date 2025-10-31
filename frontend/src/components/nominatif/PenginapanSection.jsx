@@ -2,20 +2,29 @@ import React, { useEffect } from 'react';
 import { formatRupiah } from '../../data/anggaranADummy.js';
 
 const PenginapanSection = ({ data, onChange, isEditable }) => {
-  // Auto-calculate total when penginapan values change
+  // Auto-calculate total and anggaran realisasi when penginapan values change
   useEffect(() => {
     if (data.menginap) {
       const total = (data.jumlahMalam || 1) * (data.paguPerMalam || 0);
+      const totalBiayaAktual = (data.jumlahMalam || 1) * (data.biayaAktualPerMalam || 0);
+      const anggaranRealisasi = total - totalBiayaAktual;
+
       if (data.total !== total) {
         onChange('penginapan.total', total);
+      }
+      if (data.anggaranRealisasi !== anggaranRealisasi) {
+        onChange('penginapan.anggaranRealisasi', anggaranRealisasi);
       }
     } else {
       // Reset to 0 if not staying overnight
       if (data.total !== 0) {
         onChange('penginapan.total', 0);
       }
+      if (data.anggaranRealisasi !== 0) {
+        onChange('penginapan.anggaranRealisasi', 0);
+      }
     }
-  }, [data.menginap, data.jumlahMalam, data.paguPerMalam, data.total, onChange]);
+  }, [data.menginap, data.jumlahMalam, data.paguPerMalam, data.biayaAktualPerMalam, data.total, data.anggaranRealisasi, onChange]);
 
   const handleInputChange = (field, value) => {
     if (field === 'menginap') {
@@ -27,7 +36,7 @@ const PenginapanSection = ({ data, onChange, isEditable }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+      <h3 className="text-lg font-normal text-gray-900 mb-4 flex items-center">
         <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
@@ -42,9 +51,9 @@ const PenginapanSection = ({ data, onChange, isEditable }) => {
             checked={data.menginap}
             onChange={(e) => handleInputChange('menginap', e.target.checked)}
             disabled={!isEditable}
-            className="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 disabled:opacity-50"
+            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 disabled:opacity-50"
           />
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-normal text-gray-700">
             Ya, saya membutuhkan penginapan
           </span>
         </label>
@@ -52,80 +61,59 @@ const PenginapanSection = ({ data, onChange, isEditable }) => {
 
       {/* Show penginapan details only if checked */}
       {data.menginap && (
-        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+        <div className="border border-gray-200 rounded-lg p-4 bg-white">
           {/* Jumlah Malam */}
           <div className="mb-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Jumlah Malam</h4>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Malam <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={data.jumlahMalam}
-                  onChange={(e) => handleInputChange('jumlahMalam', e.target.value)}
-                  disabled={!isEditable}
-                  className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
-                  placeholder="1"
-                />
-              </div>
-
-              <div className="col-span-9">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Info</label>
-                <p className="text-xs text-gray-500">Input manual jumlah malam</p>
-              </div>
-            </div>
+            <label className="block text-sm font-normal text-gray-700 mb-2">Jumlah Malam</label>
+            <input
+              type="number"
+              min="1"
+              value={data.jumlahMalam}
+              onChange={(e) => handleInputChange('jumlahMalam', e.target.value)}
+              disabled={!isEditable}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-500 rounded-lg"
+              placeholder="1"
+            />
           </div>
 
           {/* Pagu dan Biaya Aktual */}
-          <div className="mb-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Detail Biaya</h4>
-            <div className="grid grid-cols-2 gap-4">
-              {/* Pagu per Malam */}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Pagu per Malam <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-gray-500 text-xs">Rp</span>
-                  <input
-                    type="number"
-                    value={data.paguPerMalam || ''}
-                    onChange={(e) => handleInputChange('paguPerMalam', e.target.value)}
-                    disabled={!isEditable}
-                    placeholder="0"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
-                  />
-                </div>
-              </div>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Pagu per Malam */}
+            <div>
+              <label className="block text-sm font-normal text-gray-700 mb-2">
+                Pagu per Malam <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                value={data.paguPerMalam || ''}
+                onChange={(e) => handleInputChange('paguPerMalam', e.target.value)}
+                disabled={!isEditable}
+                placeholder="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-500 rounded-lg"
+              />
+            </div>
 
-              {/* Biaya Aktual */}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Biaya Aktual
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-gray-500 text-xs">Rp</span>
-                  <input
-                    type="number"
-                    value={data.biayaAktualPerMalam || ''}
-                    onChange={(e) => handleInputChange('biayaAktualPerMalam', e.target.value)}
-                    disabled={!isEditable}
-                    placeholder="0"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
-                  />
-                </div>
-              </div>
+            {/* Biaya Aktual */}
+            <div>
+              <label className="block text-sm font-normal text-gray-700 mb-2">
+                Biaya Aktual
+              </label>
+              <input
+                type="number"
+                value={data.biayaAktualPerMalam || ''}
+                onChange={(e) => handleInputChange('biayaAktualPerMalam', e.target.value)}
+                disabled={!isEditable}
+                placeholder="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-500 rounded-lg"
+              />
             </div>
           </div>
 
           {/* Total Penginapan */}
-          <div className="pt-4 border-t border-gray-300">
+          <div className="bg-gray-50 p-3 rounded-lg">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-700">Total Penginapan:</span>
-              <span className="text-lg font-semibold text-gray-700">
+              <span className="text-sm font-bold text-gray-900">
                 {formatRupiah(data.total || 0)}
               </span>
             </div>
@@ -134,9 +122,18 @@ const PenginapanSection = ({ data, onChange, isEditable }) => {
             </p>
           </div>
 
-          <p className="text-xs text-gray-500">
-            *Jumlah Malam & Pagu per Malam required untuk Submit
-          </p>
+          {/* Anggaran Realisasi */}
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-blue-900">Anggaran Realisasi:</span>
+              <span className="text-sm font-bold text-blue-900">
+                {formatRupiah(((data.total || 0) - ((data.jumlahMalam || 1) * (data.biayaAktualPerMalam || 0))))}
+              </span>
+            </div>
+            <p className="text-xs text-blue-700 mt-1">
+              Pagu ({formatRupiah(data.total || 0)}) - Biaya Aktual ({formatRupiah((data.jumlahMalam || 1) * (data.biayaAktualPerMalam || 0))})
+            </p>
+          </div>
         </div>
       )}
 

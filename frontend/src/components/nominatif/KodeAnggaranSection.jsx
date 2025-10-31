@@ -8,6 +8,38 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Filter states
+  const [selectedKategori, setSelectedKategori] = useState('');
+  const [selectedWilayah, setSelectedWilayah] = useState('');
+
+  // Smart truncate function
+  const truncateText = (text, maxLength = 50) => {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength).replace(/\s+\S*$/, '') + '...';
+  };
+
+  // Format option label untuk compact display
+  const formatOptionLabel = (option) => {
+    const truncatedLayanan = truncateText(option.layanan || '', 45);
+    return `${option.value} - ${truncatedLayanan}`;
+  };
+
+  // Get unique filter options from data
+  const getFilterOptions = (options) => {
+    const kategoriSet = new Set();
+    const wilayahSet = new Set();
+
+    options.forEach(option => {
+      if (option.kategori) kategoriSet.add(option.kategori);
+      if (option.wilayah) wilayahSet.add(option.wilayah);
+    });
+
+    return {
+      kategori: Array.from(kategoriSet).sort(),
+      wilayah: Array.from(wilayahSet).sort()
+    };
+  };
+
   // Fetch kode anggaran options dari API
   useEffect(() => {
     const fetchKodeAnggaranOptions = async () => {
@@ -29,12 +61,13 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
     fetchKodeAnggaranOptions();
   }, []);
 
-  // Filter options based on search term
+  // Filter options based on search term and selected filters
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredOptions(kodeAnggaranOptions);
-    } else {
-      const filtered = kodeAnggaranOptions.filter(option =>
+    let filtered = kodeAnggaranOptions;
+
+    // Apply text search
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(option =>
         option.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
         option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
         option.layanan.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,9 +80,24 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
         option.kodeLayanan1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         option.kodeLayanan2?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredOptions(filtered);
     }
-  }, [searchTerm, kodeAnggaranOptions]);
+
+    // Apply filter by kategori
+    if (selectedKategori) {
+      filtered = filtered.filter(option =>
+        option.kategori?.toLowerCase() === selectedKategori.toLowerCase()
+      );
+    }
+
+    // Apply filter by wilayah
+    if (selectedWilayah) {
+      filtered = filtered.filter(option =>
+        option.wilayah?.toLowerCase() === selectedWilayah.toLowerCase()
+      );
+    }
+
+    setFilteredOptions(filtered);
+  }, [searchTerm, selectedKategori, selectedWilayah, kodeAnggaranOptions]);
 
   const selectedOption = kodeAnggaranOptions.find(opt => opt.value === kodeAnggaranRKA);
 
@@ -58,6 +106,23 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
   };
 
   const handleClearSearch = () => {
+    setSearchTerm('');
+  };
+
+  const handleFilterChange = (filterType, value) => {
+    switch (filterType) {
+      case 'kategori':
+        setSelectedKategori(value);
+        break;
+      case 'wilayah':
+        setSelectedWilayah(value);
+        break;
+    }
+  };
+
+  const handleClearAllFilters = () => {
+    setSelectedKategori('');
+    setSelectedWilayah('');
     setSearchTerm('');
   };
 
@@ -75,6 +140,94 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
         {/* Pencarian Kode Anggaran */}
         <div className="mb-4">
           <h4 className="text-sm font-semibold text-gray-700 mb-3">Pilih Kode Anggaran</h4>
+
+          {/* Filter Dropdowns */}
+          <div className="mb-4">
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              {/* Filter Kategori */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Filter Kategori</label>
+                <select
+                  value={selectedKategori}
+                  onChange={(e) => handleFilterChange('kategori', e.target.value)}
+                  disabled={!isEditable}
+                  className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
+                >
+                  <option value="">-- Semua Kategori --</option>
+                  {getFilterOptions(kodeAnggaranOptions).kategori.map((kategori) => (
+                    <option key={kategori} value={kategori}>{kategori}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filter Wilayah */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Filter Wilayah</label>
+                <select
+                  value={selectedWilayah}
+                  onChange={(e) => handleFilterChange('wilayah', e.target.value)}
+                  disabled={!isEditable}
+                  className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
+                >
+                  <option value="">-- Semua Wilayah --</option>
+                  {getFilterOptions(kodeAnggaranOptions).wilayah.map((wilayah) => (
+                    <option key={wilayah} value={wilayah}>{wilayah}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Active Filters Display */}
+            {(selectedKategori || selectedWilayah || searchTerm) && (
+              <div className="flex items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                  {selectedKategori && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                      Kategori: {selectedKategori}
+                      <button
+                        onClick={() => setSelectedKategori('')}
+                        disabled={!isEditable}
+                        className="ml-1 text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                  {selectedWilayah && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                      Wilayah: {selectedWilayah}
+                      <button
+                        onClick={() => setSelectedWilayah('')}
+                        disabled={!isEditable}
+                        className="ml-1 text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                  {searchTerm && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">
+                      Search: {searchTerm}
+                      <button
+                        onClick={() => setSearchTerm('')}
+                        disabled={!isEditable}
+                        className="ml-1 text-orange-600 hover:text-orange-800 disabled:opacity-50"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={handleClearAllFilters}
+                  disabled={!isEditable}
+                  className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                >
+                  Clear All
+                </button>
+              </div>
+            )}
+          </div>
 
           {loading ? (
             <div className="px-3 py-2 bg-white border border-gray-200 rounded-lg flex items-center">
@@ -103,7 +256,7 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
                   onChange={handleSearchChange}
                   disabled={!isEditable}
                   placeholder="Cari kode anggaran, layanan, wilayah..."
-                  className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
+                  className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
                 />
                 {searchTerm && (
                   <button
@@ -130,12 +283,12 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
                 value={kodeAnggaranRKA}
                 onChange={(e) => onChange('kodeAnggaranRKA', e.target.value)}
                 disabled={!isEditable}
-                className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
               >
                 <option value="">-- Pilih Kode Anggaran --</option>
                 {filteredOptions.map((option, index) => (
                   <option key={`${option.value}-${index}`} value={option.value}>
-                    {option.label}
+                    {formatOptionLabel(option)}
                   </option>
                 ))}
               </select>
@@ -158,61 +311,7 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
           )}
         </div>
 
-        {/* Show selected kategori info */}
-        {selectedOption && (
-          <div className="border border-gray-200 rounded-lg p-4 bg-white">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Detail Kode Anggaran</h4>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Kode Anggaran</label>
-                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-900">
-                  {selectedOption.value}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Kategori</label>
-                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900">
-                  {selectedOption.kategori}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Arti Kode</label>
-              <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900">
-                {selectedOption.artiKode}
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Layanan</label>
-              <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900">
-                {selectedOption.layanan}
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Kode Lengkap</label>
-              <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900">
-                {selectedOption.kodeLengkap}
-              </div>
-            </div>
-
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-700">
-                💡 <strong>Info:</strong> Kode anggaran akan digunakan untuk alokasi biaya perjalanan dinas
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-xs text-gray-700">
-            💡 <strong>Info:</strong> Required untuk Submit
-          </p>
-        </div>
-      </div>
+    </div>
 
       </div>
   );

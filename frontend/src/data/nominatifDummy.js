@@ -26,24 +26,21 @@ export const getFallbackKodeAnggaranOptions = () => {
 
 // Initial state untuk form nominatif
 export const initialNominatifData = {
-  // Section 1: Deskripsi Tugas
-  deskripsiTugas: '',
+  // Section 1: Detail Perjalanan Dinas
+  detailPerjalananDinas: {
+    deskripsi: ''
+  },
 
   // Section 2: Kode Anggaran
   kodeAnggaranRKA: '',
 
   // Section 3: Perjalanan
-  jumlahHari: 1,
-  rutePerjalanan: [
-    {
-      hari: 1,
-      dari: 'Jakarta',
-      ke: '',
-      tanggal: ''
-    }
-  ],
-  tanggalPulang: '',
-  lamaDinas: 1,
+  jumlahHari: 0,
+  rutePerjalanan: [],
+  tanggalPerjalanan: {
+    tanggalMulai: '',
+    tanggalSelesai: ''
+  },
 
   // Section 4-5: Transportasi Per Hari
   transportasiPerHari: [
@@ -126,7 +123,6 @@ export const dummySubmittedNominatifs = [
     tujuan: 'Balikpapan',
     tanggalPergi: '2025-01-10',
     tanggalPulang: '2025-01-12',
-    lamaDinas: 3,
     transportasiBerangkat: {
       jenis: 'Pesawat',
       paguTransportasi: 1500000,
