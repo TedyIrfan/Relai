@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import rkaService from '../../services/rkaService.js';
 
-const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
+const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable, isEditMode = false }) => {
   const [kodeAnggaranOptions, setKodeAnggaranOptions] = useState([]);
   const [filteredOptions, setFilteredOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
+  
   // Filter states
   const [selectedKategori, setSelectedKategori] = useState('');
   const [selectedWilayah, setSelectedWilayah] = useState('');
@@ -18,12 +18,7 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
     return text.substring(0, maxLength).replace(/\s+\S*$/, '') + '...';
   };
 
-  // Format option label untuk compact display
-  const formatOptionLabel = (option) => {
-    const truncatedLayanan = truncateText(option.layanan || '', 45);
-    return `${option.value} - ${truncatedLayanan}`;
-  };
-
+  
   // Get unique filter options from data
   const getFilterOptions = (options) => {
     const kategoriSet = new Set();
@@ -127,33 +122,44 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-        <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-        Section 2: Kode Anggaran RKA
-      </h3>
+    <div className="space-y-4">
+      {/* Header dengan icon dan informasi */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-800">
+              Kode Anggaran RKA
+            </label>
+            <p className="text-xs text-gray-500">
+              Pilih kode anggaran yang sesuai dengan perjalanan dinas
+            </p>
+          </div>
+        </div>
+        <div className="text-xs text-gray-400">
+          {selectedOption ? 'Terpilih' : `${filteredOptions.length} opsi`}
+        </div>
+      </div>
 
-      {/* Kode Anggaran Details */}
-      <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-        {/* Pencarian Kode Anggaran */}
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Pilih Kode Anggaran</h4>
-
-          {/* Filter Dropdowns */}
-          <div className="mb-4">
-            <div className="grid grid-cols-2 gap-4 mb-3">
+      {/* Pencarian dan Filter */}
+      <div className="relative">
+        {/* Filter Dropdowns */}
+          <div className="mb-3">
+            <div className="grid grid-cols-2 gap-3 mb-3">
               {/* Filter Kategori */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Filter Kategori</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Kategori</label>
                 <select
                   value={selectedKategori}
                   onChange={(e) => handleFilterChange('kategori', e.target.value)}
-                  disabled={!isEditable}
-                  className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
+                  disabled={isEditMode || !isEditable}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200 shadow-sm hover:shadow-md focus:shadow-gray-100"
                 >
-                  <option value="">-- Semua Kategori --</option>
+                  <option value="">Semua Kategori</option>
                   {getFilterOptions(kodeAnggaranOptions).kategori.map((kategori) => (
                     <option key={kategori} value={kategori}>{kategori}</option>
                   ))}
@@ -162,14 +168,14 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
 
               {/* Filter Wilayah */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Filter Wilayah</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Wilayah</label>
                 <select
                   value={selectedWilayah}
                   onChange={(e) => handleFilterChange('wilayah', e.target.value)}
-                  disabled={!isEditable}
-                  className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
+                  disabled={isEditMode || !isEditable}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200 shadow-sm hover:shadow-md focus:shadow-gray-100"
                 >
-                  <option value="">-- Semua Wilayah --</option>
+                  <option value="">Semua Wilayah</option>
                   {getFilterOptions(kodeAnggaranOptions).wilayah.map((wilayah) => (
                     <option key={wilayah} value={wilayah}>{wilayah}</option>
                   ))}
@@ -186,7 +192,7 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
                       Kategori: {selectedKategori}
                       <button
                         onClick={() => setSelectedKategori('')}
-                        disabled={!isEditable}
+                        disabled={isEditMode || !isEditable}
                         className="ml-1 text-blue-600 hover:text-blue-800 disabled:opacity-50"
                       >
                         ×
@@ -198,7 +204,7 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
                       Wilayah: {selectedWilayah}
                       <button
                         onClick={() => setSelectedWilayah('')}
-                        disabled={!isEditable}
+                        disabled={isEditMode || !isEditable}
                         className="ml-1 text-blue-600 hover:text-blue-800 disabled:opacity-50"
                       >
                         ×
@@ -210,7 +216,7 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
                       Search: {searchTerm}
                       <button
                         onClick={() => setSearchTerm('')}
-                        disabled={!isEditable}
+                        disabled={isEditMode || !isEditable}
                         className="ml-1 text-orange-600 hover:text-orange-800 disabled:opacity-50"
                       >
                         ×
@@ -220,7 +226,7 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
                 </div>
                 <button
                   onClick={handleClearAllFilters}
-                  disabled={!isEditable}
+                  disabled={isEditMode || !isEditable}
                   className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-50"
                 >
                   Clear All
@@ -246,7 +252,7 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
               {/* Search Input */}
               <div className="relative mb-3">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
@@ -254,9 +260,9 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
                   type="text"
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  disabled={!isEditable}
+                  disabled={isEditMode || !isEditable}
                   placeholder="Cari kode anggaran, layanan, wilayah..."
-                  className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
+                  className="w-full pl-10 pr-10 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200 shadow-sm hover:shadow-md focus:shadow-gray-100"
                 />
                 {searchTerm && (
                   <button
@@ -264,7 +270,7 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
                     type="button"
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   >
-                    <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -278,20 +284,40 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
                 </div>
               )}
 
-              {/* Dropdown Select */}
+              {/* Dropdown Select - simple version */}
               <select
-                value={kodeAnggaranRKA}
-                onChange={(e) => onChange('kodeAnggaranRKA', e.target.value)}
-                disabled={!isEditable}
-                className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-500 text-sm"
+                value={kodeAnggaranRKA?.value || ''}
+                onChange={(e) => {
+                  const selectedOption = filteredOptions.find(option => option.value === e.target.value);
+                  onChange('kodeAnggaranRKA', selectedOption || null);
+                }}
+                disabled={isEditMode || !isEditable}
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200 shadow-sm hover:shadow-md focus:shadow-gray-100"
               >
                 <option value="">-- Pilih Kode Anggaran --</option>
                 {filteredOptions.map((option, index) => (
                   <option key={`${option.value}-${index}`} value={option.value}>
-                    {formatOptionLabel(option)}
+                    {option.value} - {truncateText(option.layanan || '', 40)}
                   </option>
                 ))}
               </select>
+
+              {/* Selected Kode Anggaran Display */}
+              {kodeAnggaranRKA && (
+                <div className="mt-3 p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-800">Kode Terpilih:</span>
+                    <button
+                      onClick={() => onChange('kodeAnggaranRKA', null)}
+                      className="text-gray-600 hover:text-red-500 text-xs"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-700 font-mono mb-1">{kodeAnggaranRKA.value}</p>
+                  <p className="text-xs text-gray-600 leading-relaxed">{kodeAnggaranRKA.layanan || ''}</p>
+                </div>
+              )}
 
               {/* No Results Message */}
               {searchTerm && filteredOptions.length === 0 && (
@@ -311,8 +337,28 @@ const KodeAnggaranSection = ({ kodeAnggaranRKA, onChange, isEditable }) => {
           )}
         </div>
 
-    </div>
-
+          {/* Helper text */}
+        <div className="mt-3 flex items-center justify-between">
+          <p className="text-xs text-gray-500">
+            <span className="inline-flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Pilih kode anggaran yang sesuai dengan perjalanan dinas
+            </span>
+          </p>
+          {kodeAnggaranRKA && isEditable && !isEditMode && (
+            <button
+              onClick={() => onChange('kodeAnggaranRKA', null)}
+              className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+              title="Hapus pilihan"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
   );
 };

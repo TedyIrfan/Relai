@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RKADetailsController;
 use App\Http\Controllers\SwaggerController;
 use App\Http\Controllers\AnggaranController;
+use App\Http\Controllers\NominatifController;
 
 // Test endpoint for Swagger
 Route::get('/test', [SwaggerController::class, 'test']);
@@ -34,6 +35,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/anggarans', [AnggaranController::class, 'store']);      // CREATE anggaran
     Route::put('/anggarans/{id}', [AnggaranController::class, 'update']);  // UPDATE anggaran
     Route::delete('/anggarans/{id}', [AnggaranController::class, 'destroy']); // DELETE anggaran
+
+    // Nominatif CRUD Operations
+    Route::get('/nominatifs', [NominatifController::class, 'index']);       // GET all nominatifs
+    Route::post('/nominatifs', [NominatifController::class, 'store']);      // CREATE nominatif
+    Route::get('/nominatifs/{id}', [NominatifController::class, 'show']);     // GET single nominatif
+    Route::put('/nominatifs/{id}', [NominatifController::class, 'update']);   // UPDATE nominatif
+    Route::post('/nominatifs/{id}/submit', [NominatifController::class, 'submit']); // SUBMIT nominatif
+    Route::delete('/nominatifs/{id}', [NominatifController::class, 'destroy']); // DELETE nominatif
 });
 
 // Dashboard API Routes (Public - for testing)

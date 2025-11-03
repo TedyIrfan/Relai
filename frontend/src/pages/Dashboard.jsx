@@ -11,7 +11,7 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
   const [dashboardData, setDashboardData] = useState({
     tahun: selectedYear,
     totalAnggaran: 0,
-    anggaranTerpakai: 0,
+    anggaranBerjalan: 0,
     anggaranSP2D: 0,
     sisaAnggaran: 0,
     kategori: []
@@ -43,7 +43,7 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
       setDashboardData({
         tahun: 2025,
         totalAnggaran: 2000000000,
-        anggaranTerpakai: 500000000,
+        anggaranBerjalan: 500000000,
         anggaranSP2D: 300000000,
         sisaAnggaran: 1200000000,
         kategori: [
@@ -72,7 +72,7 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
       const fallbackData = {
         tahun: year,
         totalAnggaran: year === 2025 ? 2000000000 : year === 2024 ? 1800000000 : year === 2023 ? 1500000000 : 2200000000,
-        anggaranTerpakai: year === 2025 ? 500000000 : year === 2024 ? 720000000 : year === 2023 ? 900000000 : 0,
+        anggaranBerjalan: year === 2025 ? 500000000 : year === 2024 ? 720000000 : year === 2023 ? 900000000 : 0,
         anggaranSP2D: year === 2025 ? 300000000 : year === 2024 ? 540000000 : year === 2023 ? 750000000 : 0,
         sisaAnggaran: year === 2025 ? 1500000000 : year === 2024 ? 1080000000 : year === 2023 ? 600000000 : 2200000000,
         kategori: [
@@ -90,7 +90,7 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
   // Calculate derived values with fallbacks
   const {
     totalAnggaran = 0,
-    anggaranTerpakai = 0,
+    anggaranBerjalan = 0,
     anggaranSP2D = 0,
     sisaAnggaran = 0,
     kategori = []
@@ -120,9 +120,9 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
         />
 
         <KPICard
-          type={KPI_TYPES.terpakai}
-          title="Anggaran Terpakai"
-          value={anggaranTerpakai}
+          type={KPI_TYPES.berjalan}
+          title="Anggaran Berjalan"
+          value={anggaranBerjalan}
           total={totalAnggaran}
           loading={loading}
         />
@@ -148,7 +148,7 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PieChart
           total={totalAnggaran}
-          terpakai={anggaranTerpakai}
+          berjalan={anggaranBerjalan}
           sp2d={anggaranSP2D}
           sisa={sisaAnggaran}
           loading={loading}

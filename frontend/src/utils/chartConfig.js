@@ -17,10 +17,10 @@ export const CHART_COLORS = {
 /**
  * Format data for pie chart
  */
-export const formatPieData = (total, terpakai, sp2d, sisa) => {
+export const formatPieData = (total, berjalan, sp2d, sisa) => {
   // Pastikan semua values numeric dan tidak null
   const numericTotal = parseFloat(total) || 0;
-  const numericTerpakai = parseFloat(terpakai) || 0;
+  const numericBerjalan = parseFloat(berjalan) || 0;
   const numericSp2d = parseFloat(sp2d) || 0;
   const numericSisa = parseFloat(sisa) || 0;
 
@@ -32,10 +32,10 @@ export const formatPieData = (total, terpakai, sp2d, sisa) => {
   // Pie chart menampilkan komponen-komponen yang membentuk total anggaran
   const data = [
     {
-      name: 'Anggaran Terpakai',
-      value: numericTerpakai,
+      name: 'Anggaran Berjalan',
+      value: numericBerjalan,
       color: CHART_COLORS.pie[1],
-      percentage: calculatePercentage(numericTerpakai)
+      percentage: calculatePercentage(numericBerjalan)
     },
     {
       name: 'Anggaran SP2D',

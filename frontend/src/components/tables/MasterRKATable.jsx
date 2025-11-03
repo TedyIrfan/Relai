@@ -184,7 +184,10 @@ const MasterRKATable = () => {
                     {formatRupiah(item.anggaranPerjalanan)}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium">
-                    {formatRupiah(item.anggaranLayanan)}
+                    {formatRupiah(item.anggaranLayananAvailable)}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium">
+                    {formatRupiah(item.anggaranLayananUsed)}
                   </td>
                   <td className="px-3 py-2 text-sm text-center">
                     <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">

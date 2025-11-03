@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Search, Filter, Download } from 'lucide-react';
-import { anggaranADummyData, anggaranAColumns, formatRupiah, getStatusColor, getSisaPemakaianColor } from '../../data/anggaranADummy';
+import { masterRKAData, anggaranAColumns, formatRupiah, getStatusColor, getSisaPemakaianColor } from '../../data/anggaranADummy';
 
 const AnggaranATable = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -9,7 +9,7 @@ const AnggaranATable = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   // Filter data based on search
-  const filteredData = anggaranADummyData.filter(item =>
+  const filteredData = masterRKAData.filter(item =>
     Object.values(item).some(value =>
       value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )

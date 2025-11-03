@@ -47,7 +47,7 @@ export const MENU_ITEMS = [
 
 export const KPI_TYPES = {
   total: 'total',
-  terpakai: 'terpakai',
+  berjalan: 'berjalan',
   sp2d: 'sp2d',
   sisa: 'sisa'
 };

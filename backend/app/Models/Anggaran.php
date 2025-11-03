@@ -12,14 +12,14 @@ class Anggaran extends Model
     protected $fillable = [
         'tahun',
         'total_anggaran',
-        'anggaran_terpakai',
+        'anggaran_berjalan',
         'sp2d',
         'keterangan'
     ];
 
     protected $casts = [
         'total_anggaran' => 'decimal:2',
-        'anggaran_terpakai' => 'decimal:2',
+        'anggaran_berjalan' => 'decimal:2',
         'sp2d' => 'decimal:2',
         'sisa_anggaran' => 'decimal:2',
         'tahun' => 'integer'
@@ -32,8 +32,8 @@ class Anggaran extends Model
     {
         // Ensure values are numeric and not null
         $total = (float) ($this->total_anggaran ?? 0);
-        $terpakai = (float) ($this->anggaran_terpakai ?? 0);
-        return max(0, $total - $terpakai); // Ensure no negative values
+        $berjalan = (float) ($this->anggaran_berjalan ?? 0);
+        return max(0, $total - $berjalan); // Ensure no negative values
     }
 
     /**

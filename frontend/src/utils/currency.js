@@ -57,11 +57,11 @@ export const getKPIColors = (type) => {
       text: 'text-blue-600',
       icon: 'Wallet'
     },
-    terpakai: {
+    berjalan: {
       gradient: 'from-gray-100 to-gray-600',
       bg: 'bg-gray-50',
       text: 'text-orange-600',
-      icon: 'FileText'
+      icon: 'Activity'
     },
     sp2d: {
       gradient: 'from-gray-100 to-gray-600',

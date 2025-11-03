@@ -34,7 +34,7 @@ class RKADetailsController extends Controller
 
         $data = $query->get();
 
-        // Format data untuk frontend (ALL 16 FIELDS)
+        // Format data untuk frontend (ALL 16 FIELDS + BUDGET TRACKING)
         $formattedData = $data->map(function($item) {
             return [
                 'id' => $item->id,
@@ -53,6 +53,8 @@ class RKADetailsController extends Controller
                 'status' => $item->status,
                 'anggaranPerjalanan' => $item->anggaran_perjalanan,
                 'anggaranLayanan' => $item->anggaran_layanan,
+                'anggaranLayananUsed' => (float)($item->anggaran_layanan_used ?? 0),
+                'anggaranLayananAvailable' => $item->anggaran_layanan_available, // This uses accessor
                 'sbm' => $item->sbm,
             ];
         });

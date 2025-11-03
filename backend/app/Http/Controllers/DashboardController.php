@@ -6,6 +6,7 @@ use OpenApi\Annotations as OA;
 use Illuminate\Http\Request;
 use App\Models\Anggaran;
 use App\Models\KategoriAnggaran;
+use App\Models\RkaDetail;
 
 /**
  * @OA\Tag(
@@ -113,6 +114,18 @@ class DashboardController extends Controller
             $anggaran = $this->createDefaultAnggaran($tahun);
         }
 
+        // 🔄 Calculate total anggaran berjalan from RKA Details (Anggaran Berjalan)
+        $totalAnggaranBerjalanFromRKA = RkaDetail::sum('anggaran_layanan_used');
+        \Log::info('📊 Dashboard DEBUG - RKA Budget Calculation:');
+        \Log::info('  - Total Anggaran Berjalan from RKA: ' . number_format($totalAnggaranBerjalanFromRKA, 0, ',', '.'));
+        \Log::info('  - Before (old) anggaran.berjalan: ' . number_format($anggaran->anggaran_berjalan, 0, ',', '.'));
+
+        // Update anggaran.berjalan dengan nilai dari RKA
+        $anggaran->anggaran_berjalan = $totalAnggaranBerjalanFromRKA;
+        $anggaran->save(); // Optional: jika mau update di database
+
+        \Log::info('  - After (new) anggaran.berjalan: ' . number_format($anggaran->anggaran_berjalan, 0, ',', '.'));
+
         // Get or create kategori data
         $kategoriData = KategoriAnggaran::getAllByTahun($tahun);
 
@@ -126,7 +139,7 @@ class DashboardController extends Controller
             return [
                 'nama' => $kategori->nama_kategori,
                 'anggaran' => $kategori->total_anggaran_kategori,
-                'terpakai' => $kategori->anggaran_terpakai_kategori,
+                'berjalan' => $kategori->anggaran_berjalan_kategori,
                 'sp2d' => $kategori->sp2d_kategori,
                 'sisa' => $kategori->getSisaAnggaranKategoriAttribute(),
                 'percentage' => $kategori->getPercentageUsed()
@@ -138,12 +151,12 @@ class DashboardController extends Controller
             'data' => [
                 'tahun' => $anggaran->tahun,
                 'totalAnggaran' => $anggaran->total_anggaran,
-                'anggaranTerpakai' => $anggaran->anggaran_terpakai,
+                'anggaranBerjalan' => $anggaran->anggaran_berjalan,
                 'anggaranSP2D' => $anggaran->sp2d,
                 'sisaAnggaran' => $anggaran->getSisaAnggaranAttribute(),
                 'kategori' => $kategoriFormatted->toArray()
             ],
-            'message' => 'Dashboard data retrieved successfully from kategori_anggarans table'
+            'message' => 'Dashboard data retrieved successfully from kategori_anggarans table - Updated with Anggaran Berjalan'
         ]);
     }
 

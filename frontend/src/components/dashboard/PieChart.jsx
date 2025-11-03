@@ -3,8 +3,8 @@ import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Legend, T
 import { formatPieData, getLabelProps, CHART_COLORS } from '../../utils/chartConfig';
 import { formatCurrency } from '../../utils/currency';
 
-const PieChart = ({ total, terpakai, sp2d, sisa, loading = false }) => {
-  const data = formatPieData(total, terpakai, sp2d, sisa);
+const PieChart = ({ total, berjalan, sp2d, sisa, loading = false }) => {
+  const data = formatPieData(total, berjalan, sp2d, sisa);
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload }) => {
@@ -112,7 +112,7 @@ const PieChart = ({ total, terpakai, sp2d, sisa, loading = false }) => {
           <div>
             <p className="text-sm text-gray-500">Total Realisasi</p>
             <p className="text-lg font-semibold text-gray-800">
-              {formatCurrency((parseFloat(terpakai) || 0) + (parseFloat(sp2d) || 0))}
+              {formatCurrency((parseFloat(berjalan) || 0) + (parseFloat(sp2d) || 0))}
             </p>
           </div>
           <div>

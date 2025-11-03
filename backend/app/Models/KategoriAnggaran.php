@@ -14,14 +14,14 @@ class KategoriAnggaran extends Model
         'tahun',
         'nama_kategori',
         'total_anggaran_kategori',
-        'anggaran_terpakai_kategori',
+        'anggaran_berjalan_kategori',
         'sp2d_kategori',
         'keterangan'
     ];
 
     protected $casts = [
         'total_anggaran_kategori' => 'decimal:2',
-        'anggaran_terpakai_kategori' => 'decimal:2',
+        'anggaran_berjalan_kategori' => 'decimal:2',
         'sp2d_kategori' => 'decimal:2',
         'sisa_anggaran_kategori' => 'decimal:2',
         'tahun' => 'integer'
@@ -33,8 +33,8 @@ class KategoriAnggaran extends Model
     public function getSisaAnggaranKategoriAttribute()
     {
         $total = (float) ($this->total_anggaran_kategori ?? 0);
-        $terpakai = (float) ($this->anggaran_terpakai_kategori ?? 0);
-        return max(0, $total - $terpakai);
+        $berjalan = (float) ($this->anggaran_berjalan_kategori ?? 0);
+        return max(0, $total - $berjalan);
     }
 
     /**

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan, onChange, isEditable }) => {
+const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan, onChange, isEditable, isEditMode = false }) => {
   // Handle perubahan tanggal rentang
   const handleTanggalChange = (field, value) => {
     const newTanggal = { ...tanggalPerjalanan, [field]: value };
@@ -45,52 +45,65 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-        <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        Section 3: Detail Perjalanan
-      </h3>
-
-      <div className="border border-gray-200 rounded-lg p-4 bg-white">
-        <div className="grid grid-cols-3 gap-4 mb-4">
+    <div className="space-y-4">
+      {/* Header dengan icon dan informasi */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
           <div>
-            <label className="block text-sm font-normal text-gray-500 mb-2">
+            <label className="block text-sm font-semibold text-gray-800">
+              Detail Perjalanan
+            </label>
+            <p className="text-xs text-gray-500">
+              Tentukan tanggal, rute, dan jumlah hari perjalanan dinas
+            </p>
+          </div>
+        </div>
+        <div className="text-xs text-gray-400">
+          {jumlahHari} hari
+        </div>
+      </div>
+
+      {/* Tanggal dan Rute */}
+      <div className="relative">
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
               Tanggal Mulai
             </label>
             <input
               type="date"
               value={tanggalPerjalanan?.tanggalMulai || ''}
               onChange={(e) => handleTanggalChange('tanggalMulai', e.target.value)}
-              disabled={!isEditable}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-500 rounded-lg"
+              disabled={isEditMode || !isEditable}
+              className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
             />
           </div>
           <div>
-            <label className="block text-sm font-normal text-gray-500 mb-2">
+            <label className="block text-xs font-medium text-gray-600 mb-1">
               Tanggal Selesai
             </label>
             <input
               type="date"
               value={tanggalPerjalanan?.tanggalSelesai || ''}
               onChange={(e) => handleTanggalChange('tanggalSelesai', e.target.value)}
-              disabled={!isEditable}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-500 rounded-lg"
+              disabled={isEditMode || !isEditable}
+              className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
             />
           </div>
           <div>
-            <label className="block text-sm font-normal text-gray-500 mb-2">
+            <label className="block text-xs font-medium text-gray-600 mb-1">
               Jumlah Hari
             </label>
-            <input
-              type="text"
-              value={jumlahHari ? `${jumlahHari} hari` : ''}
-              disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-500 rounded-lg"
-              readOnly
-            />
+            <div className="w-full px-4 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg ">
+              <span className="text-sm text-gray-700">
+                {jumlahHari ? `${jumlahHari} hari` : '-'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -111,7 +124,7 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
               };
 
               return (
-                <div key={hari} className="border border-gray-200 rounded-lg p-4 ">
+                <div key={hari} className="border border-gray-200 rounded-lg p-4 mt-2">
                   <div className="flex items-center mb-3">
                     <div className="w-8 h-8 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center font-semibold text-xs">
                       {hari}
@@ -120,7 +133,7 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-normal text-gray-500 mb-1">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
                         Dari {hari === 1 ? '' : <span className="text-red-500">*</span>}
                       </label>
                       {hari === 1 ? (
@@ -128,7 +141,7 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
                           type="text"
                           value="Jakarta"
                           disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-500 rounded-lg"
+                          className="w-full px-4 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-500"
                           readOnly
                         />
                       ) : (
@@ -136,21 +149,21 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
                           type="text"
                           value={rute.dari || ''}
                           onChange={(e) => handleRuteChange(hari, 'dari', e.target.value)}
-                          disabled={!isEditable}
-                          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-500 rounded-lg"
+                          disabled={isEditMode || !isEditable}
+                          className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
                         />
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-normal text-gray-500 mb-1">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
                         Tujuan
                       </label>
                       <input
                         type="text"
                         value={rute.ke || ''}
                         onChange={(e) => handleRuteChange(hari, 'ke', e.target.value)}
-                        disabled={!isEditable}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-500 rounded-lg"
+                        disabled={isEditMode || !isEditable}
+                        className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
                       />
                     </div>
                   </div>

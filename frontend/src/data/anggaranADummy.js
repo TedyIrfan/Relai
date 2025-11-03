@@ -114,6 +114,7 @@ export const masterRKAColumns = [
   { key: 'status', label: 'Status', width: '80px' },
   { key: 'anggaranPerjalanan', label: 'Anggaran Perjalanan', width: '120px' },
   { key: 'anggaranLayanan', label: 'Anggaran Layanan', width: '120px' },
+  { key: 'anggaranBerjalan', label: 'Anggaran Berjalan', width: '120px' },
   { key: 'sbm', label: 'SBM', width: '80px' }
 ];
 
