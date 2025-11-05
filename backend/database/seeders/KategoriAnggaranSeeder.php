@@ -17,28 +17,28 @@ class KategoriAnggaranSeeder extends Seeder
         $kategoriData = [
             [
                 'tahun' => $tahun,
-                'kode' => 'A',
+                'kode' => 'KA',
                 'nama_kategori' => 'Kategori A - Dinas Pimpinan',
                 'total_anggaran_kategori' => 0,
-                'anggaran_terpakai_kategori' => 0,
+                'anggaran_berjalan_kategori' => 0,
                 'sp2d_kategori' => 0,
                 'keterangan' => 'Dinas Pimpinan'
             ],
             [
                 'tahun' => $tahun,
-                'kode' => 'B',
+                'kode' => 'KB',
                 'nama_kategori' => 'Kategori B - Tata Usaha',
                 'total_anggaran_kategori' => 0,
-                'anggaran_terpakai_kategori' => 0,
+                'anggaran_berjalan_kategori' => 0,
                 'sp2d_kategori' => 0,
                 'keterangan' => 'Pengelolaan Tata Usaha'
             ],
             [
                 'tahun' => $tahun,
-                'kode' => 'C',
+                'kode' => 'KC',
                 'nama_kategori' => 'Kategori C - Konferensi',
                 'total_anggaran_kategori' => 0,
-                'anggaran_terpakai_kategori' => 0,
+                'anggaran_berjalan_kategori' => 0,
                 'sp2d_kategori' => 0,
                 'keterangan' => 'Konferensi Infrastruktur'
             ]

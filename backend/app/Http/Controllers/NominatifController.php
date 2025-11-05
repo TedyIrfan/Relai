@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Nominatif;
 use App\Models\RkaDetail;
 use App\Models\TransportasiNominatif;
+use App\Models\TambahanOrangNominatif;
 
 class NominatifController extends Controller
 {
@@ -48,6 +49,7 @@ class NominatifController extends Controller
             'penginapan' => 'array',
             'uang_harian' => 'array',
             'uang_representasi' => 'array',
+            'tambahan_orang' => 'array',
         ]);
 
         try {
@@ -90,9 +92,6 @@ class NominatifController extends Controller
                 'uang_representasi' => $validated['uang_representasi'] ?? [],
             ]);
 
-            // Calculate totals from the actual form data
-            $nominatif->calculateTotals();
-
             // DEBUG: Log transport data section
             \Log::info('🔍 Transport Data Section DEBUG:');
             \Log::info('  - isset(transportasi_data): ' . (isset($validated['transportasi_data']) ? 'YES' : 'NO'));
@@ -125,16 +124,65 @@ class NominatifController extends Controller
                 \Log::info('❌ No transport data found to save');
             }
 
-            // Update RKA anggaran used
-            \Log::info('🔄 ABOUT TO UPDATE ANGGARAN');
+            // Save tambahan orang data
+            if (isset($validated['tambahan_orang']) && is_array($validated['tambahan_orang'])) {
+                \Log::info('👥 Tambahan orang found, count: ' . count($validated['tambahan_orang']));
+
+                foreach ($validated['tambahan_orang'] as $index => $orang) {
+                    \Log::info("👤 Creating tambahan orang record #{$index}: ", $orang);
+
+                    $tambahanOrangRecord = TambahanOrangNominatif::create([
+                        'nominatif_id' => $nominatif->id,
+                        'nama_peserta' => $orang['nama_peserta'],
+                        'jabatan_peserta' => $orang['jabatan_peserta'],
+                        'pagu' => $orang['pagu'] ?? 0,
+                        'aktual' => $orang['aktual'] ?? 0,
+                        // Detail Perjalanan fields
+                        'jumlah_hari' => $orang['jumlah_hari'] ?? 0,
+                        'tanggal_mulai' => $orang['tanggal_mulai'] ?? null,
+                        'tanggal_selesai' => $orang['tanggal_selesai'] ?? null,
+                        'rute_perjalanan' => $orang['rute_perjalanan'] ?? [],
+                        // Transportasi fields
+                        'transportasi_per_hari' => $orang['transportasi_per_hari'] ?? [],
+                        // Penginapan fields
+                        'menginap' => $orang['menginap'] ?? false,
+                        'jumlah_malam' => $orang['jumlah_malam'] ?? 1,
+                        'pagu_per_malam' => $orang['pagu_per_malam'] ?? 0,
+                        'biaya_aktual_per_malam' => $orang['biaya_aktual_per_malam'] ?? 0,
+                        'penginapan_total' => $orang['penginapan_total'] ?? 0,
+                        'penginapan_anggaran_realisasi' => $orang['penginapan_anggaran_realisasi'] ?? 0,
+                        // Uang Harian fields
+                        'uang_harian_jumlah_hari' => $orang['uang_harian_jumlah_hari'] ?? 0,
+                        'uang_harian_pagu_per_hari' => $orang['uang_harian_pagu_per_hari'] ?? 0,
+                        'uang_harian_total' => $orang['uang_harian_total'] ?? 0,
+                        // Uang Representasi fields
+                        'uang_representasi_jumlah_hari' => $orang['uang_representasi_jumlah_hari'] ?? 0,
+                        'uang_representasi_pagu_per_hari' => $orang['uang_representasi_pagu_per_hari'] ?? 0,
+                        'uang_representasi_total' => $orang['uang_representasi_total'] ?? 0,
+                    ]);
+
+                    \Log::info("✅ Tambahan orang record created with ID: {$tambahanOrangRecord->id}");
+                }
+            } else {
+                \Log::info('ℹ️ No tambahan orang data found');
+            }
+
+            // Calculate totals from the actual form data AFTER saving all related data
+            $nominatif->calculateTotals();
+
+            // 🔄 SYNC TO MASTER RKA - Add anggaran berjalan
+            \Log::info('🔄 SYNC TO MASTER RKA:');
             \Log::info('  - RKA Detail ID: ' . $rkaDetail->id);
             \Log::info('  - Total Pagu: ' . $totalPagu);
-            \Log::info('  - Before update - RKA anggaran_layanan_used: ' . $rkaDetail->anggaran_layanan_used);
+            \Log::info('  - Before - RKA anggaran_berjalan: ' . $rkaDetail->anggaran_berjalan);
+            \Log::info('  - Before - RKA anggaran_sp2d: ' . $rkaDetail->anggaran_sp2d);
 
-            $rkaDetail->updateAnggaranUsed($totalPagu);
+            // Add to anggaran berjalan in Master RKA
+            $rkaDetail->addAnggaranBerjalan($totalPagu);
 
-            \Log::info('✅ AFTER UPDATE ANGGARAN');
-            \Log::info('  - After update - RKA anggaran_layanan_used: ' . $rkaDetail->fresh()->anggaran_layanan_used);
+            \Log::info('✅ AFTER SYNC TO MASTER RKA:');
+            \Log::info('  - After - RKA anggaran_berjalan: ' . $rkaDetail->fresh()->anggaran_berjalan);
+            \Log::info('  - After - RKA anggaran_sp2d: ' . $rkaDetail->fresh()->anggaran_sp2d);
 
             DB::commit();
 
@@ -158,7 +206,7 @@ class NominatifController extends Controller
      */
     public function show(string $id)
     {
-        $nominatif = Nominatif::with(['rkaDetail', 'user', 'transportasi'])
+        $nominatif = Nominatif::with(['rkaDetail', 'user', 'transportasi', 'tambahanOrang'])
             ->byUser(Auth::id())
             ->findOrFail($id);
 
@@ -223,10 +271,21 @@ class NominatifController extends Controller
         // Convert to array for JSON response
         $nominatif->transportasi_per_hari = array_values($transportasiByHari);
 
-      
+        // Debug: Log tambahan orang data
+        \Log::info('🔍 DEBUG show() - tambahanOrang count: ' . $nominatif->tambahanOrang->count());
+        if ($nominatif->tambahanOrang->count() > 0) {
+            foreach ($nominatif->tambahanOrang as $index => $orang) {
+                \Log::info("👤 Tambahan Orang #{$index}: " . json_encode($orang));
+            }
+        }
+
+        // Ensure tambahan orang is included in response
+        $response = $nominatif->toArray();
+        $response['tambahan_orang'] = $nominatif->tambahanOrang->toArray();
+
         return response()->json([
             'success' => true,
-            'data' => $nominatif,
+            'data' => $response,
         ]);
     }
 
@@ -252,6 +311,7 @@ class NominatifController extends Controller
             'penginapan' => 'sometimes|array',
             'uang_harian' => 'sometimes|array',
             'uang_representasi' => 'sometimes|array',
+            'tambahan_orang' => 'sometimes|array',
         ]);
 
         try {
@@ -281,6 +341,26 @@ class NominatifController extends Controller
                 $rkaDetail->updateAnggaranUsed($difference); // negative amount will reduce used
             }
 
+            // 🔄 SYNC TO MASTER RKA - Adjust anggaran berjalan
+            \Log::info('🔄 UPDATE SYNC TO MASTER RKA:');
+            \Log::info('  - RKA Detail ID: ' . $rkaDetail->id);
+            \Log::info('  - Old Total Pagu: ' . $oldTotalPagu);
+            \Log::info('  - New Total Pagu: ' . $newTotalPagu);
+            \Log::info('  - Difference: ' . $difference);
+            \Log::info('  - Before - RKA anggaran_berjalan: ' . $rkaDetail->anggaran_berjalan);
+
+            // Sync the change to Master RKA
+            if ($difference > 0) {
+                // Add additional amount to anggaran berjalan
+                $rkaDetail->addAnggaranBerjalan($difference);
+            } elseif ($difference < 0) {
+                // Reduce anggaran berjalan
+                $rkaDetail->reduceAnggaranBerjalan(abs($difference));
+            }
+
+            \Log::info('✅ AFTER UPDATE SYNC TO MASTER RKA:');
+            \Log::info('  - After - RKA anggaran_berjalan: ' . $rkaDetail->fresh()->anggaran_berjalan);
+
             // Update nominatif
             $nominatif->update($validated);
 
@@ -303,6 +383,53 @@ class NominatifController extends Controller
                         'keterangan' => $transport['keterangan'] ?? null,
                     ]);
                 }
+            }
+
+            // Update tambahan orang data if provided
+            if (isset($validated['tambahan_orang']) && is_array($validated['tambahan_orang'])) {
+                \Log::info('👥 Updating tambahan orang, count: ' . count($validated['tambahan_orang']));
+
+                // Delete existing tambahan orang records
+                $nominatif->tambahanOrang()->delete();
+
+                // Create new tambahan orang records
+                foreach ($validated['tambahan_orang'] as $index => $orang) {
+                    \Log::info("👤 Creating tambahan orang record #{$index}: ", $orang);
+
+                    $tambahanOrangRecord = TambahanOrangNominatif::create([
+                        'nominatif_id' => $nominatif->id,
+                        'nama_peserta' => $orang['nama_peserta'],
+                        'jabatan_peserta' => $orang['jabatan_peserta'],
+                        'pagu' => $orang['pagu'] ?? 0,
+                        'aktual' => $orang['aktual'] ?? 0,
+                        // Detail Perjalanan fields
+                        'jumlah_hari' => $orang['jumlah_hari'] ?? 0,
+                        'tanggal_mulai' => $orang['tanggal_mulai'] ?? null,
+                        'tanggal_selesai' => $orang['tanggal_selesai'] ?? null,
+                        'rute_perjalanan' => $orang['rute_perjalanan'] ?? [],
+                        // Transportasi fields
+                        'transportasi_per_hari' => $orang['transportasi_per_hari'] ?? [],
+                        // Penginapan fields
+                        'menginap' => $orang['menginap'] ?? false,
+                        'jumlah_malam' => $orang['jumlah_malam'] ?? 1,
+                        'pagu_per_malam' => $orang['pagu_per_malam'] ?? 0,
+                        'biaya_aktual_per_malam' => $orang['biaya_aktual_per_malam'] ?? 0,
+                        'penginapan_total' => $orang['penginapan_total'] ?? 0,
+                        'penginapan_anggaran_realisasi' => $orang['penginapan_anggaran_realisasi'] ?? 0,
+                        // Uang Harian fields
+                        'uang_harian_jumlah_hari' => $orang['uang_harian_jumlah_hari'] ?? 0,
+                        'uang_harian_pagu_per_hari' => $orang['uang_harian_pagu_per_hari'] ?? 0,
+                        'uang_harian_total' => $orang['uang_harian_total'] ?? 0,
+                        // Uang Representasi fields
+                        'uang_representasi_jumlah_hari' => $orang['uang_representasi_jumlah_hari'] ?? 0,
+                        'uang_representasi_pagu_per_hari' => $orang['uang_representasi_pagu_per_hari'] ?? 0,
+                        'uang_representasi_total' => $orang['uang_representasi_total'] ?? 0,
+                    ]);
+
+                    \Log::info("✅ Tambahan orang record created with ID: {$tambahanOrangRecord->id}");
+                }
+            } else {
+                \Log::info('ℹ️ No tambahan orang data found in update');
             }
 
             $nominatif->calculateTotals();
@@ -341,39 +468,30 @@ class NominatifController extends Controller
         try {
             DB::beginTransaction();
 
-            // 🔄 MOVE BUDGET FROM BERJALAN TO SP2D
+            // 🔄 SUBMIT NOMINATIF - Master RKA Budget Movement Logic
             $rkaDetail = $nominatif->rkaDetail;
-            $realisasiAmount = $nominatif->total_anggaran_realisasi;
+            $totalPagu = $nominatif->total_pagu;  // 700k
+            $anggaranBerjalan = $nominatif->anggaran_berjalan;  // 400k
 
-            \Log::info('🔄 SUBMIT NOMINATIF - Budget Movement:');
+            \Log::info('🔄 SUBMIT NOMINATIF - Master RKA Budget Movement:');
             \Log::info('  - Nominatif ID: ' . $nominatif->id);
-            \Log::info('  - Total Realisasi: ' . number_format($realisasiAmount, 0, ',', '.'));
+            \Log::info('  - Total Pagu: ' . number_format($totalPagu, 0, ',', '.'));
+            \Log::info('  - Anggaran Berjalan: ' . number_format($anggaranBerjalan, 0, ',', '.'));
             \Log::info('  - RKA Detail ID: ' . $rkaDetail->id);
-            \Log::info('  - Before - RKA Used: ' . number_format($rkaDetail->anggaran_layanan_used, 0, ',', '.'));
+            \Log::info('  - Before - RKA anggaran_berjalan: ' . number_format($rkaDetail->anggaran_berjalan, 0, ',', '.'));
+            \Log::info('  - Before - RKA anggaran_sp2d: ' . number_format($rkaDetail->anggaran_sp2d, 0, ',', '.'));
 
-            // 1. Kurangi anggaran berjalan di RKA (anggaran_layanan_used)
-            $rkaDetail->updateAnggaranUsed(-$realisasiAmount);
+            // 1. Kurangi total pagu dari anggaran berjalan (700k hilang)
+            $rkaDetail->reduceAnggaranBerjalan($totalPagu);
+            \Log::info('  - After reduce total pagu - RKA anggaran_berjalan: ' . number_format($rkaDetail->fresh()->anggaran_berjalan, 0, ',', '.'));
 
-            \Log::info('  - After - RKA Used: ' . number_format($rkaDetail->fresh()->anggaran_layanan_used, 0, ',', '.'));
+            // 2. Tambah anggaran berjalan ke SP2D (400k pindah)
+            $rkaDetail->anggaran_sp2d += $anggaranBerjalan;
+            $rkaDetail->save();
+            \Log::info('  - After add to SP2D - RKA anggaran_sp2d: ' . number_format($rkaDetail->fresh()->anggaran_sp2d, 0, ',', '.'));
+            \Log::info('  - Final RKA anggaran_tersisa: ' . number_format($rkaDetail->fresh()->anggaran_tersisa, 0, ',', '.'));
 
-            // 2. Tambahkan ke anggaran SP2D di tabel anggarans
-            $currentYear = date('Y');
-            $anggaran = \App\Models\Anggaran::where('tahun', $currentYear)->first();
-            if ($anggaran) {
-                \Log::info('  - Before - SP2D: ' . number_format($anggaran->sp2d, 0, ',', '.'));
-                $anggaran->sp2d += $realisasiAmount;
-                $anggaran->save();
-                \Log::info('  - After - SP2D: ' . number_format($anggaran->fresh()->sp2d, 0, ',', '.'));
-            }
-
-            // Return unused budget to RKA (if any)
-            $unusedAmount = $nominatif->total_pagu - $nominatif->total_biaya_aktual;
-            if ($unusedAmount > 0) {
-                \Log::info('  - Returning unused budget: ' . number_format($unusedAmount, 0, ',', '.'));
-                $rkaDetail->updateAnggaranUsed(-$unusedAmount);
-            }
-
-            // Submit nominatif
+            // Submit nominatif (move anggaran_berjalan to anggaran_sp2d in nominatif itself)
             $nominatif->submit();
 
             DB::commit();
@@ -410,8 +528,20 @@ class NominatifController extends Controller
         try {
             DB::beginTransaction();
 
-            // Return anggaran to RKA
+            // 🔄 SYNC TO MASTER RKA - Remove anggaran berjalan
             $rkaDetail = $nominatif->rkaDetail;
+            \Log::info('🔄 DELETE SYNC TO MASTER RKA:');
+            \Log::info('  - RKA Detail ID: ' . $rkaDetail->id);
+            \Log::info('  - Nominatif Total Pagu: ' . $nominatif->total_pagu);
+            \Log::info('  - Before - RKA anggaran_berjalan: ' . $rkaDetail->anggaran_berjalan);
+
+            // Remove from anggaran berjalan in Master RKA
+            $rkaDetail->reduceAnggaranBerjalan($nominatif->total_pagu);
+
+            \Log::info('✅ AFTER DELETE SYNC TO MASTER RKA:');
+            \Log::info('  - After - RKA anggaran_berjalan: ' . $rkaDetail->fresh()->anggaran_berjalan);
+
+            // Return anggaran to RKA (legacy logic - keep for compatibility)
             $rkaDetail->updateAnggaranUsed(-$nominatif->total_pagu);
 
             // Delete nominatif
@@ -470,7 +600,13 @@ class NominatifController extends Controller
             $total += ($data['uang_representasi']['jumlahHari'] ?? 1) * ($data['uang_representasi']['paguPerHari'] ?? 0);
         }
 
-  
+        // Tambahan orang
+        if (isset($data['tambahan_orang']) && is_array($data['tambahan_orang'])) {
+            foreach ($data['tambahan_orang'] as $orang) {
+                $total += $orang['pagu'] ?? 0;
+            }
+        }
+
         \Log::info('💰 calculateTotalPagu DEBUG:');
         \Log::info('  - Transport field: ' . $transportField);
         \Log::info('  - Transport data count: ' . (isset($data[$transportField]) ? count($data[$transportField]) : 0));
@@ -480,5 +616,55 @@ class NominatifController extends Controller
         \Log::info('  - FINAL TOTAL PAGU: ' . $total);
 
         return $total;
+    }
+
+    /**
+     * Delete all tambahan orang for a nominatif
+     */
+    public function deleteTambahanOrang(string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $nominatif = Nominatif::byUser(Auth::id())->findOrFail($id);
+
+            if ($nominatif->status !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya bisa menghapus tambahan orang pada status draft',
+                ], 400);
+            }
+
+            // Calculate total pagu from tambahan orang to return to RKA
+            $totalPaguTambahanOrang = $nominatif->tambahanOrang()->sum('pagu');
+
+            // Delete all tambahan orang
+            $deletedCount = $nominatif->tambahanOrang()->delete();
+
+            // Return budget to RKA
+            if ($totalPaguTambahanOrang > 0) {
+                $rkaDetail = $nominatif->rkaDetail;
+                $rkaDetail->reduceAnggaranBerjalan($totalPaguTambahanOrang);
+            }
+
+            // Recalculate nominatif totals
+            $nominatif->calculateTotals();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil menghapus {$deletedCount} tambahan orang",
+                'deleted_count' => $deletedCount,
+                'budget_returned' => $totalPaguTambahanOrang,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus tambahan orang: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

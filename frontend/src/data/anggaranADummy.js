@@ -114,18 +114,32 @@ export const masterRKAColumns = [
   { key: 'status', label: 'Status', width: '80px' },
   { key: 'anggaranPerjalanan', label: 'Anggaran Perjalanan', width: '120px' },
   { key: 'anggaranLayanan', label: 'Anggaran Layanan', width: '120px' },
-  { key: 'anggaranBerjalan', label: 'Anggaran Berjalan', width: '120px' },
+  { key: 'anggaran_berjalan', label: 'Anggaran Berjalan', width: '120px' },
+  { key: 'anggaran_sp2d', label: 'SP2D', width: '120px' },
+  { key: 'anggaran_tersisa', label: 'Anggaran Tersisa', width: '120px' },
   { key: 'sbm', label: 'SBM', width: '80px' }
 ];
 
 // Utility functions
 export const formatRupiah = (amount) => {
+  // Handle null, undefined, or invalid values
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    return 'Rp0';
+  }
+
+  // Convert to number if it's a string
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+
+  if (isNaN(numAmount)) {
+    return 'Rp0';
+  }
+
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(amount);
+  }).format(numAmount);
 };
 
 export const getKategoriColor = (kategori) => {

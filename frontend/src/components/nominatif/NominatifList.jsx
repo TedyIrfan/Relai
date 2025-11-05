@@ -100,8 +100,9 @@ const NominatifList = () => {
       title: 'Submit Nominatif',
       message: `Apakah Anda yakin ingin submit "${nominatif.deskripsi_perjalanan_dinas}"?
 
-      • Budget akan berpindah dari "Anggaran Berjalan" ke "Anggaran SP2D"
-      • Total realisasi: ${formatCurrency(nominatif.total_anggaran_realisasi || 0)}
+      • Anggaran Berjalan (Rp${formatCurrency(nominatif.anggaran_berjalan)}) akan berpindah ke Anggaran SP2D
+      • Total Anggaran: Rp${formatCurrency(nominatif.total_pagu)}
+      • Total Aktual: Rp${formatCurrency(nominatif.total_biaya_aktual)}
       • Data tidak dapat diedit setelah submit`,
       confirmText: 'Ya, Submit',
       onConfirm: async () => {
@@ -112,7 +113,7 @@ const NominatifList = () => {
           const response = await nominatifService.submit(id);
           if (response.success) {
             notification.success(
-              `✅ Nominatif "${nominatif.deskripsi_perjalanan_dinas}" berhasil disubmit! Budget ${formatCurrency(nominatif.total_anggaran_realisasi || 0)} telah dipindahkan ke SP2D.`,
+              `✅ Nominatif "${nominatif.deskripsi_perjalanan_dinas}" berhasil disubmit! Anggaran Berjalan (Rp${formatCurrency(nominatif.anggaran_berjalan)}) telah dipindahkan ke SP2D.`,
               {
                 duration: 6000
               }
@@ -249,6 +250,15 @@ const NominatifList = () => {
                     Total Anggaran
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total Aktual
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Anggaran Berjalan
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Anggaran SP2D
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Created
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -267,6 +277,18 @@ const NominatifList = () => {
                         <div className="text-xs text-gray-500">
                           {nominatif.rka_detail?.layanan}
                         </div>
+                        {/* Tambahkan nama dan jabatan tambahan orang */}
+                        {nominatif.tambahan_orang && nominatif.tambahan_orang.length > 0 && (
+                          <div className="mt-1 space-y-1">
+                            {nominatif.tambahan_orang.map((orang, index) => (
+                              orang.nama_peserta && orang.jabatan_peserta ? (
+                                <div key={index} className="text-xs text-blue-600 font-medium">
+                                  • {orang.nama_peserta} - {orang.jabatan_peserta}
+                                </div>
+                              ) : null
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -284,24 +306,34 @@ const NominatifList = () => {
                       <div className="text-sm font-medium text-gray-900">
                         {formatCurrency(nominatif.total_pagu)}
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatCurrency(nominatif.total_biaya_aktual)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                       {nominatif.status === 'draft' && (
-                        <div className="text-xs text-orange-600">
-                          Anggaran Berjalan: {formatCurrency(
-                            Math.abs(parseFloat(nominatif.total_anggaran_realisasi || 0))
-                          )}
+                        <div className="text-sm font-medium text-blue-600">
+                          {formatCurrency(nominatif.anggaran_berjalan)}
                         </div>
                       )}
                       {nominatif.status === 'submitted' && (
-                        <>
-                          <div className="text-xs text-orange-600">
-                            Anggaran Berjalan: {formatCurrency(0)} // Sudah pindah ke SP2D
-                          </div>
-                          <div className="text-xs text-green-600">
-                            Realisasi (SP2D): {formatCurrency(
-                              Math.abs(parseFloat(nominatif.total_anggaran_realisasi || 0))
-                            )}
-                          </div>
-                        </>
+                        <div className="text-sm font-medium text-gray-400">
+                          {formatCurrency(0)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {nominatif.status === 'draft' && (
+                        <div className="text-sm font-medium text-gray-400">
+                          {formatCurrency(0)}
+                        </div>
+                      )}
+                      {nominatif.status === 'submitted' && (
+                        <div className="text-sm font-medium text-green-600">
+                          {formatCurrency(nominatif.anggaran_sp2d)}
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4">

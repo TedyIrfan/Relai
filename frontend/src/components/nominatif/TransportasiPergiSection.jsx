@@ -7,6 +7,8 @@ const TransportasiPergiSection = ({
   onChange,
   isEditable
 }) => {
+  console.log('TransportasiPergiSection render:', { jumlahHari, transportasiPerHari, isEditable });
+
   // Update transportasi per hari when jumlahHari changes
   useEffect(() => {
     if (!transportasiPerHari || !Array.isArray(transportasiPerHari) || transportasiPerHari.length === 0 || transportasiPerHari.length !== jumlahHari) {

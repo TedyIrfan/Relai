@@ -117,14 +117,23 @@ class DashboardController extends Controller
         // 🔄 Calculate total anggaran berjalan from RKA Details (Anggaran Berjalan)
         $totalAnggaranBerjalanFromRKA = RkaDetail::sum('anggaran_layanan_used');
         \Log::info('📊 Dashboard DEBUG - RKA Budget Calculation:');
-        \Log::info('  - Total Anggaran Berjalan from RKA: ' . number_format($totalAnggaranBerjalanFromRKA, 0, ',', '.'));
+        \Log::info('  - Total Anggaran Berjalan from RKA (anggaran_layanan_used): ' . number_format($totalAnggaranBerjalanFromRKA, 0, ',', '.'));
         \Log::info('  - Before (old) anggaran.berjalan: ' . number_format($anggaran->anggaran_berjalan, 0, ',', '.'));
+
+        // 🔄 Calculate total SP2D from RKA Details (SP2D Tracking)
+        $totalSP2DFromRKA = RkaDetail::sum('sp2d');
+        \Log::info('  - Total SP2D from RKA (sp2d): ' . number_format($totalSP2DFromRKA, 0, ',', '.'));
+        \Log::info('  - Before (old) anggaran.sp2d: ' . number_format($anggaran->sp2d, 0, ',', '.'));
 
         // Update anggaran.berjalan dengan nilai dari RKA
         $anggaran->anggaran_berjalan = $totalAnggaranBerjalanFromRKA;
+
+        // Update anggaran.sp2d dengan nilai dari RKA
+        $anggaran->sp2d = $totalSP2DFromRKA;
         $anggaran->save(); // Optional: jika mau update di database
 
         \Log::info('  - After (new) anggaran.berjalan: ' . number_format($anggaran->anggaran_berjalan, 0, ',', '.'));
+        \Log::info('  - After (new) anggaran.sp2d: ' . number_format($anggaran->sp2d, 0, ',', '.'));
 
         // Get or create kategori data
         $kategoriData = KategoriAnggaran::getAllByTahun($tahun);
@@ -136,13 +145,28 @@ class DashboardController extends Controller
 
         // Format kategori untuk response
         $kategoriFormatted = $kategoriData->map(function($kategori) {
+            // Calculate Anggaran Berjalan from RKA Details for this kategori
+            $berjalanFromRKA = RkaDetail::whereHas('kategoriAnggaran', function($query) use ($kategori) {
+                $query->where('id', $kategori->id);
+            })->sum('anggaran_layanan_used');
+
+            // Calculate SP2D from RKA Details for this kategori
+            $sp2dFromRKA = RkaDetail::whereHas('kategoriAnggaran', function($query) use ($kategori) {
+                $query->where('id', $kategori->id);
+            })->sum('sp2d');
+
+            \Log::info('📊 Kategori DEBUG - from RKA:');
+            \Log::info('  - Kategori: ' . $kategori->nama_kategori);
+            \Log::info('  - Berjalan from RKA Details: ' . number_format($berjalanFromRKA, 0, ',', '.'));
+            \Log::info('  - SP2D from RKA Details: ' . number_format($sp2dFromRKA, 0, ',', '.'));
+
             return [
                 'nama' => $kategori->nama_kategori,
                 'anggaran' => $kategori->total_anggaran_kategori,
-                'berjalan' => $kategori->anggaran_berjalan_kategori,
-                'sp2d' => $kategori->sp2d_kategori,
-                'sisa' => $kategori->getSisaAnggaranKategoriAttribute(),
-                'percentage' => $kategori->getPercentageUsed()
+                'berjalan' => $berjalanFromRKA, // Use RKA Details calculation
+                'sp2d' => $sp2dFromRKA, // Use RKA Details calculation
+                'sisa' => $kategori->total_anggaran_kategori - $berjalanFromRKA,
+                'percentage' => $kategori->total_anggaran_kategori > 0 ? ($berjalanFromRKA / $kategori->total_anggaran_kategori) * 100 : 0
             ];
         });
 
@@ -228,6 +252,7 @@ class DashboardController extends Controller
             return [
                 [
                     'tahun' => $tahun,
+                    'kode' => 'KA',
                     'nama_kategori' => 'Kategori A',
                     'total_anggaran_kategori' => $anggaran->total_anggaran * 0.35,
                     'anggaran_terpakai_kategori' => 0,
@@ -236,6 +261,7 @@ class DashboardController extends Controller
                 ],
                 [
                     'tahun' => $tahun,
+                    'kode' => 'KB',
                     'nama_kategori' => 'Kategori B',
                     'total_anggaran_kategori' => $anggaran->total_anggaran * 0.325,
                     'anggaran_terpakai_kategori' => 0,
@@ -244,6 +270,7 @@ class DashboardController extends Controller
                 ],
                 [
                     'tahun' => $tahun,
+                    'kode' => 'KC',
                     'nama_kategori' => 'Kategori C',
                     'total_anggaran_kategori' => $anggaran->total_anggaran * 0.325,
                     'anggaran_terpakai_kategori' => 0,

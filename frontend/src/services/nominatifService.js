@@ -190,5 +190,16 @@ export const nominatifService = {
       uang_harian: formData.uangHarian || { jumlahHari: 0, paguPerHari: 0 },
       uang_representasi: formData.uangRepresentasi || { jumlahHari: 0, paguPerHari: 0 },
     };
+  },
+
+  // Delete all tambahan orang for a nominatif
+  deleteTambahanOrang: async (nominatifId) => {
+    try {
+      const response = await api.delete(`/nominatifs/${nominatifId}/tambahan-orang`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal menghapus tambahan orang';
+      return { success: false, message };
+    }
   }
 };

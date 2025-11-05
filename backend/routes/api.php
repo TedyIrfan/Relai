@@ -8,6 +8,7 @@ use App\Http\Controllers\RKADetailsController;
 use App\Http\Controllers\SwaggerController;
 use App\Http\Controllers\AnggaranController;
 use App\Http\Controllers\NominatifController;
+use App\Http\Controllers\DebugController;
 
 // Test endpoint for Swagger
 Route::get('/test', [SwaggerController::class, 'test']);
@@ -43,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/nominatifs/{id}', [NominatifController::class, 'update']);   // UPDATE nominatif
     Route::post('/nominatifs/{id}/submit', [NominatifController::class, 'submit']); // SUBMIT nominatif
     Route::delete('/nominatifs/{id}', [NominatifController::class, 'destroy']); // DELETE nominatif
+    Route::delete('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'deleteTambahanOrang']); // DELETE all tambahan orang
 });
 
 // Dashboard API Routes (Public - for testing)
@@ -64,6 +66,11 @@ Route::post('/kategori/{tahun}/sync', [DashboardController::class, 'syncMainAngg
 Route::get('/rka-details', [RKADetailsController::class, 'index']);
 Route::post('/rka-details/import', [RKADetailsController::class, 'importExcel']);
 Route::get('/rka-details/kategori', [RKADetailsController::class, 'getKategoriList']);
+
+// Debug Routes (No auth required for debugging)
+Route::get('/debug/nominatif', [DebugController::class, 'nominatifDebug']);
+Route::get('/debug/nominatif/{id}', [DebugController::class, 'nominatifDebug']);
+Route::post('/debug/nominatif/{id}/calculate', [DebugController::class, 'testCalculate']);
 
 
 // Dashboard API Routes (Protected - for production)

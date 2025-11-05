@@ -47,7 +47,12 @@ const MasterRKATable = () => {
   // Search by specific field prioritized
   const getSearchHighlight = (text, field) => {
     if (!searchTerm) return text;
-    if (text && text.toLowerCase().includes(searchTerm.toLowerCase())) {
+
+    // Convert text to string for comparison
+    const textString = text ? text.toString() : '';
+    const searchTermLower = searchTerm.toLowerCase();
+
+    if (textString.toLowerCase().includes(searchTermLower)) {
       return (
         <span className="bg-yellow-100 text-yellow-800">
           {text}
@@ -171,23 +176,23 @@ const MasterRKATable = () => {
                   <td className="px-3 py-2 text-sm text-gray-900 text-center">
                     {getSearchHighlight(item.sisaPemakaianAnggaran, 'sisa')}
                   </td>
-                  <td className="px-3 py-2 text-sm text-center">
-                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                      item.status === 'OK' || item.status === 'Active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {getSearchHighlight(item.status, 'status')}
-                    </span>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-center">
+                    {getSearchHighlight(item.status, 'status')}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium">
                     {formatRupiah(item.anggaranPerjalanan)}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium">
-                    {formatRupiah(item.anggaranLayananAvailable)}
+                    {formatRupiah(item.anggaranLayanan)}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-blue-600 text-right font-medium">
+                    {formatRupiah(item.anggaran_berjalan)}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-green-600 text-right font-medium">
+                    {formatRupiah(item.anggaran_sp2d)}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium">
-                    {formatRupiah(item.anggaranLayananUsed)}
+                    {formatRupiah(item.anggaran_tersisa)}
                   </td>
                   <td className="px-3 py-2 text-sm text-center">
                     <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
@@ -198,7 +203,7 @@ const MasterRKATable = () => {
               ))
             ) : loading ? (
               <tr>
-                <td colSpan={16} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={18} className="px-4 py-8 text-center text-gray-500">
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
                     Memuat data...
@@ -207,7 +212,7 @@ const MasterRKATable = () => {
               </tr>
             ) : (
               <tr>
-                <td colSpan={16} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={18} className="px-4 py-8 text-center text-gray-500">
                   {searchTerm || selectedKategori
                     ? `Tidak ada data yang cocok dengan filter "${searchTerm || selectedKategori}"`
                     : 'Belum ada data. Upload file Excel untuk memulai.'

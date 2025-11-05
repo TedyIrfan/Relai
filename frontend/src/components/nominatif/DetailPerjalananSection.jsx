@@ -112,14 +112,47 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
           <div className="space-y-4">
             {Array.from({ length: jumlahHari }, (_, index) => {
               const hari = index + 1;
-              const rute = rutePerjalanan?.[index] || { dari: 'Jakarta', ke: '', tanggal: '' };
+              const rute = {
+                dari: (rutePerjalanan?.[index]?.dari !== undefined) ? rutePerjalanan[index].dari : (index === 0 ? 'Jakarta' : ''),
+                ke: (rutePerjalanan?.[index]?.ke !== undefined) ? rutePerjalanan[index].ke : '',
+                tanggal: (rutePerjalanan?.[index]?.tanggal !== undefined) ? rutePerjalanan[index].tanggal : ''
+              };
+
+              console.log('DetailPerjalanan render:', {
+                hari,
+                index,
+                rute,
+                rutePerjalanan,
+                tanggalPerjalanan,
+                isEditable,
+                isEditMode,
+                keValue: rute.ke,
+                keIsUndefined: rute.ke === undefined,
+                dariValue: rute.dari,
+                hariCount: jumlahHari
+              });
 
               // Handle perubahan rute (kecuali tanggal karena sudah auto)
               const handleRuteChange = (hari, field, value) => {
+                console.log('DetailPerjalanan handleRuteChange:', { hari, field, value, isEditable, isEditMode });
                 const newRutePerjalanan = [...(rutePerjalanan || [])];
-                if (newRutePerjalanan[parseInt(hari) - 1]) {
-                  newRutePerjalanan[parseInt(hari) - 1][field] = value;
+                const hariIndex = parseInt(hari) - 1;
+
+                // Ensure the array has enough elements
+                while (newRutePerjalanan.length <= hariIndex) {
+                  newRutePerjalanan.push({
+                    dari: newRutePerjalanan.length === 0 ? 'Jakarta' : '',
+                    ke: '',
+                    tanggal: ''
+                  });
                 }
+
+                // Update the specific field
+                newRutePerjalanan[hariIndex] = {
+                  ...newRutePerjalanan[hariIndex],
+                  [field]: value
+                };
+
                 onChange('rutePerjalanan', newRutePerjalanan);
               };
 
@@ -147,7 +180,7 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
                       ) : (
                         <input
                           type="text"
-                          value={rute.dari || ''}
+                          value={rute.dari ?? ''}
                           onChange={(e) => handleRuteChange(hari, 'dari', e.target.value)}
                           disabled={isEditMode || !isEditable}
                           className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
@@ -160,7 +193,7 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
                       </label>
                       <input
                         type="text"
-                        value={rute.ke || ''}
+                        value={rute.ke ?? ''}
                         onChange={(e) => handleRuteChange(hari, 'ke', e.target.value)}
                         disabled={isEditMode || !isEditable}
                         className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"

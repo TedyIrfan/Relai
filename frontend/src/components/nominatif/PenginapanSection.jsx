@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { formatRupiah } from '../../data/anggaranADummy.js';
 
 const PenginapanSection = ({ data, onChange, isEditable }) => {
+  console.log('PenginapanSection render:', { data, isEditable });
+
   // Format currency untuk display
   const formatCurrencyInput = (value) => {
     if (value === undefined || value === null || value === '') return '';

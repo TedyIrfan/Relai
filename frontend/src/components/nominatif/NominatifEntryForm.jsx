@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initialNominatifData } from '../../data/nominatifDummy.js';
+import { formatRupiah } from '../../data/anggaranADummy.js';
 import { nominatifService } from '../../services/nominatifService.js';
 import { authService } from '../../services/authService.js';
 import useNotification from '../../hooks/useNotification.js';
@@ -21,6 +22,8 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
   const notification = useNotification();
   const [isNewRecord, setIsNewRecord] = useState(true); // Track if this is new or existing record
   const [isEditMode, setIsEditMode] = useState(false); // Track if we're in edit mode
+  const [tambahanOrang, setTambahanOrang] = useState([]); // State for tambahan orang
+  const [currentOrangIndex, setCurrentOrangIndex] = useState(null); // Track which orang is being edited
 
   const isEditable = formData.isEditable; // Get editable status from form data
 
@@ -93,6 +96,49 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
           totalAnggaranRealisasi: nominatifData.total_anggaran_realisasi || 0,
         });
 
+        // Load tambahan orang data
+        console.log('Loading nominatifData:', nominatifData);
+        console.log('Tambahan orang data:', nominatifData.tambahan_orang);
+
+        if (nominatifData.tambahan_orang && Array.isArray(nominatifData.tambahan_orang)) {
+          const tambahanOrangData = nominatifData.tambahan_orang.map(orang => {
+            console.log('Processing tambahan orang:', orang);
+            return {
+              ...orang,
+              // Ensure data structure is correct
+              transportasi_per_hari: orang.transportasi_per_hari || [],
+              penginapan: {
+                menginap: orang.menginap || false,
+                jumlahMalam: orang.jumlah_malam || 1,
+                paguPerMalam: orang.pagu_per_malam || 0,
+                biayaAktualPerMalam: orang.biaya_aktual_per_malam || 0,
+                total: orang.penginapan_total || 0,
+                anggaranRealisasi: orang.penginapan_anggaran_realisasi || 0
+              },
+              uangHarian: {
+                jumlahHari: orang.uang_harian_jumlah_hari || 0,
+                paguPerHari: orang.uang_harian_pagu_per_hari || 0,
+                total: orang.uang_harian_total || 0
+              },
+              uangRepresentasi: {
+                jumlahHari: orang.uang_representasi_jumlah_hari || 0,
+                paguPerHari: orang.uang_representasi_pagu_per_hari || 0,
+                total: orang.uang_representasi_total || 0
+              },
+              rute_perjalanan: orang.rute_perjalanan || [],
+              tanggal_perjalanan: orang.tanggal_perjalanan || {
+                tanggalMulai: orang.tanggal_mulai || '',
+                tanggalSelesai: orang.tanggal_selesai || ''
+              }
+            };
+          });
+          setTambahanOrang(tambahanOrangData);
+          console.log('Set tambahan orang with processed data:', tambahanOrangData);
+        } else {
+          setTambahanOrang([]);
+          console.log('No tambahan orang data found, set to empty array');
+        }
+
         setNominatifId(id);
         setIsNewRecord(false);
 
@@ -136,6 +182,300 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
         [field]: value
       };
     });
+  };
+
+  // Handle tambahan orang changes
+  const handleTambahanOrangChange = (index, field, value) => {
+    setTambahanOrang(prev => {
+      const newTambahanOrang = [...prev];
+      newTambahanOrang[index] = {
+        ...newTambahanOrang[index],
+        [field]: value
+      };
+      return newTambahanOrang;
+    });
+  };
+
+  // Handle changes from section components for tambahan orang
+  const handleTambahanOrangSectionChange = (index) => (fieldName, value) => {
+    setTambahanOrang(prev => {
+      const newTambahanOrang = [...prev];
+
+      // Handle nested fields with dot notation (e.g., "penginapan.menginap", "uangHarian.paguPerHari")
+      if (fieldName.includes('.')) {
+        const [section, field] = fieldName.split('.');
+        newTambahanOrang[index] = {
+          ...newTambahanOrang[index],
+          [section]: {
+            ...newTambahanOrang[index][section],
+            [field]: value
+          }
+        };
+      } else if (fieldName === 'transportasiPerHari') {
+        newTambahanOrang[index] = {
+          ...newTambahanOrang[index],
+          transportasi_per_hari: value
+        };
+      } else {
+        // Handle direct fields
+        newTambahanOrang[index] = {
+          ...newTambahanOrang[index],
+          [fieldName]: value
+        };
+      }
+
+      return newTambahanOrang;
+    });
+  };
+
+  // Calculate pagu and aktual for tambahan orang from sections
+  const calculateTambahanOrangTotals = (orang) => {
+    // Calculate total pagu from sections
+    let totalPagu = 0;
+    let totalAktual = 0;
+
+    console.log('Calculating totals for orang:', orang);
+
+    // Transportasi calculations
+    if (orang.transportasi_per_hari) {
+      orang.transportasi_per_hari.forEach(transport => {
+        totalPagu += (transport.paguTransportasiBerangkat || 0) + (transport.paguTaksiBerangkat || 0) +
+                     (transport.paguTransportasiPulang || 0) + (transport.paguTaksiPulang || 0);
+        totalAktual += (transport.biayaAktualTransportasiBerangkat || 0) + (transport.biayaAktualTaksiBerangkat || 0) +
+                       (transport.biayaAktualTransportasiPulang || 0) + (transport.biayaAktualTaksiPulang || 0);
+      });
+      console.log('After transportasi:', { totalPagu, totalAktual });
+    }
+
+    // Penginapan calculations
+    if (orang.penginapan) {
+      if (orang.penginapan.menginap) {
+        const penginapanPagu = (orang.penginapan.jumlahMalam || 1) * (orang.penginapan.paguPerMalam || 0);
+        const penginapanAktual = (orang.penginapan.jumlahMalam || 1) * (orang.penginapan.biayaAktualPerMalam || 0);
+        totalPagu += penginapanPagu;
+        totalAktual += penginapanAktual;
+        console.log('Penginapan:', { menginap: orang.penginapan.menginap, penginapanPagu, penginapanAktual });
+      }
+    }
+
+    // Uang Harian calculations
+    if (orang.uangHarian) {
+      const uangHarianTotal = orang.uangHarian.total || 0;
+      totalPagu += uangHarianTotal;
+      totalAktual += uangHarianTotal; // Uang harian usually same as pagu
+      console.log('Uang Harian:', { uangHarianTotal });
+    }
+
+    // Uang Representasi calculations
+    if (orang.uangRepresentasi) {
+      const uangRepresentasiTotal = orang.uangRepresentasi.total || 0;
+      totalPagu += uangRepresentasiTotal;
+      totalAktual += uangRepresentasiTotal; // Uang representasi usually same as pagu
+      console.log('Uang Representasi:', { uangRepresentasiTotal });
+    }
+
+    const result = { pagu: totalPagu, aktual: totalAktual };
+    console.log('Final totals:', result);
+    return result;
+  };
+
+  // Auto-update tambahan orang totals when sections change
+  useEffect(() => {
+    if (tambahanOrang.length > 0) {
+      setTambahanOrang(prev => prev.map(orang => {
+        const calculatedTotals = calculateTambahanOrangTotals(orang);
+        return {
+          ...orang,
+          pagu: calculatedTotals.pagu,
+          aktual: calculatedTotals.aktual,
+          anggaran_realisasi: calculatedTotals.pagu - calculatedTotals.aktual
+        };
+      }));
+    }
+  }, [tambahanOrang.map(orang =>
+    JSON.stringify({
+      transportasi_per_hari: orang.transportasi_per_hari,
+      penginapan: orang.penginapan,
+      uangHarian: orang.uangHarian,
+      uangRepresentasi: orang.uangRepresentasi
+    })
+  ).join('|')]);
+
+  // Handle changes from DetailPerjalananSection for tambahan orang
+  const handleTambahanOrangDetailPerjalananChange = (index) => (fieldName, value) => {
+    console.log('Tambahan Orang DetailPerjalanan Change:', { index, fieldName, value });
+    setTambahanOrang(prev => {
+      const newTambahanOrang = [...prev];
+
+      if (fieldName === 'jumlahHari') {
+        newTambahanOrang[index] = {
+          ...newTambahanOrang[index],
+          jumlah_hari: value
+        };
+      } else if (fieldName === 'tanggalPerjalanan') {
+        newTambahanOrang[index] = {
+          ...newTambahanOrang[index],
+          tanggal_perjalanan: value,
+          // Update individual tanggal fields
+          tanggal_mulai: value?.tanggalMulai || '',
+          tanggal_selesai: value?.tanggalSelesai || ''
+        };
+      } else if (fieldName === 'rutePerjalanan') {
+        newTambahanOrang[index] = {
+          ...newTambahanOrang[index],
+          rute_perjalanan: value
+        };
+      } else {
+        // Handle other fields
+        newTambahanOrang[index] = {
+          ...newTambahanOrang[index],
+          [fieldName]: value
+        };
+      }
+
+      return newTambahanOrang;
+    });
+  };
+
+  // Auto-sync main form data to new tambahan orang
+  useEffect(() => {
+    if (currentOrangIndex !== null && tambahanOrang[currentOrangIndex]) {
+      const currentOrang = tambahanOrang[currentOrangIndex];
+      const needsUpdate =
+        !currentOrang.jumlah_hari && formData.jumlahHari ||
+        !currentOrang.rute_perjalanan && formData.rutePerjalanan;
+
+      if (needsUpdate) {
+        console.log('🔄 Syncing data to orang', currentOrangIndex, {
+          jumlah_hari: formData.jumlahHari,
+          rute_perjalanan: formData.rutePerjalanan
+        });
+
+        setTambahanOrang(prev => {
+          const newTambahanOrang = [...prev];
+          newTambahanOrang[currentOrangIndex] = {
+            ...newTambahanOrang[currentOrangIndex],
+            jumlah_hari: currentOrang.jumlah_hari || formData.jumlahHari || 0,
+            rute_perjalanan: currentOrang.rute_perjalanan || formData.rutePerjalanan || []
+          };
+          return newTambahanOrang;
+        });
+      }
+    }
+  }, [currentOrangIndex, formData.jumlahHari, formData.rutePerjalanan]);
+
+  // Handle field changes for specific tambahan orang (separate from main form)
+  const handleTambahanOrangFieldChange = (index, field, value) => {
+    setTambahanOrang(prev => {
+      const newTambahanOrang = [...prev];
+
+      // Handle nested object updates
+      if (field.includes('.')) {
+        const [section, subfield] = field.split('.');
+        newTambahanOrang[index] = {
+          ...newTambahanOrang[index],
+          [section]: {
+            ...(newTambahanOrang[index][section] || {}),
+            [subfield]: value
+          }
+        };
+      } else {
+        newTambahanOrang[index] = {
+          ...newTambahanOrang[index],
+          [field]: value
+        };
+      }
+
+      return newTambahanOrang;
+    });
+  };
+
+  // Add new tambahan orang
+  const handleAddTambahanOrang = () => {
+    if (tambahanOrang.length < 7) {
+      const newIndex = tambahanOrang.length;
+      setTambahanOrang(prev => [
+        ...prev,
+        {
+          nama_peserta: '',
+          jabatan_peserta: '',
+          pagu: 0,
+          aktual: 0,
+          // Sync initial data from main form
+          jumlah_hari: formData.jumlahHari || 0,
+          tanggal_mulai: formData.tanggalPerjalanan?.tanggalMulai || '',
+          tanggal_selesai: formData.tanggalPerjalanan?.tanggalSelesai || '',
+          tanggal_perjalanan: formData.tanggalPerjalanan || {},
+          rute_perjalanan: formData.rutePerjalanan || []
+        }
+      ]);
+      setCurrentOrangIndex(newIndex); // Buka form untuk orang baru
+    }
+  };
+
+  
+  const handleSaveOrang = () => {
+    const orang = tambahanOrang[currentOrangIndex];
+    if (!orang.nama_peserta?.trim() || !orang.jabatan_peserta?.trim()) {
+      notification.error('Error', 'Nama dan jabatan peserta harus diisi.');
+      return;
+    }
+    // Save logic could be added here if needed
+    setCurrentOrangIndex(null); // Close form
+  };
+
+  // Delete all tambahan orang with confirmation
+  const handleDeleteAllTambahanOrang = async () => {
+    if (tambahanOrang.length === 0) return;
+
+    // Debug log
+    console.log('DEBUG handleDeleteAllTambahanOrang:', {
+      nominatifId,
+      isNewRecord,
+      isEditMode,
+      tambahanOrangCount: tambahanOrang.length
+    });
+
+    // Different confirmation message based on whether data is saved to database
+    const confirmMessage = nominatifId
+      ? `Apakah yakin ingin menghapus semua ${tambahanOrang.length} tambahan orang?
+         Semua data tambahan orang akan dihapus dari database.`
+      : `Apakah yakin ingin menghapus semua ${tambahanOrang.length} tambahan orang?
+         Data yang belum disimpan akan dihapus dari form.`;
+
+    const confirmDelete = window.confirm(confirmMessage);
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+
+      if (nominatifId) {
+        // Delete from database (edit mode)
+        const response = await nominatifService.deleteTambahanOrang(nominatifId);
+
+        if (response.success) {
+          setTambahanOrang([]);
+          notification.success(`Berhasil menghapus ${response.deleted_count} tambahan orang dari database`);
+
+          // Recalculate form totals
+          if (formData.totalPagu) {
+            const totalPaguTambahanOrang = tambahanOrang.reduce((sum, orang) => sum + (orang.pagu || 0), 0);
+            handleChange('totalPagu', formData.totalPagu - totalPaguTambahanOrang);
+          }
+        } else {
+          notification.error(response.message || 'Gagal menghapus tambahan orang');
+        }
+      } else {
+        // Only clear from state (create new mode)
+        setTambahanOrang([]);
+        notification.success(`Berhasil menghapus ${tambahanOrang.length} tambahan orang dari form`);
+      }
+    } catch (error) {
+      console.error('Error deleting tambahan orang:', error);
+      notification.error('Terjadi kesalahan saat menghapus tambahan orang');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Validation functions
@@ -210,6 +550,63 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
       // Prepare data for API
       const rkaId = formData.kodeAnggaranRKA.id;
       const apiData = nominatifService.formatFormData(formData, rkaId);
+
+      // Add tambahan orang data to API request with calculated pagu and aktual
+      apiData.tambahan_orang = tambahanOrang.filter(orang => {
+        // Include orang if has any data (nama, jabatan, or any section data)
+        const hasBasicInfo = orang.nama_peserta?.trim() || orang.jabatan_peserta?.trim();
+        const calculatedTotals = calculateTambahanOrangTotals(orang);
+        const hasAnyData = hasBasicInfo || calculatedTotals.pagu > 0 || calculatedTotals.aktual > 0;
+
+        console.log('Filtering tambahan orang:', {
+          index: tambahanOrang.indexOf(orang),
+          hasBasicInfo,
+          calculatedTotals,
+          hasAnyData,
+          orang: orang
+        });
+
+        console.log('Final API data for tambahan orang:', {
+          ...orang,
+          pagu: calculatedTotals.pagu,
+          aktual: calculatedTotals.aktual,
+          anggaran_realisasi: calculatedTotals.pagu - calculatedTotals.aktual
+        });
+
+        return hasAnyData;
+      }).map(orang => {
+        // Calculate pagu and aktual from sections
+        const calculatedTotals = calculateTambahanOrangTotals(orang);
+        return {
+          ...orang,
+          // Detail Perjalanan fields
+          jumlah_hari: orang.jumlah_hari || 0,
+          tanggal_mulai: orang.tanggal_perjalanan?.tanggalMulai || null,
+          tanggal_selesai: orang.tanggal_perjalanan?.tanggalSelesai || null,
+          rute_perjalanan: orang.rute_perjalanan || [],
+          // Transportasi fields
+          transportasi_per_hari: orang.transportasi_per_hari || [],
+          // Penginapan fields
+          menginap: orang.penginapan?.menginap || false,
+          jumlah_malam: orang.penginapan?.jumlahMalam || 1,
+          pagu_per_malam: orang.penginapan?.paguPerMalam || 0,
+          biaya_aktual_per_malam: orang.penginapan?.biayaAktualPerMalam || 0,
+          penginapan_total: orang.penginapan?.total || 0,
+          penginapan_anggaran_realisasi: orang.penginapan?.anggaranRealisasi || 0,
+          // Uang Harian fields
+          uang_harian_jumlah_hari: orang.uangHarian?.jumlahHari || 0,
+          uang_harian_pagu_per_hari: orang.uangHarian?.paguPerHari || 0,
+          uang_harian_total: orang.uangHarian?.total || 0,
+          // Uang Representasi fields
+          uang_representasi_jumlah_hari: orang.uangRepresentasi?.jumlahHari || 0,
+          uang_representasi_pagu_per_hari: orang.uangRepresentasi?.paguPerHari || 0,
+          uang_representasi_total: orang.uangRepresentasi?.total || 0,
+          // Total fields (calculate from sections or use existing)
+          pagu: calculatedTotals.pagu,
+          aktual: calculatedTotals.aktual,
+          anggaran_realisasi: calculatedTotals.pagu - calculatedTotals.aktual
+        };
+      });
 
       let response;
       if (isNewRecord) {
@@ -371,6 +768,9 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
         return;
       }
       setCurrentPage(2);
+    } else if (currentPage === 2) {
+      // Page 3 disabled - langsung submit dari page 2
+      handleSubmit();
     }
   };
 
@@ -508,32 +908,37 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
               <span>Page 2</span>
               <span className="hidden sm:inline">Rincian</span>
             </button>
+
+            {/* Button Tambah Orang - hanya muncul di Page 2 jika editable */}
+            {currentPage === 2 && formData.isEditable && (
+              <button
+                type="button"
+                onClick={handleAddTambahanOrang}
+                disabled={tambahanOrang.length >= 7}
+                className="px-4 py-2 rounded-lg font-medium text-xs shadow-sm border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                + Tambah Orang ({tambahanOrang.length}/7)
+              </button>
+            )}
+
+            {/* Button Hapus Semua Tambahan Orang - hanya muncul di Page 2 */}
+            {currentPage === 2 && tambahanOrang.length > 0 && (
+              <button
+                type="button"
+                onClick={handleDeleteAllTambahanOrang}
+                disabled={loading}
+                className="px-4 py-2 rounded-lg font-medium text-xs shadow-sm border-2 border-red-300 text-red-700 hover:border-red-400 hover:bg-red-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Hapus Semua ({tambahanOrang.length})
+              </button>
+            )}
+            {/* Page 3 disabled - Commented out */}
             <button
-              onClick={() => {
-                if (currentPage === 1) {
-                  const error = validatePage1();
-                  if (error) {
-                    alert(error);
-                    return;
-                  }
-                } else if (currentPage === 2) {
-                  const error = validatePage2();
-                  if (error) {
-                    alert(error);
-                    return;
-                  }
-                }
-                setCurrentPage(3);
-              }}
-              disabled={!isEditable && currentPage === 2}
-              className={`px-4 py-2 rounded-lg font-medium text-xs transition-all duration-200 flex items-center gap-1 ${
-                currentPage === 3
-                  ? 'bg-blue-400 text-white border-2 border-blue-500'
-                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
-              }`}
+              disabled={true}
+              className="px-4 py-2 rounded-lg font-medium text-xs transition-all duration-200 flex items-center gap-1 bg-gray-200 border-2 border-gray-300 text-gray-400 opacity-50 cursor-not-allowed"
             >
-              <div className={`w-1.5 h-1.5 rounded-full ${currentPage === 3 ? 'bg-white' : 'bg-gray-400'}`}></div>
-              <span>Page 3</span>
+              <div className={`w-1.5 h-1.5 rounded-full bg-gray-400`}></div>
+              <span>Page 3 (Disabled)</span>
               <span className="hidden sm:inline">Ringkasan</span>
             </button>
           </div>
@@ -673,7 +1078,6 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
       {currentPage === 2 && (
         <div className="space-y-6">
           <div className="flex gap-6 overflow-x-auto pb-4">
-            {/* Section 3-8: Rincian Lengkap Perjalanan */}
             {/* Section 3: Detail Perjalanan */}
             <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
               <DetailPerjalananSection
@@ -735,7 +1139,312 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
               />
             </div>
           </div>
-        </div>
+
+          {/* Form untuk orang yang sedang diedit - Complete Sections Like Main Form */}
+          {currentOrangIndex !== null && (
+            <>
+              {/* Header untuk form tambah orang */}
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                    {currentOrangIndex + 1}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      Tambah Orang ke-{currentOrangIndex + 1}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {tambahanOrang[currentOrangIndex]?.nama_peserta || 'Nama baru'} - {tambahanOrang[currentOrangIndex]?.jabatan_peserta || 'Jabatan baru'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => {
+                    // Remove the current orang if empty
+                    const newTambahanOrang = [...tambahanOrang];
+                    if (!newTambahanOrang[currentOrangIndex]?.nama_peserta &&
+                        !newTambahanOrang[currentOrangIndex]?.jabatan_peserta) {
+                      newTambahanOrang.splice(currentOrangIndex, 1);
+                      setTambahanOrang(newTambahanOrang);
+                    }
+                    setCurrentOrangIndex(null);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Tutup
+                </button>
+              </div>
+
+              {/* Horizontal Layout for All Sections */}
+              <div className="flex gap-6 overflow-x-auto pb-4">
+                {/* Section 1: Data Orang */}
+                <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Data Orang ke-{currentOrangIndex + 1}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Masukkan nama dan jabatan peserta tambahan
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nama Peserta
+                    </label>
+                    <input
+                      type="text"
+                      value={tambahanOrang[currentOrangIndex]?.nama_peserta || ''}
+                      onChange={(e) => handleTambahanOrangChange(currentOrangIndex, 'nama_peserta', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Masukkan nama peserta"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Jabatan Peserta
+                    </label>
+                    <input
+                      type="text"
+                      value={tambahanOrang[currentOrangIndex]?.jabatan_peserta || ''}
+                      onChange={(e) => handleTambahanOrangChange(currentOrangIndex, 'jabatan_peserta', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Masukkan jabatan peserta"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Detail Perjalanan */}
+              <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                <DetailPerjalananSection
+                  jumlahHari={tambahanOrang[currentOrangIndex]?.jumlah_hari || formData.jumlahHari}
+                  rutePerjalanan={tambahanOrang[currentOrangIndex]?.rute_perjalanan || []}
+                  tanggalPerjalanan={tambahanOrang[currentOrangIndex]?.tanggal_perjalanan || { tanggalMulai: '', tanggalSelesai: '' }}
+                  onChange={handleTambahanOrangDetailPerjalananChange(currentOrangIndex)}
+                  isEditable={true}
+                  isEditMode={false}
+                />
+              </div>
+
+              {/* Section 3: Transportasi Pergi */}
+              <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                <TransportasiPergiSection
+                  jumlahHari={tambahanOrang[currentOrangIndex]?.jumlah_hari || formData.jumlahHari}
+                  transportasiPerHari={tambahanOrang[currentOrangIndex]?.transportasi_per_hari || []}
+                  onChange={handleTambahanOrangSectionChange(currentOrangIndex)}
+                  isEditable={true}
+                />
+              </div>
+
+              {/* Section 4: Transportasi Pulang */}
+              <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                <TransportasiPulangSection
+                  jumlahHari={tambahanOrang[currentOrangIndex]?.jumlah_hari || formData.jumlahHari}
+                  transportasiPerHari={tambahanOrang[currentOrangIndex]?.transportasi_per_hari || []}
+                  onChange={handleTambahanOrangSectionChange(currentOrangIndex)}
+                  isEditable={true}
+                />
+              </div>
+
+              {/* Section 5: Penginapan */}
+              <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                <PenginapanSection
+                  data={tambahanOrang[currentOrangIndex]?.penginapan || {
+                    menginap: false,
+                    jumlahMalam: 1,
+                    paguPerMalam: 0,
+                    biayaAktualPerMalam: 0,
+                    total: 0
+                  }}
+                  onChange={handleTambahanOrangSectionChange(currentOrangIndex)}
+                  isEditable={true}
+                />
+              </div>
+
+              {/* Section 6: Uang Harian */}
+              <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                <UangHarianSection
+                  data={tambahanOrang[currentOrangIndex]?.uangHarian || {
+                    jumlahHari: 0,
+                    paguPerHari: 0,
+                    total: 0
+                  }}
+                  lamaDinas={tambahanOrang[currentOrangIndex]?.jumlah_hari || formData.jumlahHari}
+                  onChange={handleTambahanOrangSectionChange(currentOrangIndex)}
+                  isEditable={true}
+                />
+              </div>
+
+                {/* Section 7: Uang Representasi */}
+                <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                  <UangRepresentasiSection
+                    data={tambahanOrang[currentOrangIndex]?.uangRepresentasi || {
+                      jumlahHari: 0,
+                      paguPerHari: 0,
+                      total: 0
+                    }}
+                    lamaDinas={tambahanOrang[currentOrangIndex]?.jumlah_hari || formData.jumlahHari}
+                    onChange={handleTambahanOrangSectionChange(currentOrangIndex)}
+                    isEditable={true}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Display existing tambahan orang forms in edit mode */}
+          {console.log('Render - tambahanOrang:', tambahanOrang, 'length:', tambahanOrang.length) || true}
+          {isEditMode && tambahanOrang.length > 0 && currentOrangIndex === null && (
+            <div className="mt-6 space-y-6">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Data Tambahan Orang ({tambahanOrang.length} orang)</h3>
+              </div>
+
+              {tambahanOrang.map((orang, index) => (
+                <div key={index} className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
+                      {index + 1}
+                    </div>
+                    <h4 className="text-base font-medium text-gray-900">Orang ke-{index + 1}</h4>
+                  </div>
+
+                  {/* All sections for this tambahan orang - Same layout as main form */}
+                  <div className="mt-6">
+                    <div className="flex gap-4 overflow-x-auto pb-4">
+                      {/* Section 1: Data Orang */}
+                      <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                        <div className="mb-4">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Data Orang ke-{index + 1}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Masukkan nama dan jabatan peserta tambahan
+                          </p>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Nama Peserta
+                            </label>
+                            <input
+                              type="text"
+                              value={orang.nama_peserta || ''}
+                              onChange={(e) => handleTambahanOrangChange(index, 'nama_peserta', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Masukkan nama peserta"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Jabatan Peserta
+                            </label>
+                            <input
+                              type="text"
+                              value={orang.jabatan_peserta || ''}
+                              onChange={(e) => handleTambahanOrangChange(index, 'jabatan_peserta', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Masukkan jabatan peserta"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 2: Detail Perjalanan */}
+                      <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                        <DetailPerjalananSection
+                          jumlahHari={orang.jumlah_hari || formData.jumlahHari}
+                          rutePerjalanan={orang.rute_perjalanan || []}
+                          tanggalPerjalanan={orang.tanggal_perjalanan || {
+                            tanggalMulai: orang.tanggal_mulai || '',
+                            tanggalSelesai: orang.tanggal_selesai || ''
+                          }}
+                          onChange={handleTambahanOrangDetailPerjalananChange(index)}
+                          isEditable={true}
+                          isEditMode={false}
+                        />
+                      </div>
+
+                      {/* Section 3: Transportasi Pergi */}
+                      <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                        <TransportasiPergiSection
+                          jumlahHari={orang.jumlah_hari || formData.jumlahHari}
+                          transportasiPerHari={orang.transportasi_per_hari || []}
+                          onChange={handleTambahanOrangSectionChange(index)}
+                          isEditable={true}
+                        />
+                      </div>
+
+                      {/* Section 4: Transportasi Pulang */}
+                      <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                        <TransportasiPulangSection
+                          jumlahHari={orang.jumlah_hari || formData.jumlahHari}
+                          transportasiPerHari={orang.transportasi_per_hari || []}
+                          onChange={handleTambahanOrangSectionChange(index)}
+                          isEditable={true}
+                        />
+                      </div>
+
+                      {/* Section 5: Penginapan */}
+                      <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                        <PenginapanSection
+                          data={orang.penginapan || {
+                            menginap: false,
+                            jumlahMalam: 1,
+                            paguPerMalam: 0,
+                            biayaAktualPerMalam: 0,
+                            total: 0
+                          }}
+                          onChange={handleTambahanOrangSectionChange(index)}
+                          isEditable={true}
+                        />
+                      </div>
+
+                      {/* Section 6: Uang Harian */}
+                      <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                        <UangHarianSection
+                          data={orang.uangHarian || {
+                            jumlahHari: 0,
+                            paguPerHari: 0,
+                            total: 0
+                          }}
+                          lamaDinas={orang.jumlah_hari || formData.jumlahHari}
+                          onChange={handleTambahanOrangSectionChange(index)}
+                          isEditable={true}
+                        />
+                      </div>
+
+                      {/* Section 7: Uang Representasi */}
+                      <div className="flex-shrink-0 w-[500px] bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden p-6">
+                        <UangRepresentasiSection
+                          data={orang.uangRepresentasi || {
+                            jumlahHari: 0,
+                            paguPerHari: 0,
+                            total: 0
+                          }}
+                          lamaDinas={orang.jumlah_hari || formData.jumlahHari}
+                          onChange={handleTambahanOrangSectionChange(index)}
+                          isEditable={true}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          </div>
       )}
 
       {/* Page 3: Ringkasan Total Biaya */}
@@ -748,6 +1457,7 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
             uangHarian={formData.uangHarian}
             uangRepresentasi={formData.uangRepresentasi}
             totalPagu={formData.totalPagu}
+            tambahanOrang={tambahanOrang}
             onChange={handleChange}
           />
 

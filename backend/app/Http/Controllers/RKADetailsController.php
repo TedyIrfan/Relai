@@ -18,10 +18,10 @@ class RKADetailsController extends Controller
         if ($request->search) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('layanan', 'LIKE', '%' . $search . '%')
-                  ->orWhere('code_rka', 'LIKE', '%' . $search . '%')
-                  ->orWhere('wilayah', 'LIKE', '%' . $search . '%')
-                  ->orWhere('arti_kode', 'LIKE', '%' . $search . '%');
+                $q->where('layanan', 'ILIKE', '%' . $search . '%')
+                  ->orWhere('code_rka', 'ILIKE', '%' . $search . '%')
+                  ->orWhere('wilayah', 'ILIKE', '%' . $search . '%')
+                  ->orWhere('arti_kode', 'ILIKE', '%' . $search . '%');
             });
         }
 
@@ -34,7 +34,7 @@ class RKADetailsController extends Controller
 
         $data = $query->get();
 
-        // Format data untuk frontend (ALL 16 FIELDS + BUDGET TRACKING)
+        // Format data untuk frontend (ALL 16 FIELDS + BUDGET TRACKING + SP2D)
         $formattedData = $data->map(function($item) {
             return [
                 'id' => $item->id,
@@ -44,7 +44,7 @@ class RKADetailsController extends Controller
                 'kodeLayanan1' => $item->kode_layanan_1,
                 'kodeLayanan2' => $item->kode_layanan_2,
                 'layananTataUsaha' => $item->layanan_tata_usaha,
-                'kategoriAnggaran' => $item->kategoriAnggaran->kode,
+                'kategoriAnggaran' => $this->convertKodeToLetter($item->kategoriAnggaran->kode),
                 'codeRka' => $item->code_rka,
                 'layanan' => $item->layanan,
                 'wilayah' => $item->wilayah,
@@ -53,8 +53,14 @@ class RKADetailsController extends Controller
                 'status' => $item->status,
                 'anggaranPerjalanan' => $item->anggaran_perjalanan,
                 'anggaranLayanan' => $item->anggaran_layanan,
+                // Legacy fields for backward compatibility
                 'anggaranLayananUsed' => (float)($item->anggaran_layanan_used ?? 0),
                 'anggaranLayananAvailable' => $item->anggaran_layanan_available, // This uses accessor
+                'sp2d' => (float)($item->sp2d ?? 0),
+                // New Master RKA integration fields
+                'anggaran_berjalan' => (float)($item->anggaran_berjalan ?? 0),
+                'anggaran_sp2d' => (float)($item->anggaran_sp2d ?? 0),
+                'anggaran_tersisa' => $item->anggaran_tersisa, // Available - Berjalan - SP2D
                 'sbm' => $item->sbm,
             ];
         });
@@ -225,6 +231,41 @@ class RKADetailsController extends Controller
     public function getKategoriList()
     {
         $kategori = KategoriAnggaran::all();
-        return response()->json($kategori);
+
+        // Convert KA/KB/KC to A/B/C for frontend
+        $formattedKategori = $kategori->map(function($item) {
+            return [
+                'id' => $item->id,
+                'tahun' => $item->tahun,
+                'nama_kategori' => $item->nama_kategori,
+                'kode' => $this->convertKodeToLetter($item->kode),
+                'total_anggaran_kategori' => $item->total_anggaran_kategori,
+                'anggaran_berjalan_kategori' => $item->anggaran_berjalan_kategori,
+                'sp2d_kategori' => $item->sp2d_kategori,
+                'keterangan' => $item->keterangan,
+                'created_at' => $item->created_at,
+                'updated_at' => $item->updated_at,
+                'sisa_anggaran_kategori' => $item->sisa_anggaran_kategori,
+            ];
+        });
+
+        return response()->json($formattedKategori);
+    }
+
+    /**
+     * Convert KA/KB/KC to A/B/C for frontend display
+     */
+    private function convertKodeToLetter($kode)
+    {
+        $mapping = [
+            'KA' => 'A',
+            'KB' => 'B',
+            'KC' => 'C',
+            'A'  => 'A',
+            'B'  => 'B',
+            'C'  => 'C'
+        ];
+
+        return $mapping[$kode] ?? $kode;
     }
 }
