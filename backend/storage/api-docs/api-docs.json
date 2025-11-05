@@ -374,7 +374,7 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Create new user",
+                "summary": "Create a new user",
                 "operationId": "48c6e525232416b05b2a872ad965133a",
                 "requestBody": {
                     "required": true,
@@ -388,20 +388,20 @@
                                 ],
                                 "properties": {
                                     "username": {
-                                        "description": "Username",
+                                        "description": "Username (must be unique)",
                                         "type": "string"
                                     },
                                     "password": {
-                                        "description": "Password",
+                                        "description": "Password (minimum 6 characters)",
                                         "type": "string",
                                         "format": "password"
                                     },
                                     "jabatan": {
-                                        "description": "Position/Role",
+                                        "description": "User position/job title",
                                         "type": "string"
                                     },
                                     "is_active": {
-                                        "description": "Account status",
+                                        "description": "User active status (default: true)",
                                         "type": "boolean"
                                     }
                                 },
@@ -422,7 +422,29 @@
                                             "example": "User created successfully"
                                         },
                                         "user": {
-                                            "$ref": "#/components/schemas/User"
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "newuser"
+                                                },
+                                                "jabatan": {
+                                                    "type": "string",
+                                                    "example": "staff"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -431,7 +453,23 @@
                         }
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }

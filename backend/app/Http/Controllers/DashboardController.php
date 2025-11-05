@@ -367,28 +367,44 @@ class DashboardController extends Controller
     /**
      * Get chart data only
      */
-    public function charts()
+    public function charts($tahun = 2025)
     {
+        // Get kategori data sama seperti dashboard utama
+        $kategoriData = KategoriAnggaran::getAllByTahun($tahun);
+
+        if ($kategoriData->isEmpty()) {
+            $kategoriData = $this->createDefaultKategori($tahun);
+        }
+
+        // Format kategori untuk chart dengan data dinamis dari RKA
+        $kategoriFormatted = $kategoriData->map(function($kategori) {
+            // Calculate Anggaran Berjalan from RKA Details for this kategori
+            $berjalanFromRKA = RkaDetail::whereHas('kategoriAnggaran', function($query) use ($kategori) {
+                $query->where('id', $kategori->id);
+            })->sum('anggaran_berjalan');
+
+            // Calculate SP2D from RKA Details for this kategori
+            $sp2dFromRKA = RkaDetail::whereHas('kategoriAnggaran', function($query) use ($kategori) {
+                $query->where('id', $kategori->id);
+            })->sum('anggaran_sp2d');
+
+            return [
+                'nama' => $kategori->nama_kategori,
+                'anggaran' => $kategori->total_anggaran_kategori,
+                'berjalan' => $berjalanFromRKA, // Anggaran yang sedang digunakan
+                'sp2d' => $sp2dFromRKA,     // Anggaran yang sudah jadi SP2D
+                'sisa' => $kategori->total_anggaran_kategori - $berjalanFromRKA,
+                'persentaseTerpakai' => $kategori->total_anggaran_kategori > 0 ? ($berjalanFromRKA / $kategori->total_anggaran_kategori) * 100 : 0
+            ];
+        });
+
         return response()->json([
             'success' => true,
             'data' => [
-                'tahun' => 2025,
-                'kategori' => [
-                    [
-                        'nama' => 'Kategori A',
-                        'anggaran' => 3432039625
-                    ],
-                    [
-                        'nama' => 'Kategori B',
-                        'anggaran' => 1786105495
-                    ],
-                    [
-                        'nama' => 'Kategori C',
-                        'anggaran' => 4007278982275
-                    ]
-                ]
+                'tahun' => $tahun,
+                'kategori' => $kategoriFormatted->toArray()
             ],
-            'message' => 'Chart data retrieved successfully'
+            'message' => 'Chart data retrieved successfully from Master RKA'
         ]);
     }
 

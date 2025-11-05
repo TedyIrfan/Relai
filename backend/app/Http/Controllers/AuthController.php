@@ -179,6 +179,95 @@ class AuthController extends Controller
      *     )
      * )
      */
+    /**
+     * @OA\Post(
+     *     path="/api/auth/create-user",
+     *     summary="Create a new user",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"username","password","jabatan"},
+     *             @OA\Property(
+     *                 property="username",
+     *                 type="string",
+     *                 description="Username (must be unique)"
+     *             ),
+     *             @OA\Property(
+     *                 property="password",
+     *                 type="string",
+     *                 format="password",
+     *                 description="Password (minimum 6 characters)"
+     *             ),
+     *             @OA\Property(
+     *                 property="jabatan",
+     *                 type="string",
+     *                 description="User position/job title"
+     *             ),
+     *             @OA\Property(
+     *                 property="is_active",
+     *                 type="boolean",
+     *                 description="User active status (default: true)"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="User created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="User created successfully"
+     *             ),
+     *             @OA\Property(
+     *                 property="user",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="id",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="username",
+     *                     type="string",
+     *                     example="newuser"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="jabatan",
+     *                     type="string",
+     *                     example="staff"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="is_active",
+     *                     type="boolean",
+     *                     example=true
+     *                 ),
+     *                 @OA\Property(
+     *                     property="created_at",
+     *                     type="string",
+     *                     format="date-time"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="The given data was invalid."
+     *             ),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object"
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function createUser(Request $request)
     {
         $request->validate([
