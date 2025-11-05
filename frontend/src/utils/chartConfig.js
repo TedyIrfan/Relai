@@ -65,7 +65,10 @@ export const formatPieData = (total, berjalan, sp2d, sisa) => {
 export const formatBarData = (categories) => {
   return categories.map(category => ({
     name: category.nama,
-    anggaran: category.anggaran,
+    anggaran: parseFloat(category.anggaran) || 0,
+    berjalan: parseFloat(category.berjalan) || 0,
+    sp2d: parseFloat(category.sp2d) || 0,
+    sisa: parseFloat(category.sisa) || ((parseFloat(category.anggaran) || 0) - (parseFloat(category.berjalan) || 0)),
     fill: CHART_COLORS.primary[categories.indexOf(category) % CHART_COLORS.primary.length]
   }));
 };

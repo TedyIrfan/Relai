@@ -90,6 +90,13 @@ class Nominatif extends Model
                     ->orderBy('id');
     }
 
+    public function rutePerjalanan()
+    {
+        return $this->hasMany(RutePerjalananNominatif::class, 'nominatif_id', 'id')
+                    ->orderBy('hari');
+    }
+
+    
     // Accessors & Mutators
     public function getTotalPaguFormattedAttribute()
     {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { formatBarData } from '../../utils/chartConfig';
 import { formatCurrency } from '../../utils/currency';
 
@@ -7,12 +7,16 @@ const BarChart = ({ categories, loading = false }) => {
   const data = formatBarData(categories);
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload }) => {
+  const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-medium text-gray-800">{payload[0].payload.name}</p>
-          <p className="text-sm text-gray-600">{formatCurrency(payload[0].value)}</p>
+          <p className="font-medium text-gray-800 mb-2">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="text-sm" style={{ color: entry.color }}>
+              {entry.name}: {formatCurrency(entry.value)}
+            </p>
+          ))}
         </div>
       );
     }
@@ -107,21 +111,97 @@ const BarChart = ({ categories, loading = false }) => {
             label={{ value: 'Anggaran (Log Scale)', angle: -90, position: 'insideLeft', style: { fill: '#6B7280', fontSize: 10 } }}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey="anggaran" radius={[12, 12, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.fill} />
-            ))}
-          </Bar>
+          <Legend
+            wrapperStyle={{ paddingTop: '20px' }}
+            iconType="rect"
+            formatter={(value) => <span className="text-xs">{value}</span>}
+          />
+          <Bar dataKey="anggaran" fill="#3B82F6" name="Total Anggaran" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="berjalan" fill="#F59E0B" name="Anggaran Berjalan" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="sp2d" fill="#10B981" name="Anggaran SP2D" radius={[4, 4, 0, 0]} />
         </RechartsBarChart>
       </ResponsiveContainer>
 
       {/* Summary stats */}
       <div className="mt-6 pt-6 border-t border-gray-300">
-        <div className="text-center">
-          <p className="text-sm text-gray-500">Total Anggaran Semua Kategori</p>
-          <p className="text-lg font-semibold text-gray-800">
-            {formatCurrency(data.reduce((sum, item) => sum + item.anggaran, 0))}
-          </p>
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-xs text-gray-500">Total Anggaran</p>
+            <p className="text-sm font-semibold text-blue-600">
+              {formatCurrency(data.reduce((sum, item) => sum + item.anggaran, 0))}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Total Berjalan</p>
+            <p className="text-sm font-semibold text-orange-600">
+              {formatCurrency(data.reduce((sum, item) => sum + (item.berjalan || 0), 0))}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Total SP2D</p>
+            <p className="text-sm font-semibold text-green-600">
+              {formatCurrency(data.reduce((sum, item) => sum + (item.sp2d || 0), 0))}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bars per kategori */}
+      <div className="mt-6 pt-6 border-t border-gray-300">
+        <h4 className="text-sm font-semibold text-gray-700 mb-4 text-center">
+          Progress Penggunaan per Kategori
+        </h4>
+        <div className="space-y-4">
+          {data.map((category, index) => {
+            const usagePercentage = category.anggaran > 0 ? (category.berjalan / category.anggaran) * 100 : 0;
+            const sp2dPercentage = category.anggaran > 0 ? (category.sp2d / category.anggaran) * 100 : 0;
+            const remainingPercentage = Math.max(0, 100 - usagePercentage - sp2dPercentage);
+
+            return (
+              <div key={index} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">{category.name}</span>
+                  <span className="text-xs text-gray-500">
+                    {formatCurrency(category.berjalan + category.sp2d)} / {formatCurrency(category.anggaran)}
+                  </span>
+                </div>
+                <div className="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
+                  {/* Anggaran Berjalan Progress */}
+                  <div
+                    className="absolute left-0 top-0 h-full bg-orange-500 transition-all duration-500 ease-out"
+                    style={{ width: `${usagePercentage}%` }}
+                  />
+                  {/* SP2D Progress */}
+                  <div
+                    className="absolute top-0 h-full bg-green-500 transition-all duration-500 ease-out"
+                    style={{
+                      left: `${usagePercentage}%`,
+                      width: `${sp2dPercentage}%`
+                    }}
+                  />
+                  {/* Remaining */}
+                  <div
+                    className="absolute top-0 h-full bg-gray-300"
+                    style={{
+                      left: `${usagePercentage + sp2dPercentage}%`,
+                      width: `${remainingPercentage}%`
+                    }}
+                  />
+                  {/* Percentage Labels */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-medium text-gray-700 mix-blend-difference">
+                      {(usagePercentage + sp2dPercentage).toFixed(1)}% Terpakai
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Berjalan: {usagePercentage.toFixed(1)}%</span>
+                  <span>SP2D: {sp2dPercentage.toFixed(1)}%</span>
+                  <span>Sisa: {remainingPercentage.toFixed(1)}%</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

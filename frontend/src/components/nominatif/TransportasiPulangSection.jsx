@@ -75,8 +75,10 @@ const TransportasiPulangSection = ({
     onChange('transportasiPerHari', newTransportasiPerHari);
   };
 
-  // Calculate total pulang (menggunakan anggaran realisasi)
-  const totalPulang = (transportasiPerHari || []).reduce((total, transport) => total + (transport.anggaranRealisasiPulang || 0), 0);
+  // Calculate total pulang (hanya hari terakhir)
+  const totalPulang = (transportasiPerHari || [])
+    .filter(transport => transport.hari === (jumlahHari || 1))
+    .reduce((total, transport) => total + (transport.anggaranRealisasiPulang || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -93,7 +95,8 @@ const TransportasiPulangSection = ({
               Transportasi Pulang
             </label>
             <p className="text-xs text-gray-500">
-              Lengkapi detail transportasi kembali untuk setiap hari
+              Transportasi untuk perjalanan kembali ke kota asal
+              <span className="text-green-600 font-medium"> (Hari {jumlahHari || 1})</span>
             </p>
           </div>
         </div>
@@ -103,13 +106,20 @@ const TransportasiPulangSection = ({
       </div>
 
       <div className="space-y-4">
-        {(transportasiPerHari || []).map((transport) => (
+        {(transportasiPerHari || [])
+          .filter(transport => transport.hari === (jumlahHari || 1)) // Hari Terakhir (Pulang)
+          .map((transport) => (
           <div key={transport.hari} className="">
             <div className="flex items-center mb-3">
               <div className="w-8 h-8 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center font-semibold text-xs">
                 {transport.hari}
               </div>
-              <span className="ml-2 font-normal text-gray-700">Transportasi Pulang Hari ke-{transport.hari}</span>
+              <span className="ml-2 font-normal text-gray-700">
+                Transportasi Pulang Hari ke-{transport.hari}
+                {jumlahHari > 1 && (
+                  <span className="text-green-600 ml-2">(Kembali ke Asal)</span>
+                )}
+              </span>
             </div>
 
             {/* Jenis Transportasi */}

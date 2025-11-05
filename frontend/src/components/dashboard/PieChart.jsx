@@ -1,15 +1,37 @@
 import React from 'react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { formatPieData, getLabelProps, CHART_COLORS } from '../../utils/chartConfig';
+import { CHART_COLORS } from '../../utils/chartConfig';
 import { formatCurrency } from '../../utils/currency';
 
-const PieChart = ({ total, berjalan, sp2d, sisa, loading = false }) => {
-  const data = formatPieData(total, berjalan, sp2d, sisa);
+const PieChart = ({ categories = [], total = 0, loading = false }) => {
+  // Check if categories is valid array
+  if (!categories || !Array.isArray(categories)) {
+    return (
+      <div className="flex items-center justify-center h-80 text-gray-500">
+        <div className="text-center">
+          <p className="text-lg font-medium">Tidak ada data kategori</p>
+          <p className="text-sm">Data kategori tidak tersedia</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Format data for pie chart - distribusi per kategori
+  const data = categories.map((category, index) => {
+    const anggaranValue = parseFloat(category.anggaran) || 0;
+    const totalValue = parseFloat(total) || 0;
+
+    return {
+      name: category.nama || `Kategori ${index + 1}`,
+      value: anggaranValue,
+      percentage: totalValue > 0 ? (anggaranValue / totalValue) * 100 : 0,
+      color: CHART_COLORS.primary[index % CHART_COLORS.primary.length]
+    };
+  });
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
-      // Cari data item yang sesuai untuk mendapatkan persentase yang benar
       const currentData = data.find(item => item.name === payload[0].name);
       const percentage = currentData ? currentData.percentage : 0;
 
@@ -18,7 +40,7 @@ const PieChart = ({ total, berjalan, sp2d, sisa, loading = false }) => {
           <p className="font-medium text-gray-800">{payload[0].name}</p>
           <p className="text-sm text-gray-600">{formatCurrency(payload[0].value)}</p>
           <p className="text-xs text-gray-500">
-            {percentage.toFixed(1)}%
+            {percentage.toFixed(1)}% dari total
           </p>
         </div>
       );
@@ -56,8 +78,8 @@ const PieChart = ({ total, berjalan, sp2d, sisa, loading = false }) => {
     return (
       <div className="flex items-center justify-center h-80 text-gray-500">
         <div className="text-center">
-          <p className="text-lg font-medium">Tidak ada data</p>
-          <p className="text-sm">Belum ada realisasi anggaran</p>
+          <p className="text-lg font-medium">Tidak ada data kategori</p>
+          <p className="text-sm">Kategori anggaran belum tersedia</p>
         </div>
       </div>
     );
@@ -77,19 +99,22 @@ const PieChart = ({ total, berjalan, sp2d, sisa, loading = false }) => {
             cy="50%"
             labelLine={false}
             label={(props) => {
-              // Cari data item yang sesuai dengan current index
               const currentData = data[props.index];
-              const labelProps = getLabelProps(props.cx, props.cy, props.midAngle, props.innerRadius, props.outerRadius, props.percent, currentData);
+              const RADIAN = Math.PI / 180;
+              const radius = props.innerRadius + (props.outerRadius - props.innerRadius) * 0.5;
+              const x = props.cx + radius * Math.cos(-props.midAngle * RADIAN);
+              const y = props.cy + radius * Math.sin(-props.midAngle * RADIAN);
+
               return (
                 <text
-                  x={labelProps.x}
-                  y={labelProps.y}
-                  fill={labelProps.fill}
-                  textAnchor={labelProps.textAnchor}
-                  dominantBaseline={labelProps.dominantBaseline}
-                  className={labelProps.className}
+                  x={x}
+                  y={y}
+                  fill="white"
+                  textAnchor={x > props.cx ? 'start' : 'end'}
+                  dominantBaseline="central"
+                  className="text-xs font-medium"
                 >
-                  {labelProps.children}
+                  {currentData ? currentData.percentage.toFixed(0) + '%' : '0%'}
                 </text>
               );
             }}
@@ -108,19 +133,11 @@ const PieChart = ({ total, berjalan, sp2d, sisa, loading = false }) => {
 
       {/* Summary stats */}
       <div className="mt-6 pt-6 border-t border-gray-300">
-        <div className="grid grid-cols-2 gap-4 text-center">
-          <div>
-            <p className="text-sm text-gray-500">Total Realisasi</p>
-            <p className="text-lg font-semibold text-gray-800">
-              {formatCurrency((parseFloat(berjalan) || 0) + (parseFloat(sp2d) || 0))}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Sisa Anggaran</p>
-            <p className="text-lg font-semibold text-gray-800">
-              {formatCurrency(parseFloat(sisa) || 0)}
-            </p>
-          </div>
+        <div className="text-center">
+          <p className="text-sm text-gray-500">Total Anggaran Semua Kategori</p>
+          <p className="text-lg font-semibold text-gray-800">
+            {formatCurrency(data.reduce((sum, item) => sum + item.value, 0))}
+          </p>
         </div>
       </div>
     </div>

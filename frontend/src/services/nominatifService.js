@@ -122,6 +122,13 @@ export const nominatifService = {
 
   // Format form data for API submission
   formatFormData: (formData, rkaDetailId) => {
+    // Debug: Log incoming formData
+    console.log('🔍 FRONTEND DEBUG - formatFormData received:', {
+      jumlahHari: formData.jumlahHari,
+      tanggalPerjalanan: formData.tanggalPerjalanan,
+      rutePerjalanan: formData.rutePerjalanan
+    });
+
     // Convert transportasiPerHari to transport_data format for backend
     const transportData = [];
     if (formData.transportasiPerHari) {
@@ -178,18 +185,23 @@ export const nominatifService = {
       });
     }
 
-    return {
+    const apiData = {
       rka_detail_id: rkaDetailId,
       deskripsi_perjalanan_dinas: formData.detailPerjalananDinas?.deskripsi || '',
       jumlah_hari: formData.jumlahHari || 1,
-      tanggal_mulai: formData.tanggalMulai || new Date().toISOString().split('T')[0],
-      tanggal_selesai: formData.tanggalSelesai || new Date().toISOString().split('T')[0],
+      tanggal_mulai: formData.tanggalPerjalanan?.tanggalMulai || new Date().toISOString().split('T')[0],
+      tanggal_selesai: formData.tanggalPerjalanan?.tanggalSelesai || new Date().toISOString().split('T')[0],
       rute_perjalanan: formData.rutePerjalanan || [],
       transport_data: transportData, // New field for separate table
       penginapan: formData.penginapan || { menginap: false },
       uang_harian: formData.uangHarian || { jumlahHari: 0, paguPerHari: 0 },
       uang_representasi: formData.uangRepresentasi || { jumlahHari: 0, paguPerHari: 0 },
     };
+
+    // Debug: Log final API data
+    console.log('🔍 FRONTEND DEBUG - Final API data:', apiData);
+
+    return apiData;
   },
 
   // Delete all tambahan orang for a nominatif

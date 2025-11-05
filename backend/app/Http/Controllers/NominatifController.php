@@ -206,7 +206,7 @@ class NominatifController extends Controller
      */
     public function show(string $id)
     {
-        $nominatif = Nominatif::with(['rkaDetail', 'user', 'transportasi', 'tambahanOrang'])
+        $nominatif = Nominatif::with(['rkaDetail', 'user', 'transportasi', 'tambahanOrang', 'rutePerjalanan'])
             ->byUser(Auth::id())
             ->findOrFail($id);
 
@@ -271,6 +271,53 @@ class NominatifController extends Controller
         // Convert to array for JSON response
         $nominatif->transportasi_per_hari = array_values($transportasiByHari);
 
+        // Convert rutePerjalanan to format compatible with frontend (rute_perjalanan JSON)
+        $rutePerjalananArray = [];
+        foreach ($nominatif->rutePerjalanan as $rute) {
+            $ruteData = [
+                // Section 3 data (only include in first record)
+                'jumlah_hari' => $rute->jumlah_hari,
+                'tanggal_mulai' => $rute->tanggal_mulai->format('Y-m-d'),
+                'tanggal_selesai' => $rute->tanggal_selesai->format('Y-m-d'),
+                'keterangan_perjalanan' => $rute->keterangan_perjalanan,
+
+                // Route details
+                'hari' => $rute->hari,
+                'dari' => $rute->dari,
+                'ke' => $rute->tujuan, // Convert 'tujuan' to 'ke' for frontend compatibility
+                'pulang' => $rute->pulang,
+                'tanggal' => $rute->tanggal->format('Y-m-d'),
+                'keterangan' => $rute->keterangan,
+            ];
+
+            // Add additional tujuan fields if they exist
+            if ($rute->tujuan2) $ruteData['tujuan2'] = $rute->tujuan2;
+            if ($rute->tujuan3) $ruteData['tujuan3'] = $rute->tujuan3;
+            if ($rute->tujuan4) $ruteData['tujuan4'] = $rute->tujuan4;
+            if ($rute->tujuan5) $ruteData['tujuan5'] = $rute->tujuan5;
+            if ($rute->tujuan6) $ruteData['tujuan6'] = $rute->tujuan6;
+
+            $rutePerjalananArray[] = $ruteData;
+        }
+        $nominatif->rute_perjalanan = $rutePerjalananArray;
+
+        // Get detail perjalanan data from first route record
+        if (isset($rutePerjalananArray[0])) {
+            $firstRoute = $rutePerjalananArray[0];
+            $nominatif->jumlah_hari = $firstRoute['jumlah_hari'] ?? 1;
+            $nominatif->tanggal_mulai = $firstRoute['tanggal_mulai'] ?? $firstRoute['tanggal'];
+            $nominatif->tanggal_selesai = $firstRoute['tanggal_selesai'] ?? $firstRoute['tanggal'];
+
+            // Create tanggal_perjalanan object for frontend
+            $nominatif->tanggal_perjalanan = [
+                'tanggalMulai' => $nominatif->tanggal_mulai,
+                'tanggalSelesai' => $nominatif->tanggal_selesai,
+            ];
+        }
+
+        // Debug: Log rute data
+        \Log::info('🛣️ DEBUG show() - rutePerjalanan count: ' . count($rutePerjalananArray));
+
         // Debug: Log tambahan orang data
         \Log::info('🔍 DEBUG show() - tambahanOrang count: ' . $nominatif->tambahanOrang->count());
         if ($nominatif->tambahanOrang->count() > 0) {
@@ -305,7 +352,22 @@ class NominatifController extends Controller
 
         $validated = $request->validate([
             'deskripsi_perjalanan_dinas' => 'sometimes|string',
+            'jumlah_hari' => 'sometimes|integer|min:1',
+            'tanggal_mulai' => 'sometimes|date',
+            'tanggal_selesai' => 'sometimes|date|after_or_equal:tanggal_mulai',
+            'keterangan_perjalanan' => 'sometimes|nullable|string',
             'rute_perjalanan' => 'sometimes|array',
+            'rute_perjalanan.*.hari' => 'sometimes|integer|min:1',
+            'rute_perjalanan.*.dari' => 'sometimes|string',
+            'rute_perjalanan.*.ke' => 'sometimes|nullable|string',
+            'rute_perjalanan.*.tujuan2' => 'sometimes|nullable|string',
+            'rute_perjalanan.*.tujuan3' => 'sometimes|nullable|string',
+            'rute_perjalanan.*.tujuan4' => 'sometimes|nullable|string',
+            'rute_perjalanan.*.tujuan5' => 'sometimes|nullable|string',
+            'rute_perjalanan.*.tujuan6' => 'sometimes|nullable|string',
+            'rute_perjalanan.*.pulang' => 'sometimes|nullable|string',
+            'rute_perjalanan.*.tanggal' => 'sometimes|date',
+            'rute_perjalanan.*.keterangan' => 'sometimes|nullable|string',
             'transport_data' => 'sometimes|array',
             'transportasi_per_hari' => 'sometimes|array', // for compatibility
             'penginapan' => 'sometimes|array',
@@ -317,6 +379,13 @@ class NominatifController extends Controller
         try {
             DB::beginTransaction();
 
+            // Debug: Log all incoming data
+            \Log::info('🔍 DEBUG - Raw request data:', $request->all());
+            \Log::info('🔍 DEBUG - Validated data:', $validated);
+
+            // Get RKA detail once for the entire operation
+            $rkaDetail = $nominatif->rkaDetail;
+
             // Calculate differences
             $oldTotalPagu = $nominatif->total_pagu;
             $newTotalPagu = $this->calculateTotalPagu(array_merge($nominatif->toArray(), $validated));
@@ -324,7 +393,6 @@ class NominatifController extends Controller
 
             // Check RKA availability for additional pagu
             if ($difference > 0) {
-                $rkaDetail = $nominatif->rkaDetail;
                 if ($difference > $rkaDetail->anggaran_layanan_available) {
                     return response()->json([
                         'success' => false,
@@ -337,7 +405,6 @@ class NominatifController extends Controller
                 $rkaDetail->updateAnggaranUsed($difference);
             } elseif ($difference < 0) {
                 // Return some anggaran to RKA
-                $rkaDetail = $nominatif->rkaDetail;
                 $rkaDetail->updateAnggaranUsed($difference); // negative amount will reduce used
             }
 
@@ -361,8 +428,58 @@ class NominatifController extends Controller
             \Log::info('✅ AFTER UPDATE SYNC TO MASTER RKA:');
             \Log::info('  - After - RKA anggaran_berjalan: ' . $rkaDetail->fresh()->anggaran_berjalan);
 
-            // Update nominatif
-            $nominatif->update($validated);
+            
+            // Update nominatif (without section 3 fields)
+            $nominatifData = collect($validated)->except([
+                'jumlah_hari',
+                'tanggal_mulai',
+                'tanggal_selesai',
+                'keterangan_perjalanan'
+            ])->toArray();
+            $nominatif->update($nominatifData);
+
+            // Update rute perjalanan data if provided
+            if (isset($validated['rute_perjalanan']) && is_array($validated['rute_perjalanan'])) {
+                \Log::info('🛣️ Updating rute perjalanan, count: ' . count($validated['rute_perjalanan']));
+
+                // Delete existing rute records
+                $nominatif->rutePerjalanan()->delete();
+
+                // Create new rute records
+                foreach ($validated['rute_perjalanan'] as $index => $rute) {
+                    \Log::info("🛣️ Creating rute record #{$index}: ", $rute);
+
+                    // Extract section 3 data (only for first record)
+                    $section3Data = [];
+                    if ($index === 0) {
+                        $section3Data = [
+                            'jumlah_hari' => $validated['jumlah_hari'] ?? 1,
+                            'tanggal_mulai' => $validated['tanggal_mulai'] ?? now(),
+                            'tanggal_selesai' => $validated['tanggal_selesai'] ?? now(),
+                            'keterangan_perjalanan' => $validated['keterangan_perjalanan'] ?? null,
+                        ];
+                    }
+
+                    RutePerjalananNominatif::create([
+                        'nominatif_id' => $nominatif->id,
+                        'user_id' => Auth::id(),
+                        // Section 3 data
+                        ...$section3Data,
+                        // Route details
+                        'hari' => $rute['hari'] ?? ($index + 1),
+                        'dari' => $rute['dari'] ?? 'Jakarta',
+                        'tujuan' => $rute['ke'] ?? $rute['tujuan'] ?? null,
+                        'tujuan2' => $rute['tujuan2'] ?? null,
+                        'tujuan3' => $rute['tujuan3'] ?? null,
+                        'tujuan4' => $rute['tujuan4'] ?? null,
+                        'tujuan5' => $rute['tujuan5'] ?? null,
+                        'tujuan6' => $rute['tujuan6'] ?? null,
+                        'pulang' => $rute['pulang'] ?? ($rute['hari'] == ($validated['jumlah_hari'] ?? 1) ? 'Jakarta' : null),
+                        'tanggal' => $rute['tanggal'] ?? ($validated['tanggal_mulai'] ?? now()),
+                        'keterangan' => $rute['keterangan'] ?? null,
+                    ]);
+                }
+            }
 
             // Update transportasi data if provided
             $transportField = isset($validated['transport_data']) ? 'transport_data' : 'transportasi_per_hari';
@@ -383,6 +500,9 @@ class NominatifController extends Controller
                         'keterangan' => $transport['keterangan'] ?? null,
                     ]);
                 }
+
+                // Rebuild transportasi_per_hari JSON from database records for calculateTotals()
+                $this->rebuildTransportasiJson($nominatif);
             }
 
             // Update tambahan orang data if provided
@@ -666,5 +786,75 @@ class NominatifController extends Controller
                 'message' => 'Gagal menghapus tambahan orang: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Rebuild transportasi_per_hari JSON from database records
+     */
+    private function rebuildTransportasiJson($nominatif)
+    {
+        // Group transportasi by hari and type for calculateTotals compatibility
+        $transportasiByHari = [];
+        foreach ($nominatif->transportasi as $transport) {
+            $day = $transport->hari;
+
+            if (!isset($transportasiByHari[$day])) {
+                $transportasiByHari[$day] = [
+                    'hari' => $day,
+                    'jenisBerangkat' => '',
+                    'paguTransportasiBerangkat' => 0,
+                    'biayaAktualTransportasiBerangkat' => 0,
+                    'paguTaksiBerangkat' => 0,
+                    'biayaAktualTaksiBerangkat' => 0,
+                    'jenisPulang' => '',
+                    'paguTransportasiPulang' => 0,
+                    'biayaAktualTransportasiPulang' => 0,
+                    'paguTaksiPulang' => 0,
+                    'biayaAktualTaksiPulang' => 0,
+                    'totalHari' => 0,
+                    'anggaranRealisasiBerangkat' => 0,
+                    'anggaranRealisasiPulang' => 0,
+                ];
+            }
+
+            if ($transport->arah === 'pergi') {
+                if (strtolower($transport->jenis_transportasi) === 'taksi') {
+                    $transportasiByHari[$day]['paguTaksiBerangkat'] = (float)($transport->pagu ?? 0);
+                    $transportasiByHari[$day]['biayaAktualTaksiBerangkat'] = (float)($transport->biaya_aktual ?? 0);
+                } else {
+                    $transportasiByHari[$day]['jenisBerangkat'] = $transport->jenis_transportasi ?? '';
+                    $transportasiByHari[$day]['paguTransportasiBerangkat'] = (float)($transport->pagu ?? 0);
+                    $transportasiByHari[$day]['biayaAktualTransportasiBerangkat'] = (float)($transport->biaya_aktual ?? 0);
+                }
+
+                $anggaranRealisasiBerangkat = ($transportasiByHari[$day]['paguTransportasiBerangkat'] + $transportasiByHari[$day]['paguTaksiBerangkat']) -
+                    ($transportasiByHari[$day]['biayaAktualTransportasiBerangkat'] + $transportasiByHari[$day]['biayaAktualTaksiBerangkat']);
+                $transportasiByHari[$day]['anggaranRealisasiBerangkat'] = $anggaranRealisasiBerangkat;
+
+            } elseif ($transport->arah === 'pulang') {
+                if (strtolower($transport->jenis_transportasi) === 'taksi') {
+                    $transportasiByHari[$day]['paguTaksiPulang'] = (float)($transport->pagu ?? 0);
+                    $transportasiByHari[$day]['biayaAktualTaksiPulang'] = (float)($transport->biaya_aktual ?? 0);
+                } else {
+                    $transportasiByHari[$day]['jenisPulang'] = $transport->jenis_transportasi ?? '';
+                    $transportasiByHari[$day]['paguTransportasiPulang'] = (float)($transport->pagu ?? 0);
+                    $transportasiByHari[$day]['biayaAktualTransportasiPulang'] = (float)($transport->biaya_aktual ?? 0);
+                }
+
+                $anggaranRealisasiPulang = ($transportasiByHari[$day]['paguTransportasiPulang'] + $transportasiByHari[$day]['paguTaksiPulang']) -
+                    ($transportasiByHari[$day]['biayaAktualTransportasiPulang'] + $transportasiByHari[$day]['biayaAktualTaksiPulang']);
+                $transportasiByHari[$day]['anggaranRealisasiPulang'] = $anggaranRealisasiPulang;
+            }
+
+            $transportasiByHari[$day]['totalHari'] =
+                $transportasiByHari[$day]['anggaranRealisasiBerangkat'] +
+                $transportasiByHari[$day]['anggaranRealisasiPulang'];
+        }
+
+        // Convert to array and update nominatif
+        $nominatif->transportasi_per_hari = array_values($transportasiByHari);
+        $nominatif->save();
+
+        \Log::info('🔄 Rebuilt transportasi_per_hari JSON:', $nominatif->transportasi_per_hari);
     }
 }

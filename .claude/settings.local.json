@@ -12,7 +12,8 @@
       "Bash(docker exec:*)",
       "Bash(docker restart:*)",
       "Bash(npm run dev:*)",
-      "Bash(composer require:*)"
+      "Bash(composer require:*)",
+      "Bash(./vendor/bin/sail down:*)"
     ],
     "deny": [],
     "ask": []

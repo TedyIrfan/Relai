@@ -77,8 +77,10 @@ const TransportasiPergiSection = ({
     onChange('transportasiPerHari', newTransportasiPerHari);
   };
 
-  // Calculate total pergi (menggunakan anggaran realisasi)
-  const totalPergi = (transportasiPerHari || []).reduce((total, transport) => total + (transport.anggaranRealisasiBerangkat || 0), 0);
+  // Calculate total pergi (1 hari: Hari 1, 2+ hari: semua kecuali terakhir)
+  const totalPergi = (transportasiPerHari || [])
+    .filter(transport => transport.hari <= (jumlahHari === 1 ? 1 : (jumlahHari - 1)))
+    .reduce((total, transport) => total + (transport.anggaranRealisasiBerangkat || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -95,7 +97,16 @@ const TransportasiPergiSection = ({
               Transportasi Pergi
             </label>
             <p className="text-xs text-gray-500">
-              Lengkapi detail transportasi berangkat untuk setiap hari
+              Transportasi untuk perjalanan berangkat
+              {jumlahHari === 1 && (
+                <span className="text-blue-600 font-medium"> (Hari 1)</span>
+              )}
+              {jumlahHari === 2 && (
+                <span className="text-blue-600 font-medium"> (Hari 1)</span>
+              )}
+              {jumlahHari > 2 && (
+                <span className="text-blue-600 font-medium"> (Hari 1-{jumlahHari - 1})</span>
+              )}
             </p>
           </div>
         </div>
@@ -105,13 +116,29 @@ const TransportasiPergiSection = ({
       </div>
 
       <div className="space-y-4">
-        {(transportasiPerHari || []).map((transport) => (
-          <div key={transport.hari} className="">
+        {(transportasiPerHari || [])
+          .filter(transport => transport.hari <= (jumlahHari === 1 ? 1 : (jumlahHari - 1))) // 1 hari: Hari 1, 2+ hari: semua kecuali terakhir
+          .map((transport) => (
+          <div key={transport.hari} className="border-2 border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center font-semibold text-xs">
+              <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold text-xs">
                 {transport.hari}
               </div>
-              <span className="ml-2 font-normal text-gray-700">Transportasi Pergi Hari ke-{transport.hari}</span>
+              <span className="ml-2 font-normal text-gray-700">
+                Transportasi Pergi Hari ke-{transport.hari}
+                {jumlahHari === 1 && (
+                  <span className="text-blue-600 ml-2">(Berangkat)</span>
+                )}
+                {jumlahHari === 2 && transport.hari === 1 && (
+                  <span className="text-blue-600 ml-2">(Berangkat)</span>
+                )}
+                {jumlahHari > 2 && transport.hari === 1 && (
+                  <span className="text-blue-600 ml-2">(Berangkat Awal)</span>
+                )}
+                {jumlahHari > 2 && transport.hari > 1 && transport.hari < jumlahHari && (
+                  <span className="text-blue-600 ml-2">(Perjalanan Lanjutan)</span>
+                )}
+              </span>
             </div>
 
             {/* Jenis Transportasi */}
