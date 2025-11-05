@@ -115,14 +115,14 @@ class DashboardController extends Controller
         }
 
         // 🔄 Calculate total anggaran berjalan from RKA Details (Anggaran Berjalan)
-        $totalAnggaranBerjalanFromRKA = RkaDetail::sum('anggaran_layanan_used');
+        $totalAnggaranBerjalanFromRKA = RkaDetail::sum('anggaran_berjalan');
         \Log::info('📊 Dashboard DEBUG - RKA Budget Calculation:');
-        \Log::info('  - Total Anggaran Berjalan from RKA (anggaran_layanan_used): ' . number_format($totalAnggaranBerjalanFromRKA, 0, ',', '.'));
+        \Log::info('  - Total Anggaran Berjalan from RKA (anggaran_berjalan): ' . number_format($totalAnggaranBerjalanFromRKA, 0, ',', '.'));
         \Log::info('  - Before (old) anggaran.berjalan: ' . number_format($anggaran->anggaran_berjalan, 0, ',', '.'));
 
         // 🔄 Calculate total SP2D from RKA Details (SP2D Tracking)
-        $totalSP2DFromRKA = RkaDetail::sum('sp2d');
-        \Log::info('  - Total SP2D from RKA (sp2d): ' . number_format($totalSP2DFromRKA, 0, ',', '.'));
+        $totalSP2DFromRKA = RkaDetail::sum('anggaran_sp2d');
+        \Log::info('  - Total SP2D from RKA (anggaran_sp2d): ' . number_format($totalSP2DFromRKA, 0, ',', '.'));
         \Log::info('  - Before (old) anggaran.sp2d: ' . number_format($anggaran->sp2d, 0, ',', '.'));
 
         // Update anggaran.berjalan dengan nilai dari RKA
@@ -148,12 +148,12 @@ class DashboardController extends Controller
             // Calculate Anggaran Berjalan from RKA Details for this kategori
             $berjalanFromRKA = RkaDetail::whereHas('kategoriAnggaran', function($query) use ($kategori) {
                 $query->where('id', $kategori->id);
-            })->sum('anggaran_layanan_used');
+            })->sum('anggaran_berjalan');
 
             // Calculate SP2D from RKA Details for this kategori
             $sp2dFromRKA = RkaDetail::whereHas('kategoriAnggaran', function($query) use ($kategori) {
                 $query->where('id', $kategori->id);
-            })->sum('sp2d');
+            })->sum('anggaran_sp2d');
 
             \Log::info('📊 Kategori DEBUG - from RKA:');
             \Log::info('  - Kategori: ' . $kategori->nama_kategori);
