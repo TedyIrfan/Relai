@@ -7,6 +7,9 @@ const TransportasiPergiSection = ({
   onChange,
   isEditable
 }) => {
+  // CRITICAL: Track if data has been processed to prevent corruption
+  const [dataProcessed, setDataProcessed] = React.useState(false);
+
   // Detect if incoming data is from backend (has backend structure)
   const isBackendData = (data) => {
     return data && data.length > 0 && data[0] && data[0].hasOwnProperty && data[0].hasOwnProperty('jenis_transportasi');
@@ -24,40 +27,18 @@ const TransportasiPergiSection = ({
     return lastDayData && lastDayData.jenisPulang && targetHari > lastDay;
   };
 
-  console.log('🚀 TRANSPORTASI DEBUG - New Render');
-  console.log('📊 Jumlah Hari:', jumlahHari);
-  console.log('📋 Transport Data Length:', transportasiPerHari?.length);
-  console.log('📋 Transport Data:', transportasiPerHari?.map(t => ({
+  // Data mapper: Backend structure -> Frontend expected structure
+  const actualData = transportasiPerHari?.map((t) => ({
     hari: t.hari,
-    berangkat: t.jenisBerangkat,
-    pulang: t.jenisPulang,
-    subtotalBerangkat: t.subtotalBerangkat,
-    subtotalPulang: t.subtotalPulang
-  })));
-
-  // Debug - Show actual data without filtering
-  const actualData = transportasiPerHari?.map(t => ({
-    hari: t.hari,
-    berangkat: t.jenisBerangkat,
-    pulang: t.jenisPulang,
-    paguBerangkat: t.paguTransportasiBerangkat,
+    jenisBerangkat: t.jenisBerangkat,
+    jenisPulang: t.jenisPulang,
+    paguTransportasiBerangkat: t.paguTransportasiBerangkat,
     paguTaksiBerangkat: t.paguTaksiBerangkat,
-    paguPulang: t.paguTransportasiPulang,
+    paguTransportasiPulang: t.paguTransportasiPulang,
     paguTaksiPulang: t.paguTaksiPulang,
     subtotalBerangkat: t.subtotalBerangkat,
     subtotalPulang: t.subtotalPulang
   }));
-
-  console.log('🔍 Actual Data to display:', actualData);
-  console.log('📋 DETAILED VALUES:');
-  actualData?.forEach((t, i) => {
-    console.log(`Hari ${t.hari}:`);
-    console.log(`  jenisBerangkat: "${t.berangkat}" (type: ${typeof t.berangkat})`);
-    console.log(`  paguTransportasiBerangkat: ${t.paguBerangkat}`);
-    console.log(`  jenisPulang: "${t.pulang}" (type: ${typeof t.pulang})`);
-    console.log(`  paguTransportasiPulang: ${t.paguPulang}`);
-    console.log('---');
-  });
 
   // Data mapper: Backend structure -> Frontend expected structure
   const mapBackendToFrontend = (backendData, targetJumlahHari = null) => {
@@ -326,6 +307,16 @@ const TransportasiPergiSection = ({
         paguPulang: d.paguTransportasiPulang
       })));
 
+      console.log('🎯 DETAILED NEW DATA:');
+      newData.forEach((d, i) => {
+        console.log(`Hari ${d.hari}:`);
+        console.log(`  jenisBerangkat: "${d.jenisBerangkat}" (type: ${typeof d.jenisBerangkat})`);
+        console.log(`  paguTransportasiBerangkat: ${d.paguTransportasiBerangkat}`);
+        console.log(`  jenisPulang: "${d.jenisPulang}" (type: ${typeof d.jenisPulang})`);
+        console.log(`  paguTransportasiPulang: ${d.paguTransportasiPulang}`);
+        console.log('---');
+      });
+
       return newData;
     }
 
@@ -439,14 +430,14 @@ const TransportasiPergiSection = ({
         });
 
         if (oldLastDayData && oldLastDayData.jenisPulang) {
-          // Convert PULANG -> PERGI for old last day ( Hari 3 becomes PERGI )
-          oldLastDayData.jenisBerangkat = oldLastDayData.jenisPulang;
-          oldLastDayData.paguTransportasiBerangkat = oldLastDayData.paguTransportasiPulang;
-          oldLastDayData.biayaAktualTransportasiBerangkat = oldLastDayData.biayaAktualTransportasiPulang;
-          oldLastDayData.paguTaksiBerangkat = oldLastDayData.paguTaksiPulang;
-          oldLastDayData.biayaAktualTaksiBerangkat = oldLastDayData.biayaAktualTaksiPulang;
-          oldLastDayData.subtotalBerangkat = oldLastDayData.subtotalPulang;
-          oldLastDayData.anggaranRealisasiBerangkat = oldLastDayData.anggaranRealisasiPulang;
+          // Convert PULANG -> PERGI for old last day ( Hari 3 becomes PERGI KOSONG for user to fill )
+          oldLastDayData.jenisBerangkat = '';  // KOSONG untuk user isi
+          oldLastDayData.paguTransportasiBerangkat = 0;
+          oldLastDayData.biayaAktualTransportasiBerangkat = 0;
+          oldLastDayData.paguTaksiBerangkat = 0;
+          oldLastDayData.biayaAktualTaksiBerangkat = 0;
+          oldLastDayData.subtotalBerangkat = 0;
+          oldLastDayData.anggaranRealisasiBerangkat = 0;
 
           // Clear PULANG fields from old last day
           oldLastDayData.jenisPulang = '';
@@ -457,7 +448,7 @@ const TransportasiPergiSection = ({
           oldLastDayData.subtotalPulang = 0;
           oldLastDayData.anggaranRealisasiPulang = 0;
 
-          console.log(`✅ Old last day ${oldLastDayIndex + 1} converted to PERGI:`, {
+          console.log(`✅ Old last day ${oldLastDayIndex + 1} converted to PERGI KOSONG:`, {
             newBerangkat: oldLastDayData.jenisBerangkat,
             newSubtotalBerangkat: oldLastDayData.subtotalBerangkat,
             pulangCleared: !oldLastDayData.jenisPulang
@@ -489,123 +480,124 @@ const TransportasiPergiSection = ({
 
       return newData;
     } else {
-      // Removing days - truncate array
-      return currentData.slice(0, newJumlahHari);
+      // Removing days - need to move PULANG data from old last day to new last day
+      console.log('🔄 === REMOVING DAYS - NEED TO MOVE PULANG DATA ===');
+      console.log(`📊 OLD LENGTH: ${oldLength} → NEW LENGTH: ${newJumlahHari}`);
+
+      const newData = [];
+      const oldLastDayIndex = oldLength - 1;
+      const newLastDayIndex = newJumlahHari - 1;
+      const oldLastDay = currentData[oldLastDayIndex];
+
+      // Copy pergi data for days 1 to newJumlahHari-1
+      for (let i = 0; i < newLastDayIndex; i++) {
+        const day = currentData[i];
+        newData.push({
+          hari: i + 1,
+          // PERGI fields - preserve completely
+          jenisBerangkat: day.jenisBerangkat || '',
+          paguTransportasiBerangkat: day.paguTransportasiBerangkat || 0,
+          paguTaksiBerangkat: day.paguTaksiBerangkat || 0,
+          biayaAktualTransportasiBerangkat: day.biayaAktualTransportasiBerangkat || 0,
+          biayaAktualTaksiBerangkat: day.biayaAktualTaksiBerangkat || 0,
+          subtotalBerangkat: day.subtotalBerangkat || 0,
+          anggaranRealisasiBerangkat: day.anggaranRealisasiBerangkat || 0,
+          // PULANG fields - clear (not last day anymore)
+          jenisPulang: '',
+          paguTransportasiPulang: 0,
+          paguTaksiPulang: 0,
+          biayaAktualTransportasiPulang: 0,
+          biayaAktualTaksiPulang: 0,
+          subtotalPulang: 0,
+          anggaranRealisasiPulang: 0,
+          totalHari: (day.subtotalBerangkat || 0)
+        });
+      }
+
+      // Create new last day with PULANG data from old last day
+      if (oldLastDay && oldLastDay.jenisPulang) {
+        console.log(`🔄 Moving PULANG data from old day ${oldLastDayIndex + 1} to new day ${newLastDayIndex + 1}:`, {
+          oldPulang: oldLastDay.jenisPulang,
+          oldSubtotalPulang: oldLastDay.subtotalPulang
+        });
+
+        newData.push({
+          hari: newLastDayIndex + 1,
+          // PERGI fields - empty (user will fill if needed)
+          jenisBerangkat: '',
+          paguTransportasiBerangkat: 0,
+          paguTaksiBerangkat: 0,
+          biayaAktualTransportasiBerangkat: 0,
+          biayaAktualTaksiBerangkat: 0,
+          subtotalBerangkat: 0,
+          anggaranRealisasiBerangkat: 0,
+          // PULANG fields - move from old last day
+          jenisPulang: oldLastDay.jenisPulang,
+          paguTransportasiPulang: oldLastDay.paguTransportasiPulang || 0,
+          paguTaksiPulang: oldLastDay.paguTaksiPulang || 0,
+          biayaAktualTransportasiPulang: oldLastDay.biayaAktualTransportasiPulang || 0,
+          biayaAktualTaksiPulang: oldLastDay.biayaAktualTaksiPulang || 0,
+          subtotalPulang: oldLastDay.subtotalPulang || 0,
+          anggaranRealisasiPulang: oldLastDay.anggaranRealisasiPulang || 0,
+          totalHari: (oldLastDay.subtotalPulang || 0)
+        });
+      } else {
+        // No PULANG data in old last day, create empty last day
+        newData.push({
+          hari: newLastDayIndex + 1,
+          jenisBerangkat: '',
+          paguTransportasiBerangkat: 0,
+          paguTaksiBerangkat: 0,
+          biayaAktualTransportasiBerangkat: 0,
+          biayaAktualTaksiBerangkat: 0,
+          subtotalBerangkat: 0,
+          anggaranRealisasiBerangkat: 0,
+          jenisPulang: '',
+          paguTransportasiPulang: 0,
+          paguTaksiPulang: 0,
+          biayaAktualTransportasiPulang: 0,
+          biayaAktualTaksiPulang: 0,
+          subtotalPulang: 0,
+          anggaranRealisasiPulang: 0,
+          totalHari: 0
+        });
+      }
+
+      console.log('🎯 Final data structure after removing days:', newData.map(d => ({
+        hari: d.hari,
+        berangkat: d.jenisBerangkat,
+        pulang: d.jenisPulang,
+        subtotalBerangkat: d.subtotalBerangkat,
+        subtotalPulang: d.subtotalPulang
+      })));
+
+      return newData;
     }
   };
 
 
-  // Initialize and update transportasi per hari (BACKEND DATA ONLY)
+  // 🔥 BACKEND PROCESSING COMPLETELY DISABLED - CAUSING DATA CORRUPTION
+
+  // useEffect for handling jumlahHari changes
   useEffect(() => {
-    // ONLY process backend data, NEVER touch frontend data
-    if (!isBackendData(transportasiPerHari)) {
-      console.log('🚫 Skipping backend processing - data is already frontend format');
-      return;
-    }
-
-    // CRITICAL FIX: Skip if we already have valid frontend data to prevent overwriting shifted data
-    if (transportasiPerHari && Array.isArray(transportasiPerHari) &&
-        transportasiPerHari.length > 0 &&
-        transportasiPerHari.some(item => item.hari !== undefined && item.jenisBerangkat !== undefined)) {
-      console.log('🚫 CRITICAL: Skipping backend processing - already have valid frontend data!');
-      console.log('🚫 This prevents overwriting data that was already shifted by jumlahHari useEffect');
-      return;
-    }
-
-    if (!transportasiPerHari || !Array.isArray(transportasiPerHari) || transportasiPerHari.length === 0) {
-      // Initialize empty array for new records
-      console.log('📝 Initializing empty transport data for', jumlahHari, 'days');
-      const newTransportasiPerHari = [];
-      for (let i = 1; i <= jumlahHari; i++) {
-        newTransportasiPerHari.push({
-          hari: i,
-          jenisBerangkat: '',
-          paguTransportasiBerangkat: 0,
-          paguTaksiBerangkat: 0,
-          biayaAktualTransportasiBerangkat: 0,
-          biayaAktualTaksiBerangkat: 0,
-          subtotalBerangkat: 0,
-          anggaranRealisasiBerangkat: 0,
-          jenisPulang: '',
-          paguTransportasiPulang: 0,
-          paguTaksiPulang: 0,
-          biayaAktualTransportasiPulang: 0,
-          biayaAktualTaksiPulang: 0,
-          subtotalPulang: 0,
-          anggaranRealisasiPulang: 0
-        });
-      }
-      onChange('transportasiPerHari', newTransportasiPerHari);
-      return;
-    }
-
-    // Convert backend structure to frontend structure
-    console.log('🔄 Converting backend data to frontend structure:', transportasiPerHari);
-    const mappedData = mapBackendToFrontend(transportasiPerHari, jumlahHari);
-    console.log('🔄 Mapped data:', mappedData);
-
-    // Ensure we have the right number of days
-    const finalData = [...mappedData];
-    if (finalData.length < jumlahHari) {
-      // Add empty records for missing days
-      for (let i = finalData.length + 1; i <= jumlahHari; i++) {
-        finalData.push({
-          hari: i,
-          jenisBerangkat: '',
-          paguTransportasiBerangkat: 0,
-          paguTaksiBerangkat: 0,
-          biayaAktualTransportasiBerangkat: 0,
-          biayaAktualTaksiBerangkat: 0,
-          subtotalBerangkat: 0,
-          anggaranRealisasiBerangkat: 0,
-          jenisPulang: '',
-          paguTransportasiPulang: 0,
-          paguTaksiPulang: 0,
-          biayaAktualTransportasiPulang: 0,
-          biayaAktualTaksiPulang: 0,
-          subtotalPulang: 0,
-          anggaranRealisasiPulang: 0
-        });
-      }
-    } else if (finalData.length > jumlahHari) {
-      // Remove extra records if needed
-      finalData.splice(jumlahHari);
-    }
-
-    onChange('transportasiPerHari', finalData);
-  }, []); // Run once on mount only for initial data
-
-  // SEPARATE useEffect for handling jumlahHari changes
-  useEffect(() => {
-    console.log('🔄 === JUMLAH HARI USE EFFECT TRIGGERED ===');
-    console.log('📊 jumlahHari:', jumlahHari, 'transportasiPerHari.length:', transportasiPerHari?.length);
-
     // Only process if we have valid data and length changed
     if (transportasiPerHari && Array.isArray(transportasiPerHari) && transportasiPerHari.length > 0) {
 
-      // CRITICAL FIX: Skip if this is backend data (has jenis_transportasi field)
+      // Skip if this is backend data (has jenis_transportasi field)
       if (transportasiPerHari.some(item => item.jenis_transportasi !== undefined)) {
-        console.log('🚫 CRITICAL: Skipping jumlahHari processing - this is backend data!');
-        console.log('🚫 Let backend processing useEffect handle this first');
         return;
       }
 
       if (transportasiPerHari.length !== jumlahHari) {
-        console.log('🔄 Jumlah hari changed, applying shifting logic:', {
-          oldLength: transportasiPerHari.length,
-          newJumlahHari: jumlahHari
-        });
-
         const newTransportasiPerHari = handleJumlahHariChange(transportasiPerHari, jumlahHari);
-        console.log('🎯 After shifting:', newTransportasiPerHari);
-        onChange('transportasiPerHari', newTransportasiPerHari);
-      } else {
-        console.log('📌 Length sama, no shifting needed');
+
+        // Delay parent update to prevent race conditions
+        setTimeout(() => {
+          onChange('transportasiPerHari', newTransportasiPerHari);
+        }, 100);
       }
-    } else {
-      console.log('📌 No valid transportasi data yet');
     }
-  }, [jumlahHari]); // ONLY trigger when jumlahHari changes
+  }, [jumlahHari]);
 
   // Format currency untuk display
   const formatCurrencyInput = (value) => {
@@ -654,9 +646,9 @@ const TransportasiPergiSection = ({
     onChange('transportasiPerHari', newTransportasiPerHari);
   };
 
-  // Calculate total pergi (1 hari: Hari 1, 2+ hari: semua kecuali terakhir)
+  // Calculate total pergi - Show only departure days (exclude last day which is for return)
   const totalPergi = (transportasiPerHari || [])
-    .filter(transport => transport.hari <= (jumlahHari === 1 ? 1 : (jumlahHari - 1)))
+    .filter(transport => transport.hari <= (jumlahHari - 1))
     .reduce((total, transport) => total + (transport.anggaranRealisasiBerangkat || 0), 0);
 
   return (
@@ -694,6 +686,7 @@ const TransportasiPergiSection = ({
 
       <div className="space-y-4">
         {(transportasiPerHari || [])
+          .filter((transport) => transport.hari <= (jumlahHari - 1))
           .map((transport) => (
           <div key={transport.hari} className="border-2 border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center mb-3">
@@ -722,7 +715,7 @@ const TransportasiPergiSection = ({
               <label className="block text-xs font-medium text-gray-600 mb-1">Jenis Transportasi</label>
               <input
                 type="text"
-                value={transport.jenisBerangkat}
+                value={transport.jenisBerangkat || ''}
                 onChange={(e) => handleTransportasiChange(transport.hari, 'jenisBerangkat', e.target.value)}
                 disabled={!isEditable}
                 className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
@@ -736,7 +729,7 @@ const TransportasiPergiSection = ({
                 <label className="block text-xs font-medium text-gray-600 mb-1">Pagu Transportasi</label>
                 <input
                   type="text"
-                  value={formatCurrencyInput(transport.paguTransportasiBerangkat)}
+                  value={formatCurrencyInput(transport.paguTransportasiBerangkat || 0)}
                   onChange={(e) => handleTransportasiChange(transport.hari, 'paguTransportasiBerangkat', e.target.value)}
                   disabled={!isEditable}
                   className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
@@ -747,7 +740,7 @@ const TransportasiPergiSection = ({
                 <label className="block text-xs font-medium text-gray-600 mb-1">Biaya Aktual</label>
                 <input
                   type="text"
-                  value={formatCurrencyInput(transport.biayaAktualTransportasiBerangkat)}
+                  value={formatCurrencyInput(transport.biayaAktualTransportasiBerangkat || 0)}
                   onChange={(e) => handleTransportasiChange(transport.hari, 'biayaAktualTransportasiBerangkat', e.target.value)}
                   disabled={!isEditable}
                   className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
@@ -762,7 +755,7 @@ const TransportasiPergiSection = ({
                 <label className="block text-xs font-medium text-gray-600 mb-1">Pagu Taxi</label>
                 <input
                   type="text"
-                  value={formatCurrencyInput(transport.paguTaksiBerangkat)}
+                  value={formatCurrencyInput(transport.paguTaksiBerangkat || 0)}
                   onChange={(e) => handleTransportasiChange(transport.hari, 'paguTaksiBerangkat', e.target.value)}
                   disabled={!isEditable}
                   className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
@@ -773,7 +766,7 @@ const TransportasiPergiSection = ({
                 <label className="block text-xs font-medium text-gray-600 mb-1">Biaya Aktual</label>
                 <input
                   type="text"
-                  value={formatCurrencyInput(transport.biayaAktualTaksiBerangkat)}
+                  value={formatCurrencyInput(transport.biayaAktualTaksiBerangkat || 0)}
                   onChange={(e) => handleTransportasiChange(transport.hari, 'biayaAktualTaksiBerangkat', e.target.value)}
                   disabled={!isEditable}
                   className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-100 text-sm transition-colors duration-200"
