@@ -76,7 +76,7 @@ class Nominatif extends Model
 
     public function tambahanOrang()
     {
-        return $this->hasMany(TambahanOrangNominatif::class, 'nominatif_id', 'id')
+        return $this->hasMany(TambahanOrangNominatif::class, 'master_nominatif_id', 'id')
                     ->orderBy('id');
     }
 
