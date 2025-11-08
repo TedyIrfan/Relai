@@ -9,49 +9,39 @@ class Nominatif extends Model
 {
     use HasFactory;
 
-    protected $table = 'nominatifs';
+    protected $table = 'master_nominatifs';
 
     protected $fillable = [
         'rka_detail_id',
         'user_id',
         'deskripsi_perjalanan_dinas',
-        'jumlah_hari',
-        'tanggal_mulai',
-        'tanggal_selesai',
         'status',
         'is_editable',
-        'rute_perjalanan',
-        'transportasi_per_hari',
         'penginapan',
         'uang_harian',
         'uang_representasi',
+        'transportasi_per_hari',
         'total_pagu',
         'total_biaya_aktual',
+        'total_anggaran_realisasi',
         'anggaran_berjalan',
         'anggaran_sp2d',
     ];
 
     protected $casts = [
-        'jumlah_hari' => 'integer',
-        'tanggal_mulai' => 'date',
-        'tanggal_selesai' => 'date',
         'is_editable' => 'boolean',
-        'rute_perjalanan' => 'array',
-        'transportasi_per_hari' => 'array',
         'penginapan' => 'array',
         'uang_harian' => 'array',
         'uang_representasi' => 'array',
+        'transportasi_per_hari' => 'array',
         'total_pagu' => 'decimal:2',
         'total_biaya_aktual' => 'decimal:2',
+        'total_anggaran_realisasi' => 'decimal:2',
         'anggaran_berjalan' => 'decimal:2',
         'anggaran_sp2d' => 'decimal:2',
     ];
 
-    protected $dates = [
-        'tanggal_mulai',
-        'tanggal_selesai',
-    ];
-
+    
     // Relationships
     public function rkaDetail()
     {
@@ -92,8 +82,12 @@ class Nominatif extends Model
 
     public function rutePerjalanan()
     {
-        return $this->hasMany(RutePerjalananNominatif::class, 'nominatif_id', 'id')
-                    ->orderBy('hari');
+        return $this->hasOne(RutePerjalananNominatif::class, 'master_nominatif_id', 'id');
+    }
+
+    public function rutePerjalananNominatif()
+    {
+        return $this->hasOne(RutePerjalananNominatif::class, 'master_nominatif_id', 'id');
     }
 
     
@@ -116,6 +110,24 @@ class Nominatif extends Model
     public function getAnggaranSp2dFormattedAttribute()
     {
         return 'Rp' . number_format($this->anggaran_sp2d, 0, ',', '.');
+    }
+
+    // Accessors for route data from child relationship
+    public function getJumlahHariAttribute()
+    {
+        return optional($this->rutePerjalananNominatif)->total_hari ?? 0;
+    }
+
+    public function getTanggalMulaiAttribute()
+    {
+        $rute = $this->rutePerjalananNominatif;
+        return $rute ? $rute->tanggal_mulai->format('Y-m-d') : null;
+    }
+
+    public function getTanggalSelesaiAttribute()
+    {
+        $rute = $this->rutePerjalananNominatif;
+        return $rute ? $rute->tanggal_selesai->format('Y-m-d') : null;
     }
 
     // Scopes
@@ -162,12 +174,12 @@ class Nominatif extends Model
         $totalPagu = 0;
         $totalBiayaAktual = 0;
 
-        // Calculate from transportasi JSON data
-        $transportData = $this->transportasi_per_hari;
-        if ($transportData && is_array($transportData)) {
-            foreach ($transportData as $transport) {
-                $totalPagu += $transport['pagu'] ?? 0;
-                $totalBiayaAktual += $transport['biaya_aktual'] ?? 0;
+        // Calculate from transportasi relationship data
+        $transportasiData = $this->transportasi;
+        if ($transportasiData && $transportasiData->count() > 0) {
+            foreach ($transportasiData as $transport) {
+                $totalPagu += $transport->pagu ?? 0;
+                $totalBiayaAktual += $transport->biaya_aktual ?? 0;
             }
         }
 
@@ -177,20 +189,18 @@ class Nominatif extends Model
             $totalBiayaAktual += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['biayaAktualPerMalam'] ?? 0);
         }
 
-        // Calculate from uang harian (masuk ke total anggaran, tapi dianggap langsung aktual)
+        // Calculate from uang harian (masuk ke total pagu saja)
         if ($this->uang_harian) {
             $uangHarianTotal = ($this->uang_harian['total'] ?? 0);
-            // Uang harian masuk ke totalPagu dan langsung dianggap aktual
+            // Uang harian masuk ke totalPagu saja
             $totalPagu += $uangHarianTotal;
-            $totalBiayaAktual += $uangHarianTotal;
         }
 
-        // Calculate from uang representasi (masuk ke total anggaran, tapi dianggap langsung aktual)
+        // Calculate from uang representasi (masuk ke total pagu saja)
         if ($this->uang_representasi) {
             $uangRepresentasiTotal = ($this->uang_representasi['total'] ?? 0);
-            // Uang representasi masuk ke totalPagu dan langsung dianggap aktual
+            // Uang representasi masuk ke totalPagu saja
             $totalPagu += $uangRepresentasiTotal;
-            $totalBiayaAktual += $uangRepresentasiTotal;
         }
 
         // Calculate from tambahan orang
@@ -205,60 +215,8 @@ class Nominatif extends Model
         $this->total_pagu = $totalPagu;
         $this->total_biaya_aktual = $totalBiayaAktual;
 
-        // Calculate anggaran_berjalan: (pagu - aktual transportasi + taksi + penginapan) + uang harian + uang representasi
-        $transportasiPagu = 0;  // Transportasi utama (pesawat, bus, dll)
-        $transportasiAktual = 0;
-        $taksiPagu = 0;         // Taksi
-        $taksiAktual = 0;
-        $penginapanPagu = 0;
-        $penginapanAktual = 0;
-
-        // Hitung pagu dan aktual transportasi (pisahkan transportasi utama dan taksi)
-        if ($this->transportasi_per_hari && is_array($this->transportasi_per_hari)) {
-            foreach ($this->transportasi_per_hari as $transport) {
-                $jenisTransportasi = strtolower($transport['jenis_transportasi'] ?? '');
-                $pagu = $transport['pagu'] ?? 0;
-                $aktual = $transport['biaya_aktual'] ?? 0;
-
-                if ($jenisTransportasi === 'taksi') {
-                    // Ini taksi
-                    $taksiPagu += $pagu;
-                    $taksiAktual += $aktual;
-                } else {
-                    // Ini transportasi utama (pesawat, bus, dll)
-                    $transportasiPagu += $pagu;
-                    $transportasiAktual += $aktual;
-                }
-            }
-        }
-
-        // Hitung pagu dan aktual penginapan
-        if ($this->penginapan && isset($this->penginapan['menginap']) && $this->penginapan['menginap']) {
-            $penginapanPagu = ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['paguPerMalam'] ?? 0);
-            $penginapanAktual = ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['biayaAktualPerMalam'] ?? 0);
-        }
-
-        // Hitung uang harian dan representasi
-        $uangHarian = ($this->uang_harian['total'] ?? 0);
-        $uangRepresentasi = ($this->uang_representasi['total'] ?? 0);
-
-        // Calculate dari tambahan orang
-        $tambahanOrangPagu = 0;
-        $tambahanOrangAktual = 0;
-        $tambahanOrang = $this->tambahanOrang;
-        if ($tambahanOrang && $tambahanOrang->count() > 0) {
-            foreach ($tambahanOrang as $orang) {
-                $tambahanOrangPagu += $orang->pagu;
-                $tambahanOrangAktual += $orang->aktual;
-            }
-        }
-
-        // Anggaran berjalan = (transportasi pagu - aktual) + (taksi pagu - aktual) + (penginapan pagu - aktual) + uang harian + uang representasi + (tambahan orang pagu - aktual)
-        $selisihTransportasi = $transportasiPagu - $transportasiAktual;
-        $selisihTaksi = $taksiPagu - $taksiAktual;
-        $selisihPenginapan = $penginapanPagu - $penginapanAktual;
-        $selisihTambahanOrang = $tambahanOrangPagu - $tambahanOrangAktual;
-        $this->anggaran_berjalan = $selisihTransportasi + $selisihTaksi + $selisihPenginapan + $uangHarian + $uangRepresentasi + $selisihTambahanOrang;
+        // Anggaran berjalan = total pagu - total biaya aktual
+        $this->anggaran_berjalan = $totalPagu - $totalBiayaAktual;
 
         // Only set anggaran_sp2d if it's already submitted
         if ($this->status === 'submitted' && $this->anggaran_sp2d == 0) {

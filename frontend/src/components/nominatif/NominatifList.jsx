@@ -101,7 +101,7 @@ const NominatifList = () => {
       message: `Apakah Anda yakin ingin submit "${nominatif.deskripsi_perjalanan_dinas}"?
 
       • Anggaran Berjalan (Rp${formatCurrency(nominatif.anggaran_berjalan)}) akan berpindah ke Anggaran SP2D
-      • Total Anggaran: Rp${formatCurrency(nominatif.total_pagu)}
+      • Total Pagu: Rp${formatCurrency(nominatif.total_pagu)}
       • Total Aktual: Rp${formatCurrency(nominatif.total_biaya_aktual)}
       • Data tidak dapat diedit setelah submit`,
       confirmText: 'Ya, Submit',
@@ -247,7 +247,7 @@ const NominatifList = () => {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Anggaran
+                    Total Pagu
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total Aktual
@@ -293,10 +293,29 @@ const NominatifList = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
-                        {formatDate(nominatif.tanggal_mulai)} - {formatDate(nominatif.tanggal_selesai)}
+                        {(() => {
+                          // Try hierarchical structure first, then fallback to direct access
+                          const tanggalMulai = nominatif.rute_perjalanan?.tanggal_mulai ||
+                                            nominatif.tanggal_mulai;
+                          const tanggalSelesai = nominatif.rute_perjalanan?.tanggal_selesai ||
+                                              nominatif.tanggal_selesai;
+
+                          if (tanggalMulai && tanggalSelesai) {
+                            return `${formatDate(tanggalMulai)} - ${formatDate(tanggalSelesai)}`;
+                          } else if (tanggalMulai) {
+                            return formatDate(tanggalMulai);
+                          } else {
+                            return '-';
+                          }
+                        })()}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {nominatif.jumlah_hari} hari
+                        {(() => {
+                          // Try hierarchical structure first, then fallback to direct access
+                          const jumlahHari = nominatif.rute_perjalanan?.total_hari ||
+                                            nominatif.jumlah_hari;
+                          return jumlahHari ? `${jumlahHari} hari` : '-';
+                        })()}
                       </div>
                     </td>
                     <td className="px-6 py-4">

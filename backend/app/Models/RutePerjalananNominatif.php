@@ -10,120 +10,140 @@ class RutePerjalananNominatif extends Model
 {
     use HasFactory;
 
-    protected $table = 'rute_perjalanans';
+    protected $table = 'rute_perjalanan_nominatifs';
 
     protected $fillable = [
-        'nominatif_id',
-        'user_id',
-        // Section 3: Detail Perjalanan
-        'jumlah_hari',
+        'master_nominatif_id',
+        'total_hari',
         'tanggal_mulai',
         'tanggal_selesai',
-        'keterangan_perjalanan',
-        // Route details (per hari)
-        'hari',
         'dari',
-        'tujuan',
-        'tujuan2',
-        'tujuan3',
-        'tujuan4',
-        'tujuan5',
-        'tujuan6',
         'pulang',
-        'tanggal',
-        'keterangan',
+        'tujuan_list',
     ];
 
     protected $casts = [
-        'jumlah_hari' => 'integer',
+        'total_hari' => 'integer',
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
-        'tanggal' => 'date',
+        'tujuan_list' => 'array', // Cast JSON to array
     ];
 
     /**
-     * Get the nominatif that owns the route.
+     * Get the master nominatif that owns this route.
      */
-    public function nominatif(): BelongsTo
+    public function masterNominatif(): BelongsTo
     {
-        return $this->belongsTo(Nominatif::class);
+        return $this->belongsTo(Nominatif::class, 'master_nominatif_id');
     }
 
     /**
-     * Get the user that owns the route.
+     * Generate complete route string
      */
-    public function user(): BelongsTo
+    public function getCompleteRouteAttribute(): string
     {
-        return $this->belongsTo(User::class);
+        $destinations = $this->tujuan_list ?? [];
+
+        if (empty($destinations)) {
+            return "{$this->dari} → {$this->pulang}";
+        }
+
+        $route = [$this->dari];
+        $route = array_merge($route, $destinations);
+        $route[] = $this->pulang;
+
+        return implode(' → ', $route);
     }
 
     /**
-     * Get all destinations as an array.
+     * Get destination count
      */
-    public function getAllDestinationsAttribute(): array
+    public function getDestinationCountAttribute(): int
     {
-        $destinations = [];
-
-        if ($this->tujuan) $destinations[] = $this->tujuan;
-        if ($this->tujuan2) $destinations[] = $this->tujuan2;
-        if ($this->tujuan3) $destinations[] = $this->tujuan3;
-        if ($this->tujuan4) $destinations[] = $this->tujuan4;
-        if ($this->tujuan5) $destinations[] = $this->tujuan5;
-        if ($this->tujuan6) $destinations[] = $this->tujuan6;
-
-        return $destinations;
+        return count($this->tujuan_list ?? []);
     }
 
     /**
-     * Get the primary destination (tujuan or first available).
+     * Check if this is a single day trip
      */
-    public function getPrimaryDestinationAttribute(): ?string
+    public function isSingleDay(): bool
     {
-        return $this->tujuan ?: null;
+        return $this->total_hari === 1;
     }
 
     /**
-     * Get formatted route string.
+     * Get formatted route description
      */
-    public function getFormattedRouteAttribute(): string
+    public function getRouteDescriptionAttribute(): string
     {
-        $route = $this->dari;
+        $count = $this->destination_count;
 
-        foreach (range(1, 6) as $i) {
-            $field = $i === 1 ? 'tujuan' : "tujuan{$i}";
-            if ($this->$field) {
-                $route .= ' → ' . $this->$field;
+        if ($this->is_single_day()) {
+            return "Pergi-Pulang (1 hari)";
+        } elseif ($count === 1) {
+            return "Jakarta → {$this->tujuan_list[0]} → Jakarta ({$this->total_hari} hari)";
+        } else {
+            return "Jakarta → [{$count} Destinations] → Jakarta ({$this->total_hari} hari)";
+        }
+    }
+
+    /**
+     * Validate route data
+     */
+    public static function validateRouteData(array $data): array
+    {
+        $errors = [];
+
+        if (!isset($data['total_hari']) || $data['total_hari'] < 1) {
+            $errors['total_hari'] = 'Total hari harus minimal 1';
+        }
+
+        if (!isset($data['tanggal_mulai'])) {
+            $errors['tanggal_mulai'] = 'Tanggal mulai harus diisi';
+        }
+
+        if (!isset($data['tanggal_selesai'])) {
+            $errors['tanggal_selesai'] = 'Tanggal selesai harus diisi';
+        }
+
+        if (isset($data['tanggal_mulai'], $data['tanggal_selesai'])) {
+            $start = new \DateTime($data['tanggal_mulai']);
+            $end = new \DateTime($data['tanggal_selesai']);
+
+            if ($end < $start) {
+                $errors['tanggal_selesai'] = 'Tanggal selesai tidak boleh sebelum tanggal mulai';
+            }
+
+            if (isset($data['total_hari'])) {
+                $expectedEnd = (clone $start)->modify('+' . ($data['total_hari'] - 1) . ' days');
+                if ($end->format('Y-m-d') !== $expectedEnd->format('Y-m-d')) {
+                    $errors['total_hari'] = 'Total hari tidak sesuai dengan rentang tanggal';
+                }
             }
         }
 
-        if ($this->pulang) {
-            $route .= ' → ' . $this->pulang;
+        if (isset($data['tujuan_list'])) {
+            $expectedDestinations = ($data['total_hari'] ?? 1) - 1;
+            $actualDestinations = count($data['tujuan_list']);
+
+            if ($actualDestinations !== $expectedDestinations) {
+                $errors['tujuan_list'] = "Jumlah tujuan harus {$expectedDestinations} untuk {$data['total_hari']} hari";
+            }
+
+            // Check for duplicate destinations
+            if (count($data['tujuan_list']) !== count(array_unique($data['tujuan_list']))) {
+                $errors['tujuan_list'] = 'Tujuan tidak boleh duplikat';
+            }
         }
 
-        return $route;
+        return $errors;
     }
 
     /**
-     * Scope routes by nominatif.
+     * Check if this is a single day trip
      */
-    public function scopeByNominatif($query, $nominatifId)
+    public function is_single_day(): bool
     {
-        return $query->where('nominatif_id', $nominatifId);
-    }
-
-    /**
-     * Scope routes by user.
-     */
-    public function scopeByUser($query, $userId)
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    /**
-     * Scope routes ordered by day.
-     */
-    public function scopeOrdered($query)
-    {
-        return $query->orderBy('hari');
+        return $this->total_hari === 1;
     }
 }
