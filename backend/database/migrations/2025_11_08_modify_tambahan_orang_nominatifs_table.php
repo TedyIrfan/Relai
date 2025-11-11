@@ -40,9 +40,11 @@ return new class extends Migration
             // Remove calculated fields
             $table->dropColumn(['total_pagu', 'total_biaya_aktual', 'anggaran_berjalan']);
 
-            // Revert foreign key (jika perlu)
-            $table->dropForeign(['master_nominatif_id']);
-            $table->foreign('master_nominatif_id')->references('id')->on('nominatifs')->onDelete('cascade');
+            // Remove master_nominatif_id if it exists (no revert needed for now)
+            if (Schema::hasColumn('tambahan_orang_nominatifs', 'master_nominatif_id')) {
+                $table->dropForeign(['master_nominatif_id']);
+                $table->dropColumn('master_nominatif_id');
+            }
         });
     }
 };

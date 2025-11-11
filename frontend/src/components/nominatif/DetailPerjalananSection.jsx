@@ -17,46 +17,30 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
     console.log('🔄 useEffect triggered:', {
       trigger: 'useEffect',
       jumlahHari,
-      tujuanList,
-      rutePerjalanan,
-      currentDestinations: destinations
+      tujuanListLength: tujuanList?.length || 0,
+      rutePerjalananLength: rutePerjalanan?.length || 0
     });
 
     // Calculate expected number of destinations
     const expectedJumlahTujuan = Math.max(1, (jumlahHari || 1) - 1);
     console.log('📍 Expected destinations for', jumlahHari, 'hari:', expectedJumlahTujuan);
 
-    // Skip if destinations already initialized with correct count and values
+    // Skip if already has correct count and non-empty values
     if (destinations.length === expectedJumlahTujuan && destinations.some(d => d !== '')) {
-      console.log('📍 Destinations already initialized, skipping useEffect');
+      console.log('📍 Destinations already set correctly, skipping');
       return;
     }
 
+    let newDestinations = Array(expectedJumlahTujuan).fill('');
+
+    // Priority 1: Use tujuanList from backend (highest priority)
     if (tujuanList && tujuanList.length > 0) {
-      // Use tujuan_list from backend, but validate if count matches
-      if (tujuanList.length !== expectedJumlahTujuan) {
-        console.log('📍 tujuanList count mismatch, recalculating');
-        const newDestinations = Array(expectedJumlahTujuan).fill('');
-        // Copy existing values if available, preserve current non-empty values
-        tujuanList.forEach((dest, i) => {
-          if (i < expectedJumlahTujuan) {
-            newDestinations[i] = dest;
-          }
-        });
-        // Preserve any non-empty values from current destinations
-        destinations.forEach((dest, i) => {
-          if (i < expectedJumlahTujuan && dest && !newDestinations[i]) {
-            newDestinations[i] = dest;
-          }
-        });
-        setDestinations(newDestinations);
-      } else {
-        console.log('📍 Setting destinations from tujuanList:', tujuanList);
-        setDestinations(tujuanList);
-      }
-    } else if (rutePerjalanan && rutePerjalanan.length > 0) {
-      // Fallback to old format for compatibility
-      console.log('📍 Checking rutePerjalanan:', rutePerjalanan);
+      console.log('📍 Using tujuanList:', tujuanList);
+      newDestinations = tujuanList.map((dest, i) => i < expectedJumlahTujuan ? dest : '');
+    }
+    // Priority 2: Use rutePerjalanan for compatibility
+    else if (rutePerjalanan && rutePerjalanan.length > 0) {
+      console.log('📍 Using rutePerjalanan:', rutePerjalanan);
       const firstDay = rutePerjalanan[0];
       const destList = [];
 
@@ -68,53 +52,28 @@ const DetailPerjalananSection = ({ jumlahHari, rutePerjalanan, tanggalPerjalanan
       if (firstDay.tujuan6) destList.push(firstDay.tujuan6);
 
       if (destList.length > 0) {
-        if (destList.length !== expectedJumlahTujuan) {
-          console.log('📍 rutePerjalanan count mismatch, adjusting');
-          const newDestinations = Array(expectedJumlahTujuan).fill('');
-          // Copy existing values if available, preserve current non-empty values
-          destList.forEach((dest, i) => {
-            if (i < expectedJumlahTujuan) {
-              newDestinations[i] = dest;
-            }
-          });
-          // Preserve any non-empty values from current destinations
-          destinations.forEach((dest, i) => {
-            if (i < expectedJumlahTujuan && dest && !newDestinations[i]) {
-              newDestinations[i] = dest;
-            }
-          });
-          setDestinations(newDestinations);
-        } else {
-          console.log('📍 Setting destinations from rutePerjalanan (found data):', destList);
-          setDestinations(destList);
-        }
-      } else {
-        console.log('📍 rutePerjalanan is empty, falling back to calculation');
-        // Fallthrough to calculation logic
+        newDestinations = destList.map((dest, i) => i < expectedJumlahTujuan ? dest : '');
       }
     }
 
-    // If no valid data from tujuanList or rutePerjalanan, use calculation
-    if ((!tujuanList || tujuanList.length === 0) &&
-        (!rutePerjalanan || rutePerjalanan.length === 0 ||
-         (rutePerjalanan.length > 0 && !rutePerjalanan[0]?.ke && !rutePerjalanan[0]?.tujuan2))) {
-      // Initialize empty array for new entries
-      // Logic: 1&2 hari = 1 tujuan, 3+ hari = (hari-1) tujuan
-      const newDestinations = Array(expectedJumlahTujuan).fill('');
-      // Preserve any non-empty values from current destinations
-      destinations.forEach((dest, i) => {
-        if (i < expectedJumlahTujuan && dest) {
-          newDestinations[i] = dest;
-        }
-      });
-      console.log('📍 Setting destinations from calculation:', {
-        jumlahHari,
-        expectedJumlahTujuan,
-        newDestinations
-      });
-      setDestinations(newDestinations);
+    // Fill remaining slots if array is shorter than expected
+    while (newDestinations.length < expectedJumlahTujuan) {
+      newDestinations.push('');
     }
-  }, [tujuanList, rutePerjalanan, jumlahHari]);
+
+    // Trim if array is longer than expected
+    if (newDestinations.length > expectedJumlahTujuan) {
+      newDestinations = newDestinations.slice(0, expectedJumlahTujuan);
+    }
+
+    console.log('📍 Final destinations to set:', {
+      jumlahHari,
+      expectedJumlahTujuan,
+      newDestinations
+    });
+
+    setDestinations(newDestinations);
+  }, [jumlahHari, tujuanList?.length, rutePerjalanan?.length, JSON.stringify(tujuanList), JSON.stringify(rutePerjalanan)]);
 
   // Handle destination change (JSON array format for tujuan_list)
   const handleDestinationChange = (index, value) => {

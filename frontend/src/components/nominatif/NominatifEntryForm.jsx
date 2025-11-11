@@ -116,41 +116,85 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
           totalAnggaranRealisasi: nominatifData.total_anggaran_realisasi || 0,
         });
 
-        // Load tambahan orang data
+        // Load tambahan orang data using new API
+        try {
+          console.log('🔄 Loading tambahan orang data for ID:', id);
+          const tambahanOrangResponse = await nominatifService.getTambahanOrang(id);
+          console.log('📥 Tambahan orang response:', {
+          success: tambahanOrangResponse.success,
+          dataCount: tambahanOrangResponse.data?.length || 0,
+          firstItem: tambahanOrangResponse.data?.[0] || 'No data'
+        });
 
-        if (nominatifData.tambahan_orang && Array.isArray(nominatifData.tambahan_orang)) {
-          const tambahanOrangData = nominatifData.tambahan_orang.map(orang => {
+          // Debug: Force alert to see actual response
+          alert(`Debug Response: ${JSON.stringify({
+            success: tambahanOrangResponse.success,
+            dataCount: tambahanOrangResponse.data?.length || 0,
+            keys: Object.keys(tambahanOrangResponse),
+            dataType: typeof tambahanOrangResponse.data
+          }, null, 2)}`);
+
+          console.log('📥 Full response string:', JSON.stringify(tambahanOrangResponse, null, 2));
+
+          if (tambahanOrangResponse.success && tambahanOrangResponse.data && Array.isArray(tambahanOrangResponse.data)) {
+          const tambahanOrangData = tambahanOrangResponse.data.map(orang => {
             return {
-              ...orang,
-              // Ensure data structure is correct
-              transportasi_per_hari: orang.transportasi_per_hari || [],
-              penginapan: {
-                menginap: orang.menginap || false,
-                jumlahMalam: orang.jumlah_malam || 1,
-                paguPerMalam: orang.pagu_per_malam || 0,
-                biayaAktualPerMalam: orang.biaya_aktual_per_malam || 0,
-                total: orang.penginapan_total || 0,
-                anggaranRealisasi: orang.penginapan_anggaran_realisasi || 0
+              // Direct mapping to new backend structure (Option 1)
+              id: orang.id,
+              nama_peserta: orang.nama_peserta || '',
+              jabatan_peserta: orang.jabatan_peserta || '',
+
+              // Master fields (mirroring main form)
+              deskripsi_perjalanan_dinas: orang.deskripsi_perjalanan_dinas || '',
+              status: orang.status || 'draft',
+              is_editable: orang.is_editable !== false, // default true
+
+              // JSON sections (same as master) - transport data comes from grandchild table
+              transportasi_per_hari: convertGrandchildTransportToFormFormat(orang.transportasi || []),
+              penginapan: orang.penginapan || { menginap: false },
+              uang_harian: orang.uang_harian || { jumlahHari: 0, paguPerHari: 0 },
+              uang_representasi: orang.uang_representasi || { jumlahHari: 0, paguPerHari: 0 },
+
+              // Travel details
+              jumlah_hari: orang.jumlah_hari || 0,
+
+              // Calculated fields
+              total_pagu: orang.total_pagu || 0,
+              total_biaya_aktual: orang.total_biaya_aktual || 0,
+              anggaran_berjalan: orang.anggaran_berjalan || 0,
+              anggaran_sp2d: orang.anggaran_sp2d || 0,
+              total_anggaran_realisasi: orang.total_anggaran_realisasi || 0,
+
+              // Legacy compatibility fields
+              pagu: orang.pagu || 0,
+              aktual: orang.aktual || 0,
+              anggaran_realisasi: orang.anggaran_realisasi || 0,
+
+              // For component compatibility
+              transportasi: convertGrandchildTransportToFormFormat(orang.transportasi || []),
+              rutePerjalanan: orang.rute_perjalanan || null,
+              tanggal_perjalanan: {
+                tanggalMulai: orang.rute_perjalanan?.tanggal_mulai?.split('T')[0] || '',
+                tanggalSelesai: orang.rute_perjalanan?.tanggal_selesai?.split('T')[0] || ''
               },
-              uangHarian: {
-                jumlahHari: orang.uang_harian_jumlah_hari || 0,
-                paguPerHari: orang.uang_harian_pagu_per_hari || 0,
-                total: orang.uang_harian_total || 0
-              },
-              uangRepresentasi: {
-                jumlahHari: orang.uang_representasi_jumlah_hari || 0,
-                paguPerHari: orang.uang_representasi_pagu_per_hari || 0,
-                total: orang.uang_representasi_total || 0
-              },
-              rute_perjalanan: orang.rute_perjalanan || [],
-              tanggal_perjalanan: orang.tanggal_perjalanan || {
-                tanggalMulai: orang.tanggal_mulai || '',
-                tanggalSelesai: orang.tanggal_selesai || ''
+              // Route data for DetailPerjalananSection
+              custom_rute_perjalanan: {
+                total_hari: orang.rute_perjalanan?.total_hari || orang.jumlah_hari || 0,
+                tanggal_mulai: orang.rute_perjalanan?.tanggal_mulai?.split('T')[0] || '',
+                tanggal_selesai: orang.rute_perjalanan?.tanggal_selesai?.split('T')[0] || '',
+                dari: orang.rute_perjalanan?.dari || 'Jakarta',
+                pulang: orang.rute_perjalanan?.pulang || 'Jakarta',
+                tujuan_list: orang.rute_perjalanan?.tujuan_list || []
               }
             };
           });
           setTambahanOrang(tambahanOrangData);
         } else {
+          setTambahanOrang([]);
+        }
+        } catch (error) {
+          console.error('Error loading tambahan orang:', error);
+          notification.error('Gagal memuat data tambahan orang');
           setTambahanOrang([]);
         }
 
@@ -272,23 +316,25 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
       }
     }
 
-    // Uang Harian calculations
-    if (orang.uangHarian) {
-      const uangHarianTotal = orang.uangHarian.total || 0;
+      // Uang Harian calculations - Use UI state structure (uangHarian)
+    let uangHarianTotal = 0;
+    if (orang.uangHarian && orang.uangHarian.total) {
+      uangHarianTotal = orang.uangHarian.total || 0;
       totalPagu += uangHarianTotal;
       totalAktual += uangHarianTotal; // Uang harian usually same as pagu
       console.log('Uang Harian:', { uangHarianTotal });
     }
 
-    // Uang Representasi calculations
-    if (orang.uangRepresentasi) {
-      const uangRepresentasiTotal = orang.uangRepresentasi.total || 0;
+    // Uang Representasi calculations - Use UI state structure (uangRepresentasi)
+    let uangRepresentasiTotal = 0;
+    if (orang.uangRepresentasi && orang.uangRepresentasi.total) {
+      uangRepresentasiTotal = orang.uangRepresentasi.total || 0;
       totalPagu += uangRepresentasiTotal;
       totalAktual += uangRepresentasiTotal; // Uang representasi usually same as pagu
       console.log('Uang Representasi:', { uangRepresentasiTotal });
     }
 
-    const result = { pagu: totalPagu, aktual: totalAktual };
+    const result = { pagu: totalPagu, aktual: totalAktual, uangHarianTotal, uangRepresentasiTotal };
     console.log('Final totals:', result);
     return result;
   };
@@ -404,30 +450,208 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
     });
   };
 
-  // Add new tambahan orang
+  // Add new tambahan orang (Option 1 Structure)
   const handleAddTambahanOrang = () => {
     if (tambahanOrang.length < 7) {
       const newIndex = tambahanOrang.length;
       setTambahanOrang(prev => [
         ...prev,
         {
+          // Person info
           nama_peserta: '',
           jabatan_peserta: '',
-          pagu: 0,
-          aktual: 0,
-          // Sync initial data from main form
+
+          // Master fields (sync with main form)
+          deskripsi_perjalanan_dinas: formData.detailPerjalananDinas?.deskripsi || '',
+          status: 'draft',
+          is_editable: formData.isEditable !== false,
+
+          // Travel details (sync with main form)
           jumlah_hari: formData.jumlahHari || 0,
           tanggal_mulai: formData.tanggalPerjalanan?.tanggalMulai || '',
           tanggal_selesai: formData.tanggalPerjalanan?.tanggalSelesai || '',
+
+          // JSON sections (master pattern)
+          transportasi_per_hari: [],
+          penginapan: { menginap: false },
+          uang_harian: { jumlahHari: formData.jumlahHari || 0, paguPerHari: 0 },
+          uang_representasi: { jumlahHari: formData.jumlahHari || 0, paguPerHari: 0 },
+
+          // Calculated fields
+          total_pagu: 0,
+          total_biaya_aktual: 0,
+          anggaran_berjalan: 0,
+          anggaran_sp2d: 0,
+          total_anggaran_realisasi: 0,
+
+          // Legacy compatibility fields
+          pagu: 0,
+          aktual: 0,
+          anggaran_realisasi: 0,
+
+          // Component compatibility
+          transportasi: [],
+          rute_perjalanan: formData.rutePerjalanan || [],
           tanggal_perjalanan: formData.tanggalPerjalanan || {},
-          rute_perjalanan: formData.rutePerjalanan || []
+
+          // Custom route data for individual tambahan orang
+          // User can customize travel duration independently
+          custom_rute_perjalanan: {
+            total_hari: formData.jumlahHari || 0,
+            tanggal_mulai: formData.tanggalPerjalanan?.tanggalMulai || '',
+            tanggal_selesai: formData.tanggalPerjalanan?.tanggalSelesai || '',
+            dari: 'Jakarta',
+            pulang: 'Jakarta',
+            tujuan_list: []
+          }
         }
       ]);
       setCurrentOrangIndex(newIndex); // Buka form untuk orang baru
     }
   };
 
-  
+  // Collect rute perjalanan data for tambahan orang
+  const collectRutePerjalananTambahanOrang = (orang) => {
+    // Use custom route data for individual tambahan orang
+    const customRute = orang.custom_rute_perjalanan;
+
+    // Return formatted data for grandchild table
+    return {
+      total_hari: customRute.total_hari || orang.jumlah_hari || formData.jumlahHari || 1,
+      tanggal_mulai: customRute.tanggal_mulai || orang.tanggal_perjalanan?.tanggalMulai || formData.tanggalPerjalanan?.tanggalMulai || null,
+      tanggal_selesai: customRute.tanggal_selesai || orang.tanggal_perjalanan?.tanggalSelesai || formData.tanggalPerjalanan?.tanggalSelesai || null,
+      dari: customRute.dari || 'Jakarta',
+      pulang: customRute.pulang || 'Jakarta',
+      tujuan_list: formData.tujuanList || [] // Use main form destinations
+    };
+  };
+
+  // Collect transportasi data for tambahan orang
+  const collectTransportasiTambahanOrang = (orang) => {
+    const transportasiData = orang.transportasi_per_hari || orang.transportasi || [];
+
+    // Transform to grandchild table format
+    const formattedData = [];
+
+    // Convert transportasi_per_hari (master format) to individual records
+    if (transportasiData && Array.isArray(transportasiData)) {
+      transportasiData.forEach((dayData, dayIndex) => {
+        const day = dayIndex + 1; // 1-based indexing
+
+        // Pergi transport (from master format: jenisBerangkat, paguTransportasiBerangkat)
+        if (dayData.jenisBerangkat && dayData.paguTransportasiBerangkat > 0) {
+          formattedData.push({
+            hari: day,
+            arah: 'pergi',
+            jenis_transportasi: dayData.jenisBerangkat,
+            keterangan: `Transportasi ${dayData.jenisBerangkat} pergi hari ke-${day}`,
+            pagu: dayData.paguTransportasiBerangkat || 0,
+            biaya_aktual: dayData.biayaAktualTransportasiBerangkat || 0,
+            anggaran_realisasi: (dayData.paguTransportasiBerangkat || 0) - (dayData.biayaAktualTransportasiBerangkat || 0)
+          });
+        }
+
+        // Taksi pergi (if exists)
+        if (dayData.paguTaksiBerangkat > 0) {
+          formattedData.push({
+            hari: day,
+            arah: 'pergi',
+            jenis_transportasi: 'taksi',
+            keterangan: `Transportasi taksi pergi hari ke-${day}`,
+            pagu: dayData.paguTaksiBerangkat || 0,
+            biaya_aktual: dayData.biayaAktualTaksiBerangkat || 0,
+            anggaran_realisasi: (dayData.paguTaksiBerangkat || 0) - (dayData.biayaAktualTaksiBerangkat || 0)
+          });
+        }
+
+        // Pulang transport (from master format: jenisPulang, paguTransportasiPulang)
+        if (dayData.jenisPulang && dayData.paguTransportasiPulang > 0) {
+          formattedData.push({
+            hari: day,
+            arah: 'pulang',
+            jenis_transportasi: dayData.jenisPulang,
+            keterangan: `Transportasi ${dayData.jenisPulang} pulang hari ke-${day}`,
+            pagu: dayData.paguTransportasiPulang || 0,
+            biaya_aktual: dayData.biayaAktualTransportasiPulang || 0,
+            anggaran_realisasi: (dayData.paguTransportasiPulang || 0) - (dayData.biayaAktualTransportasiPulang || 0)
+          });
+        }
+
+        // Taksi pulang (if exists)
+        if (dayData.paguTaksiPulang > 0) {
+          formattedData.push({
+            hari: day,
+            arah: 'pulang',
+            jenis_transportasi: 'taksi',
+            keterangan: `Transportasi taksi pulang hari ke-${day}`,
+            pagu: dayData.paguTaksiPulang || 0,
+            biaya_aktual: dayData.biayaAktualTaksiPulang || 0,
+            anggaran_realisasi: (dayData.paguTaksiPulang || 0) - (dayData.biayaAktualTaksiPulang || 0)
+          });
+        }
+      });
+    }
+
+    console.log('🚗 collectTransportasiTambahanOrang result:', formattedData);
+    return formattedData;
+  };
+
+  // Function to convert grandchild transport data to form format
+  const convertGrandchildTransportToFormFormat = (transportData) => {
+    if (!transportData || transportData.length === 0) {
+      return [];
+    }
+
+    const result = [];
+
+    transportData.forEach((transport) => {
+      const { hari, arah, jenis_transportasi, pagu, biaya_aktual } = transport;
+
+      // Find or create day entry
+      let dayEntry = result.find(item => item.hari === hari);
+      if (!dayEntry) {
+        dayEntry = {
+          hari: hari,
+          jenisBerangkat: '',
+          paguTransportasiBerangkat: 0,
+          biayaAktualTransportasiBerangkat: 0,
+          jenisPulang: '',
+          paguTransportasiPulang: 0,
+          biayaAktualTransportasiPulang: 0,
+          paguTaksiBerangkat: 0,
+          biayaAktualTaksiBerangkat: 0,
+          paguTaksiPulang: 0,
+          biayaAktualTaksiPulang: 0,
+        };
+        result.push(dayEntry);
+      }
+
+      // Map transport data to form fields
+      if (arah === 'pergi') {
+        if (jenis_transportasi === 'taksi') {
+          dayEntry.paguTaksiBerangkat = parseFloat(pagu) || 0;
+          dayEntry.biayaAktualTaksiBerangkat = parseFloat(biaya_aktual) || 0;
+        } else {
+          dayEntry.jenisBerangkat = jenis_transportasi;
+          dayEntry.paguTransportasiBerangkat = parseFloat(pagu) || 0;
+          dayEntry.biayaAktualTransportasiBerangkat = parseFloat(biaya_aktual) || 0;
+        }
+      } else if (arah === 'pulang') {
+        if (jenis_transportasi === 'taksi') {
+          dayEntry.paguTaksiPulang = parseFloat(pagu) || 0;
+          dayEntry.biayaAktualTaksiPulang = parseFloat(biaya_aktual) || 0;
+        } else {
+          dayEntry.jenisPulang = jenis_transportasi;
+          dayEntry.paguTransportasiPulang = parseFloat(pagu) || 0;
+          dayEntry.biayaAktualTransportasiPulang = parseFloat(biaya_aktual) || 0;
+        }
+      }
+    });
+
+    // Sort by hari
+    return result.sort((a, b) => a.hari - b.hari);
+  };
+
   const handleSaveOrang = () => {
     const orang = tambahanOrang[currentOrangIndex];
     if (!orang.nama_peserta?.trim() || !orang.jabatan_peserta?.trim()) {
@@ -570,62 +794,15 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
       const rkaId = formData.kodeAnggaranRKA.id;
       const apiData = nominatifService.formatFormData(formData, rkaId);
 
-      // Add tambahan orang data to API request with calculated pagu and aktual
-      apiData.tambahan_orang = tambahanOrang.filter(orang => {
-        // Include orang if has any data (nama, jabatan, or any section data)
+      // Handle tambahan orang separately using new API
+      const validTambahanOrang = tambahanOrang.filter(orang => {
         const hasBasicInfo = orang.nama_peserta?.trim() || orang.jabatan_peserta?.trim();
         const calculatedTotals = calculateTambahanOrangTotals(orang);
-        const hasAnyData = hasBasicInfo || calculatedTotals.pagu > 0 || calculatedTotals.aktual > 0;
-
-        console.log('Filtering tambahan orang:', {
-          index: tambahanOrang.indexOf(orang),
-          hasBasicInfo,
-          calculatedTotals,
-          hasAnyData,
-          orang: orang
-        });
-
-        console.log('Final API data for tambahan orang:', {
-          ...orang,
-          pagu: calculatedTotals.pagu,
-          aktual: calculatedTotals.aktual,
-          anggaran_realisasi: calculatedTotals.pagu - calculatedTotals.aktual
-        });
-
-        return hasAnyData;
-      }).map(orang => {
-        // Calculate pagu and aktual from sections
-        const calculatedTotals = calculateTambahanOrangTotals(orang);
-        return {
-          ...orang,
-          // Detail Perjalanan fields
-          jumlah_hari: orang.jumlah_hari || 0,
-          tanggal_mulai: orang.tanggal_perjalanan?.tanggalMulai || null,
-          tanggal_selesai: orang.tanggal_perjalanan?.tanggalSelesai || null,
-          rute_perjalanan: orang.rute_perjalanan || [],
-          // Transportasi fields - use relationship data instead of JSON field
-          transportasi_per_hari: orang.transportasi || [],
-          // Penginapan fields
-          menginap: orang.penginapan?.menginap || false,
-          jumlah_malam: orang.penginapan?.jumlahMalam || 1,
-          pagu_per_malam: orang.penginapan?.paguPerMalam || 0,
-          biaya_aktual_per_malam: orang.penginapan?.biayaAktualPerMalam || 0,
-          penginapan_total: orang.penginapan?.total || 0,
-          penginapan_anggaran_realisasi: orang.penginapan?.anggaranRealisasi || 0,
-          // Uang Harian fields
-          uang_harian_jumlah_hari: orang.uangHarian?.jumlahHari || 0,
-          uang_harian_pagu_per_hari: orang.uangHarian?.paguPerHari || 0,
-          uang_harian_total: orang.uangHarian?.total || 0,
-          // Uang Representasi fields
-          uang_representasi_jumlah_hari: orang.uangRepresentasi?.jumlahHari || 0,
-          uang_representasi_pagu_per_hari: orang.uangRepresentasi?.paguPerHari || 0,
-          uang_representasi_total: orang.uangRepresentasi?.total || 0,
-          // Total fields (calculate from sections or use existing)
-          pagu: calculatedTotals.pagu,
-          aktual: calculatedTotals.aktual,
-          anggaran_realisasi: calculatedTotals.pagu - calculatedTotals.aktual
-        };
+        return hasBasicInfo || calculatedTotals.pagu > 0 || calculatedTotals.aktual > 0;
       });
+
+      // Remove tambahan orang from main API data (handled separately)
+      // apiData.tambahan_orang will be handled after main save
 
       let response;
       if (isNewRecord) {
@@ -646,6 +823,9 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
           }));
 
           notification.success('Draft Berhasil Disimpan!', `Data draft telah disimpan dengan ID: ${response.data.data.id}`);
+
+          // Save tambahan orang using new API
+          await saveTambahanOrangData(response.data.data.id, validTambahanOrang);
         } else {
           throw new Error(response.message || 'Gagal membuat draft baru');
         }
@@ -662,6 +842,9 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
           }));
 
           notification.success('Draft Berhasil Diupdate!', 'Perubahan data draft telah berhasil disimpan.');
+
+          // Save tambahan orang using new API
+          await saveTambahanOrangData(nominatifId, validTambahanOrang);
         } else {
           throw new Error(response.message || 'Gagal mengupdate draft');
         }
@@ -842,6 +1025,126 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
       return 'Semua tujuan perjalanan harus diisi.';
     }
     return null;
+  };
+
+  // Save tambahan orang data using new API
+  const saveTambahanOrangData = async (nominatifId, tambahanOrangToSave) => {
+    if (tambahanOrangToSave.length === 0) return;
+
+    try {
+      // Match tambahan orang to save with existing records by ID
+      const matchedData = tambahanOrangToSave.map((orangToSave) => {
+        // Find matching record in current state
+        const existingRecord = tambahanOrang.find(
+          existing => existing.nama_peserta === orangToSave.nama_peserta
+        );
+
+        if (existingRecord && existingRecord.id) {
+          // Update existing record - use its ID
+          return {
+            ...orangToSave,
+            id: existingRecord.id // Use existing ID for update
+          };
+        } else {
+          // Create new record - no ID needed
+          return orangToSave;
+        }
+      });
+
+      // Save each tambahan orang with proper ID handling
+      for (const orang of matchedData) {
+        const calculatedTotals = calculateTambahanOrangTotals(orang);
+
+        // Collect grandchild data from tambahan orang state
+        const ruteData = collectRutePerjalananTambahanOrang(orang);
+        const transportasiData = collectTransportasiTambahanOrang(orang);
+
+        // Debug: Check calculated totals
+        console.log('🔍 DEBUG Tambahan Orang Calculations:', {
+          nama: orang.nama_peserta,
+          uangHarianTotal: orang.uangHarianTotal,
+          uangRepresentasiTotal: orang.uangRepresentasiTotal,
+          jumlah_hari: orang.jumlah_hari,
+          calculatedTotals: calculatedTotals
+        });
+
+        // Get current uang values from calculated totals (not database old values)
+        const currentUangHarian = {
+          jumlahHari: orang.jumlah_hari || 2,
+          paguPerHari: (calculatedTotals.uangHarianTotal && orang.jumlah_hari > 0) ? Math.round(calculatedTotals.uangHarianTotal / orang.jumlah_hari) : 0,
+          total: calculatedTotals.uangHarianTotal || 0
+        };
+
+        const currentUangRepresentasi = {
+          jumlahHari: orang.jumlah_hari || 2,
+          paguPerHari: (calculatedTotals.uangRepresentasiTotal && orang.jumlah_hari > 0) ? Math.round(calculatedTotals.uangRepresentasiTotal / orang.jumlah_hari) : 0,
+          total: calculatedTotals.uangRepresentasiTotal || 0
+        };
+
+        console.log('🔍 DEBUG Current Uang Values:', {
+          currentUangHarian,
+          currentUangRepresentasi
+        });
+
+        // Format data for backend API (Option 1 Structure)
+        const tambahanOrangData = {
+          // Person info
+          nama_peserta: orang.nama_peserta || '',
+          jabatan_peserta: orang.jabatan_peserta || '',
+
+          // Master fields (mirroring main form - sync with formData)
+          deskripsi_perjalanan_dinas: formData.detailPerjalananDinas?.deskripsi || '',
+          status: formData.status || 'draft',
+          is_editable: formData.isEditable !== false,
+
+          // Travel details
+          jumlah_hari: orang.jumlah_hari || formData.jumlahHari || 0,
+          tanggal_mulai: ruteData.tanggalMulai || formData.tanggalPerjalanan?.tanggalMulai || null,
+          tanggal_selesai: ruteData.tanggalSelesai || formData.tanggalPerjalanan?.tanggalSelesai || null,
+
+          // Grandchild data for backend processing
+          rute_perjalanan: ruteData,
+          transportasi_data: transportasiData,
+
+          // JSON sections (same as master structure) - USE CURRENT FORM VALUES
+          transportasi_per_hari: null, // Will be populated from grandchild data by backend
+          penginapan: orang.penginapan || { menginap: false },
+          uang_harian: currentUangHarian, // Use current values from form state
+          uang_representasi: currentUangRepresentasi, // Use current values from form state
+
+          // Calculated fields (matching master pattern)
+          total_pagu: calculatedTotals.pagu,
+          total_biaya_aktual: calculatedTotals.aktual,
+          anggaran_berjalan: calculatedTotals.pagu - calculatedTotals.aktual,
+          anggaran_sp2d: 0, // Set to 0 for draft
+          total_anggaran_realisasi: 0, // Set to 0 for draft
+
+          // Legacy compatibility fields
+          pagu: calculatedTotals.pagu,
+          aktual: calculatedTotals.aktual,
+          anggaran_realisasi: calculatedTotals.pagu - calculatedTotals.aktual
+        };
+
+        let response;
+        if (orang.id) {
+          // Update existing record
+          response = await nominatifService.updateTambahanOrang(orang.id, tambahanOrangData);
+        } else {
+          // Create new record
+          response = await nominatifService.saveTambahanOrang(nominatifId, tambahanOrangData);
+        }
+
+        if (!response.success) {
+          throw new Error(response.message || 'Gagal menyimpan tambahan orang');
+        }
+      }
+
+      notification.success(`Berhasil menyimpan ${matchedData.length} tambahan orang`);
+    } catch (error) {
+      console.error('Error saving tambahan orang:', error);
+      notification.error(error.message || 'Gagal menyimpan data tambahan orang');
+      throw error; // Re-throw to handle in main save function
+    }
   };
 
   return (
@@ -1263,6 +1566,7 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
                   jumlahHari={tambahanOrang[currentOrangIndex]?.jumlah_hari || formData.jumlahHari}
                   rutePerjalanan={tambahanOrang[currentOrangIndex]?.rute_perjalanan || []}
                   tanggalPerjalanan={tambahanOrang[currentOrangIndex]?.tanggal_perjalanan || { tanggalMulai: '', tanggalSelesai: '' }}
+                  tujuanList={tambahanOrang[currentOrangIndex]?.custom_rute_perjalanan?.tujuan_list || []}
                   onChange={handleTambahanOrangDetailPerjalananChange(currentOrangIndex)}
                   isEditable={true}
                   isEditMode={false}
@@ -1404,6 +1708,7 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
                             tanggalMulai: orang.tanggal_mulai || '',
                             tanggalSelesai: orang.tanggal_selesai || ''
                           }}
+                          tujuanList={orang.custom_rute_perjalanan?.tujuan_list || []}
                           onChange={handleTambahanOrangDetailPerjalananChange(index)}
                           isEditable={true}
                           isEditMode={false}

@@ -201,5 +201,105 @@ export const nominatifService = {
       const message = error.response?.data?.message || 'Gagal menghapus tambahan orang';
       return { success: false, message };
     }
+  },
+
+  // === NEW TAMBAHAN ORANG API METHODS ===
+
+  // Get all tambahan orang for a nominatif
+  getTambahanOrang: async (nominatifId) => {
+    try {
+      const response = await api.get(`/nominatifs/${nominatifId}/tambahan-orang`);
+      // Return backend response directly without double-wrapping
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal mengambil data tambahan orang';
+      return { success: false, message };
+    }
+  },
+
+  // Save/Update single tambahan orang
+  saveTambahanOrang: async (nominatifId, tambahanOrangData) => {
+    try {
+      const response = await api.post(`/nominatifs/${nominatifId}/tambahan-orang`, tambahanOrangData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal menyimpan tambahan orang';
+      const errors = error.response?.data?.errors || {};
+      return { success: false, message, errors };
+    }
+  },
+
+  // Update existing tambahan orang
+  updateTambahanOrang: async (tambahanOrangId, tambahanOrangData) => {
+    try {
+      const response = await api.put(`/nominatifs/tambahan-orang/${tambahanOrangId}`, tambahanOrangData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal mengupdate tambahan orang';
+      const errors = error.response?.data?.errors || {};
+      return { success: false, message, errors };
+    }
+  },
+
+  // Delete specific tambahan orang
+  deleteTambahanOrangById: async (nominatifId, tambahanOrangId) => {
+    try {
+      const response = await api.delete(`/nominatifs/${nominatifId}/tambahan-orang/${tambahanOrangId}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal menghapus tambahan orang';
+      return { success: false, message };
+    }
+  },
+
+  // Format tambahan orang data for backend (using existing table structure)
+  formatTambahanOrangData: (formData) => {
+    // Convert frontend structure to backend table structure
+    return {
+      nama_peserta: formData.nama || '',
+      jabatan_peserta: formData.jabatan || '',
+      pagu: formData.pagu || 0,
+      aktual: formData.aktual || 0,
+      anggaran_realisasi: formData.anggaran_realisasi || 0,
+      jumlah_hari: formData.jumlahHari || 0,
+      tanggal_mulai: formData.tanggalMulai || null,
+      tanggal_selesai: formData.tanggalSelesai || null,
+      rute_perjalanan: formData.rutePerjalanan || [],
+      // Transport data handled separately via API calls
+      transportasi_data: formData.transportasiData || [],
+      // Individual sections as JSON
+      penginapan: formData.penginapan || {},
+      uang_harian: formData.uang_harian || {},
+      uang_representasi: formData.uang_representasi || {},
+    };
+  },
+
+  // Calculate total pagu for tambahan orang
+  calculateTambahanOrangPagu: (formData) => {
+    let total = 0;
+
+    // Transportasi
+    if (formData.transportasi_data) {
+      formData.transportasi_data.forEach(transport => {
+        total += transport.pagu || 0;
+      });
+    }
+
+    // Penginapan
+    if (formData.penginapan?.menginap) {
+      total += (formData.penginapan.jumlahMalam || 1) * (formData.penginapan.paguPerMalam || 0);
+    }
+
+    // Uang harian
+    if (formData.uang_harian?.total) {
+      total += formData.uang_harian.total;
+    }
+
+    // Uang representasi
+    if (formData.uang_representasi?.total) {
+      total += formData.uang_representasi.total;
+    }
+
+    return total;
   }
 };

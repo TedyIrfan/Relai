@@ -10,6 +10,8 @@ class RutePerjalananTambahanOrang extends Model
 {
     use HasFactory;
 
+    protected $table = 'rute_perjalanan_tambahan_orang';
+
     protected $fillable = [
         'tambahan_orang_nominatif_id',
         'total_hari',

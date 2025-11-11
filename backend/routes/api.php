@@ -47,6 +47,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/nominatifs/{id}', [NominatifController::class, 'destroy']); // DELETE nominatif
     Route::delete('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'deleteTambahanOrang']); // DELETE all tambahan orang
 
+    // Tambahan Orang API Routes (New Normalized Structure)
+    Route::get('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'getTambahanOrang']); // GET all tambahan orang for nominatif
+    Route::post('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'saveTambahanOrang']); // SAVE tambahan orang
+    Route::put('/nominatifs/tambahan-orang/{id}', [NominatifController::class, 'updateTambahanOrang']); // UPDATE specific tambahan orang
+    Route::delete('/nominatifs/{id}/tambahan-orang/{tambahanOrangId}', [NominatifController::class, 'deleteTambahanOrangById']); // DELETE specific tambahan orang
+
     // Rute Perjalanan CRUD Operations
     Route::get('/rute-perjalanan/{nominatif_id}', [RutePerjalananController::class, 'show']); // GET route by nominatif
     Route::get('/rute-perjalanan/{nominatif_id}/formatted', [RutePerjalananController::class, 'getFormattedRoute']); // GET formatted route

@@ -10,6 +10,8 @@ use App\Models\RkaDetail;
 use App\Models\TransportasiNominatif;
 use App\Models\TambahanOrangNominatif;
 use App\Models\RutePerjalananNominatif;
+use App\Models\TransportasiTambahanOrang;
+use App\Models\RutePerjalananTambahanOrang;
 
 class NominatifController extends Controller
 {
@@ -22,7 +24,8 @@ class NominatifController extends Controller
             'rkaDetail',
             'user',
             'rutePerjalananNominatif', // Add this for hierarchical structure
-            'tambahanOrang' // Add for list display
+            'tambahanOrang.transportasi', // Add for list display
+            'tambahanOrang.rutePerjalanan' // Add for list display
         ])->byUser(Auth::id());
 
         // Filter by status if provided
@@ -89,6 +92,13 @@ class NominatifController extends Controller
             'uang_harian' => 'array',
             'uang_representasi' => 'array',
             'tambahan_orang' => 'array',
+            'tambahan_orang.*.nama_peserta' => 'required|string|max:255',
+            'tambahan_orang.*.jabatan_peserta' => 'nullable|string|max:255',
+            'tambahan_orang.*.rute_perjalanan' => 'array',
+            'tambahan_orang.*.transportasi_data' => 'array',
+            'tambahan_orang.*.penginapan' => 'array',
+            'tambahan_orang.*.uang_harian' => 'array',
+            'tambahan_orang.*.uang_representasi' => 'array',
             // Missing validation for route fields
             'rute_dari' => 'sometimes|string|max:100',
             'rute_pulang' => 'sometimes|string|max:100',
@@ -167,44 +177,10 @@ class NominatifController extends Controller
             }
 
             // Save tambahan orang data
+            // Handle tambahan orang with new normalized structure
             if (isset($validated['tambahan_orang']) && is_array($validated['tambahan_orang'])) {
                 \Log::info('👥 Tambahan orang found, count: ' . count($validated['tambahan_orang']));
-
-                foreach ($validated['tambahan_orang'] as $index => $orang) {
-                    \Log::info("👤 Creating tambahan orang record #{$index}: ", $orang);
-
-                    $tambahanOrangRecord = TambahanOrangNominatif::create([
-                        'nominatif_id' => $nominatif->id,
-                        'nama_peserta' => $orang['nama_peserta'],
-                        'jabatan_peserta' => $orang['jabatan_peserta'],
-                        'pagu' => $orang['pagu'] ?? 0,
-                        'aktual' => $orang['aktual'] ?? 0,
-                        // Detail Perjalanan fields
-                        'jumlah_hari' => $orang['jumlah_hari'] ?? 0,
-                        'tanggal_mulai' => $orang['tanggal_mulai'] ?? null,
-                        'tanggal_selesai' => $orang['tanggal_selesai'] ?? null,
-                        'rute_perjalanan' => $orang['rute_perjalanan'] ?? [],
-                        // Transportasi fields
-                        'transportasi_per_hari' => $orang['transportasi_per_hari'] ?? [],
-                        // Penginapan fields
-                        'menginap' => $orang['menginap'] ?? false,
-                        'jumlah_malam' => $orang['jumlah_malam'] ?? 1,
-                        'pagu_per_malam' => $orang['pagu_per_malam'] ?? 0,
-                        'biaya_aktual_per_malam' => $orang['biaya_aktual_per_malam'] ?? 0,
-                        'penginapan_total' => $orang['penginapan_total'] ?? 0,
-                        'penginapan_anggaran_realisasi' => $orang['penginapan_anggaran_realisasi'] ?? 0,
-                        // Uang Harian fields
-                        'uang_harian_jumlah_hari' => $orang['uang_harian_jumlah_hari'] ?? 0,
-                        'uang_harian_pagu_per_hari' => $orang['uang_harian_pagu_per_hari'] ?? 0,
-                        'uang_harian_total' => $orang['uang_harian_total'] ?? 0,
-                        // Uang Representasi fields
-                        'uang_representasi_jumlah_hari' => $orang['uang_representasi_jumlah_hari'] ?? 0,
-                        'uang_representasi_pagu_per_hari' => $orang['uang_representasi_pagu_per_hari'] ?? 0,
-                        'uang_representasi_total' => $orang['uang_representasi_total'] ?? 0,
-                    ]);
-
-                    \Log::info("✅ Tambahan orang record created with ID: {$tambahanOrangRecord->id}");
-                }
+                $this->handleTambahanOrang($nominatif, $validated['tambahan_orang']);
             } else {
                 \Log::info('ℹ️ No tambahan orang data found');
             }
@@ -298,7 +274,7 @@ class NominatifController extends Controller
      */
     public function show(string $id)
     {
-        $nominatif = Nominatif::with(['rkaDetail', 'user', 'transportasi', 'tambahanOrang', 'rutePerjalananNominatif'])
+        $nominatif = Nominatif::with(['rkaDetail', 'user', 'transportasi', 'tambahanOrang.transportasi', 'tambahanOrang.rutePerjalanan', 'rutePerjalananNominatif'])
             ->byUser(Auth::id())
             ->findOrFail($id);
 
@@ -446,6 +422,13 @@ class NominatifController extends Controller
             'uang_harian' => 'sometimes|array',
             'uang_representasi' => 'sometimes|array',
             'tambahan_orang' => 'sometimes|array',
+            'tambahan_orang.*.nama_peserta' => 'required|string|max:255',
+            'tambahan_orang.*.jabatan_peserta' => 'nullable|string|max:255',
+            'tambahan_orang.*.rute_perjalanan' => 'array',
+            'tambahan_orang.*.transportasi_data' => 'array',
+            'tambahan_orang.*.penginapan' => 'array',
+            'tambahan_orang.*.uang_harian' => 'array',
+            'tambahan_orang.*.uang_representasi' => 'array',
         ]);
 
         try {
@@ -597,48 +580,10 @@ class NominatifController extends Controller
             }
 
             // Update tambahan orang data if provided
+            // Handle tambahan orang with new normalized structure
             if (isset($validated['tambahan_orang']) && is_array($validated['tambahan_orang'])) {
-                \Log::info('👥 Updating tambahan orang, count: ' . count($validated['tambahan_orang']));
-
-                // Delete existing tambahan orang records
-                $nominatif->tambahanOrang()->delete();
-
-                // Create new tambahan orang records
-                foreach ($validated['tambahan_orang'] as $index => $orang) {
-                    \Log::info("👤 Creating tambahan orang record #{$index}: ", $orang);
-
-                    $tambahanOrangRecord = TambahanOrangNominatif::create([
-                        'nominatif_id' => $nominatif->id,
-                        'nama_peserta' => $orang['nama_peserta'],
-                        'jabatan_peserta' => $orang['jabatan_peserta'],
-                        'pagu' => $orang['pagu'] ?? 0,
-                        'aktual' => $orang['aktual'] ?? 0,
-                        // Detail Perjalanan fields
-                        'jumlah_hari' => $orang['jumlah_hari'] ?? 0,
-                        'tanggal_mulai' => $orang['tanggal_mulai'] ?? null,
-                        'tanggal_selesai' => $orang['tanggal_selesai'] ?? null,
-                        'rute_perjalanan' => $orang['rute_perjalanan'] ?? [],
-                        // Transportasi fields
-                        'transportasi_per_hari' => $orang['transportasi_per_hari'] ?? [],
-                        // Penginapan fields
-                        'menginap' => $orang['menginap'] ?? false,
-                        'jumlah_malam' => $orang['jumlah_malam'] ?? 1,
-                        'pagu_per_malam' => $orang['pagu_per_malam'] ?? 0,
-                        'biaya_aktual_per_malam' => $orang['biaya_aktual_per_malam'] ?? 0,
-                        'penginapan_total' => $orang['penginapan_total'] ?? 0,
-                        'penginapan_anggaran_realisasi' => $orang['penginapan_anggaran_realisasi'] ?? 0,
-                        // Uang Harian fields
-                        'uang_harian_jumlah_hari' => $orang['uang_harian_jumlah_hari'] ?? 0,
-                        'uang_harian_pagu_per_hari' => $orang['uang_harian_pagu_per_hari'] ?? 0,
-                        'uang_harian_total' => $orang['uang_harian_total'] ?? 0,
-                        // Uang Representasi fields
-                        'uang_representasi_jumlah_hari' => $orang['uang_representasi_jumlah_hari'] ?? 0,
-                        'uang_representasi_pagu_per_hari' => $orang['uang_representasi_pagu_per_hari'] ?? 0,
-                        'uang_representasi_total' => $orang['uang_representasi_total'] ?? 0,
-                    ]);
-
-                    \Log::info("✅ Tambahan orang record created with ID: {$tambahanOrangRecord->id}");
-                }
+                \Log::info('👤 Updating tambahan orang, count: ' . count($validated['tambahan_orang']));
+                $this->handleTambahanOrang($nominatif, $validated['tambahan_orang']);
             } else {
                 \Log::info('ℹ️ No tambahan orang data found in update');
             }
@@ -814,7 +759,32 @@ class NominatifController extends Controller
         // Tambahan orang
         if (isset($data['tambahan_orang']) && is_array($data['tambahan_orang'])) {
             foreach ($data['tambahan_orang'] as $orang) {
-                $total += $orang['pagu'] ?? 0;
+                // For new structure, calculate from individual components
+                $tambahanOrangTotal = 0;
+
+                // Transportasi
+                if (isset($orang['transportasi_data']) && is_array($orang['transportasi_data'])) {
+                    foreach ($orang['transportasi_data'] as $transport) {
+                        $tambahanOrangTotal += $transport['pagu'] ?? 0;
+                    }
+                }
+
+                // Penginapan
+                if (isset($orang['penginapan']['menginap']) && $orang['penginapan']['menginap']) {
+                    $tambahanOrangTotal += ($orang['penginapan']['jumlahMalam'] ?? 1) * ($orang['penginapan']['paguPerMalam'] ?? 0);
+                }
+
+                // Uang harian
+                if (isset($orang['uang_harian']['total'])) {
+                    $tambahanOrangTotal += $orang['uang_harian']['total'];
+                }
+
+                // Uang representasi
+                if (isset($orang['uang_representasi']['total'])) {
+                    $tambahanOrangTotal += $orang['uang_representasi']['total'];
+                }
+
+                $total += $tambahanOrangTotal;
             }
         }
 
@@ -947,5 +917,404 @@ class NominatifController extends Controller
         $nominatif->save();
 
         \Log::info('🔄 Rebuilt transportasi_per_hari JSON:', $nominatif->transportasi_per_hari);
+    }
+
+    /**
+     * Create/Update tambahan orang with new normalized structure
+     */
+    private function handleTambahanOrang(Nominatif $nominatif, array $tambahanOrangData): void
+    {
+        if (empty($tambahanOrangData)) {
+            // Delete all existing tambahan orang if no data provided
+            $nominatif->tambahanOrang()->delete();
+            return;
+        }
+
+        // Delete existing records to avoid conflicts
+        $nominatif->tambahanOrang()->delete();
+
+        foreach ($tambahanOrangData as $index => $orang) {
+            \Log::info("👤 Creating tambahan orang record #{$index}: ", $orang);
+
+            // Create main tambahan orang record (following master pattern)
+            $tambahanOrangRecord = TambahanOrangNominatif::create([
+                'master_nominatif_id' => $nominatif->id,
+                'nama_peserta' => $orang['nama_peserta'] ?? '',
+                'jabatan_peserta' => $orang['jabatan_peserta'] ?? '',
+                // Master fields (sama seperti master)
+                'deskripsi_perjalanan_dinas' => $orang['deskripsi_perjalanan_dinas'] ?? $nominatif->deskripsi_perjalanan_dinas,
+                'status' => 'draft',
+                'is_editable' => true,
+                'transportasi_per_hari' => $orang['transportasi_per_hari'] ?? null, // JSON field
+                'penginapan' => $orang['penginapan'] ?? [],
+                'uang_harian' => $orang['uang_harian'] ?? [],
+                'uang_representasi' => $orang['uang_representasi'] ?? [],
+                'total_pagu' => 0, // Will be calculated
+                'total_biaya_aktual' => 0, // Will be calculated
+                'anggaran_berjalan' => 0, // Will be calculated
+                'anggaran_sp2d' => 0,
+                'total_anggaran_realisasi' => 0,
+            ]);
+
+            // Handle rute perjalanan for this tambahan orang
+            if (isset($orang['rute_perjalanan'])) {
+                $this->createRutePerjalananTambahanOrang($tambahanOrangRecord, $orang['rute_perjalanan']);
+            }
+
+            // Handle transportasi for this tambahan orang
+            if (isset($orang['transportasi_data']) && is_array($orang['transportasi_data'])) {
+                $this->createTransportasiTambahanOrang($tambahanOrangRecord, $orang['transportasi_data']);
+            }
+
+            // Calculate totals for this tambahan orang
+            $tambahanOrangRecord->calculateTotals();
+
+            \Log::info("✅ Tambahan orang record created with ID: {$tambahanOrangRecord->id}");
+        }
+    }
+
+    /**
+     * Create rute perjalanan for tambahan orang
+     */
+    private function createRutePerjalananTambahanOrang(TambahanOrangNominatif $tambahanOrang, array $ruteData): void
+    {
+        // Delete existing rute perjalanan record to avoid duplicates
+        $tambahanOrang->rutePerjalanan()->delete();
+
+        RutePerjalananTambahanOrang::create([
+            'tambahan_orang_nominatif_id' => $tambahanOrang->id,
+            'total_hari' => $ruteData['total_hari'] ?? 1,
+            'tanggal_mulai' => $ruteData['tanggal_mulai'] ?? now()->format('Y-m-d'),
+            'tanggal_selesai' => $ruteData['tanggal_selesai'] ?? now()->format('Y-m-d'),
+            'dari' => $ruteData['dari'] ?? 'Jakarta',
+            'pulang' => $ruteData['pulang'] ?? 'Jakarta',
+            'tujuan_list' => $ruteData['tujuan_list'] ?? [],
+        ]);
+    }
+
+    /**
+     * Create transportasi records for tambahan orang
+     */
+    private function createTransportasiTambahanOrang(TambahanOrangNominatif $tambahanOrang, array $transportData): void
+    {
+        // Delete existing transportasi records to avoid unique constraint violation
+        $tambahanOrang->transportasi()->delete();
+
+        foreach ($transportData as $transport) {
+            TransportasiTambahanOrang::create([
+                'tambahan_orang_nominatif_id' => $tambahanOrang->id,
+                'hari' => $transport['hari'] ?? 1,
+                'arah' => $transport['arah'] ?? 'pergi',
+                'jenis_transportasi' => $transport['jenis_transportasi'] ?? null,
+                'keterangan' => $transport['keterangan'] ?? null,
+                'pagu' => $transport['pagu'] ?? 0,
+                'biaya_aktual' => $transport['biaya_aktual'] ?? 0,
+            ]);
+        }
+    }
+
+    /**
+     * Get tambahan orang with complete relationships
+     */
+    public function getTambahanOrang(string $id)
+    {
+        try {
+            \Log::info("🔍 getTambahanOrang called with ID: {$id}");
+
+            $nominatif = Nominatif::byUser(Auth::id())->findOrFail($id);
+            \Log::info("🔍 Nominatif found: ID {$nominatif->id}, status {$nominatif->status}");
+
+            $tambahanOrang = $nominatif->tambahanOrang()->with([
+                'transportasi',
+                'rutePerjalanan'
+            ])->get();
+
+            \Log::info("🔍 Tambahan orang data found: " . $tambahanOrang->count() . " records");
+            \Log::info("🔍 Raw tambahan orang data:", $tambahanOrang->toArray());
+
+            // Remove double-embedding of data -直接返回数组而不是Collection
+            $responseData = $tambahanOrang->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'nama_peserta' => $item->nama_peserta,
+                    'jabatan_peserta' => $item->jabatan_peserta,
+                    'pagu' => $item->pagu,
+                    'aktual' => $item->aktual,
+                    'anggaran_realisasi' => $item->anggaran_realisasi,
+                    'jumlah_hari' => $item->jumlah_hari,
+                    'transportasi_per_hari' => $item->transportasi_per_hari,
+                    'total_pagu' => $item->total_pagu,
+                    'total_biaya_aktual' => $item->total_biaya_aktual,
+                    'anggaran_berjalan' => $item->anggaran_berjalan,
+                    'master_nominatif_id' => $item->master_nominatif_id,
+                    'deskripsi_perjalanan_dinas' => $item->deskripsi_perjalanan_dinas,
+                    'status' => $item->status,
+                    'is_editable' => $item->is_editable,
+                    'anggaran_sp2d' => $item->anggaran_sp2d,
+                    'total_anggaran_realisasi' => $item->total_anggaran_realisasi,
+                    'penginapan' => $item->penginapan,
+                    'uang_harian' => $item->uang_harian,
+                    'uang_representasi' => $item->uang_representasi,
+                    'transportasi' => $item->transportasi->map(function($transport) {
+                        return [
+                            'id' => $transport->id,
+                            'hari' => $transport->hari,
+                            'arah' => $transport->arah,
+                            'jenis_transportasi' => $transport->jenis_transportasi,
+                            'keterangan' => $transport->keterangan,
+                            'pagu' => $transport->pagu,
+                            'biaya_aktual' => $transport->biaya_aktual,
+                            'anggaran_realisasi' => $transport->anggaran_realisasi,
+                            'created_at' => $transport->created_at,
+                            'updated_at' => $transport->updated_at,
+                        ];
+                    })->toArray(),
+                    'rute_perjalanan' => [
+                        'id' => $item->rutePerjalanan->id,
+                        'total_hari' => $item->rutePerjalanan->total_hari,
+                        'tanggal_mulai' => $item->rutePerjalanan->tanggal_mulai,
+                        'tanggal_selesai' => $item->rutePerjalanan->tanggal_selesai,
+                        'dari' => $item->rutePerjalanan->dari,
+                        'pulang' => $item->rutePerjalanan->pulang,
+                        'tujuan_list' => $item->rutePerjalanan->tujuan_list,
+                        'created_at' => $item->rutePerjalanan->created_at,
+                        'updated_at' => $item->rutePerjalanan->updated_at,
+                    ],
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            })->toArray(); // Convert to array to prevent Laravel from auto-wrapping
+
+            // Log final response structure for debugging
+            \Log::info('🔍 Final response structure:', [
+                'success' => true,
+                'data_count' => count($responseData),
+                'sample_data' => $responseData[0] ?? null
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $responseData,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error getting tambahan orang: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data tambahan orang: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Save/Update single tambahan orang
+     */
+    public function saveTambahanOrang(Request $request, string $id)
+    {
+        \Log::info('📝 Save Tambahan Orang Request Data:', $request->all());
+
+        // More permissive validation with detailed error logging
+        try {
+            $validated = $request->validate([
+                'nama_peserta' => 'required|string|max:255',
+                'jabatan_peserta' => 'nullable|string|max:255',
+                'rute_perjalanan' => 'array',
+                'transportasi_data' => 'array',
+                'penginapan' => 'array',
+                'uang_harian' => 'array',
+                'uang_representasi' => 'array',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('❌ Validation failed:', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed: ' . implode(', ', $e->errors()),
+                'errors' => $e->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $nominatif = Nominatif::byUser(Auth::id())->findOrFail($id);
+
+            if ($nominatif->status !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya bisa mengubah tambahan orang pada status draft',
+                ], 400);
+            }
+
+            \Log::info('🔄 Calling handleTambahanOrang with data:', [$validated]);
+
+            // Handle the tambahan orang data
+            $this->handleTambahanOrang($nominatif, [$validated]);
+
+            // Recalculate nominatif totals
+            $nominatif->calculateTotals();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tambahan orang berhasil disimpan',
+                'data' => $nominatif->fresh()->load('tambahanOrang.transportasi', 'tambahanOrang.rutePerjalanan'),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error saving tambahan orang: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan tambahan orang: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update existing tambahan orang
+     */
+    public function updateTambahanOrang(Request $request, string $id)
+    {
+        \Log::info('📝 Update Tambahan Orang Request Data:', ['id' => $id, 'data' => $request->all()]);
+
+        // More permissive validation with detailed error logging
+        try {
+            $validated = $request->validate([
+                'nama_peserta' => 'required|string|max:255',
+                'jabatan_peserta' => 'nullable|string|max:255',
+                'rute_perjalanan' => 'array',
+                'transportasi_data' => 'array',
+                'penginapan' => 'array',
+                'uang_harian' => 'array',
+                'uang_representasi' => 'array',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('❌ Validation failed:', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed: ' . implode(', ', $e->errors()),
+                'errors' => $e->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Find the tambahan orang record by ID
+            $tambahanOrang = TambahanOrangNominatif::findOrFail($id);
+
+            // Verify user ownership through the parent nominatif
+            $nominatif = $tambahanOrang->masterNominatif;
+            if ($nominatif->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized: Anda tidak memiliki akses ke data ini',
+                ], 403);
+            }
+
+            if ($nominatif->status !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya bisa mengubah tambahan orang pada status draft',
+                ], 400);
+            }
+
+            \Log::info('🔄 Updating tambahan orang with data:', [$validated]);
+
+            // Delete existing related data before updating
+            $tambahanOrang->transportasi()->delete();
+            $tambahanOrang->rutePerjalanan()->delete();
+
+            // Update main fields
+            $tambahanOrang->update([
+                'nama_peserta' => $validated['nama_peserta'],
+                'jabatan_peserta' => $validated['jabatan_peserta'] ?? null,
+            ]);
+
+            // Handle grandchild data if provided
+            if (!empty($validated['rute_perjalanan'])) {
+                $tambahanOrang->rutePerjalanan()->create($validated['rute_perjalanan']);
+            }
+
+            if (!empty($validated['transportasi_data'])) {
+                foreach ($validated['transportasi_data'] as $transportData) {
+                    $tambahanOrang->transportasi()->create($transportData);
+                }
+            }
+
+            // Update JSON fields if provided
+            if (!empty($validated['penginapan'])) {
+                $tambahanOrang->penginapan = $validated['penginapan'];
+            }
+            if (!empty($validated['uang_harian'])) {
+                $tambahanOrang->uang_harian = $validated['uang_harian'];
+            }
+            if (!empty($validated['uang_representasi'])) {
+                $tambahanOrang->uang_representasi = $validated['uang_representasi'];
+            }
+
+            // Calculate totals
+            $tambahanOrang->calculateTotals();
+            $tambahanOrang->save();
+
+            // Recalculate parent nominatif totals
+            $nominatif->calculateTotals();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tambahan orang berhasil diperbarui',
+                'data' => $tambahanOrang->fresh()->load('transportasi', 'rutePerjalanan'),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error updating tambahan orang: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui tambahan orang: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete single tambahan orang
+     */
+    public function deleteTambahanOrangById(Request $request, string $id, string $tambahanOrangId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $nominatif = Nominatif::byUser(Auth::id())->findOrFail($id);
+
+            if ($nominatif->status !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya bisa menghapus tambahan orang pada status draft',
+                ], 400);
+            }
+
+            $tambahanOrang = $nominatif->tambahanOrang()->findOrFail($tambahanOrangId);
+            $tambahanOrang->delete();
+
+            // Recalculate nominatif totals
+            $nominatif->calculateTotals();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tambahan orang berhasil dihapus',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error deleting tambahan orang: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus tambahan orang',
+            ], 500);
+        }
     }
 }

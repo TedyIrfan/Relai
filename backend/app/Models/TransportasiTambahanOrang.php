@@ -10,6 +10,8 @@ class TransportasiTambahanOrang extends Model
 {
     use HasFactory;
 
+    protected $table = 'transportasi_tambahan_orang';
+
     protected $fillable = [
         'tambahan_orang_nominatif_id',
         'hari',

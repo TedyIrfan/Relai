@@ -14,14 +14,25 @@ class TambahanOrangNominatif extends Model
 
     protected $fillable = [
         'master_nominatif_id',
-        'nama',
-        'jabatan',
+        'nama_peserta',
+        'jabatan_peserta',
+        'jumlah_hari',
+        'pagu',
+        'aktual',
+        'anggaran_realisasi',
+        // Master fields (sama seperti Nominatif)
+        'deskripsi_perjalanan_dinas',
+        'status',
+        'is_editable',
+        'transportasi_per_hari',
         'penginapan',
         'uang_harian',
         'uang_representasi',
         'total_pagu',
         'total_biaya_aktual',
         'anggaran_berjalan',
+        'anggaran_sp2d',
+        'total_anggaran_realisasi',
     ];
 
     protected $casts = [
