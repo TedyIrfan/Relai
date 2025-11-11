@@ -8,6 +8,7 @@ use App\Http\Controllers\RKADetailsController;
 use App\Http\Controllers\SwaggerController;
 use App\Http\Controllers\AnggaranController;
 use App\Http\Controllers\NominatifController;
+use App\Http\Controllers\RutePerjalananController;
 use App\Http\Controllers\DebugController;
 
 // Test endpoint for Swagger
@@ -45,6 +46,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/nominatifs/{id}/submit', [NominatifController::class, 'submit']); // SUBMIT nominatif
     Route::delete('/nominatifs/{id}', [NominatifController::class, 'destroy']); // DELETE nominatif
     Route::delete('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'deleteTambahanOrang']); // DELETE all tambahan orang
+
+    // Rute Perjalanan CRUD Operations
+    Route::get('/rute-perjalanan/{nominatif_id}', [RutePerjalananController::class, 'show']); // GET route by nominatif
+    Route::get('/rute-perjalanan/{nominatif_id}/formatted', [RutePerjalananController::class, 'getFormattedRoute']); // GET formatted route
+    Route::post('/rute-perjalanan', [RutePerjalananController::class, 'store']); // CREATE route
+    Route::put('/rute-perjalanan/{id}', [RutePerjalananController::class, 'update']); // UPDATE route
+    Route::delete('/rute-perjalanan/{id}', [RutePerjalananController::class, 'destroy']); // DELETE route
 });
 
 // Dashboard API Routes (Public - for testing)

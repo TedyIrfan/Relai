@@ -26,17 +26,9 @@ export const nominatifService = {
   // Create new nominatif
   create: async (data) => {
     try {
-      // DEBUG: Log data being sent to backend
-      console.log('🔍 FRONTEND DEBUG - Sending data to backend:', data);
-      console.log('📝 transport_data field:', data.transport_data);
-      console.log('📝 transport_data type:', typeof data.transport_data);
-      console.log('📝 transport_data length:', data.transport_data ? data.transport_data.length : 'N/A');
-
       const response = await api.post('/nominatifs', data);
-      console.log('✅ Backend response:', response.data);
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('❌ Backend error:', error.response?.data);
       const message = error.response?.data?.message || 'Gagal membuat nominatif';
       const errors = error.response?.data?.errors || {};
       return { success: false, message, errors };
@@ -122,12 +114,6 @@ export const nominatifService = {
 
   // Format form data for API submission
   formatFormData: (formData, rkaDetailId) => {
-    // Debug: Log incoming formData
-    console.log('🔍 FRONTEND DEBUG - formatFormData received:', {
-      jumlahHari: formData.jumlahHari,
-      tanggalPerjalanan: formData.tanggalPerjalanan,
-      rutePerjalanan: formData.rutePerjalanan
-    });
 
     // Convert transportasiPerHari to transport_data format for backend
     const transportData = [];
@@ -192,14 +178,16 @@ export const nominatifService = {
       tanggal_mulai: formData.tanggalPerjalanan?.tanggalMulai || new Date().toISOString().split('T')[0],
       tanggal_selesai: formData.tanggalPerjalanan?.tanggalSelesai || new Date().toISOString().split('T')[0],
       rute_perjalanan: formData.rutePerjalanan || [],
+      tujuan_list: formData.tujuanList || [], // Fixed: use tujuanList (camelCase) from handleChange
+      rute_dari: formData.ruteDari || 'Jakarta', // Fixed: use ruteDari (camelCase)
+      rute_pulang: formData.rutePulang || 'Jakarta', // Fixed: use rutePulang (camelCase)
       transport_data: transportData, // New field for separate table
       penginapan: formData.penginapan || { menginap: false },
       uang_harian: formData.uangHarian || { jumlahHari: 0, paguPerHari: 0 },
       uang_representasi: formData.uangRepresentasi || { jumlahHari: 0, paguPerHari: 0 },
+      // Critical fix: These fields were being overridden by frontend but need proper defaults
+      transportasi_per_hari: formData.transportasiPerHari || [],
     };
-
-    // Debug: Log final API data
-    console.log('🔍 FRONTEND DEBUG - Final API data:', apiData);
 
     return apiData;
   },

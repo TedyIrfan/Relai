@@ -1,6 +1,7 @@
 import React from 'react';
 
 const DetailPerjalananDinasSection = ({ data, onChange, isEditable }) => {
+
   const handleInputChange = (value) => {
     onChange('detailPerjalananDinas', { deskripsi: value });
   };

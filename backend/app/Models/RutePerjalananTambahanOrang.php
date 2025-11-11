@@ -6,14 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class RutePerjalananNominatif extends Model
+class RutePerjalananTambahanOrang extends Model
 {
     use HasFactory;
 
-    protected $table = 'rute_perjalanan_nominatifs';
-
     protected $fillable = [
-        'master_nominatif_id',
+        'tambahan_orang_nominatif_id',
         'total_hari',
         'tanggal_mulai',
         'tanggal_selesai',
@@ -30,11 +28,11 @@ class RutePerjalananNominatif extends Model
     ];
 
     /**
-     * Get the master nominatif that owns this route.
+     * Get the tambahan orang that owns this route.
      */
-    public function masterNominatif(): BelongsTo
+    public function tambahanOrang(): BelongsTo
     {
-        return $this->belongsTo(Nominatif::class, 'master_nominatif_id');
+        return $this->belongsTo(TambahanOrangNominatif::class);
     }
 
     /**
@@ -81,9 +79,9 @@ class RutePerjalananNominatif extends Model
         if ($this->is_single_day()) {
             return "Pergi-Pulang (1 hari)";
         } elseif ($count === 1) {
-            return "Jakarta → {$this->tujuan_list[0]} → Jakarta ({$this->total_hari} hari)";
+            return "{$this->dari} → {$this->tujuan_list[0]} → {$this->pulang} ({$this->total_hari} hari)";
         } else {
-            return "Jakarta → [{$count} Destinations] → Jakarta ({$this->total_hari} hari)";
+            return "{$this->dari} → [{$count} Destinations] → {$this->pulang} ({$this->total_hari} hari)";
         }
     }
 

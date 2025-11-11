@@ -41,6 +41,9 @@ export const initialNominatifData = {
     tanggalMulai: '',
     tanggalSelesai: ''
   },
+  tujuanList: [], // New: JSON array format for tujuan_list database field
+  ruteDari: 'Jakarta', // New: Route origin
+  rutePulang: 'Jakarta', // New: Route destination
 
   // Section 4-5: Transportasi Per Hari
   transportasiPerHari: [

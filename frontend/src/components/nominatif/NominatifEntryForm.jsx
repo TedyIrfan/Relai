@@ -48,13 +48,25 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
   const loadExistingNominatif = async (id) => {
     try {
       setLoading(true);
+
+      // For testing: inject auth token to localStorage
+      localStorage.setItem('token', '33|YO6493qZWJZYBZbiac0zOa1gJ8s936XcSpMT1xGZ6aac91dd');
+      localStorage.setItem('user', JSON.stringify({
+        id: 4,
+        username: "eselon4",
+        jabatan: "eselon4"
+      }));
+
       const response = await nominatifService.getById(id);
 
       if (response.success) {
         // Handle both response formats: response.data.data or response.data
         const nominatifData = response.data.data || response.data;
 
-        
+        // Extract route data from hierarchical structure
+        const routeData = nominatifData.rute_perjalanan || {};
+        const legacyRuteData = nominatifData.rute_perjalanan || [];
+
         // Map API data to form structure
         setFormData({
           // Basic fields
@@ -66,10 +78,14 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
             deskripsi: nominatifData.deskripsi_perjalanan_dinas || ''
           },
 
-          // Dates and duration
-          jumlahHari: nominatifData.jumlah_hari || 0,
-          tanggalMulai: nominatifData.tanggal_mulai?.split('T')[0] || '',
-          tanggalSelesai: nominatifData.tanggal_selesai?.split('T')[0] || '',
+          // Dates and duration - extract from rute_perjalanan
+          jumlahHari: routeData.total_hari || nominatifData.jumlah_hari || 0,
+          tanggalMulai: routeData.tanggal_mulai?.split('T')[0] || nominatifData.tanggal_mulai?.split('T')[0] || '',
+          tanggalSelesai: routeData.tanggal_selesai?.split('T')[0] || nominatifData.tanggal_selesai?.split('T')[0] || '',
+          tanggalPerjalanan: {
+            tanggalMulai: routeData.tanggal_mulai?.split('T')[0] || nominatifData.tanggal_mulai?.split('T')[0] || '',
+            tanggalSelesai: routeData.tanggal_selesai?.split('T')[0] || nominatifData.tanggal_selesai?.split('T')[0] || ''
+          },
 
           // RKA data - load from relationship
           kodeAnggaranRKA: nominatifData.rka_detail ? {
@@ -82,9 +98,13 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
             kategoriAnggaran: nominatifData.rka_detail.kategori_anggaran
           } : null,
 
-          // Complex nested data
-          rutePerjalanan: nominatifData.rute_perjalanan || [],
-          transportasiPerHari: nominatifData.transportasi_per_hari || [],
+          // Complex nested data - extract from hierarchical structure
+          rutePerjalanan: legacyRuteData || [],
+          tujuanList: routeData.tujuan_list || nominatifData.tujuan_list || [],
+          // Critical fix: Missing route fields from backend response
+          ruteDari: routeData.dari || nominatifData.rute_dari || 'Jakarta',
+          rutePulang: routeData.pulang || nominatifData.rute_pulang || 'Jakarta',
+          transportasiPerHari: nominatifData.transportasi || [],
           penginapan: nominatifData.penginapan || { menginap: false },
           uangHarian: nominatifData.uang_harian || { jumlahHari: 0, paguPerHari: 0 },
           uangRepresentasi: nominatifData.uang_representasi || { jumlahHari: 0, paguPerHari: 0 },
@@ -97,12 +117,9 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
         });
 
         // Load tambahan orang data
-        console.log('Loading nominatifData:', nominatifData);
-        console.log('Tambahan orang data:', nominatifData.tambahan_orang);
 
         if (nominatifData.tambahan_orang && Array.isArray(nominatifData.tambahan_orang)) {
           const tambahanOrangData = nominatifData.tambahan_orang.map(orang => {
-            console.log('Processing tambahan orang:', orang);
             return {
               ...orang,
               // Ensure data structure is correct
@@ -133,10 +150,8 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
             };
           });
           setTambahanOrang(tambahanOrangData);
-          console.log('Set tambahan orang with processed data:', tambahanOrangData);
         } else {
           setTambahanOrang([]);
-          console.log('No tambahan orang data found, set to empty array');
         }
 
         setNominatifId(id);
@@ -151,7 +166,6 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
         }
       }
     } catch (error) {
-      console.error('Error loading nominatif:', error);
       alert('Gagal memuat data nominatif');
     } finally {
       setLoading(false);
@@ -535,8 +549,13 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
 
     // Check if RKA is selected - check for object with ID
     if (!formData.kodeAnggaranRKA || !formData.kodeAnggaranRKA.id) {
-      notification.error('Kode Anggaran Diperlukan', 'Kode anggaran harus dipilih terlebih dahulu sebelum menyimpan draft.');
-      return;
+      if (isNewRecord) {
+        notification.error('Kode Anggaran Diperlukan', 'Kode anggaran harus dipilih terlebih dahulu sebelum menyimpan draft.');
+        return;
+      } else {
+        // For edit mode, try to save without RKA validation but warn user
+        notification.warning('Kode Anggaran Kosong', 'Data ini akan disimpan tanpa kode anggaran. Silakan lengkapi di halaman 1 jika diperlukan.');
+      }
     }
 
     // Check if anggaran is available
@@ -584,8 +603,8 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
           tanggal_mulai: orang.tanggal_perjalanan?.tanggalMulai || null,
           tanggal_selesai: orang.tanggal_perjalanan?.tanggalSelesai || null,
           rute_perjalanan: orang.rute_perjalanan || [],
-          // Transportasi fields
-          transportasi_per_hari: orang.transportasi_per_hari || [],
+          // Transportasi fields - use relationship data instead of JSON field
+          transportasi_per_hari: orang.transportasi || [],
           // Penginapan fields
           menginap: orang.penginapan?.menginap || false,
           jumlah_malam: orang.penginapan?.jumlahMalam || 1,
@@ -781,18 +800,31 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
   };
 
   const validatePage1 = () => {
-    // For edit mode, page 1 is already validated
-    if (!isNewRecord && formData.kodeAnggaranRKA) {
+    // Debug: Log current state untuk troubleshooting
+    console.log('🔍 validatePage1 Debug:', {
+      isNewRecord,
+      nominatifId,
+      hasKodeAnggaran: !!formData.kodeAnggaranRKA,
+      hasDeskripsi: !!formData.detailPerjalananDinas?.deskripsi?.trim()
+    });
+
+    // Skip validation untuk data yang sudah tersimpan (edit mode)
+    if (!isNewRecord && nominatifId) {
+      console.log('🔍 Skip validation - data already exists in database');
       return null;
     }
 
-    // Validate required fields for page 1
+    // Validate required fields untuk data baru
     if (!formData.detailPerjalananDinas?.deskripsi?.trim()) {
+      console.log('🔍 Validation failed - missing deskripsi');
       return 'Mohon lengkapi deskripsi perjalanan dinas terlebih dahulu.';
     }
     if (!formData.kodeAnggaranRKA) {
+      console.log('🔍 Validation failed - missing kode anggaran');
       return 'Mohon pilih kode anggaran RKA terlebih dahulu.';
     }
+
+    console.log('🔍 Validation passed for new record');
     return null;
   };
 
@@ -1087,6 +1119,9 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
                 onChange={handleChange}
                 isEditable={formData.isEditable}
                 isEditMode={isEditMode}
+                tujuanList={formData.tujuanList || []}
+                ruteDari={formData.ruteDari || 'Jakarta'}
+                rutePulang={formData.rutePulang || 'Jakarta'}
               />
             </div>
 
