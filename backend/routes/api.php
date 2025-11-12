@@ -10,6 +10,7 @@ use App\Http\Controllers\AnggaranController;
 use App\Http\Controllers\NominatifController;
 use App\Http\Controllers\RutePerjalananController;
 use App\Http\Controllers\DebugController;
+use App\Http\Controllers\PenginapanController;
 
 // Test endpoint for Swagger
 Route::get('/test', [SwaggerController::class, 'test']);
@@ -59,6 +60,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/rute-perjalanan', [RutePerjalananController::class, 'store']); // CREATE route
     Route::put('/rute-perjalanan/{id}', [RutePerjalananController::class, 'update']); // UPDATE route
     Route::delete('/rute-perjalanan/{id}', [RutePerjalananController::class, 'destroy']); // DELETE route
+
+    // Penginapan CRUD Operations (Master Nominatif)
+    Route::get('/penginapan/{master_nominatif_id}', [PenginapanController::class, 'index']); // GET penginapan for master
+    Route::post('/penginapan/generate-from-rute', [PenginapanController::class, 'generateFromRute']); // GENERATE from rute
+    Route::get('/penginapan/{master_nominatif_id}/summary', [PenginapanController::class, 'getSummary']); // GET summary
+    Route::put('/penginapan/{id}', [PenginapanController::class, 'update']); // UPDATE penginapan
+    Route::put('/penginapan/batch-update', [PenginapanController::class, 'batchUpdate']); // BATCH UPDATE
+    Route::delete('/penginapan/{id}', [PenginapanController::class, 'destroy']); // DELETE penginapan
+
+    // Penginapan CRUD Operations (Tambahan Orang)
+    Route::get('/penginapan/tambahan-orang/{tambahan_orang_nominatif_id}', [PenginapanController::class, 'indexTambahanOrang']); // GET penginapan for tambahan orang
+    Route::post('/penginapan/tambahan-orang/generate-from-rute', [PenginapanController::class, 'generateFromRuteTambahanOrang']); // GENERATE for tambahan orang
+    Route::put('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'updateTambahanOrang']); // UPDATE tambahan orang
+    Route::delete('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'destroyTambahanOrang']); // DELETE tambahan orang
 });
 
 // Dashboard API Routes (Public - for testing)

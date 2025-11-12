@@ -37,13 +37,31 @@ class NominatifController extends Controller
 
         // Transform data to include hierarchical structure
         $nominatifs->getCollection()->transform(function ($nominatif) {
+            // Calculate grand total (main + tambahan orang)
+            $grandTotalPagu = $nominatif->total_pagu;
+            $grandTotalAktual = $nominatif->total_biaya_aktual;
+
+            // Add tambahan orang totals to grand total
+            foreach ($nominatif->tambahanOrang as $tambahan) {
+                $grandTotalPagu += $tambahan->total_pagu ?? 0;
+                $grandTotalAktual += $tambahan->total_biaya_aktual ?? 0;
+            }
+
             return [
                 'id' => $nominatif->id,
                 'deskripsi_perjalanan_dinas' => $nominatif->deskripsi_perjalanan_dinas,
                 'status' => $nominatif->status,
-                'total_pagu' => $nominatif->total_pagu,
-                'total_biaya_aktual' => $nominatif->total_biaya_aktual,
-                'anggaran_berjalan' => $nominatif->anggaran_berjalan,
+
+                // Individual totals (for reference)
+                'main_total_pagu' => $nominatif->total_pagu,
+                'main_total_biaya_aktual' => $nominatif->total_biaya_aktual,
+
+                // Grand totals for display (main + all tambahan orang)
+                'total_pagu' => $grandTotalPagu,
+                'total_biaya_aktual' => $grandTotalAktual,
+
+                // Updated anggaran berjalan based on grand total
+                'anggaran_berjalan' => $grandTotalPagu - $grandTotalAktual,
                 'anggaran_sp2d' => $nominatif->anggaran_sp2d,
                 'created_at' => $nominatif->created_at,
                 'updated_at' => $nominatif->updated_at,
@@ -133,8 +151,6 @@ class NominatifController extends Controller
                 'user_id' => Auth::id(),
                 'deskripsi_perjalanan_dinas' => $validated['deskripsi_perjalanan_dinas'],
                 'jumlah_hari' => $validated['jumlah_hari'],
-                'tanggal_mulai' => $validated['tanggal_mulai'],
-                'tanggal_selesai' => $validated['tanggal_selesai'],
                 'status' => 'draft',
                 'is_editable' => true,
                 'rute_perjalanan' => $validated['rute_perjalanan'] ?? [],

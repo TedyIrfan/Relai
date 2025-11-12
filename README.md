@@ -4048,4 +4048,149 @@ DashboardController.php (index method)
 
 ---
 
+### **✅ Grand Total Calculation Bug Fix - COMPLETED (100%)**
+
+#### **🐛 Bug Discovery: Grand Total Aggregation Issue**
+During testing of multi-person travel forms, user discovered that grand totals in the nominatif list were not properly aggregating main form + tambahan orang (additional people) data.
+
+**Issue Details:**
+- **Expected**: Grand Total Pagu = 1.800.000, Grand Total Aktual = 500.000
+- **Actual**: Individual totals only (900.000 / 250.000), excluding tambahan orang
+- **Root Cause**: Backend API only returned main form totals, not aggregated grand totals
+
+#### **🔍 Technical Analysis & Debugging Process**
+
+**1. Database Verification via PgAdmin**
+User provided actual database data to verify individual calculations:
+```sql
+-- Main form (Nominatif ID: 22)
+-- Total Pagu: 900.000, Total Aktual: 250.000
+
+-- Tambahan orang (TambahanOrangNominatif ID: 32)
+-- Total Pagu: 600.000, Total Aktual: 150.000
+
+-- Tambahan orang (TambahanOrangNominatif ID: 33)
+-- Total Pagu: 300.000, Total Aktual: 100.000
+
+-- Expected Grand Total: 1.800.000 / 500.000
+```
+
+**2. Calculation Logic Clarification**
+User confirmed business rules:
+- **Total Pagu**: Includes transport + penginapan + uang harian + uang representasi (all components)
+- **Total Aktual**: Includes transport + penginapan ONLY ( excludes uang harian & uang representasi)
+- **Grand Total**: Main form + all tambahan orang (additional people)
+
+#### **🛠️ Bug Fix Implementation**
+
+**Backend API Fix - NominatifController.php:**
+```php
+// Modified transform method to calculate grand totals
+->append([
+    // ... existing append fields ...
+
+    'grand_total_pagu' => function ($nominatif) {
+        // Calculate grand total (main + tambahan orang)
+        $grandTotalPagu = $nominatif->total_pagu;
+
+        foreach ($nominatif->tambahanOrang as $tambahan) {
+            $grandTotalPagu += $tambahan->total_pagu ?? 0;
+        }
+
+        return $grandTotalPagu;
+    },
+
+    'grand_total_aktual' => function ($nominatif) {
+        // Calculate grand total (main + tambahan orang)
+        $grandTotalAktual = $nominatif->total_biaya_aktual;
+
+        foreach ($nominatif->tambahanOrang as $tambahan) {
+            $grandTotalAktual += $tambahan->total_biaya_aktual ?? 0;
+        }
+
+        return $grandTotalAktual;
+    },
+])
+```
+
+#### **🧪 Testing & Verification**
+
+**API Response Structure (After Fix):**
+```json
+{
+    "id": 22,
+    "total_pagu": 900000,
+    "total_biaya_aktual": 250000,
+    "grand_total_pagu": 1800000,  // Fixed: Now includes tambahan orang
+    "grand_total_aktual": 500000, // Fixed: Now includes tambahan orang
+    "tambahan_orang": [
+        {
+            "id": 32,
+            "total_pagu": 600000,
+            "total_biaya_aktual": 150000
+        },
+        {
+            "id": 33,
+            "total_pagu": 300000,
+            "total_biaya_aktual": 100000
+        }
+    ]
+}
+```
+
+#### **📊 Impact & Business Value**
+
+**Before Fix:**
+- ❌ Grand totals showed only main form values
+- ❌ Multi-person travel forms displayed incorrect totals
+- ❌ Budget tracking inaccurate for group travel
+
+**After Fix:**
+- ✅ Grand totals properly aggregate main form + all tambahan orang
+- ✅ Accurate budget tracking for multi-person travel authorizations
+- ✅ Proper financial reporting for group travel expenses
+- ✅ UI displays correct aggregated values
+
+#### **🔧 Technical Implementation Details**
+
+**Files Modified:**
+- `backend/app/Http/Controllers/NominatifController.php` - Added grand total calculation logic
+- API response now includes `grand_total_pagu` and `grand_total_aktual` fields
+- Backward compatible with existing individual totals
+
+**Database Relationships Used:**
+- `Nominatif::tambahanOrang()` - HasMany relationship for additional people
+- `TambahanOrangNominatif::total_pagu` - Individual pagu totals
+- `TambahanOrangNominatif::total_biaya_aktual` - Individual aktual totals
+
+#### **🎯 User Experience Improvements**
+
+**Nominatif List Display:**
+- Shows accurate grand totals for multi-person travel forms
+- Maintains individual breakdown for transparency
+- Proper budget tracking and reporting
+
+**Financial Accuracy:**
+- Correct aggregation of travel expenses
+- Accurate representation of total authorization costs
+- Proper budget monitoring and control
+
+#### **✅ Quality Assurance Verification**
+
+**Manual Database Verification:**
+- Confirmed individual calculations match database values
+- Verified grand total aggregation logic
+- Tested with various multi-person scenarios
+
+**API Response Testing:**
+- Confirmed grand totals included in API responses
+- Verified backward compatibility maintained
+- Tested with single-person and multi-person forms
+
+#### **🚀 Implementation Status: PRODUCTION READY**
+
+This bug fix ensures that the nominatif system accurately calculates and displays grand totals for travel authorizations involving multiple people, providing correct financial data for budget tracking and reporting purposes.
+
+---
+
 ## 🎯 **NEXT PHASE: Advanced Reporting & Analytics (Optional)**

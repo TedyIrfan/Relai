@@ -189,6 +189,13 @@ export const nominatifService = {
       transportasi_per_hari: formData.transportasiPerHari || [],
     };
 
+    // Debug: Log final API data
+    console.log('🚀 DEBUG: Final API Data being sent:', {
+      jumlah_hari: apiData.jumlah_hari,
+      original_jumlahHari: formData.jumlahHari,
+      full_api_data: apiData
+    });
+
     return apiData;
   },
 

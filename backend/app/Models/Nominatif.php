@@ -15,6 +15,7 @@ class Nominatif extends Model
         'rka_detail_id',
         'user_id',
         'deskripsi_perjalanan_dinas',
+        'jumlah_hari',
         'status',
         'is_editable',
         'penginapan',
@@ -88,6 +89,12 @@ class Nominatif extends Model
     public function rutePerjalananNominatif()
     {
         return $this->hasOne(RutePerjalananNominatif::class, 'master_nominatif_id', 'id');
+    }
+
+    public function penginapan()
+    {
+        return $this->hasMany(PenginapanNominatif::class, 'master_nominatif_id', 'id')
+                    ->orderBy('malam');
     }
 
     
@@ -185,22 +192,37 @@ class Nominatif extends Model
 
         // Calculate from penginapan
         if ($this->penginapan && isset($this->penginapan['menginap']) && $this->penginapan['menginap']) {
-            $totalPagu += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['paguPerMalam'] ?? 0);
-            $totalBiayaAktual += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['biayaAktualPerMalam'] ?? 0);
+            // New logic: support malamDetails structure (per malam inputs)
+            if (isset($this->penginapan['malamDetails']) && is_array($this->penginapan['malamDetails'])) {
+                foreach ($this->penginapan['malamDetails'] as $malam) {
+                    $totalPagu += $malam['pagu'] ?? 0;
+                    $totalBiayaAktual += $malam['aktual'] ?? 0;
+                }
+            } else {
+                // Fallback to old logic for backward compatibility
+                $totalPagu += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['paguPerMalam'] ?? 0);
+                $totalBiayaAktual += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['biayaAktualPerMalam'] ?? 0);
+            }
         }
 
-        // Calculate from uang harian (masuk ke total pagu saja)
+        // Calculate from uang harian (masuk ke total pagu dan total aktual)
         if ($this->uang_harian) {
-            $uangHarianTotal = ($this->uang_harian['total'] ?? 0);
-            // Uang harian masuk ke totalPagu saja
+            $jumlahHari = $this->jumlah_hari ?? 1;
+            $uangHarianPerHari = ($this->uang_harian['paguPerHari'] ?? 0);
+            $uangHarianTotal = $uangHarianPerHari * $jumlahHari;
+            // Uang harian masuk ke totalPagu dan totalBiayaAktual
             $totalPagu += $uangHarianTotal;
+            $totalBiayaAktual += $uangHarianTotal; // Updated: masuk ke aktual juga
         }
 
-        // Calculate from uang representasi (masuk ke total pagu saja)
+        // Calculate from uang representasi (masuk ke total pagu dan total aktual)
         if ($this->uang_representasi) {
-            $uangRepresentasiTotal = ($this->uang_representasi['total'] ?? 0);
-            // Uang representasi masuk ke totalPagu saja
+            $jumlahHari = $this->jumlah_hari ?? 1;
+            $uangRepresentasiPerHari = ($this->uang_representasi['paguPerHari'] ?? 0);
+            $uangRepresentasiTotal = $uangRepresentasiPerHari * $jumlahHari;
+            // Uang representasi masuk ke totalPagu dan totalBiayaAktual
             $totalPagu += $uangRepresentasiTotal;
+            $totalBiayaAktual += $uangRepresentasiTotal; // Updated: masuk ke aktual juga
         }
 
         // Calculate from tambahan orang
@@ -215,8 +237,80 @@ class Nominatif extends Model
         $this->total_pagu = $totalPagu;
         $this->total_biaya_aktual = $totalBiayaAktual;
 
-        // Anggaran berjalan = total pagu - total biaya aktual
-        $this->anggaran_berjalan = $totalPagu - $totalBiayaAktual;
+        // Hitung ulang untuk logic baru: transport+penginapan selisih + uang harian/representasi full
+        $transportPenginapanPagu = 0;
+        $transportPenginapanAktual = 0;
+        $uangHarianDanRepresentasi = 0;
+
+        // Dari main form
+        $transportasiData = $this->transportasi;
+        if ($transportasiData && $transportasiData->count() > 0) {
+            foreach ($transportasiData as $transport) {
+                $transportPenginapanPagu += $transport->pagu ?? 0;
+                $transportPenginapanAktual += $transport->biaya_aktual ?? 0;
+            }
+        }
+
+        if ($this->penginapan && isset($this->penginapan['menginap']) && $this->penginapan['menginap']) {
+            // New logic: support malamDetails structure (per malam inputs)
+            if (isset($this->penginapan['malamDetails']) && is_array($this->penginapan['malamDetails'])) {
+                foreach ($this->penginapan['malamDetails'] as $malam) {
+                    $transportPenginapanPagu += $malam['pagu'] ?? 0;
+                    $transportPenginapanAktual += $malam['aktual'] ?? 0;
+                }
+            } else {
+                // Fallback to old logic for backward compatibility
+                $transportPenginapanPagu += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['paguPerMalam'] ?? 0);
+                $transportPenginapanAktual += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['biayaAktualPerMalam'] ?? 0);
+            }
+        }
+
+        // Calculate uang harian dan representasi (dihitung perhari untuk anggaran)
+        $jumlahHari = $this->jumlah_hari ?? 1;
+
+        if ($this->uang_harian) {
+            $uangHarianPerHari = ($this->uang_harian['paguPerHari'] ?? 0);
+            $uangHarianDanRepresentasi += $uangHarianPerHari * $jumlahHari;
+        }
+        if ($this->uang_representasi) {
+            $uangRepresentasiPerHari = ($this->uang_representasi['paguPerHari'] ?? 0);
+            $uangHarianDanRepresentasi += $uangRepresentasiPerHari * $jumlahHari;
+        }
+
+        // Dari tambahan orang
+        $tambahanOrang = $this->tambahanOrang;
+        if ($tambahanOrang && $tambahanOrang->count() > 0) {
+            foreach ($tambahanOrang as $orang) {
+                // Transport dan penginapan dari tambahan orang
+                $transportTambahan = $orang->transportasi;
+                if ($transportTambahan && $transportTambahan->count() > 0) {
+                    foreach ($transportTambahan as $transport) {
+                        $transportPenginapanPagu += $transport->pagu ?? 0;
+                        $transportPenginapanAktual += $transport->biaya_aktual ?? 0;
+                    }
+                }
+
+                if ($orang->penginapan && isset($orang->penginapan['menginap']) && $orang->penginapan['menginap']) {
+                    $transportPenginapanPagu += ($orang->penginapan['jumlahMalam'] ?? 1) * ($orang->penginapan['paguPerMalam'] ?? 0);
+                    $transportPenginapanAktual += ($orang->penginapan['jumlahMalam'] ?? 1) * ($orang->penginapan['biayaAktualPerMalam'] ?? 0);
+                }
+
+                // Uang harian dan representasi dari tambahan orang (dihitung perhari)
+                $jumlahHariOrang = $orang->jumlah_hari ?? 1;
+
+                if ($orang->uang_harian) {
+                    $uangHarianPerHari = ($orang->uang_harian['paguPerHari'] ?? 0);
+                    $uangHarianDanRepresentasi += $uangHarianPerHari * $jumlahHariOrang;
+                }
+                if ($orang->uang_representasi) {
+                    $uangRepresentasiPerHari = ($orang->uang_representasi['paguPerHari'] ?? 0);
+                    $uangHarianDanRepresentasi += $uangRepresentasiPerHari * $jumlahHariOrang;
+                }
+            }
+        }
+
+        // Logic baru: (transport+penginapan pagu - transport+penginapan aktual) + uang harian/representasi full
+        $this->anggaran_berjalan = ($transportPenginapanPagu - $transportPenginapanAktual) + $uangHarianDanRepresentasi;
 
         // Only set anggaran_sp2d if it's already submitted
         if ($this->status === 'submitted' && $this->anggaran_sp2d == 0) {

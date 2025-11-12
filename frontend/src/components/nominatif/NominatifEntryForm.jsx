@@ -152,8 +152,12 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
               // JSON sections (same as master) - transport data comes from grandchild table
               transportasi_per_hari: convertGrandchildTransportToFormFormat(orang.transportasi || []),
               penginapan: orang.penginapan || { menginap: false },
-              uang_harian: orang.uang_harian || { jumlahHari: 0, paguPerHari: 0 },
-              uang_representasi: orang.uang_representasi || { jumlahHari: 0, paguPerHari: 0 },
+              uang_harian: orang.uang_harian || { jumlahHari: 0, paguPerHari: 0, total: 0 },
+              uang_representasi: orang.uang_representasi || { jumlahHari: 0, paguPerHari: 0, total: 0 },
+
+              // For component compatibility (camelCase)
+              uangHarian: orang.uang_harian || { jumlahHari: 0, paguPerHari: 0, total: 0 },
+              uangRepresentasi: orang.uang_representasi || { jumlahHari: 0, paguPerHari: 0, total: 0 },
 
               // Travel details
               jumlah_hari: orang.jumlah_hari || 0,
@@ -221,6 +225,16 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
     // Debug: Log field changes for kodeAnggaranRKA
     if (field === 'kodeAnggaranRKA') {
       console.log('handleChange - kodeAnggaranRKA changed to:', value);
+    }
+
+    // Debug: Log tujuanList changes
+    if (field === 'tujuanList') {
+      console.log('🔄 handleChange - tujuanList changed to:', value);
+    }
+
+    // Debug: Log jumlahHari changes
+    if (field === 'jumlahHari') {
+      console.log('🔄 handleChange - jumlahHari changed to:', value);
     }
 
     setFormData(prev => {
@@ -770,6 +784,8 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
 
     // Debug: Log current formData structure
     console.log('Current formData.kodeAnggaranRKA:', formData.kodeAnggaranRKA);
+    console.log('🔍 DEBUG: Current formData.jumlahHari:', formData.jumlahHari);
+    console.log('🔍 DEBUG: Full formData:', formData);
 
     // Check if RKA is selected - check for object with ID
     if (!formData.kodeAnggaranRKA || !formData.kodeAnggaranRKA.id) {
@@ -1454,6 +1470,11 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
                 data={formData.penginapan}
                 onChange={handleChange}
                 isEditable={formData.isEditable}
+                rutePerjalanan={formData.rutePerjalanan?.[0] || null}
+                tujuanList={formData.tujuanList || []}
+                jumlahHari={formData.jumlahHari || 1}
+                nominatifId={nominatifId}
+                isTambahanOrang={false}
               />
             </div>
 
@@ -1605,6 +1626,12 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
                   }}
                   onChange={handleTambahanOrangSectionChange(currentOrangIndex)}
                   isEditable={true}
+                  rutePerjalanan={tambahanOrang[currentOrangIndex]?.rute_perjalanan || formData.rutePerjalanan?.[0] || null}
+                  tujuanList={tambahanOrang[currentOrangIndex]?.custom_rute_perjalanan?.tujuan_list || formData.tujuanList || []}
+                  jumlahHari={tambahanOrang[currentOrangIndex]?.jumlah_hari || formData.jumlahHari || 1}
+                  nominatifId={null}
+                  tambahanOrangId={tambahanOrang[currentOrangIndex]?.id}
+                  isTambahanOrang={true}
                 />
               </div>
 
@@ -1747,6 +1774,12 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
                           }}
                           onChange={handleTambahanOrangSectionChange(index)}
                           isEditable={true}
+                          rutePerjalanan={orang.rute_perjalanan || formData.rutePerjalanan?.[0] || null}
+                          tujuanList={orang.custom_rute_perjalanan?.tujuan_list || formData.tujuanList || []}
+                          jumlahHari={orang.jumlah_hari || formData.jumlahHari || 1}
+                          nominatifId={null}
+                          tambahanOrangId={orang.id}
+                          isTambahanOrang={true}
                         />
                       </div>
 

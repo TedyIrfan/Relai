@@ -90,6 +90,15 @@ class TambahanOrangNominatif extends Model
         return $this->hasOne(RutePerjalananTambahanOrang::class);
     }
 
+    /**
+     * Get the penginapan records for this additional person.
+     */
+    public function penginapan(): HasMany
+    {
+        return $this->hasMany(PenginapanTambahanOrang::class, 'tambahan_orang_nominatif_id', 'id')
+                    ->orderBy('malam');
+    }
+
     // Accessors & Mutators
     public function getTotalPaguFormattedAttribute()
     {
@@ -141,27 +150,84 @@ class TambahanOrangNominatif extends Model
 
         // Calculate from penginapan
         if ($this->penginapan && isset($this->penginapan['menginap']) && $this->penginapan['menginap']) {
-            $totalPagu += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['paguPerMalam'] ?? 0);
-            $totalBiayaAktual += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['biayaAktualPerMalam'] ?? 0);
+            // New logic: support malamDetails structure (per malam inputs)
+            if (isset($this->penginapan['malamDetails']) && is_array($this->penginapan['malamDetails'])) {
+                foreach ($this->penginapan['malamDetails'] as $malam) {
+                    $totalPagu += $malam['pagu'] ?? 0;
+                    $totalBiayaAktual += $malam['aktual'] ?? 0;
+                }
+            } else {
+                // Fallback to old logic for backward compatibility
+                $totalPagu += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['paguPerMalam'] ?? 0);
+                $totalBiayaAktual += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['biayaAktualPerMalam'] ?? 0);
+            }
         }
 
-        // Calculate from uang harian (masuk ke total pagu saja)
+        // Calculate from uang harian (masuk ke total pagu dan total aktual)
         if ($this->uang_harian) {
-            $uangHarianTotal = ($this->uang_harian['total'] ?? 0);
+            $jumlahHari = $this->jumlah_hari ?? 1;
+            $uangHarianPerHari = ($this->uang_harian['paguPerHari'] ?? 0);
+            $uangHarianTotal = $uangHarianPerHari * $jumlahHari;
             $totalPagu += $uangHarianTotal;
+            $totalBiayaAktual += $uangHarianTotal; // Updated: masuk ke aktual juga
         }
 
-        // Calculate from uang representasi (masuk ke total pagu saja)
+        // Calculate from uang representasi (masuk ke total pagu dan total aktual)
         if ($this->uang_representasi) {
-            $uangRepresentasiTotal = ($this->uang_representasi['total'] ?? 0);
+            $jumlahHari = $this->jumlah_hari ?? 1;
+            $uangRepresentasiPerHari = ($this->uang_representasi['paguPerHari'] ?? 0);
+            $uangRepresentasiTotal = $uangRepresentasiPerHari * $jumlahHari;
             $totalPagu += $uangRepresentasiTotal;
+            $totalBiayaAktual += $uangRepresentasiTotal; // Updated: masuk ke aktual juga
         }
 
         $this->total_pagu = $totalPagu;
         $this->total_biaya_aktual = $totalBiayaAktual;
 
-        // Anggaran berjalan = total pagu - total biaya aktual
-        $this->anggaran_berjalan = $totalPagu - $totalBiayaAktual;
+        // Hitung ulang untuk logic baru: transport+penginapan selisih + uang harian/representasi full
+        $transportPenginapanPagu = 0;
+        $transportPenginapanAktual = 0;
+        $uangHarianDanRepresentasi = 0;
+
+        // Calculate from transportasi relationship data
+        $transportasiData = $this->transportasi;
+        if ($transportasiData && $transportasiData->count() > 0) {
+            foreach ($transportasiData as $transport) {
+                $transportPenginapanPagu += $transport->pagu ?? 0;
+                $transportPenginapanAktual += $transport->biaya_aktual ?? 0;
+            }
+        }
+
+        // Calculate from penginapan
+        if ($this->penginapan && isset($this->penginapan['menginap']) && $this->penginapan['menginap']) {
+            // New logic: support malamDetails structure (per malam inputs)
+            if (isset($this->penginapan['malamDetails']) && is_array($this->penginapan['malamDetails'])) {
+                foreach ($this->penginapan['malamDetails'] as $malam) {
+                    $transportPenginapanPagu += $malam['pagu'] ?? 0;
+                    $transportPenginapanAktual += $malam['aktual'] ?? 0;
+                }
+            } else {
+                // Fallback to old logic for backward compatibility
+                $transportPenginapanPagu += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['paguPerMalam'] ?? 0);
+                $transportPenginapanAktual += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['biayaAktualPerMalam'] ?? 0);
+            }
+        }
+
+        // Calculate uang harian dan representasi (dihitung perhari untuk anggaran)
+        $jumlahHari = $this->jumlah_hari ?? 1;
+
+        if ($this->uang_harian) {
+            $uangHarianPerHari = ($this->uang_harian['paguPerHari'] ?? 0);
+            $uangHarianDanRepresentasi += $uangHarianPerHari * $jumlahHari;
+        }
+
+        if ($this->uang_representasi) {
+            $uangRepresentasiPerHari = ($this->uang_representasi['paguPerHari'] ?? 0);
+            $uangHarianDanRepresentasi += $uangRepresentasiPerHari * $jumlahHari;
+        }
+
+        // Logic baru: (transport+penginapan pagu - transport+penginapan aktual) + uang harian/representasi full
+        $this->anggaran_berjalan = ($transportPenginapanPagu - $transportPenginapanAktual) + $uangHarianDanRepresentasi;
 
         $this->save();
     }
