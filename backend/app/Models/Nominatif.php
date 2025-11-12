@@ -56,21 +56,21 @@ class Nominatif extends Model
 
     public function transportasi()
     {
-        return $this->hasMany(TransportasiNominatif::class, 'nominatif_id', 'id')
+        return $this->hasMany(TransportasiNominatif::class, 'master_nominatif_id', 'id')
                     ->orderBy('hari')
                     ->orderBy('arah');
     }
 
     public function transportasiPergi()
     {
-        return $this->hasMany(TransportasiNominatif::class, 'nominatif_id', 'id')
+        return $this->hasMany(TransportasiNominatif::class, 'master_nominatif_id', 'id')
                     ->where('arah', 'pergi')
                     ->orderBy('hari');
     }
 
     public function transportasiPulang()
     {
-        return $this->hasMany(TransportasiNominatif::class, 'nominatif_id', 'id')
+        return $this->hasMany(TransportasiNominatif::class, 'master_nominatif_id', 'id')
                     ->where('arah', 'pulang')
                     ->orderBy('hari');
     }
@@ -190,18 +190,12 @@ class Nominatif extends Model
             }
         }
 
-        // Calculate from penginapan
-        if ($this->penginapan && isset($this->penginapan['menginap']) && $this->penginapan['menginap']) {
-            // New logic: support malamDetails structure (per malam inputs)
-            if (isset($this->penginapan['malamDetails']) && is_array($this->penginapan['malamDetails'])) {
-                foreach ($this->penginapan['malamDetails'] as $malam) {
-                    $totalPagu += $malam['pagu'] ?? 0;
-                    $totalBiayaAktual += $malam['aktual'] ?? 0;
-                }
-            } else {
-                // Fallback to old logic for backward compatibility
-                $totalPagu += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['paguPerMalam'] ?? 0);
-                $totalBiayaAktual += ($this->penginapan['jumlahMalam'] ?? 1) * ($this->penginapan['biayaAktualPerMalam'] ?? 0);
+        // Calculate from penginapan (NEW: from separate table)
+        $penginapanData = $this->penginapan;
+        if ($penginapanData && count($penginapanData) > 0) {
+            foreach ($penginapanData as $penginapan) {
+                $totalPagu += $penginapan->pagu ?? 0;
+                $totalBiayaAktual += $penginapan->biaya_aktual ?? 0;
             }
         }
 

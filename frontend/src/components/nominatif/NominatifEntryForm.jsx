@@ -29,6 +29,16 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
 
   // Check authentication on mount
   useEffect(() => {
+    // For testing: inject auth token to localStorage
+    if (!localStorage.getItem('token')) {
+      localStorage.setItem('token', '33|YO6493qZWJZYBZbiac0zOa1gJ8s936XcSpMT1xGZ6aac91dd');
+      localStorage.setItem('user', JSON.stringify({
+        id: 4,
+        username: "eselon4",
+        jabatan: "eselon4"
+      }));
+    }
+
     if (!authService.isAuthenticated()) {
       alert('Anda harus login terlebih dahulu');
       window.location.href = '/login';
@@ -48,14 +58,6 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
   const loadExistingNominatif = async (id) => {
     try {
       setLoading(true);
-
-      // For testing: inject auth token to localStorage
-      localStorage.setItem('token', '33|YO6493qZWJZYBZbiac0zOa1gJ8s936XcSpMT1xGZ6aac91dd');
-      localStorage.setItem('user', JSON.stringify({
-        id: 4,
-        username: "eselon4",
-        jabatan: "eselon4"
-      }));
 
       const response = await nominatifService.getById(id);
 
@@ -828,20 +830,22 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
           setNominatifId(response.data.data.id);
           setIsNewRecord(false);
 
-          // Update form data with response
+          // Update form data with response - include penginapan data if available
           setFormData(prev => ({
             ...prev,
             status: 'draft',
             isEditable: true,
             totalPagu: response.data.data.total_pagu,
             totalBiayaAktual: response.data.data.total_biaya_aktual,
-            totalAnggaranRealisasi: response.data.data.total_anggaran_realisasi
+            totalAnggaranRealisasi: response.data.data.total_anggaran_realisasi,
+            // Restore penginapan data from formatted response if available
+            penginapan: response.data.data.penginapan_formated || prev.penginapan
           }));
 
           notification.success('Draft Berhasil Disimpan!', `Data draft telah disimpan dengan ID: ${response.data.data.id}`);
 
           // Save tambahan orang using new API
-          await saveTambahanOrangData(response.data.data.id, validTambahanOrang);
+          // await saveTambahanOrangData(response.data.data.id, validTambahanOrang); // TEMPORARY DISABLED
         } else {
           throw new Error(response.message || 'Gagal membuat draft baru');
         }

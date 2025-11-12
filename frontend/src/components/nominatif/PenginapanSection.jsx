@@ -34,9 +34,20 @@ const PenginapanSection = ({
   const getRuteDisplayText = () => {
     // Prioritas 1: Cari dari tujuanList (data dari form Detail Perjalanan)
     if (tujuanList && tujuanList.length > 0) {
-      const firstTujuan = tujuanList[0];
-      if (firstTujuan && firstTujuan.tujuan && firstTujuan.dari) {
-        return `${firstTujuan.dari} → ${firstTujuan.tujuan} → ${firstTujuan.dari}`;
+      const destinations = tujuanList.map(item => {
+        // Handle both string and object formats
+        if (typeof item === 'string') {
+          return item;
+        } else if (item && typeof item === 'object') {
+          return item.tujuan || item;
+        }
+        return item;
+      }).filter(Boolean);
+
+      if (destinations.length > 0) {
+        const dari = 'Jakarta'; // Default dari
+        const tujuanString = destinations.join(' → ');
+        return `${dari} → ${tujuanString} → ${dari}`;
       }
     }
 
@@ -53,8 +64,11 @@ const PenginapanSection = ({
     // Prioritas 1: Cari dari tujuanList (data dari form Detail Perjalanan)
     if (tujuanList && tujuanList.length > 0) {
       const firstTujuan = tujuanList[0];
-      if (firstTujuan && firstTujuan.tujuan) {
-        return firstTujuan.tujuan;
+      // Handle both string and object formats
+      if (typeof firstTujuan === 'string') {
+        return firstTujuan;
+      } else if (firstTujuan && typeof firstTujuan === 'object') {
+        return firstTujuan.tujuan || firstTujuan;
       }
     }
 
@@ -112,25 +126,45 @@ const PenginapanSection = ({
   // Load penginapan data when component mounts or IDs change
   useEffect(() => {
     const loadPenginapanData = async () => {
-      if (!nominatifId && !tambahanOrangId) {
+      // Enhanced validation to prevent string "null" or invalid IDs
+      const isValidId = (id) => {
+        return id && id !== 'null' && id !== null && id !== undefined && id !== '';
+      };
+
+      const validNominatifId = isValidId(nominatifId) ? parseInt(nominatifId) : null;
+      const validTambahanOrangId = isValidId(tambahanOrangId) ? parseInt(tambahanOrangId) : null;
+
+      if (!validNominatifId && !validTambahanOrangId) {
+        console.log('🔄 No valid IDs available, setting initialized without loading');
         setInitialized(true);
         return;
       }
 
+      console.log('🔄 Loading penginapan data for IDs:', { nominatifId: validNominatifId, tambahanOrangId: validTambahanOrangId });
       setLoading(true);
       try {
         let response;
-        if (isTambahanOrang && tambahanOrangId) {
-          response = await penginapanService.getPenginapanTambahanOrang(tambahanOrangId);
-        } else if (nominatifId) {
-          response = await penginapanService.getPenginapan(nominatifId);
+        if (isTambahanOrang && validTambahanOrangId) {
+          response = await penginapanService.getPenginapanTambahanOrang(validTambahanOrangId);
+        } else if (validNominatifId) {
+          response = await penginapanService.getPenginapan(validNominatifId);
         }
 
         if (response && response.success) {
-          setPenginapanData(response.data || []);
+          console.log('✅ Penginapan data loaded:', response.data);
+          // Convert API response to form data format
+          const formData = penginapanService.apiToFormData(response.data);
+          setPenginapanData(formData.malamDetails || []);
+
+          // Update parent form state
+          onChange('penginapan', formData);
+        } else {
+          console.log('ℹ️ No existing penginapan data found');
+          setPenginapanData([]);
         }
       } catch (error) {
         console.error('Error loading penginapan data:', error);
+        setPenginapanData([]);
       } finally {
         setLoading(false);
         setInitialized(true);
@@ -152,14 +186,17 @@ const PenginapanSection = ({
       isTambahanOrang,
       shouldGenerate: data?.menginap && jumlahHari > 1,
       hasData: penginapanData.length > 0,
-      expectedMalam: Math.max(0, jumlahHari - 1)
+      expectedMalam: Math.max(0, jumlahHari - 1),
+      hasValidId: nominatifId || tambahanOrangId
     });
 
     const shouldGenerate = data?.menginap && jumlahHari > 1;
     const hasData = penginapanData.length > 0;
     const expectedMalam = Math.max(0, jumlahHari - 1);
+    const hasValidId = nominatifId || tambahanOrangId;
 
-    if (shouldGenerate && (!hasData || penginapanData.length !== expectedMalam)) {
+    // Only generate if we have a valid ID (data already saved)
+    if (shouldGenerate && hasValidId && (!hasData || penginapanData.length !== expectedMalam)) {
       generatePenginapanData();
     } else if (!data?.menginap && hasData) {
       // Clear penginapan data if not staying overnight
@@ -178,7 +215,7 @@ const PenginapanSection = ({
     });
 
     if (!nominatifId && !tambahanOrangId) {
-      console.log('❌ Early return: No IDs available');
+      console.log('❌ Early return: No IDs available - Data must be saved first');
       return;
     }
 
@@ -201,43 +238,70 @@ const PenginapanSection = ({
     setLoading(true);
 
     try {
-      let response;
-      const defaultPaguPerMalam = 500000; // Default value, can be made configurable
-
-      // Extract tujuan list for auto-mapping
-      const routeTujuanList = tujuanList.map(item => item.tujuan).filter(Boolean);
+      // Prepare rute data for API - NO DOUBLE NESTING!
+      const ruteData = {
+        tujuan_list: tujuanList.map(item => {
+          // Handle both string and object formats
+          if (typeof item === 'string') {
+            return item;
+          } else if (item && typeof item === 'object') {
+            return item.tujuan || item;
+          }
+          return item;
+        }).filter(Boolean),
+        total_hari: jumlahHari,
+        dari: 'Jakarta',
+        pulang: 'Jakarta'
+      };
 
       console.log('📋 API Parameters:', {
-        defaultPaguPerMalam,
-        routeTujuanList,
-        'Calling API': isTambahanOrang ? 'generateFromRuteTambahanOrang' : 'generateFromRute'
+        ruteData,
+        'Pagu Mode': 'User Input Manual (No Default)',
+        'Jumlah Malam': jumlahMalam
       });
+      console.log('📋 RuteData Detail:', JSON.stringify(ruteData, null, 2));
 
-      if (isTambahanOrang && tambahanOrangId) {
-        console.log('🔵 Calling generateFromRuteTambahanOrang...');
-        response = await penginapanService.generateFromRuteTambahanOrang(
-          tambahanOrangId,
-          jumlahMalam,
-          defaultPaguPerMalam,
-          routeTujuanList.length > 0 ? routeTujuanList : [] // Pass empty array instead of null
-        );
-      } else if (nominatifId) {
-        console.log('🟢 Calling generateFromRute...');
+      let response;
+
+      // Enhanced validation for generation
+      const isValidId = (id) => {
+        return id && id !== 'null' && id !== null && id !== undefined && id !== '' && !isNaN(parseInt(id));
+      };
+
+      const validNominatifId = isValidId(nominatifId) ? parseInt(nominatifId) : null;
+      const validTambahanOrangId = isValidId(tambahanOrangId) ? parseInt(tambahanOrangId) : null;
+
+      if (validNominatifId && !isTambahanOrang) {
+        console.log('🟢 Calling generateFromRute with ID:', validNominatifId);
         response = await penginapanService.generateFromRute(
-          nominatifId,
-          jumlahMalam,
-          defaultPaguPerMalam,
-          routeTujuanList.length > 0 ? routeTujuanList : [] // Pass empty array instead of null
+          validNominatifId,
+          ruteData, // Send directly - no wrapping to prevent double nesting
+          0 // No default pagu - user will input manually
         );
+      } else if (isTambahanOrang && validTambahanOrangId) {
+        console.log('🔵 Tambahan orang generation not implemented yet...');
+        // TODO: Implement when tambahan orang penginapan API is ready
+        return;
+      } else {
+        console.log('❌ No valid ID available for generation', {
+          nominatifId,
+          tambahanOrangId,
+          isTambahanOrang,
+          validNominatifId,
+          validTambahanOrangId
+        });
+        return;
       }
 
       console.log('📥 API Response received:', response);
 
       if (response && response.success) {
-        setPenginapanData(response.data || []);
+        // Convert API response to form data format
+        const formData = penginapanService.apiToFormData(response.data);
+        setPenginapanData(formData.malamDetails || []);
 
         // Update parent form state for compatibility
-        updateParentFormState(response.data || []);
+        updateParentFormState(formData.malamDetails || []);
 
         console.log(`✅ Berhasil generate ${jumlahMalam} malam penginapan`);
       }
@@ -288,25 +352,52 @@ const PenginapanSection = ({
 
   // Update parent form state for backward compatibility
   const updateParentFormState = (data) => {
+    console.log('🔄 updateParentFormState called with data:', data);
+
     let totalPagu = 0;
     let totalAktual = 0;
-    const malamDetails = {};
+    const malamDetails = [];
+    const malamDetailsObject = {};
 
     data.forEach((item, index) => {
       totalPagu += parseFloat(item.pagu) || 0;
-      totalAktual += parseFloat(item.biaya_aktual) || 0;
-      malamDetails[index] = {
+      totalAktual += parseFloat(item.aktual) || 0;
+
+      const malamDetail = {
+        malam: item.malam || (index + 1),
         pagu: parseFloat(item.pagu) || 0,
-        aktual: parseFloat(item.biaya_aktual) || 0,
+        aktual: parseFloat(item.aktual) || 0,
         lokasi: item.lokasi || '',
         nama_hotel: item.nama_hotel || '',
         keterangan: item.keterangan || ''
       };
+
+      // Add to array for proper storage
+      malamDetails.push(malamDetail);
+
+      // Also add to object for backward compatibility
+      malamDetailsObject[index] = malamDetail;
     });
 
     const anggaranRealisasi = totalPagu - totalAktual;
 
-    // Update parent form state
+    console.log('📊 Penginapan totals calculated:', {
+      totalPagu,
+      totalAktual,
+      anggaranRealisasi,
+      malamCount: data.length,
+      malamDetailsArray: malamDetails,
+      malamDetailsObject: malamDetailsObject
+    });
+
+    // Update parent form state - CRITICAL: Use array format
+    onChange('penginapan', {
+      menginap: true,
+      jumlahMalam: data.length,
+      malamDetails: malamDetails
+    });
+
+    // Also update individual fields for compatibility
     onChange('penginapan.total', totalPagu);
     onChange('penginapan.totalBiayaAktual', totalAktual);
     onChange('penginapan.anggaranRealisasi', anggaranRealisasi);
@@ -325,7 +416,7 @@ const PenginapanSection = ({
         malam: index + 1,
         lokasi: getLokasiForMalam(index + 1),
         pagu: 0,
-        biaya_aktual: 0,
+        aktual: 0,
         nama_hotel: '',
         keterangan: ''
       };
@@ -337,7 +428,7 @@ const PenginapanSection = ({
     if (field === 'pagu') {
       updatedData[index].pagu = numericValue;
     } else if (field === 'biaya_aktual') {
-      updatedData[index].biaya_aktual = numericValue;
+      updatedData[index].aktual = numericValue;
     } else if (field === 'nama_hotel') {
       updatedData[index].nama_hotel = value;
     } else if (field === 'keterangan') {
@@ -346,33 +437,90 @@ const PenginapanSection = ({
 
     setPenginapanData(updatedData);
 
-    // Update API if record exists
-    if (updatedData[index].id) {
-      try {
-        let response;
-        if (isTambahanOrang) {
+    // Update API if record exists, otherwise create new record
+    try {
+      let response;
+      if (isTambahanOrang) {
+        if (updatedData[index].id) {
           response = await penginapanService.updatePenginapanTambahanOrang(
             updatedData[index].id,
             updatedData[index]
           );
         } else {
+          // Create new record - we need to use the savePenginapan method
+          // But first we need to make sure we have the right data structure
+          const formData = {
+            malamDetails: [updatedData[index]]
+          };
+
+          // Validate ID before calling API
+          if (!tambahanOrangId || tambahanOrangId === 'null' || tambahanOrangId === null || tambahanOrangId === undefined) {
+            console.error('❌ Cannot save penginapan: Invalid tambahanOrangId', { tambahanOrangId });
+            // Don't call API if ID is invalid
+            return;
+          }
+
+          console.log('💾 Saving penginapan with tambahanOrangId:', tambahanOrangId);
+          response = await penginapanService.savePenginapanTambahanOrang(tambahanOrangId, formData);
+        }
+      } else {
+        if (updatedData[index].id) {
           response = await penginapanService.updatePenginapan(
             updatedData[index].id,
             updatedData[index]
           );
+        } else {
+          // Create new record
+          const formData = {
+            malamDetails: [updatedData[index]]
+          };
+
+          // Validate ID before calling API
+          if (!nominatifId || nominatifId === 'null' || nominatifId === null || nominatifId === undefined) {
+            console.warn('⚠️ Cannot save penginapan: Nominatif not yet saved (no ID). Please save the main nominatif first.');
+            // Don't call API if ID is invalid - this is expected for new records
+            // Just update local state without API call
+            return;
+          }
+
+          console.log('💾 Saving penginapan with nominatifId:', nominatifId);
+          response = await penginapanService.savePenginapan(nominatifId, formData);
+        }
+      }
+
+      if (response && response.success) {
+        console.log('✅ Penginapan save/update successful:', response);
+
+        // Update the ID if it was just created
+        if (!updatedData[index].id && response.data && response.data.length > 0) {
+          updatedData[index].id = response.data[response.data.length - 1].id;
+          console.log('🆔 New record ID assigned:', updatedData[index].id);
         }
 
-        if (response && response.success) {
-          updateParentFormState(updatedData);
+        // For existing records, update the data from response
+        if (updatedData[index].id && response.data) {
+          const updatedRecord = response.data.find(item => item.id === updatedData[index].id);
+          if (updatedRecord) {
+            updatedData[index] = {
+              ...updatedData[index],
+              nama_hotel: updatedRecord.nama_hotel,
+              keterangan: updatedRecord.keterangan,
+              pagu: parseFloat(updatedRecord.pagu),
+              aktual: parseFloat(updatedRecord.biaya_aktual)
+            };
+            console.log('🔄 Updated record from response:', updatedRecord);
+          }
         }
-      } catch (error) {
-        console.error('❌ Error updating penginapan:', error);
-        console.log('❌ Gagal update data penginapan:', error.message || error);
-        // Revert state on error
-        setPenginapanData(penginapanData);
+
+        setPenginapanData(updatedData);
+        updateParentFormState(updatedData);
+        console.log('📊 Final penginapanData after save:', updatedData);
       }
-    } else {
-      updateParentFormState(updatedData);
+    } catch (error) {
+      console.error('❌ Error saving/updating penginapan:', error);
+      console.log('❌ Gagal save/update data penginapan:', error.message || error);
+      // Revert state on error
+      setPenginapanData(penginapanData);
     }
   };
 
@@ -385,14 +533,37 @@ const PenginapanSection = ({
     const tujuanCount = tujuanList.length;
 
     if (tujuanCount === 1) {
-      return tujuanList[0].tujuan || 'Tujuan';
+      const tujuan = tujuanList[0];
+      // Handle both string and object formats
+      if (typeof tujuan === 'string') {
+        return tujuan;
+      } else if (tujuan && typeof tujuan === 'object') {
+        return tujuan.tujuan || tujuan;
+      }
+      return 'Tujuan';
     }
 
+    // Logic yang benar: Malam 1 -> tujuan pertama, Malam 2 -> tujuan kedua, dst
     if (malam <= tujuanCount) {
-      return tujuanList[malam - 1].tujuan || 'Tujuan';
+      const tujuan = tujuanList[malam - 1];
+      // Handle both string and object formats
+      if (typeof tujuan === 'string') {
+        return tujuan;
+      } else if (tujuan && typeof tujuan === 'object') {
+        return tujuan.tujuan || tujuan;
+      }
+      return 'Tujuan';
     }
 
-    return tujuanList[tujuanCount - 1].tujuan || 'Tujuan';
+    // Jika malam lebih banyak dari tujuan, gunakan tujuan terakhir
+    const lastTujuan = tujuanList[tujuanCount - 1];
+    // Handle both string and object formats
+    if (typeof lastTujuan === 'string') {
+      return lastTujuan;
+    } else if (lastTujuan && typeof lastTujuan === 'object') {
+      return lastTujuan.tujuan || lastTujuan;
+    }
+    return 'Tujuan';
   };
 
   const handleInputChange = (field, value) => {
@@ -482,7 +653,7 @@ const PenginapanSection = ({
             return (
               <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                 <h5 className="text-sm font-semibold text-gray-700 mb-3">
-                  Malam {index + 1} - {malamData.lokasi || getLokasiPenginapan()}
+                  Malam {index + 1} - {getLokasiForMalam(index + 1)}
                 </h5>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -508,7 +679,7 @@ const PenginapanSection = ({
                     </label>
                     <input
                       type="text"
-                      value={formatCurrencyInput(malamData.biaya_aktual || 0)}
+                      value={formatCurrencyInput(malamData.aktual || 0)}
                       onChange={(e) => handleMalamChange(index, 'biaya_aktual', e.target.value)}
                       disabled={!isEditable || loading}
                       placeholder="0"
@@ -557,7 +728,7 @@ const PenginapanSection = ({
 
                 {/* Anggaran Realisasi per malam */}
                 <div className="mt-1 text-xs text-gray-500">
-                  Selisih: {formatRupiah((malamData.pagu || 0) - (malamData.biaya_aktual || 0))}
+                  Selisih: {formatRupiah((malamData.pagu || 0) - (malamData.aktual || 0))}
                 </div>
               </div>
             );
@@ -584,7 +755,7 @@ const PenginapanSection = ({
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-gray-800">Total Penginapan:</span>
               <span className="text-base font-bold text-blue-900">
-                {formatRupiah(data.total || 0)}
+                {formatRupiah(penginapanData.reduce((sum, item) => sum + (parseFloat(item.pagu) || 0), 0))}
               </span>
             </div>
             <p className="text-xs text-blue-600 mt-1">
@@ -597,11 +768,14 @@ const PenginapanSection = ({
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-gray-800">Anggaran Realisasi:</span>
               <span className="text-base font-bold text-green-900">
-                {formatRupiah(data.anggaranRealisasi || 0)}
+                {formatRupiah(
+              penginapanData.reduce((sum, item) => sum + (parseFloat(item.pagu) || 0), 0) -
+              penginapanData.reduce((sum, item) => sum + (parseFloat(item.aktual) || 0), 0)
+            )}
               </span>
             </div>
             <p className="text-xs text-green-600 mt-1">
-              Pagu (Rp {formatRupiah(data.total || 0).replace('Rp ', '')}) - Biaya Aktual (Rp {formatRupiah(data.totalBiayaAktual || 0).replace('Rp ', '')})
+              Pagu (Rp {formatRupiah(penginapanData.reduce((sum, item) => sum + (parseFloat(item.pagu) || 0), 0)).replace('Rp ', '')}) - Biaya Aktual (Rp {formatRupiah(penginapanData.reduce((sum, item) => sum + (parseFloat(item.aktual) || 0), 0)).replace('Rp ', '')})
             </p>
           </div>
         </>

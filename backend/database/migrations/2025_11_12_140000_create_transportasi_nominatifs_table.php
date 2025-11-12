@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('transportasi_nominatifs', function (Blueprint $table) {
             $table->id();
 
-            // Foreign key ke nominatifs
-            $table->foreignId('nominatif_id')->constrained('nominatifs')->onDelete('cascade');
+            // Foreign key ke master_nominatifs
+            $table->foreignId('master_nominatif_id')->constrained('master_nominatifs')->onDelete('cascade');
 
             // Detail transportasi
             $table->integer('hari')->comment('Hari ke-berapa perjalanan');
@@ -34,9 +34,9 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes untuk performance
-            $table->index(['nominatif_id', 'hari']);
-            $table->index(['nominatif_id', 'arah']);
-            $table->index(['nominatif_id', 'hari', 'arah']);
+            $table->index(['master_nominatif_id', 'hari']);
+            $table->index(['master_nominatif_id', 'arah']);
+            $table->index(['master_nominatif_id', 'hari', 'arah']);
         });
     }
 

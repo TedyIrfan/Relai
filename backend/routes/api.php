@@ -54,6 +54,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/nominatifs/tambahan-orang/{id}', [NominatifController::class, 'updateTambahanOrang']); // UPDATE specific tambahan orang
     Route::delete('/nominatifs/{id}/tambahan-orang/{tambahanOrangId}', [NominatifController::class, 'deleteTambahanOrangById']); // DELETE specific tambahan orang
 
+    // Penginapan CRUD Operations (NEW - Database Table)
+    Route::get('/nominatifs/{id}/penginapan', [NominatifController::class, 'getPenginapan']); // GET all penginapan for nominatif
+    Route::post('/nominatifs/{id}/penginapan', [NominatifController::class, 'savePenginapan']); // SAVE/UPDATE penginapan
+    Route::put('/nominatifs/penginapan/{penginapanId}', [NominatifController::class, 'updatePenginapan']); // UPDATE specific penginapan
+    Route::delete('/nominatifs/penginapan/{penginapanId}', [NominatifController::class, 'deletePenginapan']); // DELETE penginapan
+    Route::post('/nominatifs/{id}/penginapan/generate', [NominatifController::class, 'generatePenginapanFromRute']); // GENERATE from rute
+
     // Rute Perjalanan CRUD Operations
     Route::get('/rute-perjalanan/{nominatif_id}', [RutePerjalananController::class, 'show']); // GET route by nominatif
     Route::get('/rute-perjalanan/{nominatif_id}/formatted', [RutePerjalananController::class, 'getFormattedRoute']); // GET formatted route

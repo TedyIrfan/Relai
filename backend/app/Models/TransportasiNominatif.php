@@ -12,7 +12,7 @@ class TransportasiNominatif extends Model
     protected $table = 'transportasi_nominatifs';
 
     protected $fillable = [
-        'nominatif_id',
+        'master_nominatif_id',
         'hari',
         'arah',
         'jenis_transportasi',
@@ -37,7 +37,12 @@ class TransportasiNominatif extends Model
     // Relationships
     public function nominatif()
     {
-        return $this->belongsTo(Nominatif::class, 'nominatif_id', 'id');
+        return $this->belongsTo(Nominatif::class, 'master_nominatif_id', 'id');
+    }
+
+    public function masterNominatif()
+    {
+        return $this->belongsTo(Nominatif::class, 'master_nominatif_id', 'id');
     }
 
     // Accessors & Mutators
@@ -65,7 +70,7 @@ class TransportasiNominatif extends Model
 
     public static function getByNominatifId($nominatifId, $arah = null)
     {
-        $query = static::where('nominatif_id', $nominatifId);
+        $query = static::where('master_nominatif_id', $nominatifId);
 
         if ($arah) {
             $query->where('arah', $arah);
@@ -76,7 +81,7 @@ class TransportasiNominatif extends Model
 
     public static function getTotalByNominatifId($nominatifId, $arah = null)
     {
-        $query = static::where('nominatif_id', $nominatifId);
+        $query = static::where('master_nominatif_id', $nominatifId);
 
         if ($arah) {
             $query->where('arah', $arah);

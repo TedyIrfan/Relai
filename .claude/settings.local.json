@@ -13,7 +13,8 @@
       "Bash(docker restart:*)",
       "Bash(npm run dev:*)",
       "Bash(composer require:*)",
-      "Bash(./vendor/bin/sail down:*)"
+      "Bash(./vendor/bin/sail down:*)",
+      "Bash(storage/logs/laravel.log)"
     ],
     "deny": [],
     "ask": []

@@ -114,6 +114,14 @@ export const nominatifService = {
 
   // Format form data for API submission
   formatFormData: (formData, rkaDetailId) => {
+    // Debug: Log penginapan data structure
+    console.log('🔍 DEBUG formatFormData - penginapan structure:', {
+      'penginapan exists': !!formData.penginapan,
+      'penginapan data': formData.penginapan,
+      'malamDetails exists': !!(formData.penginapan && formData.penginapan.malamDetails),
+      'malamDetails data': formData.penginapan?.malamDetails,
+      'malamDetails length': formData.penginapan?.malamDetails?.length
+    });
 
     // Convert transportasiPerHari to transport_data format for backend
     const transportData = [];
@@ -182,7 +190,18 @@ export const nominatifService = {
       rute_dari: formData.ruteDari || 'Jakarta', // Fixed: use ruteDari (camelCase)
       rute_pulang: formData.rutePulang || 'Jakarta', // Fixed: use rutePulang (camelCase)
       transport_data: transportData, // New field for separate table
-      penginapan: formData.penginapan || { menginap: false },
+      penginapan: formData.penginapan && formData.penginapan.malamDetails && formData.penginapan.malamDetails.length > 0 ? {
+        menginap: true, // Force to true if we have malamDetails
+        jumlahMalam: formData.penginapan.jumlahMalam || formData.penginapan.malamDetails.length || 0,
+        malamDetails: formData.penginapan.malamDetails.map(detail => ({
+          malam: detail.malam || 1,
+          lokasi: detail.lokasi || '',
+          nama_hotel: detail.nama_hotel || null,
+          keterangan: detail.keterangan || null,
+          pagu: detail.pagu || 0,
+          aktual: detail.aktual || 0
+        }))
+      } : { menginap: false },
       uang_harian: formData.uangHarian || { jumlahHari: 0, paguPerHari: 0 },
       uang_representasi: formData.uangRepresentasi || { jumlahHari: 0, paguPerHari: 0 },
       // Critical fix: These fields were being overridden by frontend but need proper defaults

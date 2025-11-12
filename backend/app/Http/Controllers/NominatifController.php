@@ -12,6 +12,7 @@ use App\Models\TambahanOrangNominatif;
 use App\Models\RutePerjalananNominatif;
 use App\Models\TransportasiTambahanOrang;
 use App\Models\RutePerjalananTambahanOrang;
+use App\Models\PenginapanNominatif;
 
 class NominatifController extends Controller
 {
@@ -176,7 +177,7 @@ class NominatifController extends Controller
                     \Log::info("🚗 Creating transport record #{$index}: ", $transport);
 
                     $transportRecord = TransportasiNominatif::create([
-                        'nominatif_id' => $nominatif->id,
+                        'master_nominatif_id' => $nominatif->id,
                         'hari' => $transport['hari'],
                         'arah' => $transport['arah'], // 'pergi' atau 'pulang'
                         'jenis_transportasi' => $transport['jenis_transportasi'] ?? null,
@@ -190,6 +191,37 @@ class NominatifController extends Controller
                 }
             } else {
                 \Log::info('❌ No transport data found to save');
+            }
+
+            // Save penginapan data ke table terpisah (seperti transportasi)
+            \Log::info('🏨 Penginapan validation check:', [
+                'isset_penginapan' => isset($validated['penginapan']),
+                'isset_malamDetails' => isset($validated['penginapan']['malamDetails']),
+                'is_array_malamDetails' => is_array($validated['penginapan']['malamDetails'] ?? null),
+                'penginapan_data' => $validated['penginapan'] ?? 'NOT_SET'
+            ]);
+
+            if (isset($validated['penginapan']) && isset($validated['penginapan']['malamDetails']) && is_array($validated['penginapan']['malamDetails'])) {
+                \Log::info('🏨 Penginapan data found, count: ' . count($validated['penginapan']['malamDetails']));
+                \Log::info('🏨 Penginapan data content:', $validated['penginapan']['malamDetails']);
+
+                foreach ($validated['penginapan']['malamDetails'] as $index => $penginapan) {
+                    \Log::info("🏨 Creating penginapan record #{$index}: ", $penginapan);
+
+                    $penginapanRecord = PenginapanNominatif::create([
+                        'master_nominatif_id' => $nominatif->id,
+                        'malam' => $index + 1,
+                        'lokasi_penginapan' => $penginapan['lokasi'] ?? '',
+                        'nama_hotel' => $penginapan['nama_hotel'] ?? null,
+                        'keterangan' => $penginapan['keterangan'] ?? null,
+                        'pagu' => $penginapan['pagu'] ?? 0,
+                        'biaya_aktual' => $penginapan['aktual'] ?? 0,
+                    ]);
+
+                    \Log::info("✅ Penginapan record created with ID: {$penginapanRecord->id}");
+                }
+            } else {
+                \Log::info('❌ No penginapan data found to save');
             }
 
             // Save tambahan orang data
@@ -270,10 +302,19 @@ class NominatifController extends Controller
 
             DB::commit();
 
+            // Reload dengan fresh relationships untuk memastikan object consistency
+            $nominatif->load(['rkaDetail', 'user', 'penginapan']);
+
+            // Format penginapan data for frontend
+            $penginapanData = $this->formatPenginapanForFrontend($nominatif);
+
+            // Add formatted penginapan data to response
+            $nominatif->setAttribute('penginapan_formated', $penginapanData);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Nominatif berhasil dibuat',
-                'data' => $nominatif->load(['rkaDetail', 'user']),
+                'data' => $nominatif,
             ], 201);
 
         } catch (\Exception $e) {
@@ -581,7 +622,7 @@ class NominatifController extends Controller
                 // Create new transport records
                 foreach ($validated[$transportField] as $transport) {
                     TransportasiNominatif::create([
-                        'nominatif_id' => $nominatif->id,
+                        'master_nominatif_id' => $nominatif->id,
                         'hari' => $transport['hari'],
                         'arah' => $transport['arah'],
                         'jenis_transportasi' => $transport['jenis_transportasi'] ?? null,
@@ -1040,12 +1081,23 @@ class NominatifController extends Controller
             $nominatif = Nominatif::byUser(Auth::id())->findOrFail($id);
             \Log::info("🔍 Nominatif found: ID {$nominatif->id}, status {$nominatif->status}");
 
-            $tambahanOrang = $nominatif->tambahanOrang()->with([
-                'transportasi',
-                'rutePerjalanan'
-            ])->get();
+            try {
+                $tambahanOrang = $nominatif->tambahanOrang()->with([
+                    'transportasi',
+                    'rutePerjalanan'
+                ])->get();
 
-            \Log::info("🔍 Tambahan orang data found: " . $tambahanOrang->count() . " records");
+                if (!$tambahanOrang) {
+                    $tambahanOrang = collect();
+                    \Log::warning("⚠️ Tambahan orang relationship returned null, using empty collection");
+                }
+
+                \Log::info("🔍 Tambahan orang data found: " . $tambahanOrang->count() . " records");
+            } catch (\Exception $e) {
+                $tambahanOrang = collect();
+                \Log::error("❌ Error loading tambahan orang data: " . $e->getMessage());
+                \Log::error("❌ Error trace: " . $e->getTraceAsString());
+            }
             \Log::info("🔍 Raw tambahan orang data:", $tambahanOrang->toArray());
 
             // Remove double-embedding of data -直接返回数组而不是Collection
@@ -1331,6 +1383,390 @@ class NominatifController extends Controller
                 'success' => false,
                 'message' => 'Gagal menghapus tambahan orang',
             ], 500);
+        }
+    }
+
+    /**
+     * Get all penginapan for a nominatif
+     */
+    public function getPenginapan(Request $request, string $id)
+    {
+        try {
+            $nominatif = Nominatif::byUser(Auth::id())->findOrFail($id);
+
+            $penginapanData = $nominatif->penginapan()->orderBy('malam')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $penginapanData,
+                'message' => 'Data penginapan berhasil diambil'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error getting penginapan: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data penginapan',
+            ], 500);
+        }
+    }
+
+    /**
+     * Save or update penginapan for a nominatif
+     */
+    public function savePenginapan(Request $request, string $id)
+    {
+        try {
+            $validated = $request->validate([
+                'penginapanData' => 'required|array',
+                'penginapanData.*.malam' => 'required|integer|min:1',
+                'penginapanData.*.lokasi_penginapan' => 'required|string|max:100',
+                'penginapanData.*.nama_hotel' => 'nullable|string|max:100',
+                'penginapanData.*.pagu' => 'required|numeric|min:0',
+                'penginapanData.*.biaya_aktual' => 'nullable|numeric|min:0',
+                'penginapanData.*.keterangan' => 'nullable|string|max:500',
+            ]);
+
+            $nominatif = Nominatif::byUser(Auth::id())->findOrFail($id);
+
+            if ($nominatif->status !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya bisa mengedit penginapan pada status draft',
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            $savedPenginapan = [];
+            foreach ($validated['penginapanData'] as $penginapanData) {
+                // Check if penginapan already exists for this malam
+                $penginapan = $nominatif->penginapan()
+                    ->where('malam', $penginapanData['malam'])
+                    ->first();
+
+                if ($penginapan) {
+                    // Update existing
+                    $penginapan->update([
+                        'lokasi_penginapan' => $penginapanData['lokasi_penginapan'],
+                        'nama_hotel' => $penginapanData['nama_hotel'] ?? null,
+                        'pagu' => $penginapanData['pagu'],
+                        'biaya_aktual' => $penginapanData['biaya_aktual'] ?? 0,
+                        'keterangan' => $penginapanData['keterangan'] ?? null,
+                    ]);
+                } else {
+                    // Create new
+                    $penginapan = $nominatif->penginapan()->create([
+                        'malam' => $penginapanData['malam'],
+                        'lokasi_penginapan' => $penginapanData['lokasi_penginapan'],
+                        'nama_hotel' => $penginapanData['nama_hotel'] ?? null,
+                        'pagu' => $penginapanData['pagu'],
+                        'biaya_aktual' => $penginapanData['biaya_aktual'] ?? 0,
+                        'keterangan' => $penginapanData['keterangan'] ?? null,
+                    ]);
+                }
+                $savedPenginapan[] = $penginapan;
+            }
+
+            // Recalculate nominatif totals
+            $nominatif->calculateTotals();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data' => $savedPenginapan,
+                'message' => 'Penginapan berhasil disimpan'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error saving penginapan: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan penginapan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update specific penginapan
+     */
+    public function updatePenginapan(Request $request, string $penginapanId)
+    {
+        try {
+            $validated = $request->validate([
+                'lokasi_penginapan' => 'required|string|max:100',
+                'nama_hotel' => 'nullable|string|max:100',
+                'pagu' => 'required|numeric|min:0',
+                'biaya_aktual' => 'nullable|numeric|min:0',
+                'keterangan' => 'nullable|string|max:500',
+            ]);
+
+            $penginapan = PenginapanNominatif::findOrFail($penginapanId);
+
+            // Check if user owns the parent nominatif
+            $nominatif = Nominatif::byUser(Auth::id())
+                ->where('id', $penginapan->master_nominatif_id)
+                ->firstOrFail();
+
+            if ($nominatif->status !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya bisa mengedit penginapan pada status draft',
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            $penginapan->update([
+                'lokasi_penginapan' => $validated['lokasi_penginapan'],
+                'nama_hotel' => $validated['nama_hotel'] ?? null,
+                'pagu' => $validated['pagu'],
+                'biaya_aktual' => $validated['biaya_aktual'] ?? 0,
+                'keterangan' => $validated['keterangan'] ?? null,
+            ]);
+
+            // Recalculate nominatif totals
+            $nominatif->calculateTotals();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data' => $penginapan,
+                'message' => 'Penginapan berhasil diperbarui'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error updating penginapan: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui penginapan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete penginapan
+     */
+    public function deletePenginapan(Request $request, string $penginapanId)
+    {
+        try {
+            $penginapan = PenginapanNominatif::findOrFail($penginapanId);
+
+            // Check if user owns the parent nominatif
+            $nominatif = Nominatif::byUser(Auth::id())
+                ->where('id', $penginapan->master_nominatif_id)
+                ->firstOrFail();
+
+            if ($nominatif->status !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya bisa menghapus penginapan pada status draft',
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            $penginapan->delete();
+
+            // Recalculate nominatif totals
+            $nominatif->calculateTotals();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Penginapan berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error deleting penginapan: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus penginapan',
+            ], 500);
+        }
+    }
+
+    /**
+     * Auto-generate penginapan from rute perjalanan
+     */
+    public function generatePenginapanFromRute(Request $request, string $id)
+    {
+        try {
+            // Debug log
+            \Log::info('🔍 Generate Penginapan - Request Data:', [
+                'all' => $request->all(),
+                'rute_perjalanan' => $request->input('rute_perjalanan'),
+                'tujuan_list' => $request->input('rute_perjalanan.tujuan_list'),
+                'validation_check' => [
+                    'has_rute_perjalanan' => $request->has('rute_perjalanan'),
+                    'has_tujuan_list' => $request->has('rute_perjalanan.tujuan_list'),
+                    'tujuan_list_is_array' => is_array($request->input('rute_perjalanan.tujuan_list')),
+                    'tujuan_list_count' => is_array($request->input('rute_perjalanan.tujuan_list')) ? count($request->input('rute_perjalanan.tujuan_list')) : 'N/A'
+                ]
+            ]);
+
+            $validated = $request->validate([
+                'rute_perjalanan' => 'required|array',
+                'rute_perjalanan.tujuan_list' => 'required|array',
+                'rute_perjalanan.total_hari' => 'required|integer|min:2',
+                'default_pagu_per_malam' => 'nullable|numeric|min:0'
+            ], [
+                'rute_perjalanan.tujuan_list.required' => 'The tujuan list field is required.',
+                'rute_perjalanan.total_hari.required' => 'The total hari field is required.'
+            ]);
+
+            $nominatif = Nominatif::byUser(Auth::id())->findOrFail($id);
+
+            if ($nominatif->status !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya bisa generate penginapan pada status draft',
+                ], 400);
+            }
+
+            $ruteData = $validated['rute_perjalanan'];
+            $defaultPagu = $validated['default_pagu_per_malam'] ?? 800000;
+
+            \Log::info('🔍 Generate Penginapan Debug:', [
+                'ruteData' => $ruteData,
+                'tujuan_list' => $ruteData['tujuan_list'] ?? 'NOT_FOUND',
+                'total_hari' => $ruteData['total_hari'] ?? 'NOT_FOUND'
+            ]);
+
+            DB::beginTransaction();
+
+            // Delete existing penginapan
+            $nominatif->penginapan()->delete();
+
+            // Generate new penginapan data
+            $penginapanRecords = PenginapanNominatif::generateFromRutePerjalanan(
+                $nominatif->id,
+                (object) $ruteData,
+                $defaultPagu
+            );
+
+            foreach ($penginapanRecords as $penginapanData) {
+                $nominatif->penginapan()->create($penginapanData);
+            }
+
+            // Recalculate nominatif totals
+            $nominatif->calculateTotals();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data' => $nominatif->penginapan()->orderBy('malam')->get(),
+                'message' => 'Penginapan berhasil digenerate dari rute perjalanan'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error generating penginapan from rute: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal generate penginapan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Format penginapan data for frontend consumption
+     */
+    private function formatPenginapanForFrontend($nominatif)
+    {
+        try {
+            $penginapanRecords = $nominatif->penginapan;
+
+            // Initialize empty result
+            $result = [
+                'menginap' => false,
+                'jumlahMalam' => 0,
+                'malamDetails' => []
+            ];
+
+            // If no records, return empty result
+            if (!$penginapanRecords) {
+                return $result;
+            }
+
+            $malamDetails = [];
+
+            // Convert to array for consistent processing
+            if (is_array($penginapanRecords)) {
+                $recordsArray = $penginapanRecords;
+            } else {
+                // Try to convert to array - this handles both Collection and other objects
+                try {
+                    $recordsArray = $penginapanRecords->toArray();
+                } catch (\Exception $e) {
+                    // If toArray() fails, try json encode/decode
+                    try {
+                        $recordsArray = json_decode(json_encode($penginapanRecords), true);
+                    } catch (\Exception $e2) {
+                        // Last resort - check if it's iterable
+                        if (is_iterable($penginapanRecords)) {
+                            $recordsArray = [];
+                            foreach ($penginapanRecords as $record) {
+                                $recordsArray[] = $record;
+                            }
+                        } else {
+                            return $result;
+                        }
+                    }
+                }
+            }
+
+            // Check if empty after conversion
+            if (empty($recordsArray)) {
+                return $result;
+            }
+
+            // Process records
+            foreach ($recordsArray as $penginapan) {
+                // Handle both array and object formats for individual records
+                if (is_array($penginapan)) {
+                    $malamDetails[] = [
+                        'malam' => $penginapan['malam'] ?? 1,
+                        'lokasi' => $penginapan['lokasi_penginapan'] ?? '',
+                        'nama_hotel' => $penginapan['nama_hotel'] ?? null,
+                        'keterangan' => $penginapan['keterangan'] ?? null,
+                        'pagu' => (float)($penginapan['pagu'] ?? 0),
+                        'aktual' => (float)($penginapan['biaya_aktual'] ?? 0)
+                    ];
+                } else {
+                    $malamDetails[] = [
+                        'malam' => $penginapan->malam ?? 1,
+                        'lokasi' => $penginapan->lokasi_penginapan ?? '',
+                        'nama_hotel' => $penginapan->nama_hotel ?? null,
+                        'keterangan' => $penginapan->keterangan ?? null,
+                        'pagu' => (float)($penginapan->pagu ?? 0),
+                        'aktual' => (float)($penginapan->biaya_aktual ?? 0)
+                    ];
+                }
+            }
+
+            // Sort by malam
+            usort($malamDetails, function($a, $b) {
+                return $a['malam'] - $b['malam'];
+            });
+
+            return [
+                'menginap' => true,
+                'jumlahMalam' => count($malamDetails),
+                'malamDetails' => $malamDetails
+            ];
+
+        } catch (\Exception $e) {
+            \Log::error('Error in formatPenginapanForFrontend: ' . $e->getMessage());
+
+            // Return empty result on any error
+            return [
+                'menginap' => false,
+                'jumlahMalam' => 0,
+                'malamDetails' => []
+            ];
         }
     }
 }
