@@ -147,7 +147,7 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
               jabatan_peserta: orang.jabatan_peserta || '',
 
               // Master fields (mirroring main form)
-              deskripsi_perjalanan_dinas: orang.deskripsi_perjalanan_dinas || '',
+              // Note: deskripsi_perjalanan_dinas removed - not a column in database
               status: orang.status || 'draft',
               is_editable: orang.is_editable !== false, // default true
 
@@ -478,7 +478,7 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
           jabatan_peserta: '',
 
           // Master fields (sync with main form)
-          deskripsi_perjalanan_dinas: formData.detailPerjalananDinas?.deskripsi || '',
+          // Note: deskripsi_perjalanan_dinas removed - not a column in database
           status: 'draft',
           is_editable: formData.isEditable !== false,
 
@@ -778,6 +778,11 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
   };
 
   const handleSave = async () => {
+    console.log('🚀 DEBUG handleSave: Starting save process');
+    console.log('🚀 DEBUG handleSave: nominatifId =', nominatifId);
+    console.log('🚀 DEBUG handleSave: isNewRecord =', isNewRecord);
+    console.log('🚀 DEBUG handleSave: nominatifId type =', typeof nominatifId);
+
     const error = validateSave();
     if (error) {
       notification.error('Validasi Gagal', error);
@@ -823,11 +828,19 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
       // apiData.tambahan_orang will be handled after main save
 
       let response;
-      if (isNewRecord) {
+      // Use more robust check for new record
+      const isActuallyNew = !nominatifId || nominatifId === 'undefined' || nominatifId === null;
+      console.log('🔧 DEBUG handleSave: isActuallyNew =', isActuallyNew);
+
+      if (isActuallyNew) {
         // Create new nominatif
         response = await nominatifService.create(apiData);
         if (response.success) {
-          setNominatifId(response.data.data.id);
+          const newId = response.data.data.id;
+          console.log('✅ DEBUG handleSave: New nominatif created with ID:', newId);
+          console.log('✅ DEBUG handleSave: Type of new ID:', typeof newId);
+
+          setNominatifId(newId);
           setIsNewRecord(false);
 
           // Update form data with response - include penginapan data if available
@@ -851,6 +864,15 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
         }
       } else {
         // Update existing nominatif
+        console.log('🔧 DEBUG handleSave: Updating existing nominatif with ID:', nominatifId);
+        console.log('🔧 DEBUG handleSave: isNewRecord:', isNewRecord);
+        console.log('🔧 DEBUG handleSave: Type of nominatifId:', typeof nominatifId);
+
+        if (!nominatifId || nominatifId === 'undefined') {
+          console.error('❌ ERROR: nominatifId is invalid:', nominatifId);
+          throw new Error('Invalid nominatif ID: Cannot update record');
+        }
+
         response = await nominatifService.update(nominatifId, apiData);
         if (response.success) {
           // Update form data with response
@@ -863,7 +885,7 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
 
           notification.success('Draft Berhasil Diupdate!', 'Perubahan data draft telah berhasil disimpan.');
 
-          // Save tambahan orang using new API
+          // Save tambahan orang using new API - Backend Fixed!
           await saveTambahanOrangData(nominatifId, validTambahanOrang);
         } else {
           throw new Error(response.message || 'Gagal mengupdate draft');
@@ -980,8 +1002,8 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
     }
   };
 
-  // Page navigation functions
-  const handleNextPage = () => {
+  // Auto-save Page 1 data before proceeding to Page 2
+  const handleNextPage = async () => {
     if (currentPage === 1) {
       // Validate page 1 before proceeding
       const error = validatePage1();
@@ -989,6 +1011,85 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
         alert(error);
         return;
       }
+
+      // Progressive Save: Auto-save main nominatif before Page 2
+      if (isNewRecord && !nominatifId) {
+        try {
+          console.log('🔄 Progressive Save: Saving main nominatif before Page 2...');
+
+          // Get RKA detail ID from selected kode anggaran
+          const rkaDetailId = formData.kodeAnggaranRKA?.id;
+
+          if (!rkaDetailId) {
+            throw new Error('Kode anggaran RKA tidak valid. Silakan pilih kembali.');
+          }
+
+          // Prepare minimal data for Page 1 save using proper formatFormData
+          const minimalFormData = {
+            ...formData,
+            rutePerjalanan: {
+              total_hari: formData.jumlahHari || 1,
+              tanggal_mulai: formData.tanggalMulai || new Date().toISOString().split('T')[0],
+              tanggal_selesai: formData.tanggalSelesai || new Date().toISOString().split('T')[0],
+              dari: 'Jakarta',
+              pulang: 'Jakarta',
+              tujuan_list: formData.tujuanList || []
+            },
+            // Set default values for required fields
+            transportasiPerHari: [],
+            penginapan: { menginap: false, malamDetails: [] },
+            uangHarian: { jumlahHari: 0, paguPerHari: 0, total: 0 },
+            uangRepresentasi: { jumlahHari: 0, paguPerHari: 0, total: 0 },
+            total_pagu: 0,
+            total_biaya_aktual: 0,
+            total_anggaran_realisasi: 0,
+            anggaran_berjalan: 0,
+            anggaran_sp2d: 0
+          };
+
+          // Use formatFormData to ensure proper API structure
+          const apiData = nominatifService.formatFormData(minimalFormData, rkaDetailId);
+
+          console.log('📤 Sending data to API:', JSON.stringify(apiData, null, 2));
+          const response = await nominatifService.create(apiData);
+
+          console.log('📥 API Response:', response);
+          console.log('📥 Response.data structure:', JSON.stringify(response.data, null, 2));
+
+          if (response.success && response.data) {
+            // Convert string ID to number if needed
+            const rawId = response.data.data?.id ||  // Main path for current API response
+                             response.data.id ||
+                             response.data.master_nominatif?.id ||
+                             response.data.nominatif?.id ||
+                             response.data[0]?.id;
+
+            const newNominatifId = rawId ? parseInt(rawId, 10) : undefined;
+
+            console.log('🆔 Extracted nominatif ID:', newNominatifId);
+            console.log('🔍 Available keys in response.data:', Object.keys(response.data));
+          console.log('🔍 response.data.data exists:', !!response.data.data);
+          console.log('🔍 response.data.data.id:', response.data.data?.id);
+
+            setNominatifId(newNominatifId);
+            setIsNewRecord(false);
+            console.log('✅ Progressive Save successful! New nominatif ID:', newNominatifId);
+            notification.success('Data dasar berhasil disimpan. Silakan lanjut ke halaman detail.');
+          } else {
+            console.error('❌ API Error Details:', {
+              message: response.message,
+              errors: response.errors,
+              fullResponse: response
+            });
+            throw new Error(response.message || 'Failed to save main nominatif');
+          }
+        } catch (error) {
+          console.error('❌ Progressive Save failed:', error);
+          alert('Gagal menyimpan data dasar. Mohon coba lagi.');
+          return;
+        }
+      }
+
       setCurrentPage(2);
     } else if (currentPage === 2) {
       // Page 3 disabled - langsung submit dari page 2
@@ -1022,8 +1123,8 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
       console.log('🔍 Validation failed - missing deskripsi');
       return 'Mohon lengkapi deskripsi perjalanan dinas terlebih dahulu.';
     }
-    if (!formData.kodeAnggaranRKA) {
-      console.log('🔍 Validation failed - missing kode anggaran');
+    if (!formData.kodeAnggaranRKA || !formData.kodeAnggaranRKA.id) {
+      console.log('🔍 Validation failed - missing kode anggaran:', formData.kodeAnggaranRKA);
       return 'Mohon pilih kode anggaran RKA terlebih dahulu.';
     }
 
@@ -1049,35 +1150,42 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
 
   // Save tambahan orang data using new API
   const saveTambahanOrangData = async (nominatifId, tambahanOrangToSave) => {
-    if (tambahanOrangToSave.length === 0) return;
+
+  // Save individual penginapan data to penginapan_tambahan_orang table
+  const savePenginapanTambahanOrangData = async (tambahanOrangId, malamDetails) => {
+    if (!malamDetails || malamDetails.length === 0) return;
 
     try {
-      // Match tambahan orang to save with existing records by ID
-      const matchedData = tambahanOrangToSave.map((orangToSave) => {
-        // Find matching record in current state
-        const existingRecord = tambahanOrang.find(
-          existing => existing.nama_peserta === orangToSave.nama_peserta
-        );
+      console.log('💾️ Saving individual penginapan data for tambahan orang ID:', tambahanOrangId);
+      console.log('🏨 Malam details to save:', malamDetails);
 
-        if (existingRecord && existingRecord.id) {
-          // Update existing record - use its ID
-          return {
-            ...orangToSave,
-            id: existingRecord.id // Use existing ID for update
-          };
-        } else {
-          // Create new record - no ID needed
-          return orangToSave;
+      // Save each malam as individual record
+      for (const malamData of malamDetails) {
+        const penginapanRecord = {
+          tambahan_orang_nominatif_id: tambahanOrangId,
+          malam: malamData.malam,
+          lokasi_penginapan: malamData.lokasi || '',
+          nama_hotel: malamData.nama_hotel || '',
+          keterangan: malamData.keterangan || '',
+          tipe_kamar: malamData.tipeKamar || 'Standard',
+          nomor_kamar: malamData.nomorKamar || '',
+          kapasitas: malamData.kapasitas || 1,
+          pagu: malamData.pagu || 0,
+          biaya_aktual: malamData.aktual || 0,
+        };
+
+        console.log('💾️ Saving penginapan record:', penginapanRecord);
+
+        // Call API to save individual penginapan record
+        const response = await nominatifService.savePenginapanTambahanOrang(penginapanRecord);
+
+        if (!response.success) {
+          console.error('❌ Failed to save penginapan record:', response.message);
+          throw new Error(response.message || 'Gagal menyimpan data penginapan tambahan orang');
         }
-      });
+      }
 
-      // Save each tambahan orang with proper ID handling
-      for (const orang of matchedData) {
-        const calculatedTotals = calculateTambahanOrangTotals(orang);
-
-        // Collect grandchild data from tambahan orang state
-        const ruteData = collectRutePerjalananTambahanOrang(orang);
-        const transportasiData = collectTransportasiTambahanOrang(orang);
+      console.log('✅ All penginapan records saved successfully');
 
         // Debug: Check calculated totals
         console.log('🔍 DEBUG Tambahan Orang Calculations:', {
@@ -1113,7 +1221,7 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
           jabatan_peserta: orang.jabatan_peserta || '',
 
           // Master fields (mirroring main form - sync with formData)
-          deskripsi_perjalanan_dinas: formData.detailPerjalananDinas?.deskripsi || '',
+          // Note: deskripsi_perjalanan_dinas removed - not a column in tambahan_orang_nominatifs table
           status: formData.status || 'draft',
           is_editable: formData.isEditable !== false,
 
@@ -1145,13 +1253,35 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
           anggaran_realisasi: calculatedTotals.pagu - calculatedTotals.aktual
         };
 
+        // Clean any forbidden fields that might cause database errors
+        const forbiddenFields = [
+          'deskripsi_perjalanan_dinas', // ❌ Not in database
+          'status', // ❌ Not in database
+          'is_editable', // ❌ Not in database
+          'anggaran_sp2d', // ❌ Not in database
+          'total_anggaran_realisasi' // ❌ Not in database
+        ];
+        const cleanedData = { ...tambahanOrangData };
+        forbiddenFields.forEach(field => delete cleanedData[field]);
+
         let response;
         if (orang.id) {
           // Update existing record
-          response = await nominatifService.updateTambahanOrang(orang.id, tambahanOrangData);
+          response = await nominatifService.updateTambahanOrang(orang.id, cleanedData);
         } else {
-          // Create new record
-          response = await nominatifService.saveTambahanOrang(nominatifId, tambahanOrangData);
+          // Create new record - use master_nominatif_id to match master table
+          const apiData = {
+            ...cleanedData,
+            master_nominatif_id: nominatifId // ✅ FIXED: Use master_nominatif_id
+          };
+          delete apiData.nominatif_id; // Remove old field if exists
+
+          response = await nominatifService.saveTambahanOrang(nominatifId, apiData);
+
+          // Save individual penginapan data to penginapan_tambahan_orang table
+          if (response.success && orang.penginapan?.malamDetails) {
+            await savePenginapanTambahanOrangData(response.data.id, orang.penginapan.malamDetails);
+          }
         }
 
         if (!response.success) {
@@ -1251,8 +1381,18 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
               )}
             </button>
             <button
-              onClick={() => currentPage === 3 ? setCurrentPage(2) : handleNextPage()}
+              onClick={() => {
+                console.log('🔍 DEBUG Page 2 Button Click:', {
+                  currentPage,
+                  isNewRecord,
+                  nominatifId,
+                  kodeAnggaranRKA: !!formData.kodeAnggaranRKA,
+                  deskripsi: !!formData.detailPerjalananDinas?.deskripsi?.trim()
+                });
+                return currentPage === 3 ? setCurrentPage(2) : handleNextPage();
+              }}
               disabled={!isEditable && currentPage === 1}
+              title={currentPage === 1 && isNewRecord && !nominatifId ? 'Mohon lengkapi data Page 1 terlebih dahulu' : ''}
               className={`px-4 py-2 rounded-lg font-medium text-xs transition-all duration-200 flex items-center gap-1 ${
                 currentPage === 2
                   ? 'bg-blue-400 text-white border-2 border-blue-500'
@@ -1262,9 +1402,12 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
               <div className={`w-1.5 h-1.5 rounded-full ${currentPage === 2 ? 'bg-white' : 'bg-gray-400'}`}></div>
               <span>Page 2</span>
               <span className="hidden sm:inline">Rincian</span>
+              {currentPage === 1 && isNewRecord && !nominatifId && (
+                <span className="ml-1 text-orange-500">*</span>
+              )}
             </button>
 
-            {/* Button Tambah Orang - hanya muncul di Page 2 jika editable */}
+            {/* Button Tambah Orang - BACKEND FIXED! */}
             {currentPage === 2 && formData.isEditable && (
               <button
                 type="button"
@@ -1274,6 +1417,15 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
               >
                 + Tambah Orang ({tambahanOrang.length}/7)
               </button>
+            )}
+
+            {/* Info untuk progressive save */}
+            {currentPage === 1 && isNewRecord && !nominatifId && (
+              <div className="col-span-full text-xs text-orange-600 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200 mb-2">
+                ⚠️ Mohon lengkapi data Page 1 terlebih dahulu. Data akan otomatis tersimpan sebelum ke Page 2.
+                <br />
+                <small>Debug: isNewRecord={isNewRecord.toString()}, nominatifId={nominatifId}</small>
+              </div>
             )}
 
             {/* Button Hapus Semua Tambahan Orang - hanya muncul di Page 2 */}

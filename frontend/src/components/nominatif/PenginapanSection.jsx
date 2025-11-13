@@ -204,6 +204,51 @@ const PenginapanSection = ({
     }
   }, [data?.menginap, jumlahHari, initialized, loading, nominatifId, tambahanOrangId, isTambahanOrang, penginapanData.length]);
 
+  // Progressive Save: Save penginapan data when nominatifId becomes available
+  useEffect(() => {
+    if (nominatifId && penginapanData.length > 0 && !loading) {
+      console.log('🔄 Progressive Save Trigger: NominatifId available, saving penginapan data...');
+      savePendingPenginapanData();
+    }
+  }, [nominatifId]);
+
+  // Save pending penginapan data after main nominatif is saved
+  const savePendingPenginapanData = async () => {
+    if (!nominatifId || penginapanData.length === 0) return;
+
+    try {
+      console.log('💾 Progressive Save: Saving pending penginapan data...');
+
+      for (let i = 0; i < penginapanData.length; i++) {
+        const malamData = penginapanData[i];
+
+        // Only save if data doesn't have ID (not yet saved)
+        if (!malamData.id && (malamData.pagu > 0 || malamData.aktual > 0 || malamData.nama_hotel || malamData.keterangan)) {
+          const formData = {
+            malamDetails: [malamData]
+          };
+
+          const response = await penginapanService.savePenginapan(nominatifId, formData);
+
+          if (response && response.success && response.data && response.data.length > 0) {
+            // Update local data with new ID from server
+            const updatedData = [...penginapanData];
+            updatedData[i] = {
+              ...updatedData[i],
+              id: response.data[response.data.length - 1].id
+            };
+            setPenginapanData(updatedData);
+            console.log('✅ Progressive Save: Penginapan malam', i + 1, 'saved with ID:', updatedData[i].id);
+          }
+        }
+      }
+
+      console.log('✅ Progressive Save: All pending penginapan data saved successfully');
+    } catch (error) {
+      console.error('❌ Progressive Save: Failed to save pending penginapan data:', error);
+    }
+  };
+
   // Generate penginapan data from route
   const generatePenginapanData = async () => {
     console.log('🚀 generatePenginapanData called:', {
@@ -475,11 +520,13 @@ const PenginapanSection = ({
             malamDetails: [updatedData[index]]
           };
 
-          // Validate ID before calling API
+          // Progressive Save: Handle case when nominatif is not yet saved
           if (!nominatifId || nominatifId === 'null' || nominatifId === null || nominatifId === undefined) {
-            console.warn('⚠️ Cannot save penginapan: Nominatif not yet saved (no ID). Please save the main nominatif first.');
+            console.log('🔄 Progressive Save: Nominatif not yet saved, updating local state only');
             // Don't call API if ID is invalid - this is expected for new records
-            // Just update local state without API call
+            // Just update local state without API call - will be saved later
+            setPenginapanData(updatedData);
+            updateParentFormState(updatedData);
             return;
           }
 

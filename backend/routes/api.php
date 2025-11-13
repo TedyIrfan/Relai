@@ -11,6 +11,7 @@ use App\Http\Controllers\NominatifController;
 use App\Http\Controllers\RutePerjalananController;
 use App\Http\Controllers\DebugController;
 use App\Http\Controllers\PenginapanController;
+use App\Http\Controllers\PenginapanTambahanOrangController;
 
 // Test endpoint for Swagger
 Route::get('/test', [SwaggerController::class, 'test']);
@@ -81,6 +82,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/penginapan/tambahan-orang/generate-from-rute', [PenginapanController::class, 'generateFromRuteTambahanOrang']); // GENERATE for tambahan orang
     Route::put('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'updateTambahanOrang']); // UPDATE tambahan orang
     Route::delete('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'destroyTambahanOrang']); // DELETE tambahan orang
+
+    // Penginapan Tambahan Orang CRUD Operations (Option 2: Individual Tracking)
+    Route::get('/penginapan-tambahan-orang/by-tambahan-orang/{tambahanOrangId}', [PenginapanTambahanOrangController::class, 'getByTambahanOrang']); // GET all penginapan for tambahan orang
+    Route::post('/penginapan-tambahan-orang', [PenginapanTambahanOrangController::class, 'store']); // CREATE penginapan record
+    Route::get('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'show']); // GET single penginapan record
+    Route::put('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'update']); // UPDATE penginapan record
+    Route::delete('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'destroy']); // DELETE penginapan record
 });
 
 // Dashboard API Routes (Public - for testing)

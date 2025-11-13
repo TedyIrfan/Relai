@@ -13,29 +13,27 @@ class TambahanOrangNominatif extends Model
     use HasFactory;
 
     protected $fillable = [
-        'master_nominatif_id',
-        'nama_peserta',
-        'jabatan_peserta',
-        'jumlah_hari',
-        'pagu',
-        'aktual',
-        'anggaran_realisasi',
-        // Master fields (sama seperti Nominatif)
-        'deskripsi_perjalanan_dinas',
-        'status',
-        'is_editable',
-        'transportasi_per_hari',
-        'penginapan',
-        'uang_harian',
-        'uang_representasi',
-        'total_pagu',
-        'total_biaya_aktual',
-        'anggaran_berjalan',
-        'anggaran_sp2d',
-        'total_anggaran_realisasi',
+        'master_nominatif_id', // ✅ From migration 2025_11_08
+        'nominatif_id', // ✅ From migration 2025_11_04 (legacy compatibility)
+        'nama_peserta', // ✅ From migration 2025_11_04
+        'jabatan_peserta', // ✅ From migration 2025_11_04
+        'jumlah_hari', // ✅ From migration 2025_11_06
+        'pagu', // ✅ From migration 2025_11_04
+        'aktual', // ✅ From migration 2025_11_04
+        'anggaran_realisasi', // ✅ From migration 2025_11_04
+        // Fields from migration 2025_11_08
+        'total_pagu', // ✅ From migration 2025_11_08
+        'total_biaya_aktual', // ✅ From migration 2025_11_08
+        'anggaran_berjalan', // ✅ From migration 2025_11_08
+        // RESTORE JSON fields (they DO exist in migration 2025_11_06)
+        'transportasi_per_hari', // ✅ From migration 2025_11_06
+        'penginapan', // ✅ From migration 2025_11_06
+        'uang_harian', // ✅ From migration 2025_11_06
+        'uang_representasi', // ✅ From migration 2025_11_06
     ];
 
     protected $casts = [
+        'transportasi_per_hari' => 'array',
         'penginapan' => 'array',
         'uang_harian' => 'array',
         'uang_representasi' => 'array',
@@ -60,6 +58,15 @@ class TambahanOrangNominatif extends Model
         return $this->hasMany(TransportasiTambahanOrang::class)
                     ->orderBy('hari')
                     ->orderBy('arah');
+    }
+
+    /**
+     * Get the penginapan records for this additional person.
+     */
+    public function penginapanTambahanOrang(): HasMany
+    {
+        return $this->hasMany(PenginapanTambahanOrang::class)
+                    ->orderBy('malam');
     }
 
     /**

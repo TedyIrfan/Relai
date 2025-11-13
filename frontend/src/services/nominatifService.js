@@ -327,5 +327,51 @@ export const nominatifService = {
     }
 
     return total;
+  },
+
+  // Save individual penginapan record for tambahan orang (Option 2)
+  savePenginapanTambahanOrang: async (penginapanData) => {
+    try {
+      const response = await api.post('/penginapan-tambahan-orang', penginapanData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal menyimpan penginapan tambahan orang';
+      const errors = error.response?.data?.errors || {};
+      return { success: false, message, errors };
+    }
+  },
+
+  // Get all penginapan records for a tambahan orang
+  getPenginapanTambahanOrang: async (tambahanOrangId) => {
+    try {
+      const response = await api.get(`/penginapan-tambahan-orang/by-tambahan-orang/${tambahanOrangId}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal mengambil data penginapan';
+      return { success: false, message };
+    }
+  },
+
+  // Update individual penginapan record
+  updatePenginapanTambahanOrang: async (penginapanId, penginapanData) => {
+    try {
+      const response = await api.put(`/penginapan-tambahan-orang/${penginapanId}`, penginapanData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal mengupdate penginapan';
+      const errors = error.response?.data?.errors || {};
+      return { success: false, message, errors };
+    }
+  },
+
+  // Delete individual penginapan record
+  deletePenginapanTambahanOrang: async (penginapanId) => {
+    try {
+      const response = await api.delete(`/penginapan-tambahan-orang/${penginapanId}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal menghapus penginapan';
+      return { success: false, message };
+    }
   }
 };
