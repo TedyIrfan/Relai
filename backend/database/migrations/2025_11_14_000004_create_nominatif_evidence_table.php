@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('nominatif_evidence', function (Blueprint $table) {
             $table->id();
 
-            // Foreign key
-            $table->foreignId('nominatif_detail_row_id')->constrained('nominatif_detail_rows')->onDelete('cascade');
+            // Foreign key to main nominatif
+            $table->foreignId('nominatif_id')->constrained('nominatifs_new')->onDelete('cascade');
 
             // File data
             $table->string('evidence_foto_path', 255);
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes
-            $table->index('nominatif_detail_row_id');
+            $table->index('nominatif_id');
             $table->index('evidence_foto_type');
         });
     }

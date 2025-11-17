@@ -85,9 +85,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{biayaId}', [NominatifBiayaRowController::class, 'destroy']);
     });
 
-    // Evidence (File Upload) - On Demand Loading
-    Route::prefix('nominatifs/details/{detailRowId}/evidence')->group(function () {
+    // Evidence (File Upload) - Direct to Nominatif
+    Route::prefix('nominatifs/{nominatifId}/evidence')->group(function () {
         Route::get('/', [NominatifEvidenceController::class, 'index']);
+        Route::get('/all', [NominatifEvidenceController::class, 'getAllEvidence']); // With file type info
         Route::post('/', [NominatifEvidenceController::class, 'store']);
         Route::get('/{evidenceId}', [NominatifEvidenceController::class, 'show']);
         Route::put('/{evidenceId}', [NominatifEvidenceController::class, 'update']);

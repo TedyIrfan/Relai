@@ -60,6 +60,26 @@ class NominatifNew extends Model
                     ->orderBy('row_order');
     }
 
+    public function evidence()
+    {
+        return $this->hasMany(NominatifEvidence::class, 'nominatif_id')
+                    ->orderBy('created_at', 'desc');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(NominatifEvidence::class, 'nominatif_id')
+                    ->whereIn('evidence_foto_type', ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'])
+                    ->orderBy('created_at', 'desc');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(NominatifEvidence::class, 'nominatif_id')
+                    ->where('evidence_foto_type', 'application/pdf')
+                    ->orderBy('created_at', 'desc');
+    }
+
     // Scopes
     public function scopeDraft($query)
     {

@@ -286,8 +286,8 @@ const NominatifPage = () => {
         const detailId = detailResult.data.id;
         console.log('Created detail ID:', detailId);
 
-          // Save biaya row
-          const biayaPayload = {
+        // Save biaya row
+        const biayaPayload = {
             transport_taksi_pergi_pagu: row.transport_taksi_pergi_pagu || 0,
             transport_taksi_pergi_aktual: row.transport_taksi_pergi_aktual || 0,
             transport_pergi_pagu: row.transport_pergi_pagu || 0,
@@ -320,7 +320,7 @@ const NominatifPage = () => {
             const formData = new FormData();
             formData.append('evidence_file', row.evidence);
 
-            await fetch(`http://localhost/api/nominatifs/details/${detailId}/evidence`, {
+            await fetch(`http://localhost/api/nominatifs/${nominatifId}/evidence`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`

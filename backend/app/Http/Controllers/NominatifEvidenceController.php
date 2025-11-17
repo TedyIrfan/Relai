@@ -7,27 +7,27 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use App\Models\NominatifDetailRow;
+use App\Models\NominatifNew;
 use App\Models\NominatifEvidence;
 
 class NominatifEvidenceController extends Controller
 {
     /**
-     * Display evidence files for a detail row.
+     * Display evidence files for a nominatif.
      */
-    public function index($detailRowId)
+    public function index($nominatifId)
     {
-        $detailRow = NominatifDetailRow::findOrFail($detailRowId);
+        $nominatif = NominatifNew::findOrFail($nominatifId);
 
         // Security check
-        if ($detailRow->nominatif->user_id !== Auth::id()) {
+        if ($nominatif->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
             ], 403);
         }
 
-        $evidenceFiles = $detailRow->evidence()->orderBy('created_at', 'desc')->get();
+        $evidenceFiles = $nominatif->evidence()->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'success' => true,
@@ -38,12 +38,12 @@ class NominatifEvidenceController extends Controller
     /**
      * Store a newly uploaded evidence file in storage.
      */
-    public function store(Request $request, $detailRowId)
+    public function store(Request $request, $nominatifId)
     {
-        $detailRow = NominatifDetailRow::findOrFail($detailRowId);
+        $nominatif = NominatifNew::findOrFail($nominatifId);
 
         // Security check
-        if ($detailRow->nominatif->user_id !== Auth::id()) {
+        if ($nominatif->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -51,7 +51,7 @@ class NominatifEvidenceController extends Controller
         }
 
         // Check if nominatif is still editable
-        if ($detailRow->nominatif->status !== 'draft') {
+        if ($nominatif->status !== 'draft') {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot upload evidence to submitted nominatif'
@@ -60,31 +60,32 @@ class NominatifEvidenceController extends Controller
 
         $request->validate([
             'evidence_file' => 'required|file|mimes:jpg,jpeg,png|max:5120', // Max 5MB, images only
+            'keterangan' => 'nullable|string|max:500'
         ]);
 
         DB::beginTransaction();
         try {
             $file = $request->file('evidence_file');
             $userId = Auth::id();
-            $nominatifId = $detailRow->nominatif_id;
 
             // Create unique filename
-            $fileName = time() . '_' . $userId . '_' . $detailRowId . '_' . $file->getClientOriginalName();
+            $fileName = time() . '_' . $userId . '_' . $nominatifId . '_' . $file->getClientOriginalName();
 
             // Store file
             $path = $file->storeAs(
-                "evidence/{$userId}/nominatif_{$nominatifId}/detail_{$detailRowId}",
+                "evidence/{$userId}/nominatif_{$nominatifId}",
                 $fileName,
                 'public'
             );
 
             // Create evidence record
             $evidence = NominatifEvidence::create([
-                'nominatif_detail_row_id' => $detailRowId,
+                'nominatif_id' => $nominatifId,
                 'evidence_foto_path' => $path,
                 'evidence_foto_name' => $file->getClientOriginalName(),
                 'evidence_foto_size' => $file->getSize(),
                 'evidence_foto_type' => $file->getMimeType(),
+                'keterangan' => $request->keterangan,
             ]);
 
             DB::commit();
@@ -113,7 +114,7 @@ class NominatifEvidenceController extends Controller
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
         // Security check
-        if ($evidence->detailRow->nominatif->user_id !== Auth::id()) {
+        if ($evidence->nominatif->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -134,7 +135,7 @@ class NominatifEvidenceController extends Controller
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
         // Security check
-        if ($evidence->detailRow->nominatif->user_id !== Auth::id()) {
+        if ($evidence->nominatif->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -142,17 +143,24 @@ class NominatifEvidenceController extends Controller
         }
 
         // Check if nominatif is still editable
-        if ($evidence->detailRow->nominatif->status !== 'draft') {
+        if ($evidence->nominatif->status !== 'draft') {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot edit evidence in submitted nominatif'
             ], 422);
         }
 
-        // Simple evidence - just view/download, no edit needed
+        $request->validate([
+            'keterangan' => 'nullable|string|max:500'
+        ]);
+
+        $evidence->update([
+            'keterangan' => $request->keterangan
+        ]);
+
         return response()->json([
             'success' => true,
-            'message' => 'Evidence viewed successfully',
+            'message' => 'Evidence updated successfully',
             'data' => $evidence
         ]);
     }
@@ -165,7 +173,7 @@ class NominatifEvidenceController extends Controller
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
         // Security check
-        if ($evidence->detailRow->nominatif->user_id !== Auth::id()) {
+        if ($evidence->nominatif->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -173,7 +181,7 @@ class NominatifEvidenceController extends Controller
         }
 
         // Check if nominatif is still editable
-        if ($evidence->detailRow->nominatif->status !== 'draft') {
+        if ($evidence->nominatif->status !== 'draft') {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete evidence in submitted nominatif'
@@ -215,7 +223,7 @@ class NominatifEvidenceController extends Controller
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
         // Security check
-        if ($evidence->detailRow->nominatif->user_id !== Auth::id()) {
+        if ($evidence->nominatif->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -238,31 +246,56 @@ class NominatifEvidenceController extends Controller
     }
 
     /**
-     * Validate evidence upload
+     * Get all evidence files for a nominatif with file type info
      */
-    public function validate(Request $request)
+    public function getAllEvidence($nominatifId)
     {
-        $request->validate([
-            'evidence_file' => 'required|file|mimes:jpg,jpeg,png|max:5120', // Max 5MB, images only
-        ]);
+        $nominatif = NominatifNew::findOrFail($nominatifId);
+
+        // Security check
+        if ($nominatif->user_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        $evidenceFiles = $nominatif->evidence()->orderBy('created_at', 'desc')->get();
+
+        // Add file type info to each evidence
+        $evidenceFiles = $evidenceFiles->map(function($evidence) {
+            $evidence->file_info = $this->getFileTypeInfo($evidence->evidence_foto_name);
+            $evidence->formatted_size = $this->getFormattedFileSize($evidence->evidence_foto_size);
+            return $evidence;
+        });
 
         return response()->json([
             'success' => true,
-            'message' => 'Evidence file is valid'
+            'data' => $evidenceFiles
         ]);
+    }
+
+    /**
+     * Get formatted file size
+     */
+    private function getFormattedFileSize($bytes)
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+        return round($bytes, 2) . ' ' . $units[$i];
     }
 
     /**
      * Get file type information
      */
-    public function getFileTypeInfo($fileName)
+    private function getFileTypeInfo($fileName)
     {
         $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
         $imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
         $documentTypes = ['pdf', 'doc', 'docx', 'txt', 'rtf'];
-        $spreadsheetTypes = ['xls', 'xlsx', 'csv'];
-        $presentationTypes = ['ppt', 'pptx'];
 
         if (in_array($extension, $imageTypes)) {
             return [
@@ -275,18 +308,6 @@ class NominatifEvidenceController extends Controller
                 'type' => 'document',
                 'category' => 'Document File',
                 'previewable' => $extension === 'pdf'
-            ];
-        } elseif (in_array($extension, $spreadsheetTypes)) {
-            return [
-                'type' => 'spreadsheet',
-                'category' => 'Spreadsheet File',
-                'previewable' => false
-            ];
-        } elseif (in_array($extension, $presentationTypes)) {
-            return [
-                'type' => 'presentation',
-                'category' => 'Presentation File',
-                'previewable' => false
             ];
         } else {
             return [

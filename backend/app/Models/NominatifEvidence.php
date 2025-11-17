@@ -12,7 +12,7 @@ class NominatifEvidence extends Model
     protected $table = 'nominatif_evidence';
 
     protected $fillable = [
-        'nominatif_detail_row_id',
+        'nominatif_id',
         'evidence_foto_path',
         'evidence_foto_name',
         'evidence_foto_size',
@@ -25,11 +25,12 @@ class NominatifEvidence extends Model
     ];
 
     // Relationships
-    public function detailRow()
+    public function nominatif()
     {
-        return $this->belongsTo(NominatifDetailRow::class, 'nominatif_detail_row_id');
+        return $this->belongsTo(NominatifNew::class, 'nominatif_id');
     }
 
+    
     // Accessors
     public function getFormattedFileSizeAttribute()
     {
