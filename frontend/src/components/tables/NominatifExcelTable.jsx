@@ -27,23 +27,36 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
       asal: '',
       tujuan: '',
       tanggal_pergi: '',
-      tanggal_pulang: '',
-      transport_taksi_pergi_pagu: '',
-      transport_taksi_pergi_aktual: '',
-      transport_taksi_pulang_pagu: '',
-      transport_taksi_pulang_aktual: '',
-      transport_pergi_pagu: '',
-      transport_pergi_aktual: '',
-      transport_pulang_pagu: '',
-      transport_pulang_aktual: '',
-      penginapan_pagu: '',
-      penginapan_aktual: '',
-      uang_harian_fullboard_pagu: '',
-      uang_harian_fullboard_aktual: '',
-      uang_harian_pagu: '',
-      uang_harian_aktual: '',
-      uang_representasi_pagu: '',
-      uang_representasi_aktual: '',
+      tanggal_sampai: '',
+      // Transportasi (4 fields baru)
+      transport_pesawat_non_pp_pagu: '',
+      transport_pesawat_non_pp_aktual: '',
+      transport_taksi_pagu: '',
+      transport_taksi_aktual: '',
+      // Penginapan (3 fields baru)
+      penginapan_jumlah_malam: '',
+      penginapan_pagu_perhari: '',
+      penginapan_aktual_perhari: '',
+      // Uang Harian Fullboard (3 fields)
+      uang_harian_fullboard_jumlah_hari: '',
+      uang_harian_fullboard_pagu_perhari: '',
+      uang_harian_fullboard_aktual_perhari: '',
+      // Uang Harian Luar Kota (3 fields)
+      uang_harian_luar_kota_jumlah_hari: '',
+      uang_harian_luar_kota_pagu_perhari: '',
+      uang_harian_luar_kota_aktual_perhari: '',
+      // Uang Harian Dalam Kota (3 fields)
+      uang_harian_dalam_kota_jumlah_hari: '',
+      uang_harian_dalam_kota_pagu_perhari: '',
+      uang_harian_dalam_kota_aktual_perhari: '',
+      // Representasi Luar Kota (3 fields)
+      representasi_luar_kota_jumlah_hari: '',
+      representasi_luar_kota_pagu_perhari: '',
+      representasi_luar_kota_aktual_perhari: '',
+      // Representasi Dalam Kota (3 fields)
+      representasi_dalam_kota_jumlah_hari: '',
+      representasi_dalam_kota_pagu_perhari: '',
+      representasi_dalam_kota_aktual_perhari: '',
       evidence_url: null
     };
     setRows([...rows, newRow]);
@@ -77,60 +90,86 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
   
   // Calculate totals
   const totals = React.useMemo(() => {
-    return rows.reduce((acc, row) => ({
-      transport_taksi_pergi_pagu: acc.transport_taksi_pergi_pagu + (parseFloat(row.transport_taksi_pergi_pagu) || 0),
-      transport_taksi_pergi_aktual: acc.transport_taksi_pergi_aktual + (parseFloat(row.transport_taksi_pergi_aktual) || 0),
-      transport_taksi_pulang_pagu: acc.transport_taksi_pulang_pagu + (parseFloat(row.transport_taksi_pulang_pagu) || 0),
-      transport_taksi_pulang_aktual: acc.transport_taksi_pulang_aktual + (parseFloat(row.transport_taksi_pulang_aktual) || 0),
-      transport_pergi_pagu: acc.transport_pergi_pagu + (parseFloat(row.transport_pergi_pagu) || 0),
-      transport_pergi_aktual: acc.transport_pergi_aktual + (parseFloat(row.transport_pergi_aktual) || 0),
-      transport_pulang_pagu: acc.transport_pulang_pagu + (parseFloat(row.transport_pulang_pagu) || 0),
-      transport_pulang_aktual: acc.transport_pulang_aktual + (parseFloat(row.transport_pulang_aktual) || 0),
-      penginapan_pagu: acc.penginapan_pagu + (parseFloat(row.penginapan_pagu) || 0),
-      penginapan_aktual: acc.penginapan_aktual + (parseFloat(row.penginapan_aktual) || 0),
-      uang_harian_fullboard_pagu: acc.uang_harian_fullboard_pagu + (parseFloat(row.uang_harian_fullboard_pagu) || 0),
-      uang_harian_fullboard_aktual: acc.uang_harian_fullboard_aktual + (parseFloat(row.uang_harian_fullboard_aktual) || 0),
-      uang_harian_pagu: acc.uang_harian_pagu + (parseFloat(row.uang_harian_pagu) || 0),
-      uang_harian_aktual: acc.uang_harian_aktual + (parseFloat(row.uang_harian_aktual) || 0),
-      uang_representasi_pagu: acc.uang_representasi_pagu + (parseFloat(row.uang_representasi_pagu) || 0),
-      uang_representasi_aktual: acc.uang_representasi_aktual + (parseFloat(row.uang_representasi_aktual) || 0),
-      total_pagu: acc.total_pagu +
-        (parseFloat(row.transport_taksi_pergi_pagu) || 0) +
-        (parseFloat(row.transport_taksi_pulang_pagu) || 0) +
-        (parseFloat(row.transport_pergi_pagu) || 0) +
-        (parseFloat(row.transport_pulang_pagu) || 0) +
-        (parseFloat(row.penginapan_pagu) || 0) +
-        (parseFloat(row.uang_harian_fullboard_pagu) || 0) +
-        (parseFloat(row.uang_harian_pagu) || 0) +
-        (parseFloat(row.uang_representasi_pagu) || 0),
-      total_aktual: acc.total_aktual +
-        (parseFloat(row.transport_taksi_pergi_aktual) || 0) +
-        (parseFloat(row.transport_taksi_pulang_aktual) || 0) +
-        (parseFloat(row.transport_pergi_aktual) || 0) +
-        (parseFloat(row.transport_pulang_aktual) || 0) +
-        (parseFloat(row.penginapan_aktual) || 0) +
-        (parseFloat(row.uang_harian_fullboard_aktual) || 0) +
-        (parseFloat(row.uang_harian_aktual) || 0) +
-        (parseFloat(row.uang_representasi_aktual) || 0)
-    }), {
-      transport_taksi_pergi_pagu: 0,
-      transport_taksi_pergi_aktual: 0,
-      transport_taksi_pulang_pagu: 0,
-      transport_taksi_pulang_aktual: 0,
-      transport_pergi_pagu: 0,
-      transport_pergi_aktual: 0,
-      transport_pulang_pagu: 0,
-      transport_pulang_aktual: 0,
+    return rows.reduce((acc, row) => {
+      // Transportasi (2 fields baru)
+      const transport_pesawat_non_pp_pagu = acc.transport_pesawat_non_pp_pagu + (parseFloat(row.transport_pesawat_non_pp_pagu) || 0);
+      const transport_pesawat_non_pp_aktual = acc.transport_pesawat_non_pp_aktual + (parseFloat(row.transport_pesawat_non_pp_aktual) || 0);
+      const transport_taksi_pagu = acc.transport_taksi_pagu + (parseFloat(row.transport_taksi_pagu) || 0);
+      const transport_taksi_aktual = acc.transport_taksi_aktual + (parseFloat(row.transport_taksi_aktual) || 0);
+
+      // Penginapan - Hitung total dari jumlah_malam × perhari
+      const penginapan_pagu = acc.penginapan_pagu + ((parseFloat(row.penginapan_jumlah_malam) || 0) * (parseFloat(row.penginapan_pagu_perhari) || 0));
+      const penginapan_aktual = acc.penginapan_aktual + ((parseFloat(row.penginapan_jumlah_malam) || 0) * (parseFloat(row.penginapan_aktual_perhari) || 0));
+
+      // Uang Harian Fullboard - Hitung total dari jumlah_hari × perhari
+      const uang_harian_fullboard_pagu = acc.uang_harian_fullboard_pagu + ((parseFloat(row.uang_harian_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_fullboard_pagu_perhari) || 0));
+      const uang_harian_fullboard_aktual = acc.uang_harian_fullboard_aktual + ((parseFloat(row.uang_harian_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_fullboard_aktual_perhari) || 0));
+
+      // Uang Harian Luar Kota - Hitung total dari jumlah_hari × perhari
+      const uang_harian_luar_kota_pagu = acc.uang_harian_luar_kota_pagu + ((parseFloat(row.uang_harian_luar_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_luar_kota_pagu_perhari) || 0));
+      const uang_harian_luar_kota_aktual = acc.uang_harian_luar_kota_aktual + ((parseFloat(row.uang_harian_luar_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_luar_kota_aktual_perhari) || 0));
+
+      // Uang Harian Dalam Kota - Hitung total dari jumlah_hari × perhari
+      const uang_harian_dalam_kota_pagu = acc.uang_harian_dalam_kota_pagu + ((parseFloat(row.uang_harian_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_dalam_kota_pagu_perhari) || 0));
+      const uang_harian_dalam_kota_aktual = acc.uang_harian_dalam_kota_aktual + ((parseFloat(row.uang_harian_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_dalam_kota_aktual_perhari) || 0));
+
+      // Representasi Luar Kota - Hitung total dari jumlah_hari × perhari
+      const representasi_luar_kota_pagu = acc.representasi_luar_kota_pagu + ((parseFloat(row.representasi_luar_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_luar_kota_pagu_perhari) || 0));
+      const representasi_luar_kota_aktual = acc.representasi_luar_kota_aktual + ((parseFloat(row.representasi_luar_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_luar_kota_aktual_perhari) || 0));
+
+      // Representasi Dalam Kota - Hitung total dari jumlah_hari × perhari
+      const representasi_dalam_kota_pagu = acc.representasi_dalam_kota_pagu + ((parseFloat(row.representasi_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_dalam_kota_pagu_perhari) || 0));
+      const representasi_dalam_kota_aktual = acc.representasi_dalam_kota_aktual + ((parseFloat(row.representasi_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_dalam_kota_aktual_perhari) || 0));
+
+      // Total keseluruhan
+      const total_pagu_row = transport_pesawat_non_pp_pagu + transport_taksi_pagu + penginapan_pagu + uang_harian_fullboard_pagu + uang_harian_luar_kota_pagu + uang_harian_dalam_kota_pagu + representasi_luar_kota_pagu + representasi_dalam_kota_pagu;
+      const total_aktual_row = transport_pesawat_non_pp_aktual + transport_taksi_aktual + penginapan_aktual + uang_harian_fullboard_aktual + uang_harian_luar_kota_aktual + uang_harian_dalam_kota_aktual + representasi_luar_kota_aktual + representasi_dalam_kota_aktual;
+
+      return {
+        transport_pesawat_non_pp_pagu,
+        transport_pesawat_non_pp_aktual,
+        transport_taksi_pagu,
+        transport_taksi_aktual,
+        penginapan_pagu,
+        penginapan_aktual,
+        uang_harian_fullboard_pagu,
+        uang_harian_fullboard_aktual,
+        uang_harian_luar_kota_pagu,
+        uang_harian_luar_kota_aktual,
+        uang_harian_dalam_kota_pagu,
+        uang_harian_dalam_kota_aktual,
+        representasi_luar_kota_pagu,
+        representasi_luar_kota_aktual,
+        representasi_dalam_kota_pagu,
+        representasi_dalam_kota_aktual,
+        total_pagu_row,
+        total_aktual_row,
+        total_pagu: acc.total_pagu + total_pagu_row,
+        total_aktual: acc.total_aktual + total_aktual_row,
+        total_anggaran_berjalan: acc.total_anggaran_berjalan + (total_pagu_row - total_aktual_row)
+      };
+    }, {
+      transport_pesawat_non_pp_pagu: 0,
+      transport_pesawat_non_pp_aktual: 0,
+      transport_taksi_pagu: 0,
+      transport_taksi_aktual: 0,
       penginapan_pagu: 0,
       penginapan_aktual: 0,
       uang_harian_fullboard_pagu: 0,
       uang_harian_fullboard_aktual: 0,
-      uang_harian_pagu: 0,
-      uang_harian_aktual: 0,
-      uang_representasi_pagu: 0,
-      uang_representasi_aktual: 0,
+      uang_harian_luar_kota_pagu: 0,
+      uang_harian_luar_kota_aktual: 0,
+      uang_harian_dalam_kota_pagu: 0,
+      uang_harian_dalam_kota_aktual: 0,
+      representasi_luar_kota_pagu: 0,
+      representasi_luar_kota_aktual: 0,
+      representasi_dalam_kota_pagu: 0,
+      representasi_dalam_kota_aktual: 0,
+      total_pagu_row: 0,
+      total_aktual_row: 0,
       total_pagu: 0,
-      total_aktual: 0
+      total_aktual: 0,
+      total_anggaran_berjalan: 0
     });
   }, [rows]);
 
@@ -243,45 +282,59 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Asal</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tujuan</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tgl Pergi</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tgl Pulang</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Transportasi</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="2">Penginapan</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="4">Uang Harian</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="2">Representasi</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tgl Sampai</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="4">Transportasi</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="3">Penginapan</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Uang Harian Fullboard</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Uang Harian Luar Kota</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Uang Harian Dalam Kota</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Representasi Luar Kota</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Representasi Dalam Kota</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Evidence</th>
             </tr>
             {/* Subcategories Row */}
             <tr className="bg-gray-100 border-b border-gray-300">
               <td colSpan="10" className="px-4 py-2 border-r border-gray-200"></td>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Taksi Pergi</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Transport Pergi</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Taksi Pulang</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Transport Pulang</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Full Board</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Regular</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Pesawat Non-PP</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Taksi</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Malam</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
               <td className="px-4 py-2"></td>
             </tr>
             {/* Pagu/Aktual Row */}
             <tr className="bg-gray-100 border-b border-gray-300">
               <td colSpan="10" className="px-4 py-2 border-r border-gray-200"></td>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Penginapan</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Fullboard</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Luar Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Dalam Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Luar Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Dalam Kota</th>
               <td className="px-4 py-2"></td>
             </tr>
           </thead>
@@ -381,167 +434,246 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                   />
                 </td>
 
-                {/* Transportasi - Taksi Pergi */}
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                {/* Transportasi - Pesawat Non-PP */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.transport_taksi_pergi_pagu}
-                    onChange={(e) => updateRow(row.id, 'transport_taksi_pergi_pagu', e.target.value)}
+                    value={row.transport_pesawat_non_pp_pagu}
+                    onChange={(e) => updateRow(row.id, 'transport_pesawat_non_pp_pagu', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.transport_taksi_pergi_aktual}
-                    onChange={(e) => updateRow(row.id, 'transport_taksi_pergi_aktual', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
-                  />
-                </td>
-
-                {/* Transportasi - Taksi Pulang */}
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
-                  <input
-                    type="number"
-                    value={row.transport_taksi_pulang_pagu}
-                    onChange={(e) => updateRow(row.id, 'transport_taksi_pulang_pagu', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
-                  />
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
-                  <input
-                    type="number"
-                    value={row.transport_taksi_pulang_aktual}
-                    onChange={(e) => updateRow(row.id, 'transport_taksi_pulang_aktual', e.target.value)}
+                    value={row.transport_pesawat_non_pp_aktual}
+                    onChange={(e) => updateRow(row.id, 'transport_pesawat_non_pp_aktual', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
 
-                {/* Transportasi - Lainnya Pergi */}
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                {/* Transportasi - Taksi */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.transport_pergi_pagu}
-                    onChange={(e) => updateRow(row.id, 'transport_pergi_pagu', e.target.value)}
+                    value={row.transport_taksi_pagu}
+                    onChange={(e) => updateRow(row.id, 'transport_taksi_pagu', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.transport_pergi_aktual}
-                    onChange={(e) => updateRow(row.id, 'transport_pergi_aktual', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
-                  />
-                </td>
-
-                {/* Transportasi - Lainnya Pulang */}
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
-                  <input
-                    type="number"
-                    value={row.transport_pulang_pagu}
-                    onChange={(e) => updateRow(row.id, 'transport_pulang_pagu', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
-                  />
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
-                  <input
-                    type="number"
-                    value={row.transport_pulang_aktual}
-                    onChange={(e) => updateRow(row.id, 'transport_pulang_aktual', e.target.value)}
+                    value={row.transport_taksi_aktual}
+                    onChange={(e) => updateRow(row.id, 'transport_taksi_aktual', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
 
                 {/* Penginapan */}
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.penginapan_pagu}
-                    onChange={(e) => updateRow(row.id, 'penginapan_pagu', e.target.value)}
+                    value={row.penginapan_jumlah_malam}
+                    onChange={(e) => updateRow(row.id, 'penginapan_jumlah_malam', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.penginapan_aktual}
-                    onChange={(e) => updateRow(row.id, 'penginapan_aktual', e.target.value)}
+                    value={row.penginapan_pagu_perhari}
+                    onChange={(e) => updateRow(row.id, 'penginapan_pagu_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
-
-                {/* Uang Harian - Full Board */}
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_fullboard_pagu}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_pagu', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
-                  />
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
-                  <input
-                    type="number"
-                    value={row.uang_harian_fullboard_aktual}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_aktual', e.target.value)}
+                    value={row.penginapan_aktual_perhari}
+                    onChange={(e) => updateRow(row.id, 'penginapan_aktual_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
 
-                {/* Uang Harian - Regular */}
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                {/* Uang Harian Fullboard */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_pagu}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_pagu', e.target.value)}
+                    value={row.uang_harian_fullboard_jumlah_hari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_jumlah_hari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_aktual}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_aktual', e.target.value)}
+                    value={row.uang_harian_fullboard_pagu_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_pagu_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
-
-                {/* Uang Representasi */}
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_representasi_pagu}
-                    onChange={(e) => updateRow(row.id, 'uang_representasi_pagu', e.target.value)}
+                    value={row.uang_harian_fullboard_aktual_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_aktual_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
-                  <input
-                    type="number"
-                    value={row.uang_representasi_aktual}
-                    onChange={(e) => updateRow(row.id, 'uang_representasi_aktual', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
-                  />
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
+                  <div className="text-right font-medium text-gray-700">
+                    {((parseFloat(row.uang_harian_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_fullboard_pagu_perhari) || 0)).toLocaleString('id-ID')}
+                  </div>
                 </td>
 
-                {/* Evidence */}
+                {/* Uang Harian Luar Kota */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.uang_harian_luar_kota_jumlah_hari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_jumlah_hari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.uang_harian_luar_kota_pagu_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_pagu_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.uang_harian_luar_kota_aktual_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_aktual_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
+                  <div className="text-right font-medium text-gray-700">
+                    {((parseFloat(row.uang_harian_luar_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_luar_kota_pagu_perhari) || 0)).toLocaleString('id-ID')}
+                  </div>
+                </td>
+
+                {/* Uang Harian Dalam Kota */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.uang_harian_dalam_kota_jumlah_hari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_jumlah_hari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.uang_harian_dalam_kota_pagu_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_pagu_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.uang_harian_dalam_kota_aktual_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_aktual_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
+                  <div className="text-right font-medium text-gray-700">
+                    {((parseFloat(row.uang_harian_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_dalam_kota_pagu_perhari) || 0)).toLocaleString('id-ID')}
+                  </div>
+                </td>
+
+                {/* Representasi Luar Kota */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.representasi_luar_kota_jumlah_hari}
+                    onChange={(e) => updateRow(row.id, 'representasi_luar_kota_jumlah_hari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.representasi_luar_kota_pagu_perhari}
+                    onChange={(e) => updateRow(row.id, 'representasi_luar_kota_pagu_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.representasi_luar_kota_aktual_perhari}
+                    onChange={(e) => updateRow(row.id, 'representasi_luar_kota_aktual_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
+                  <div className="text-right font-medium text-gray-700">
+                    {((parseFloat(row.representasi_luar_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_luar_kota_pagu_perhari) || 0)).toLocaleString('id-ID')}
+                  </div>
+                </td>
+
+                {/* Representasi Dalam Kota */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.representasi_dalam_kota_jumlah_hari}
+                    onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_jumlah_hari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.representasi_dalam_kota_pagu_perhari}
+                    onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_pagu_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.representasi_dalam_kota_aktual_perhari}
+                    onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_aktual_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
+                  <div className="text-right font-medium text-gray-700">
+                    {((parseFloat(row.representasi_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_dalam_kota_pagu_perhari) || 0)).toLocaleString('id-ID')}
+                  </div>
+                </td>
+
+                {/* Evidence Column */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex items-center space-x-2">
                     <label className="cursor-pointer">
@@ -571,77 +703,81 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 Total:
               </td>
 
-              {/* Transportasi - Taksi Pergi */}
+              {/* Transportasi - Pesawat Non-PP */}
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_taksi_pergi_pagu.toLocaleString('id-ID')}
+                {totals.transport_pesawat_non_pp_pagu.toLocaleString('id-ID')}
               </td>
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_taksi_pergi_aktual.toLocaleString('id-ID')}
-              </td>
-
-              {/* Transportasi - Lainnya Pergi */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_pergi_pagu.toLocaleString('id-ID')}
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_pergi_aktual.toLocaleString('id-ID')}
+                {totals.transport_pesawat_non_pp_aktual.toLocaleString('id-ID')}
               </td>
 
-              {/* Transportasi - Taksi Pulang */}
+              {/* Transportasi - Taksi */}
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_taksi_pulang_pagu.toLocaleString('id-ID')}
+                {totals.transport_taksi_pagu.toLocaleString('id-ID')}
               </td>
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_taksi_pulang_aktual.toLocaleString('id-ID')}
-              </td>
-
-              {/* Transportasi - Lainnya Pulang */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_pulang_pagu.toLocaleString('id-ID')}
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_pulang_aktual.toLocaleString('id-ID')}
+                {totals.transport_taksi_aktual.toLocaleString('id-ID')}
               </td>
 
               {/* Penginapan */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.penginapan_pagu.toLocaleString('id-ID')}
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.penginapan_aktual.toLocaleString('id-ID')}
-              </td>
-
-              {/* Uang Harian - Full Board */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.uang_harian_fullboard_pagu.toLocaleString('id-ID')}
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.uang_harian_fullboard_aktual.toLocaleString('id-ID')}
-              </td>
-
-              {/* Uang Harian - Regular */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.uang_harian_pagu.toLocaleString('id-ID')}
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.uang_harian_aktual.toLocaleString('id-ID')}
-              </td>
-
-              {/* Uang Representasi */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.uang_representasi_pagu.toLocaleString('id-ID')}
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.uang_representasi_aktual.toLocaleString('id-ID')}
-              </td>
-
-              {/* Total Overall */}
-              <td colSpan="2" className="px-6 py-4 text-sm text-gray-900 text-right">
-                <div className="space-y-1">
-                  <div>Total Pagu: Rp {totals.total_pagu.toLocaleString('id-ID')}</div>
-                  <div>Total Aktual: Rp {totals.total_aktual.toLocaleString('id-ID')}</div>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
+                <div className="text-center">
+                  {totals.penginapan_pagu.toLocaleString('id-ID')}
                 </div>
               </td>
+
+              {/* Uang Harian Fullboard */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
+                <div className="text-center">
+                  {totals.uang_harian_fullboard_pagu.toLocaleString('id-ID')}
+                </div>
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.uang_harian_fullboard_total.toLocaleString('id-ID')}
+              </td>
+
+              {/* Uang Harian Luar Kota */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
+                <div className="text-center">
+                  {totals.uang_harian_luar_kota_pagu.toLocaleString('id-ID')}
+                </div>
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.uang_harian_luar_kota_total.toLocaleString('id-ID')}
+              </td>
+
+              {/* Uang Harian Dalam Kota */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
+                <div className="text-center">
+                  {totals.uang_harian_dalam_kota_pagu.toLocaleString('id-ID')}
+                </div>
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.uang_harian_dalam_kota_total.toLocaleString('id-ID')}
+              </td>
+
+              {/* Representasi Luar Kota */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
+                <div className="text-center">
+                  {totals.representasi_luar_kota_pagu.toLocaleString('id-ID')}
+                </div>
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.representasi_luar_kota_total.toLocaleString('id-ID')}
+              </td>
+
+              {/* Representasi Dalam Kota */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
+                <div className="text-center">
+                  {totals.representasi_dalam_kota_pagu.toLocaleString('id-ID')}
+                </div>
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.representasi_dalam_kota_total.toLocaleString('id-ID')}
+              </td>
+
+              {/* Evidence */}
+              <td className="px-6 py-4"></td>
             </tr>
           </tbody>
         </table>

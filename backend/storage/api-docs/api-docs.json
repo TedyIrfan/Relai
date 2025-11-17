@@ -900,6 +900,243 @@
                 }
             }
         },
+        "/api/nominatifs-new": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get list of nominatifs",
+                "description": "Returns list of nominatifs with pagination",
+                "operationId": "getNominatifsList",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "submitted"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "deskripsi_perjalanan_dinas": {
+                                                                "type": "string",
+                                                                "example": "Perjalanan Dinas Jakarta"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "draft"
+                                                            },
+                                                            "total_pagu_trip": {
+                                                                "type": "number",
+                                                                "example": 5000000
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Create new nominatif",
+                "description": "Create a new nominatif record",
+                "operationId": "createNominatif",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rka_detail_id",
+                                    "deskripsi_perjalanan_dinas",
+                                    "tanggal_mulai",
+                                    "tanggal_selesai"
+                                ],
+                                "properties": {
+                                    "rka_detail_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "deskripsi_perjalanan_dinas": {
+                                        "type": "string",
+                                        "example": "Perjalanan Dinas Test"
+                                    },
+                                    "tanggal_mulai": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-11-24"
+                                    },
+                                    "tanggal_selesai": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-11-27"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Nominatif created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nominatif created successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "deskripsi_perjalanan_dinas": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "draft"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/nominatifs-new/{id}": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get nominatif by ID",
+                "description": "Returns detailed nominatif information with all related data",
+                "operationId": "getNominatifById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Nominatif ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "nominatif": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "deskripsi_perjalanan_dinas": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "draft"
+                                                        },
+                                                        "total_pagu_trip": {
+                                                            "type": "number",
+                                                            "example": 5000000
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nominatif not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/test": {
             "get": {
                 "tags": [
@@ -1062,6 +1299,10 @@
         {
             "name": "Dashboard",
             "description": "Dashboard and budget management operations"
+        },
+        {
+            "name": "Nominatif",
+            "description": "Nominatif management operations"
         },
         {
             "name": "Anggaran",

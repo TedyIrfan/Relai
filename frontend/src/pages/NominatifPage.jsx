@@ -286,47 +286,73 @@ const NominatifPage = () => {
         const detailId = detailResult.data.id;
         console.log('Created detail ID:', detailId);
 
-        // Save biaya row
+        // Save biaya row dengan 19 fields baru
         const biayaPayload = {
-            transport_taksi_pergi_pagu: row.transport_taksi_pergi_pagu || 0,
-            transport_taksi_pergi_aktual: row.transport_taksi_pergi_aktual || 0,
-            transport_pergi_pagu: row.transport_pergi_pagu || 0,
-            transport_pergi_aktual: row.transport_pergi_aktual || 0,
-            transport_taksi_pulang_pagu: row.transport_taksi_pulang_pagu || 0,
-            transport_taksi_pulang_aktual: row.transport_taksi_pulang_aktual || 0,
-            transport_pulang_pagu: row.transport_pulang_pagu || 0,
-            transport_pulang_aktual: row.transport_pulang_aktual || 0,
-            penginapan_pagu: row.penginapan_pagu || 0,
-            penginapan_aktual: row.penginapan_aktual || 0,
-            uang_harian_fullboard_pagu: row.uang_harian_fullboard_pagu || 0,
-            uang_harian_fullboard_aktual: row.uang_harian_fullboard_aktual || 0,
-            uang_harian_pagu: row.uang_harian_pagu || 0,
-            uang_harian_aktual: row.uang_harian_aktual || 0,
-            uang_representasi_pagu: row.uang_representasi_pagu || 0,
-            uang_representasi_aktual: row.uang_representasi_aktual || 0
-          };
+          // Transportasi (4 fields)
+          transport_pesawat_non_pp_pagu: row.transport_pesawat_non_pp_pagu || 0,
+          transport_pesawat_non_pp_aktual: row.transport_pesawat_non_pp_aktual || 0,
+          transport_taksi_pagu: row.transport_taksi_pagu || 0,
+          transport_taksi_aktual: row.transport_taksi_aktual || 0,
 
-          await fetch(`http://localhost/api/nominatifs/details/${detailId}/biaya`, {
+          // Penginapan (3 fields)
+          penginapan_jumlah_malam: row.penginapan_jumlah_malam || 0,
+          penginapan_pagu_perhari: row.penginapan_pagu_perhari || 0,
+          penginapan_aktual_perhari: row.penginapan_aktual_perhari || 0,
+
+          // Uang Harian Fullboard (3 fields)
+          uang_harian_fullboard_jumlah_hari: row.uang_harian_fullboard_jumlah_hari || 0,
+          uang_harian_fullboard_pagu_perhari: row.uang_harian_fullboard_pagu_perhari || 0,
+          uang_harian_fullboard_aktual_perhari: row.uang_harian_fullboard_aktual_perhari || 0,
+
+          // Uang Harian Luar Kota (3 fields)
+          uang_harian_luar_kota_jumlah_hari: row.uang_harian_luar_kota_jumlah_hari || 0,
+          uang_harian_luar_kota_pagu_perhari: row.uang_harian_luar_kota_pagu_perhari || 0,
+          uang_harian_luar_kota_aktual_perhari: row.uang_harian_luar_kota_aktual_perhari || 0,
+
+          // Uang Harian Dalam Kota (3 fields)
+          uang_harian_dalam_kota_jumlah_hari: row.uang_harian_dalam_kota_jumlah_hari || 0,
+          uang_harian_dalam_kota_pagu_perhari: row.uang_harian_dalam_kota_pagu_perhari || 0,
+          uang_harian_dalam_kota_aktual_perhari: row.uang_harian_dalam_kota_aktual_perhari || 0,
+
+          // Representasi Luar Kota (3 fields)
+          representasi_luar_kota_jumlah_hari: row.representasi_luar_kota_jumlah_hari || 0,
+          representasi_luar_kota_pagu_perhari: row.representasi_luar_kota_pagu_perhari || 0,
+          representasi_luar_kota_aktual_perhari: row.representasi_luar_kota_aktual_perhari || 0,
+
+          // Representasi Dalam Kota (3 fields)
+          representasi_dalam_kota_jumlah_hari: row.representasi_dalam_kota_jumlah_hari || 0,
+          representasi_dalam_kota_pagu_perhari: row.representasi_dalam_kota_pagu_perhari || 0,
+          representasi_dalam_kota_aktual_perhari: row.representasi_dalam_kota_aktual_perhari || 0
+        };
+
+        const biayaResponse = await fetch(`http://localhost/api/nominatifs/details/${detailId}/biaya`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(biayaPayload)
+        });
+
+        if (!biayaResponse.ok) {
+          throw new Error('Gagal menyimpan biaya row');
+        }
+
+        // Handle evidence upload if exists
+        if (row.evidence) {
+          const formData = new FormData();
+          formData.append('evidence_file', row.evidence);
+
+          const evidenceResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/evidence`, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(biayaPayload)
+            body: formData
           });
 
-          // Handle evidence upload if exists
-          if (row.evidence) {
-            const formData = new FormData();
-            formData.append('evidence_file', row.evidence);
-
-            await fetch(`http://localhost/api/nominatifs/${nominatifId}/evidence`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`
-              },
-              body: formData
-            });
+          if (!evidenceResponse.ok) {
+            throw new Error('Gagal upload evidence');
           }
         }
       }
