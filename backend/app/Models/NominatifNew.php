@@ -20,6 +20,10 @@ class NominatifNew extends Model
         'status',
         'total_pagu',
         'total_biaya_aktual',
+        // New fields for trip calculations
+        'total_pagu_trip',
+        'total_aktual_trip',
+        'total_anggaran_berjalan_trip',
     ];
 
     protected $casts = [
@@ -27,6 +31,10 @@ class NominatifNew extends Model
         'tanggal_selesai' => 'date',
         'total_pagu' => 'decimal:2',
         'total_biaya_aktual' => 'decimal:2',
+        // New fields
+        'total_pagu_trip' => 'decimal:2',
+        'total_aktual_trip' => 'decimal:2',
+        'total_anggaran_berjalan_trip' => 'decimal:2',
     ];
 
     // Relationships
@@ -105,6 +113,22 @@ class NominatifNew extends Model
     public function getTotalBiayaAktualFormattedAttribute()
     {
         return 'Rp' . number_format($this->total_biaya_aktual, 0, ',', '.');
+    }
+
+    // New accessors for trip calculations
+    public function getTotalPaguTripFormattedAttribute()
+    {
+        return 'Rp' . number_format($this->total_pagu_trip, 0, ',', '.');
+    }
+
+    public function getTotalAktualTripFormattedAttribute()
+    {
+        return 'Rp' . number_format($this->total_aktual_trip, 0, ',', '.');
+    }
+
+    public function getTotalAnggaranBerjalanTripFormattedAttribute()
+    {
+        return 'Rp' . number_format($this->total_anggaran_berjalan_trip, 0, ',', '.');
     }
 
     public function getJumlahHariAttribute()

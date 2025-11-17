@@ -62,24 +62,7 @@ class NominatifBiayaRowController extends Controller
             ], 422);
         }
 
-        $request->validate([
-            'transportasi_taksi_pergi_pagu' => 'nullable|numeric|min:0',
-            'transportasi_taksi_pergi_aktual' => 'nullable|numeric|min:0',
-            'transportasi_pergi_pagu' => 'nullable|numeric|min:0',
-            'transportasi_pergi_aktual' => 'nullable|numeric|min:0',
-            'transportasi_taksi_pulang_pagu' => 'nullable|numeric|min:0',
-            'transportasi_taksi_pulang_aktual' => 'nullable|numeric|min:0',
-            'transportasi_pulang_pagu' => 'nullable|numeric|min:0',
-            'transportasi_pulang_aktual' => 'nullable|numeric|min:0',
-            'penginapan_pagu' => 'nullable|numeric|min:0',
-            'penginapan_aktual' => 'nullable|numeric|min:0',
-            'uang_harian_fullboard_pagu' => 'nullable|numeric|min:0',
-            'uang_harian_fullboard_aktual' => 'nullable|numeric|min:0',
-            'uang_harian_pagu' => 'nullable|numeric|min:0',
-            'uang_harian_aktual' => 'nullable|numeric|min:0',
-            'uang_representasi_pagu' => 'nullable|numeric|min:0',
-            'uang_representasi_aktual' => 'nullable|numeric|min:0',
-        ]);
+        $request->validate(NominatifBiayaRow::getValidationRules());
 
         DB::beginTransaction();
         try {

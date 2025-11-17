@@ -13,44 +13,95 @@ class NominatifBiayaRow extends Model
 
     protected $fillable = [
         'nominatif_detail_row_id',
-        // Transportasi
-        'transport_taksi_pergi_pagu',
-        'transport_taksi_pergi_aktual',
-        'transport_pergi_pagu',
-        'transport_pergi_aktual',
-        'transport_taksi_pulang_pagu',
-        'transport_taksi_pulang_aktual',
-        'transport_pulang_pagu',
-        'transport_pulang_aktual',
-        // Penginapan & Uang
-        'penginapan_pagu',
-        'penginapan_aktual',
-        'uang_harian_fullboard_pagu',
-        'uang_harian_fullboard_aktual',
-        'uang_harian_pagu',
-        'uang_harian_aktual',
-        // Uang Representasi
-        'uang_representasi_pagu',
-        'uang_representasi_aktual',
+        // Transportasi (4 fields)
+        'transport_pesawat_non_pp_pagu',
+        'transport_pesawat_non_pp_aktual',
+        'transport_taksi_pagu',
+        'transport_taksi_aktual',
+        // Penginapan (3 fields)
+        'penginapan_jumlah_malam',
+        'penginapan_pagu_perhari',
+        'penginapan_aktual_perhari',
+        // Uang Harian Fullboard (3 fields)
+        'uang_harian_fullboard_jumlah_hari',
+        'uang_harian_fullboard_pagu_perhari',
+        'uang_harian_fullboard_aktual_perhari',
+        // Uang Harian Luar Kota (3 fields)
+        'uang_harian_luar_kota_jumlah_hari',
+        'uang_harian_luar_kota_pagu_perhari',
+        'uang_harian_luar_kota_aktual_perhari',
+        // Uang Harian Dalam Kota (3 fields)
+        'uang_harian_dalam_kota_jumlah_hari',
+        'uang_harian_dalam_kota_pagu_perhari',
+        'uang_harian_dalam_kota_aktual_perhari',
+        // Representasi Luar Kota (3 fields)
+        'representasi_luar_kota_jumlah_hari',
+        'representasi_luar_kota_pagu_perhari',
+        'representasi_luar_kota_aktual_perhari',
+        // Representasi Dalam Kota (3 fields)
+        'representasi_dalam_kota_jumlah_hari',
+        'representasi_dalam_kota_pagu_perhari',
+        'representasi_dalam_kota_aktual_perhari',
     ];
 
     protected $casts = [
-        'transport_taksi_pergi_pagu' => 'decimal:2',
-        'transport_taksi_pergi_aktual' => 'decimal:2',
-        'transport_pergi_pagu' => 'decimal:2',
-        'transport_pergi_aktual' => 'decimal:2',
-        'transport_taksi_pulang_pagu' => 'decimal:2',
-        'transport_taksi_pulang_aktual' => 'decimal:2',
-        'transport_pulang_pagu' => 'decimal:2',
-        'transport_pulang_aktual' => 'decimal:2',
-        'penginapan_pagu' => 'decimal:2',
-        'penginapan_aktual' => 'decimal:2',
-        'uang_harian_fullboard_pagu' => 'decimal:2',
-        'uang_harian_fullboard_aktual' => 'decimal:2',
-        'uang_harian_pagu' => 'decimal:2',
-        'uang_harian_aktual' => 'decimal:2',
-        'uang_representasi_pagu' => 'decimal:2',
-        'uang_representasi_aktual' => 'decimal:2',
+        // Transportasi
+        'transport_pesawat_non_pp_pagu' => 'decimal:2',
+        'transport_pesawat_non_pp_aktual' => 'decimal:2',
+        'transport_taksi_pagu' => 'decimal:2',
+        'transport_taksi_aktual' => 'decimal:2',
+        // Penginapan
+        'penginapan_jumlah_malam' => 'integer',
+        'penginapan_pagu_perhari' => 'decimal:2',
+        'penginapan_aktual_perhari' => 'decimal:2',
+        // Generated columns
+        'penginapan_total_pagu' => 'decimal:2',
+        'penginapan_total_aktual' => 'decimal:2',
+        'penginapan_anggaran_berjalan' => 'decimal:2',
+        // Uang Harian Fullboard
+        'uang_harian_fullboard_jumlah_hari' => 'integer',
+        'uang_harian_fullboard_pagu_perhari' => 'decimal:2',
+        'uang_harian_fullboard_aktual_perhari' => 'decimal:2',
+        // Generated columns
+        'uang_harian_fullboard_total_pagu' => 'decimal:2',
+        'uang_harian_fullboard_total_aktual' => 'decimal:2',
+        'uang_harian_fullboard_anggaran_berjalan' => 'decimal:2',
+        // Uang Harian Luar Kota
+        'uang_harian_luar_kota_jumlah_hari' => 'integer',
+        'uang_harian_luar_kota_pagu_perhari' => 'decimal:2',
+        'uang_harian_luar_kota_aktual_perhari' => 'decimal:2',
+        // Generated columns
+        'uang_harian_luar_kota_total_pagu' => 'decimal:2',
+        'uang_harian_luar_kota_total_aktual' => 'decimal:2',
+        'uang_harian_luar_kota_anggaran_berjalan' => 'decimal:2',
+        // Uang Harian Dalam Kota
+        'uang_harian_dalam_kota_jumlah_hari' => 'integer',
+        'uang_harian_dalam_kota_pagu_perhari' => 'decimal:2',
+        'uang_harian_dalam_kota_aktual_perhari' => 'decimal:2',
+        // Generated columns
+        'uang_harian_dalam_kota_total_pagu' => 'decimal:2',
+        'uang_harian_dalam_kota_total_aktual' => 'decimal:2',
+        'uang_harian_dalam_kota_anggaran_berjalan' => 'decimal:2',
+        // Representasi Luar Kota
+        'representasi_luar_kota_jumlah_hari' => 'integer',
+        'representasi_luar_kota_pagu_perhari' => 'decimal:2',
+        'representasi_luar_kota_aktual_perhari' => 'decimal:2',
+        // Generated columns
+        'representasi_luar_kota_total_pagu' => 'decimal:2',
+        'representasi_luar_kota_total_aktual' => 'decimal:2',
+        'representasi_luar_kota_anggaran_berjalan' => 'decimal:2',
+        // Representasi Dalam Kota
+        'representasi_dalam_kota_jumlah_hari' => 'integer',
+        'representasi_dalam_kota_pagu_perhari' => 'decimal:2',
+        'representasi_dalam_kota_aktual_perhari' => 'decimal:2',
+        // Generated columns
+        'representasi_dalam_kota_total_pagu' => 'decimal:2',
+        'representasi_dalam_kota_total_aktual' => 'decimal:2',
+        'representasi_dalam_kota_anggaran_berjalan' => 'decimal:2',
+        // Total akhir per row
+        'total_pagu_row' => 'decimal:2',
+        'total_aktual_row' => 'decimal:2',
+        'total_anggaran_berjalan_row' => 'decimal:2',
     ];
 
     // Relationships
@@ -60,63 +111,108 @@ class NominatifBiayaRow extends Model
     }
 
     // Accessors for formatted currency
-    public function getTransportTaxiPergiPaguFormattedAttribute()
+    public function getTransportPesawatNonPpPaguFormattedAttribute()
     {
-        return 'Rp' . number_format($this->transport_taksi_pergi_pagu, 0, ',', '.');
+        return 'Rp' . number_format($this->transport_pesawat_non_pp_pagu, 0, ',', '.');
     }
 
-    public function getTransportTaxiPergiAktualFormattedAttribute()
+    public function getTransportPesawatNonPpAktualFormattedAttribute()
     {
-        return 'Rp' . number_format($this->transport_taksi_pergi_aktual, 0, ',', '.');
+        return 'Rp' . number_format($this->transport_pesawat_non_pp_aktual, 0, ',', '.');
     }
 
-    // Calculate totals
-    public function getTotalTransportasiPaguAttribute()
+    public function getTransportTaxiPaguFormattedAttribute()
     {
-        return $this->transport_taksi_pergi_pagu +
-               $this->transport_pergi_pagu +
-               $this->transport_taksi_pulang_pagu +
-               $this->transport_pulang_pagu;
+        return 'Rp' . number_format($this->transport_taksi_pagu, 0, ',', '.');
     }
 
-    public function getTotalTransportasiAktualAttribute()
+    public function getTransportTaxiAktualFormattedAttribute()
     {
-        return $this->transport_taksi_pergi_aktual +
-               $this->transport_pergi_aktual +
-               $this->transport_taksi_pulang_aktual +
-               $this->transport_pulang_aktual;
+        return 'Rp' . number_format($this->transport_taksi_aktual, 0, ',', '.');
     }
 
-    public function getTotalUangHarianPaguAttribute()
+    public function getTotalPaguRowFormattedAttribute()
     {
-        return $this->uang_harian_fullboard_pagu + $this->uang_harian_pagu;
+        return 'Rp' . number_format($this->total_pagu_row, 0, ',', '.');
     }
 
-    public function getTotalUangHarianAktualAttribute()
+    public function getTotalAktualRowFormattedAttribute()
     {
-        return $this->uang_harian_fullboard_aktual + $this->uang_harian_aktual;
+        return 'Rp' . number_format($this->total_aktual_row, 0, ',', '.');
+    }
+
+    public function getTotalAnggaranBerjalanRowFormattedAttribute()
+    {
+        return 'Rp' . number_format($this->total_anggaran_berjalan_row, 0, ',', '.');
+    }
+
+    // Calculate totals for each category
+    public function getTransportTotalPaguAttribute()
+    {
+        return $this->transport_pesawat_non_pp_pagu + $this->transport_taksi_pagu;
+    }
+
+    public function getTransportTotalAktualAttribute()
+    {
+        return $this->transport_pesawat_non_pp_aktual + $this->transport_taksi_aktual;
+    }
+
+    public function getTransportAnggaranBerjalanAttribute()
+    {
+        return $this->transport_total_pagu - $this->transport_total_aktual;
     }
 
     // Validation rules
     public static function getValidationRules()
     {
         return [
-            'transport_taksi_pergi_pagu' => 'nullable|numeric|min:0|max:999999999.99',
-            'transport_taksi_pergi_aktual' => 'nullable|numeric|min:0|max:999999999.99',
-            'transport_pergi_pagu' => 'nullable|numeric|min:0|max:999999999.99',
-            'transport_pergi_aktual' => 'nullable|numeric|min:0|max:999999999.99',
-            'transport_taksi_pulang_pagu' => 'nullable|numeric|min:0|max:999999999.99',
-            'transport_taksi_pulang_aktual' => 'nullable|numeric|min:0|max:999999999.99',
-            'transport_pulang_pagu' => 'nullable|numeric|min:0|max:999999999.99',
-            'transport_pulang_aktual' => 'nullable|numeric|min:0|max:999999999.99',
-            'penginapan_pagu' => 'nullable|numeric|min:0|max:999999999.99',
-            'penginapan_aktual' => 'nullable|numeric|min:0|max:999999999.99',
-            'uang_harian_fullboard_pagu' => 'nullable|numeric|min:0|max:999999999.99',
-            'uang_harian_fullboard_aktual' => 'nullable|numeric|min:0|max:999999999.99',
-            'uang_harian_pagu' => 'nullable|numeric|min:0|max:999999999.99',
-            'uang_harian_aktual' => 'nullable|numeric|min:0|max:999999999.99',
-            'uang_representasi_pagu' => 'nullable|numeric|min:0|max:999999999.99',
-            'uang_representasi_aktual' => 'nullable|numeric|min:0|max:999999999.99',
+            // Transportasi
+            'transport_pesawat_non_pp_pagu' => 'nullable|numeric|min:0|max:999999999.99',
+            'transport_pesawat_non_pp_aktual' => 'nullable|numeric|min:0|max:999999999.99',
+            'transport_taksi_pagu' => 'nullable|numeric|min:0|max:999999999.99',
+            'transport_taksi_aktual' => 'nullable|numeric|min:0|max:999999999.99',
+            // Penginapan
+            'penginapan_jumlah_malam' => 'nullable|integer|min:0|max:365',
+            'penginapan_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            'penginapan_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            // Uang Harian Fullboard
+            'uang_harian_fullboard_jumlah_hari' => 'nullable|integer|min:0|max:365',
+            'uang_harian_fullboard_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            'uang_harian_fullboard_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            // Uang Harian Luar Kota
+            'uang_harian_luar_kota_jumlah_hari' => 'nullable|integer|min:0|max:365',
+            'uang_harian_luar_kota_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            'uang_harian_luar_kota_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            // Uang Harian Dalam Kota
+            'uang_harian_dalam_kota_jumlah_hari' => 'nullable|integer|min:0|max:365',
+            'uang_harian_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            'uang_harian_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            // Representasi Luar Kota
+            'representasi_luar_kota_jumlah_hari' => 'nullable|integer|min:0|max:365',
+            'representasi_luar_kota_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            'representasi_luar_kota_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            // Representasi Dalam Kota
+            'representasi_dalam_kota_jumlah_hari' => 'nullable|integer|min:0|max:365',
+            'representasi_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            'representasi_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
         ];
+    }
+
+    // Custom method to check if anggaran berjalan is negative
+    public function isOverBudget()
+    {
+        return $this->total_anggaran_berjalan_row < 0;
+    }
+
+    // Get budget status for UI
+    public function getBudgetStatusAttribute()
+    {
+        if ($this->total_anggaran_berjalan_row < 0) {
+            return 'over';
+        } elseif ($this->total_anggaran_berjalan_row == 0) {
+            return 'exact';
+        } else {
+            return 'under';
+        }
     }
 }

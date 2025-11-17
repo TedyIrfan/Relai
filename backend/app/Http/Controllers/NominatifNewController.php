@@ -76,6 +76,9 @@ class NominatifNewController extends Controller
 
         DB::beginTransaction();
         try {
+            // Get RKA details for anggaran
+            $rkaDetail = RkaDetail::findOrFail($request->rka_detail_id);
+
             $nominatif = NominatifNew::create([
                 'rka_detail_id' => $request->rka_detail_id,
                 'user_id' => Auth::id(),
@@ -85,6 +88,10 @@ class NominatifNewController extends Controller
                 'status' => 'draft',
                 'total_pagu' => 0,
                 'total_biaya_aktual' => 0,
+                // New fields
+                'total_pagu_trip' => 0,
+                'total_aktual_trip' => 0,
+                'total_anggaran_berjalan_trip' => $rkaDetail->anggaran_berjalan,
             ]);
 
             DB::commit();
@@ -221,15 +228,39 @@ class NominatifNewController extends Controller
             ], 422);
         }
 
+        // Get RKA details for anggaran update
+        $rkaDetail = $nominatif->rkaDetail;
+
+        // Calculate total actual from all rows to return to anggaran_berjalan
+        $totalAktualTrip = $nominatif->detailRows()->sum(function ($row) {
+            return $row->biayaRow?->total_aktual_row ?? 0;
+        });
+
+        DB::beginTransaction();
         try {
+            // If this was a draft, return the anggaran to anggaran_berjalan
+            if ($totalAktualTrip > 0) {
+                $rkaDetail->update([
+                    'anggaran_berjalan' => $rkaDetail->anggaran_berjalan + $totalAktualTrip,
+                    'anggaran_layanan_used' => $rkaDetail->anggaran_layanan_used - $totalAktualTrip,
+                ]);
+            }
+
             $nominatif->delete();
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Nominatif deleted successfully'
+                'message' => 'Nominatif deleted successfully',
+                'anggaran_returned' => [
+                    'total_aktual_returned' => $totalAktualTrip,
+                    'rka_anggaran_berjalan' => $rkaDetail->anggaran_berjalan,
+                ]
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete nominatif',
@@ -268,8 +299,24 @@ class NominatifNewController extends Controller
             ], 422);
         }
 
+        // Get RKA details for anggaran update
+        $rkaDetail = $nominatif->rkaDetail;
+
+        // Calculate total actual from all rows
+        $totalAktualTrip = $nominatif->detailRows()->sum(function ($row) {
+            return $row->biayaRow?->total_aktual_row ?? 0;
+        });
+
         DB::beginTransaction();
         try {
+            // Update RKA anggaran - move from anggaran_berjalan to anggaran_sp2d
+            $rkaDetail->update([
+                'anggaran_berjalan' => $rkaDetail->anggaran_berjalan + $totalAktualTrip,
+                'anggaran_sp2d' => $rkaDetail->anggaran_sp2d - $totalAktualTrip,
+                'anggaran_layanan_used' => $rkaDetail->anggaran_layanan_used + $totalAktualTrip,
+            ]);
+
+            // Update nominatif status
             $nominatif->status = 'submitted';
             $nominatif->save();
 
@@ -281,7 +328,12 @@ class NominatifNewController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Nominatif submitted successfully',
-                'data' => $nominatif
+                'data' => $nominatif,
+                'anggaran_updated' => [
+                    'total_aktual_trip' => $totalAktualTrip,
+                    'rka_anggaran_berjalan' => $rkaDetail->anggaran_berjalan,
+                    'rka_anggaran_sp2d' => $rkaDetail->anggaran_sp2d,
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -396,9 +448,15 @@ class NominatifNewController extends Controller
             return $row->biayaRow?->total_aktual_row ?? 0;
         });
 
+        $totalAnggaranBerjalan = $totalPagu - $totalAktual;
+
         $nominatif->update([
             'total_pagu' => $totalPagu,
             'total_biaya_aktual' => $totalAktual,
+            // New fields
+            'total_pagu_trip' => $totalPagu,
+            'total_aktual_trip' => $totalAktual,
+            'total_anggaran_berjalan_trip' => $totalAnggaranBerjalan,
         ]);
     }
 }
