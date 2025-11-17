@@ -8,10 +8,10 @@ use App\Http\Controllers\RKADetailsController;
 use App\Http\Controllers\SwaggerController;
 use App\Http\Controllers\AnggaranController;
 // use App\Http\Controllers\NominatifController; // Disabled (migrated to new 4-table system)
-use App\Http\Controllers\RutePerjalananController;
-use App\Http\Controllers\DebugController;
+// use App\Http\Controllers\RutePerjalananController; // REMOVED (old system)
+// use App\Http\Controllers\DebugController; // REMOVED (old system debug)
 // use App\Http\Controllers\PenginapanController; // Controller not available
-use App\Http\Controllers\PenginapanTambahanOrangController;
+// use App\Http\Controllers\PenginapanTambahanOrangController; // REMOVED (old system)
 use App\Http\Controllers\NominatifNewController;
 use App\Http\Controllers\NominatifDetailRowController;
 use App\Http\Controllers\NominatifBiayaRowController;
@@ -102,12 +102,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::delete('/nominatifs/penginapan/{penginapanId}', [NominatifController::class, 'deletePenginapan']); // DELETE penginapan
     // Route::post('/nominatifs/{id}/penginapan/generate', [NominatifController::class, 'generatePenginapanFromRute']); // GENERATE from rute
 
-    // Rute Perjalanan CRUD Operations
-    Route::get('/rute-perjalanan/{nominatif_id}', [RutePerjalananController::class, 'show']); // GET route by nominatif
-    Route::get('/rute-perjalanan/{nominatif_id}/formatted', [RutePerjalananController::class, 'getFormattedRoute']); // GET formatted route
-    Route::post('/rute-perjalanan', [RutePerjalananController::class, 'store']); // CREATE route
-    Route::put('/rute-perjalanan/{id}', [RutePerjalananController::class, 'update']); // UPDATE route
-    Route::delete('/rute-perjalanan/{id}', [RutePerjalananController::class, 'destroy']); // DELETE route
+    // Rute Perjalanan CRUD Operations - REMOVED (old system)
+    // Route::get('/rute-perjalanan/{nominatif_id}', [RutePerjalananController::class, 'show']); // GET route by nominatif
+    // Route::get('/rute-perjalanan/{nominatif_id}/formatted', [RutePerjalananController::class, 'getFormattedRoute']); // GET formatted route
+    // Route::post('/rute-perjalanan', [RutePerjalananController::class, 'store']); // CREATE route
+    // Route::put('/rute-perjalanan/{id}', [RutePerjalananController::class, 'update']); // UPDATE route
+    // Route::delete('/rute-perjalanan/{id}', [RutePerjalananController::class, 'destroy']); // DELETE route
 
     // Penginapan CRUD Operations (Master Nominatif) - DISABLED (Controller not available)
     // Route::get('/penginapan/{master_nominatif_id}', [PenginapanController::class, 'index']); // GET penginapan for master
@@ -123,12 +123,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::put('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'updateTambahanOrang']); // UPDATE tambahan orang
     // Route::delete('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'destroyTambahanOrang']); // DELETE tambahan orang
 
-    // Penginapan Tambahan Orang CRUD Operations (Option 2: Individual Tracking)
-    Route::get('/penginapan-tambahan-orang/by-tambahan-orang/{tambahanOrangId}', [PenginapanTambahanOrangController::class, 'getByTambahanOrang']); // GET all penginapan for tambahan orang
-    Route::post('/penginapan-tambahan-orang', [PenginapanTambahanOrangController::class, 'store']); // CREATE penginapan record
-    Route::get('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'show']); // GET single penginapan record
-    Route::put('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'update']); // UPDATE penginapan record
-    Route::delete('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'destroy']); // DELETE penginapan record
+    // Penginapan Tambahan Orang CRUD Operations - REMOVED (old system)
+    // Route::get('/penginapan-tambahan-orang/by-tambahan-orang/{tambahanOrangId}', [PenginapanTambahanOrangController::class, 'getByTambahanOrang']); // GET all penginapan for tambahan orang
+    // Route::post('/penginapan-tambahan-orang', [PenginapanTambahanOrangController::class, 'store']); // CREATE penginapan record
+    // Route::get('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'show']); // GET single penginapan record
+    // Route::put('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'update']); // UPDATE penginapan record
+    // Route::delete('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'destroy']); // DELETE penginapan record
 });
 
 // Dashboard API Routes (Public - for testing)
@@ -151,10 +151,10 @@ Route::get('/rka-details', [RKADetailsController::class, 'index']);
 Route::post('/rka-details/import', [RKADetailsController::class, 'importExcel']);
 Route::get('/rka-details/kategori', [RKADetailsController::class, 'getKategoriList']);
 
-// Debug Routes (No auth required for debugging)
-Route::get('/debug/nominatif', [DebugController::class, 'nominatifDebug']);
-Route::get('/debug/nominatif/{id}', [DebugController::class, 'nominatifDebug']);
-Route::post('/debug/nominatif/{id}/calculate', [DebugController::class, 'testCalculate']);
+// Debug Routes (No auth required for debugging) - REMOVED (old system)
+// Route::get('/debug/nominatif', [DebugController::class, 'nominatifDebug']);
+// Route::get('/debug/nominatif/{id}', [DebugController::class, 'nominatifDebug']);
+// Route::post('/debug/nominatif/{id}/calculate', [DebugController::class, 'testCalculate']);
 
 
 // Dashboard API Routes (Protected - for production)

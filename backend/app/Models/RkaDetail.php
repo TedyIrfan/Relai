@@ -66,7 +66,7 @@ class RkaDetail extends Model
 
     public function nominatifs()
     {
-        return $this->hasMany(Nominatif::class);
+        return $this->hasMany(NominatifNew::class);
     }
 
     // Business Logic untuk tracking anggaran berjalan dari nominatif
