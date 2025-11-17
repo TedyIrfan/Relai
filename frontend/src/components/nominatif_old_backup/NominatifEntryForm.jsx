@@ -1148,9 +1148,6 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
     return null;
   };
 
-  // Save tambahan orang data using new API
-  const saveTambahanOrangData = async (nominatifId, tambahanOrangToSave) => {
-
   // Save individual penginapan data to penginapan_tambahan_orang table
   const savePenginapanTambahanOrangData = async (tambahanOrangId, malamDetails) => {
     if (!malamDetails || malamDetails.length === 0) return;
@@ -1186,6 +1183,149 @@ const NominatifEntryForm = ({ editId, onCancel }) => {
       }
 
       console.log('✅ All penginapan records saved successfully');
+    } catch (error) {
+      console.error('❌ Error saving penginapan data:', error);
+      throw error;
+    }
+  };
+
+  // Save tambahan orang data using new API
+  const saveTambahanOrangData = async (nominatifId, tambahanOrangToSave) => {
+    try {
+      console.log('💾️ Starting saveTambahanOrangData...');
+      console.log('📋 Nominatif ID:', nominatifId);
+      console.log('👥 Tambahan orang to save:', tambahanOrangToSave);
+
+      // Helper function to get rute data from formData (reusing existing logic)
+      const getRuteDataForTambahan = (orang) => {
+        const ruteList = formData.rutePerjalanan || [];
+        const ruteData = ruteList.length > 0 ? ruteList[0] : {};
+
+        return {
+          dari: ruteData.dari || formData.ruteDari || 'Jakarta',
+          pulang: ruteData.pulang || formData.rutePulang || 'Jakarta',
+          tujuan_list: ruteData.tujuanList || formData.tujuanList || [],
+          total_hari: orang.jumlah_hari || formData.jumlahHari || 0,
+          tanggal_mulai: formData.tanggalPerjalanan?.tanggalMulai || new Date().toISOString().split('T')[0],
+          tanggal_selesai: formData.tanggalPerjalanan?.tanggalSelesai || new Date().toISOString().split('T')[0]
+        };
+      };
+
+      // Helper function to get transport data for each orang
+      const getTransportDataForOrang = (orang) => {
+        const transportData = [];
+        const ruteData = getRuteDataForTambahan(orang);
+
+        if (orang.transportasi && orang.transportasi.length > 0) {
+          orang.transportasi.forEach((transport, index) => {
+            const hari = transport.hari || index + 1;
+
+            // Add transportasi utama pergi
+            if (transport.jenisBerangkat && transport.paguBerangkat > 0) {
+              transportData.push({
+                hari: hari,
+                arah: 'pergi',
+                jenis_transportasi: transport.jenisBerangkat,
+                pagu: transport.paguBerangkat,
+                biaya_aktual: transport.aktualBerangkat || 0,
+                keterangan: `Transportasi ${transport.jenisBerangkat} pergi hari ke-${hari} - ${orang.nama_peserta}`
+              });
+            }
+
+            // Add taksi pergi
+            if (transport.paguTaksiBerangkat > 0) {
+              transportData.push({
+                hari: hari,
+                arah: 'pergi',
+                jenis_transportasi: 'taksi',
+                pagu: transport.paguTaksiBerangkat,
+                biaya_aktual: transport.aktualTaksiBerangkat || 0,
+                keterangan: `Transportasi taksi pergi hari ke-${hari} - ${orang.nama_peserta}`
+              });
+            }
+
+            // Add transportasi utama pulang
+            if (transport.jenisPulang && transport.paguPulang > 0) {
+              transportData.push({
+                hari: hari,
+                arah: 'pulang',
+                jenis_transportasi: transport.jenisPulang,
+                pagu: transport.paguPulang,
+                biaya_aktual: transport.aktualPulang || 0,
+                keterangan: `Transportasi ${transport.jenisPulang} pulang hari ke-${hari} - ${orang.nama_peserta}`
+              });
+            }
+
+            // Add taksi pulang
+            if (transport.paguTaksiPulang > 0) {
+              transportData.push({
+                hari: hari,
+                arah: 'pulang',
+                jenis_transportasi: 'taksi',
+                pagu: transport.paguTaksiPulang,
+                biaya_aktual: transport.aktualTaksiPulang || 0,
+                keterangan: `Transportasi taksi pulang hari ke-${hari} - ${orang.nama_peserta}`
+              });
+            }
+          });
+        }
+
+        return transportData;
+      };
+
+      // Calculate totals using the same logic as frontend form
+      const calculateTotalsForOrang = (orang) => {
+        let totalPagu = 0;
+        let totalAktual = 0;
+        let uangHarianTotal = 0;
+        let uangRepresentasiTotal = 0;
+        let penginapanTotal = 0;
+
+        // Calculate from transport data
+        const transportData = getTransportDataForOrang(orang);
+        transportData.forEach(transport => {
+          totalPagu += transport.pagu || 0;
+          totalAktual += transport.biaya_aktual || 0;
+        });
+
+        // Calculate from uang sections
+        if (orang.uangHarian) {
+          const jumlahHari = orang.jumlah_hari || formData.jumlahHari || 2;
+          const paguPerHari = orang.uangHarian.paguPerHari || (orang.uangHarian.total && jumlahHari > 0 ? orang.uangHarian.total / jumlahHari : 0);
+          uangHarianTotal = orang.uangHarian.total || (paguPerHari * jumlahHari);
+        }
+
+        if (orang.uangRepresentasi) {
+          const jumlahHari = orang.jumlah_hari || formData.jumlahHari || 2;
+          const paguPerHari = orang.uangRepresentasi.paguPerHari || (orang.uangRepresentasi.total && jumlahHari > 0 ? orang.uangRepresentasi.total / jumlahHari : 0);
+          uangRepresentasiTotal = orang.uangRepresentasi.total || (paguPerHari * jumlahHari);
+        }
+
+        // Calculate from penginapan
+        if (orang.penginapan?.menginap && orang.penginapan?.malamDetails) {
+          orang.penginapan.malamDetails.forEach(malam => {
+            penginapanTotal += malam.pagu || 0;
+            totalAktual += malam.aktual || 0;
+          });
+        }
+
+        // Full allowance totals (always added)
+        totalPagu += uangHarianTotal + uangRepresentasiTotal + penginapanTotal;
+
+        return {
+          pagu: totalPagu,
+          aktual: totalAktual,
+          uangHarianTotal,
+          uangRepresentasiTotal,
+          penginapanTotal
+        };
+      };
+
+      // Save each tambahan orang
+      for (const orang of tambahanOrangToSave) {
+        const ruteData = getRuteDataForTambahan(orang);
+        const transportData = getTransportDataForOrang(orang);
+        const calculatedTotals = calculateTotalsForOrang(orang);
 
         // Debug: Check calculated totals
         console.log('🔍 DEBUG Tambahan Orang Calculations:', {

@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import MasterSBM from './pages/MasterSBM';
 import MasterRKA from './pages/MasterRKA';
 import Nominatif from './pages/Nominatif';
+import NominatifPage from './pages/NominatifPage';
+import NominatifCreate from './pages/NominatifCreate';
 
 function App() {
   return (
@@ -40,6 +42,20 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Nominatif />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/nominatif/:rkaId" element={
+            <ProtectedRoute>
+              <Layout>
+                <NominatifPage />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/nominatif/create" element={
+            <ProtectedRoute>
+              <Layout>
+                <NominatifCreate />
               </Layout>
             </ProtectedRoute>
           } />

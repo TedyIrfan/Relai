@@ -7,11 +7,15 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RKADetailsController;
 use App\Http\Controllers\SwaggerController;
 use App\Http\Controllers\AnggaranController;
-use App\Http\Controllers\NominatifController;
+// use App\Http\Controllers\NominatifController; // Disabled (migrated to new 4-table system)
 use App\Http\Controllers\RutePerjalananController;
 use App\Http\Controllers\DebugController;
-use App\Http\Controllers\PenginapanController;
+// use App\Http\Controllers\PenginapanController; // Controller not available
 use App\Http\Controllers\PenginapanTambahanOrangController;
+use App\Http\Controllers\NominatifNewController;
+use App\Http\Controllers\NominatifDetailRowController;
+use App\Http\Controllers\NominatifBiayaRowController;
+use App\Http\Controllers\NominatifEvidenceController;
 
 // Test endpoint for Swagger
 Route::get('/test', [SwaggerController::class, 'test']);
@@ -40,27 +44,63 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/anggarans/{id}', [AnggaranController::class, 'update']);  // UPDATE anggaran
     Route::delete('/anggarans/{id}', [AnggaranController::class, 'destroy']); // DELETE anggaran
 
-    // Nominatif CRUD Operations
-    Route::get('/nominatifs', [NominatifController::class, 'index']);       // GET all nominatifs
-    Route::post('/nominatifs', [NominatifController::class, 'store']);      // CREATE nominatif
-    Route::get('/nominatifs/{id}', [NominatifController::class, 'show']);     // GET single nominatif
-    Route::put('/nominatifs/{id}', [NominatifController::class, 'update']);   // UPDATE nominatif
-    Route::post('/nominatifs/{id}/submit', [NominatifController::class, 'submit']); // SUBMIT nominatif
-    Route::delete('/nominatifs/{id}', [NominatifController::class, 'destroy']); // DELETE nominatif
-    Route::delete('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'deleteTambahanOrang']); // DELETE all tambahan orang
+    // OLD NOMINATIF OPERATIONS - Disabled (migrated to new 4-table system)
+    // Route::get('/nominatifs', [NominatifController::class, 'index']);       // GET all nominatifs
+    // Route::post('/nominatifs', [NominatifController::class, 'store']);      // CREATE nominatif
+    // Route::get('/nominatifs/{id}', [NominatifController::class, 'show']);     // GET single nominatif
+    // Route::put('/nominatifs/{id}', [NominatifController::class, 'update']);   // UPDATE nominatif
+    // Route::post('/nominatifs/{id}/submit', [NominatifController::class, 'submit']); // SUBMIT nominatif
+    // Route::delete('/nominatifs/{id}', [NominatifController::class, 'destroy']); // DELETE nominatif
+    // Route::delete('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'deleteTambahanOrang']); // DELETE all tambahan orang
 
-    // Tambahan Orang API Routes (New Normalized Structure)
-    Route::get('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'getTambahanOrang']); // GET all tambahan orang for nominatif
-    Route::post('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'saveTambahanOrang']); // SAVE tambahan orang
-    Route::put('/nominatifs/tambahan-orang/{id}', [NominatifController::class, 'updateTambahanOrang']); // UPDATE specific tambahan orang
-    Route::delete('/nominatifs/{id}/tambahan-orang/{tambahanOrangId}', [NominatifController::class, 'deleteTambahanOrangById']); // DELETE specific tambahan orang
+    // NEW NOMINATIF SYSTEM (Phase 2) - Separated Tables Architecture
+    Route::prefix('nominatifs-new')->group(function () {
+        Route::get('/', [NominatifNewController::class, 'index']);
+        Route::post('/', [NominatifNewController::class, 'store']);
+        Route::get('/{id}', [NominatifNewController::class, 'show']);
+        Route::put('/{id}', [NominatifNewController::class, 'update']);
+        Route::delete('/{id}', [NominatifNewController::class, 'destroy']);
+        Route::post('/{id}/submit', [NominatifNewController::class, 'submit']);
+        Route::get('/search', [NominatifNewController::class, 'search']);
+        Route::get('/statistics', [NominatifNewController::class, 'statistics']);
+    });
 
-    // Penginapan CRUD Operations (NEW - Database Table)
-    Route::get('/nominatifs/{id}/penginapan', [NominatifController::class, 'getPenginapan']); // GET all penginapan for nominatif
-    Route::post('/nominatifs/{id}/penginapan', [NominatifController::class, 'savePenginapan']); // SAVE/UPDATE penginapan
-    Route::put('/nominatifs/penginapan/{penginapanId}', [NominatifController::class, 'updatePenginapan']); // UPDATE specific penginapan
-    Route::delete('/nominatifs/penginapan/{penginapanId}', [NominatifController::class, 'deletePenginapan']); // DELETE penginapan
-    Route::post('/nominatifs/{id}/penginapan/generate', [NominatifController::class, 'generatePenginapanFromRute']); // GENERATE from rute
+    // Detail Rows (Person + Route Data)
+    Route::prefix('nominatifs/{nominatifId}/details')->group(function () {
+        Route::get('/', [NominatifDetailRowController::class, 'index']);
+        Route::post('/', [NominatifDetailRowController::class, 'store']);
+        Route::get('/{rowId}', [NominatifDetailRowController::class, 'show']);
+        Route::put('/{rowId}', [NominatifDetailRowController::class, 'update']);
+        Route::delete('/{rowId}', [NominatifDetailRowController::class, 'destroy']);
+        Route::post('/bulk', [NominatifDetailRowController::class, 'bulkStore']);
+        Route::put('/bulk', [NominatifDetailRowController::class, 'bulkUpdate']);
+    });
+
+    // Biaya Rows (Financial Data) - Lazy Loading
+    Route::prefix('nominatifs/details/{detailRowId}/biaya')->group(function () {
+        Route::get('/', [NominatifBiayaRowController::class, 'index']);
+        Route::post('/', [NominatifBiayaRowController::class, 'store']);
+        Route::get('/{biayaId}', [NominatifBiayaRowController::class, 'show']);
+        Route::put('/{biayaId}', [NominatifBiayaRowController::class, 'update']);
+        Route::delete('/{biayaId}', [NominatifBiayaRowController::class, 'destroy']);
+    });
+
+    // Evidence (File Upload) - On Demand Loading
+    Route::prefix('nominatifs/details/{detailRowId}/evidence')->group(function () {
+        Route::get('/', [NominatifEvidenceController::class, 'index']);
+        Route::post('/', [NominatifEvidenceController::class, 'store']);
+        Route::get('/{evidenceId}', [NominatifEvidenceController::class, 'show']);
+        Route::put('/{evidenceId}', [NominatifEvidenceController::class, 'update']);
+        Route::delete('/{evidenceId}', [NominatifEvidenceController::class, 'destroy']);
+        Route::get('/{evidenceId}/download', [NominatifEvidenceController::class, 'download']);
+    });
+
+    // Legacy Penginapan Routes - Disabled (migrated to new 4-table system)
+    // Route::get('/nominatifs/{id}/penginapan', [NominatifController::class, 'getPenginapan']); // GET all penginapan for nominatif
+    // Route::post('/nominatifs/{id}/penginapan', [NominatifController::class, 'savePenginapan']); // SAVE/UPDATE penginapan
+    // Route::put('/nominatifs/penginapan/{penginapanId}', [NominatifController::class, 'updatePenginapan']); // UPDATE specific penginapan
+    // Route::delete('/nominatifs/penginapan/{penginapanId}', [NominatifController::class, 'deletePenginapan']); // DELETE penginapan
+    // Route::post('/nominatifs/{id}/penginapan/generate', [NominatifController::class, 'generatePenginapanFromRute']); // GENERATE from rute
 
     // Rute Perjalanan CRUD Operations
     Route::get('/rute-perjalanan/{nominatif_id}', [RutePerjalananController::class, 'show']); // GET route by nominatif
@@ -69,19 +109,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/rute-perjalanan/{id}', [RutePerjalananController::class, 'update']); // UPDATE route
     Route::delete('/rute-perjalanan/{id}', [RutePerjalananController::class, 'destroy']); // DELETE route
 
-    // Penginapan CRUD Operations (Master Nominatif)
-    Route::get('/penginapan/{master_nominatif_id}', [PenginapanController::class, 'index']); // GET penginapan for master
-    Route::post('/penginapan/generate-from-rute', [PenginapanController::class, 'generateFromRute']); // GENERATE from rute
-    Route::get('/penginapan/{master_nominatif_id}/summary', [PenginapanController::class, 'getSummary']); // GET summary
-    Route::put('/penginapan/{id}', [PenginapanController::class, 'update']); // UPDATE penginapan
-    Route::put('/penginapan/batch-update', [PenginapanController::class, 'batchUpdate']); // BATCH UPDATE
-    Route::delete('/penginapan/{id}', [PenginapanController::class, 'destroy']); // DELETE penginapan
+    // Penginapan CRUD Operations (Master Nominatif) - DISABLED (Controller not available)
+    // Route::get('/penginapan/{master_nominatif_id}', [PenginapanController::class, 'index']); // GET penginapan for master
+    // Route::post('/penginapan/generate-from-rute', [PenginapanController::class, 'generateFromRute']); // GENERATE from rute
+    // Route::get('/penginapan/{master_nominatif_id}/summary', [PenginapanController::class, 'getSummary']); // GET summary
+    // Route::put('/penginapan/{id}', [PenginapanController::class, 'update']); // UPDATE penginapan
+    // Route::put('/penginapan/batch-update', [PenginapanController::class, 'batchUpdate']); // BATCH UPDATE
+    // Route::delete('/penginapan/{id}', [PenginapanController::class, 'destroy']); // DELETE penginapan
 
-    // Penginapan CRUD Operations (Tambahan Orang)
-    Route::get('/penginapan/tambahan-orang/{tambahan_orang_nominatif_id}', [PenginapanController::class, 'indexTambahanOrang']); // GET penginapan for tambahan orang
-    Route::post('/penginapan/tambahan-orang/generate-from-rute', [PenginapanController::class, 'generateFromRuteTambahanOrang']); // GENERATE for tambahan orang
-    Route::put('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'updateTambahanOrang']); // UPDATE tambahan orang
-    Route::delete('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'destroyTambahanOrang']); // DELETE tambahan orang
+    // Penginapan CRUD Operations (Tambahan Orang) - DISABLED (Controller not available)
+    // Route::get('/penginapan/tambahan-orang/{tambahan_orang_nominatif_id}', [PenginapanController::class, 'indexTambahanOrang']); // GET penginapan for tambahan orang
+    // Route::post('/penginapan/tambahan-orang/generate-from-rute', [PenginapanController::class, 'generateFromRuteTambahanOrang']); // GENERATE for tambahan orang
+    // Route::put('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'updateTambahanOrang']); // UPDATE tambahan orang
+    // Route::delete('/penginapan/tambahan-orang/{id}', [PenginapanController::class, 'destroyTambahanOrang']); // DELETE tambahan orang
 
     // Penginapan Tambahan Orang CRUD Operations (Option 2: Individual Tracking)
     Route::get('/penginapan-tambahan-orang/by-tambahan-orang/{tambahanOrangId}', [PenginapanTambahanOrangController::class, 'getByTambahanOrang']); // GET all penginapan for tambahan orang

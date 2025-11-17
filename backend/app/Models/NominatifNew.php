@@ -1,0 +1,108 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class NominatifNew extends Model
+{
+    use HasFactory;
+
+    protected $table = 'nominatifs_new';
+
+    protected $fillable = [
+        'rka_detail_id',
+        'user_id',
+        'deskripsi_perjalanan_dinas',
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'status',
+        'total_pagu',
+        'total_biaya_aktual',
+    ];
+
+    protected $casts = [
+        'tanggal_mulai' => 'date',
+        'tanggal_selesai' => 'date',
+        'total_pagu' => 'decimal:2',
+        'total_biaya_aktual' => 'decimal:2',
+    ];
+
+    // Relationships
+    public function rkaDetail()
+    {
+        return $this->belongsTo(RkaDetail::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function detailRows()
+    {
+        return $this->hasMany(NominatifDetailRow::class, 'nominatif_id')
+                    ->orderBy('row_order');
+    }
+
+    public function mainPersonRows()
+    {
+        return $this->hasMany(NominatifDetailRow::class, 'nominatif_id')
+                    ->where('person_type', 'main')
+                    ->orderBy('row_order');
+    }
+
+    public function tambahanOrangRows()
+    {
+        return $this->hasMany(NominatifDetailRow::class, 'nominatif_id')
+                    ->where('person_type', 'tambahan')
+                    ->orderBy('row_order');
+    }
+
+    // Scopes
+    public function scopeDraft($query)
+    {
+        return $query->where('status', 'draft');
+    }
+
+    public function scopeSubmitted($query)
+    {
+        return $query->where('status', 'submitted');
+    }
+
+    public function scopeByUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    // Accessors
+    public function getTotalPaguFormattedAttribute()
+    {
+        return 'Rp' . number_format($this->total_pagu, 0, ',', '.');
+    }
+
+    public function getTotalBiayaAktualFormattedAttribute()
+    {
+        return 'Rp' . number_format($this->total_biaya_aktual, 0, ',', '.');
+    }
+
+    public function getJumlahHariAttribute()
+    {
+        return $this->tanggal_mulai && $this->tanggal_selesai
+            ? $this->tanggal_mulai->diffInDays($this->tanggal_selesai) + 1
+            : 0;
+    }
+
+    // Business Logic
+    public function submit()
+    {
+        $this->status = 'submitted';
+        $this->save();
+    }
+
+    public function canEdit()
+    {
+        return $this->status === 'draft';
+    }
+}

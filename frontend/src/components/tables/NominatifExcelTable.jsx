@@ -1,30 +1,39 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Save, Send, Upload, Download, CheckCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plus, Trash2, Save, Send, RefreshCw, CheckCircle, Upload, Eye } from 'lucide-react';
 
 const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) => {
   const [rows, setRows] = useState(initialData);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const tableRef = useRef(null);
+
+  // Initialize with one empty row if no data
+  React.useEffect(() => {
+    if (rows.length === 0) {
+      addRow();
+    }
+  }, []);
 
   // Add new row
   const addRow = (personType = 'main') => {
     const newRow = {
-      id: Date.now(), // temporary ID
+      id: Date.now(),
       person_type: personType,
-      nama: '',
+      nama_lengkap: '',
       golongan: '',
       jabatan: '',
       eselon: '',
       asal: '',
       tujuan: '',
-      tanggal: getCurrentDate(), // Default to current date
+      tanggal_pergi: '',
+      tanggal_pulang: '',
       transport_taksi_pergi_pagu: '',
       transport_taksi_pergi_aktual: '',
-      transport_pergi_pagu: '',
-      transport_pergi_aktual: '',
       transport_taksi_pulang_pagu: '',
       transport_taksi_pulang_aktual: '',
+      transport_pergi_pagu: '',
+      transport_pergi_aktual: '',
       transport_pulang_pagu: '',
       transport_pulang_aktual: '',
       penginapan_pagu: '',
@@ -35,726 +44,642 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
       uang_harian_aktual: '',
       uang_representasi_pagu: '',
       uang_representasi_aktual: '',
-      evidence: null
+      evidence_url: null
     };
     setRows([...rows, newRow]);
   };
 
+  // Update row data
+  const updateRow = (id, field, value) => {
+    const updatedRows = rows.map(row =>
+      row.id === id ? { ...row, [field]: value } : row
+    );
+    setRows(updatedRows);
+  };
+
   // Delete row
-  const deleteRow = (index) => {
-    const newRows = rows.filter((_, i) => i !== index);
-    setRows(newRows);
-  };
-
-  // Update cell value
-  const updateCell = (rowIndex, columnKey, value) => {
-    const newRows = [...rows];
-    newRows[rowIndex][columnKey] = value;
-    setRows(newRows);
-  };
-
-  // Format currency
-  const formatCurrency = (value) => {
-    if (!value) return '';
-    const num = value.toString().replace(/[^\d]/g, '');
-    return num ? parseInt(num).toLocaleString('id-ID') : '';
-  };
-
-  // Parse currency
-  const parseCurrency = (value) => {
-    if (!value) return 0;
-    const num = value.toString().replace(/[^\d]/g, '');
-    const parsed = num ? parseInt(num, 10) : 0;
-    // Batasi maksimal nilai agar tidak terlalu besar (maksimal 10 miliar)
-    return Math.min(parsed, 10000000000);
-  };
-
-  // Calculate row totals
-  const calculateRowTotals = (row) => {
-    const paguFields = [
-      'transport_taksi_pergi_pagu',
-      'transport_pergi_pagu',
-      'transport_taksi_pulang_pagu',
-      'transport_pulang_pagu',
-      'penginapan_pagu',
-      'uang_harian_fullboard_pagu',
-      'uang_harian_pagu',
-      'uang_representasi_pagu'
-    ];
-
-    const aktualFields = [
-      'transport_taksi_pergi_aktual',
-      'transport_pergi_aktual',
-      'transport_taksi_pulang_aktual',
-      'transport_pulang_aktual',
-      'penginapan_aktual',
-      'uang_harian_fullboard_aktual',
-      'uang_harian_aktual',
-      'uang_representasi_aktual'
-    ];
-
-    const totalPagu = paguFields.reduce((sum, field) => {
-      const value = parseCurrency(row[field] || 0);
-      return sum + value;
-    }, 0);
-
-    const totalAktual = aktualFields.reduce((sum, field) => {
-      const value = parseCurrency(row[field] || 0);
-      return sum + value;
-    }, 0);
-
-    return { totalPagu, totalAktual };
-  };
-
-  // Calculate grand totals
-  const calculateGrandTotals = () => {
-    let mainPersonPagu = 0;
-    let mainPersonAktual = 0;
-    let tambahanPagu = 0;
-    let tambahanAktual = 0;
-
-    rows.forEach(row => {
-      const totals = calculateRowTotals(row);
-      if (row.person_type === 'main') {
-        mainPersonPagu += totals.totalPagu;
-        mainPersonAktual += totals.totalAktual;
-      } else {
-        tambahanPagu += totals.totalPagu;
-        tambahanAktual += totals.totalAktual;
-      }
-    });
-
-    return {
-      mainPersonPagu,
-      mainPersonAktual,
-      tambahanPagu,
-      tambahanAktual,
-      grandPagu: mainPersonPagu + tambahanPagu,
-      grandAktual: mainPersonAktual + tambahanAktual
-    };
-  };
-
-  // Handle file upload
-  const handleFileUpload = (rowIndex, file) => {
-    if (file && file.type.startsWith('image/')) {
-      const newRows = [...rows];
-      newRows[rowIndex].evidence = file;
-      setRows(newRows);
+  const deleteRow = (id) => {
+    if (rows.length > 1) {
+      setRows(rows.filter(row => row.id !== id));
     }
   };
 
-  // Save data
-  const handleSave = async () => {
+  // Handle file upload
+  const handleFileUpload = (rowId, file) => {
+    if (file) {
+      // Create file URL for preview
+      const fileUrl = URL.createObjectURL(file);
+      updateRow(rowId, 'evidence_url', fileUrl);
+      updateRow(rowId, 'evidence_file', file);
+    }
+  };
+
+  
+  // Calculate totals
+  const totals = React.useMemo(() => {
+    return rows.reduce((acc, row) => ({
+      transport_taksi_pergi_pagu: acc.transport_taksi_pergi_pagu + (parseFloat(row.transport_taksi_pergi_pagu) || 0),
+      transport_taksi_pergi_aktual: acc.transport_taksi_pergi_aktual + (parseFloat(row.transport_taksi_pergi_aktual) || 0),
+      transport_taksi_pulang_pagu: acc.transport_taksi_pulang_pagu + (parseFloat(row.transport_taksi_pulang_pagu) || 0),
+      transport_taksi_pulang_aktual: acc.transport_taksi_pulang_aktual + (parseFloat(row.transport_taksi_pulang_aktual) || 0),
+      transport_pergi_pagu: acc.transport_pergi_pagu + (parseFloat(row.transport_pergi_pagu) || 0),
+      transport_pergi_aktual: acc.transport_pergi_aktual + (parseFloat(row.transport_pergi_aktual) || 0),
+      transport_pulang_pagu: acc.transport_pulang_pagu + (parseFloat(row.transport_pulang_pagu) || 0),
+      transport_pulang_aktual: acc.transport_pulang_aktual + (parseFloat(row.transport_pulang_aktual) || 0),
+      penginapan_pagu: acc.penginapan_pagu + (parseFloat(row.penginapan_pagu) || 0),
+      penginapan_aktual: acc.penginapan_aktual + (parseFloat(row.penginapan_aktual) || 0),
+      uang_harian_fullboard_pagu: acc.uang_harian_fullboard_pagu + (parseFloat(row.uang_harian_fullboard_pagu) || 0),
+      uang_harian_fullboard_aktual: acc.uang_harian_fullboard_aktual + (parseFloat(row.uang_harian_fullboard_aktual) || 0),
+      uang_harian_pagu: acc.uang_harian_pagu + (parseFloat(row.uang_harian_pagu) || 0),
+      uang_harian_aktual: acc.uang_harian_aktual + (parseFloat(row.uang_harian_aktual) || 0),
+      uang_representasi_pagu: acc.uang_representasi_pagu + (parseFloat(row.uang_representasi_pagu) || 0),
+      uang_representasi_aktual: acc.uang_representasi_aktual + (parseFloat(row.uang_representasi_aktual) || 0),
+      total_pagu: acc.total_pagu +
+        (parseFloat(row.transport_taksi_pergi_pagu) || 0) +
+        (parseFloat(row.transport_taksi_pulang_pagu) || 0) +
+        (parseFloat(row.transport_pergi_pagu) || 0) +
+        (parseFloat(row.transport_pulang_pagu) || 0) +
+        (parseFloat(row.penginapan_pagu) || 0) +
+        (parseFloat(row.uang_harian_fullboard_pagu) || 0) +
+        (parseFloat(row.uang_harian_pagu) || 0) +
+        (parseFloat(row.uang_representasi_pagu) || 0),
+      total_aktual: acc.total_aktual +
+        (parseFloat(row.transport_taksi_pergi_aktual) || 0) +
+        (parseFloat(row.transport_taksi_pulang_aktual) || 0) +
+        (parseFloat(row.transport_pergi_aktual) || 0) +
+        (parseFloat(row.transport_pulang_aktual) || 0) +
+        (parseFloat(row.penginapan_aktual) || 0) +
+        (parseFloat(row.uang_harian_fullboard_aktual) || 0) +
+        (parseFloat(row.uang_harian_aktual) || 0) +
+        (parseFloat(row.uang_representasi_aktual) || 0)
+    }), {
+      transport_taksi_pergi_pagu: 0,
+      transport_taksi_pergi_aktual: 0,
+      transport_taksi_pulang_pagu: 0,
+      transport_taksi_pulang_aktual: 0,
+      transport_pergi_pagu: 0,
+      transport_pergi_aktual: 0,
+      transport_pulang_pagu: 0,
+      transport_pulang_aktual: 0,
+      penginapan_pagu: 0,
+      penginapan_aktual: 0,
+      uang_harian_fullboard_pagu: 0,
+      uang_harian_fullboard_aktual: 0,
+      uang_harian_pagu: 0,
+      uang_harian_aktual: 0,
+      uang_representasi_pagu: 0,
+      uang_representasi_aktual: 0,
+      total_pagu: 0,
+      total_aktual: 0
+    });
+  }, [rows]);
+
+  // Save draft
+  const saveDraft = async () => {
     setSaving(true);
     try {
       if (onSave) {
         await onSave(rows);
       }
+      console.log('Draft saved:', rows);
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('Error saving draft:', error);
     } finally {
       setSaving(false);
     }
   };
 
-  // Submit data
-  const handleSubmit = async () => {
-    setLoading(true);
+  // Submit
+  const submitNominatif = async () => {
+    setSubmitting(true);
     try {
       if (onSubmit) {
         await onSubmit(rows);
       }
+      console.log('Nominatif submitted:', rows);
     } catch (error) {
-      console.error('Submit error:', error);
+      console.error('Error submitting:', error);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  // Get current date for default
-  const getCurrentDate = () => {
-    return new Date().toISOString().split('T')[0];
+  // Load draft (placeholder)
+  const loadDraft = () => {
+    console.log('Loading draft...');
   };
 
-  // Column definitions
-  const columns = [
-    { key: 'delete', label: 'Aksi', width: '60px', type: 'delete' },
-    { key: 'person_type', label: 'Tipe', width: '80px', type: 'select', options: ['main', 'tambahan'] },
-    { key: 'nama', label: 'Nama Lengkap', width: '120px', type: 'text' },
-    { key: 'golongan', label: 'Golongan', width: '80px', type: 'text' },
-    { key: 'jabatan', label: 'Jabatan', width: '100px', type: 'text' },
-    { key: 'eselon', label: 'Eselon', width: '70px', type: 'text' },
-    { key: 'asal', label: 'Asal', width: '80px', type: 'text' },
-    { key: 'tujuan', label: 'Tujuan', width: '80px', type: 'text' },
-    { key: 'tanggal', label: 'Tanggal', width: '100px', type: 'date' },
-    { key: 'transport_taksi_pergi_pagu', label: 'Transportasi Taksi Pergi', width: '320px', type: 'merged' },
-    { key: 'transport_pergi_pagu', label: 'Transportasi Pergi', width: '300px', type: 'merged' },
-    { key: 'transport_taksi_pulang_pagu', label: 'Transportasi Taksi Pulang', width: '320px', type: 'merged' },
-    { key: 'transport_pulang_pagu', label: 'Transportasi Pulang', width: '300px', type: 'merged' },
-    { key: 'penginapan_pagu', label: 'Penginapan', width: '300px', type: 'merged' },
-    { key: 'uang_harian_fullboard_pagu', label: 'Uang Harian Fullboard', width: '340px', type: 'merged' },
-    { key: 'uang_harian_pagu', label: 'Uang Harian', width: '300px', type: 'merged' },
-    { key: 'uang_representasi_pagu', label: 'Uang Representasi', width: '320px', type: 'merged' },
-    { key: 'evidence', label: 'Evidence', width: '100px', type: 'file' }
-  ];
-
-  const totals = calculateGrandTotals();
-
   return (
-    <div className="bg-white rounded-lg p-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Input Nominatif</h3>
-          {rkaDetail && (
-            <p className="text-sm text-gray-600">
-              RKA: {rkaDetail.code_rka} - {rkaDetail.layanan}
-            </p>
-          )}
+    <div className="bg-white rounded-lg">
+      {/* Mobile/Tablet Info */}
+      <div className="md:hidden lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <div className="flex items-center space-x-2 text-blue-800">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-sm font-medium">Table best viewed on desktop. Swipe horizontally to view all columns.</p>
         </div>
-        <div className="flex gap-2">
+      </div>
+      {/* Action Bar */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-3">
+            <button
+              onClick={addRow}
+              className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Baris</span>
+            </button>
+            <button
+              onClick={() => addRow('tambahan')}
+              className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Orang</span>
+            </button>
+          </div>
+
+        <div className="flex items-center space-x-2">
           <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg disabled:opacity-50 bg-white"
+            onClick={loadDraft}
+            disabled={!rkaDetail || loading}
+            className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Muat Draft</span>
+          </button>
+          <button
+            onClick={saveDraft}
+            disabled={loading || saving}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="w-4 h-4" />
-            {saving ? 'Saving...' : 'Save Draft'}
+            <span>{saving ? 'Menyimpan...' : 'Simpan Draft'}</span>
           </button>
           <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-400 text-gray-800 rounded-lg disabled:opacity-50 bg-gray-50"
+            onClick={submitNominatif}
+            disabled={loading || submitting}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send className="w-4 h-4" />
-            {loading ? 'Submitting...' : 'Submit'}
+            <CheckCircle className="w-4 h-4" />
+            <span>{submitting ? 'Mengirim...' : 'Submit'}</span>
           </button>
         </div>
       </div>
 
-      {/* Actions Bar */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <button
-          onClick={() => addRow('main')}
-          className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg text-sm bg-white"
-        >
-          <Plus className="w-4 h-4" />
-          + Main Person
-        </button>
-        <button
-          onClick={() => addRow('tambahan')}
-          className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg text-sm bg-white"
-        >
-          <Plus className="w-4 h-4" />
-          + Tambahan Orang
-        </button>
-      </div>
-
-      {/* Excel-like Table - Completely White Design for Eye Comfort */}
-      <div className="border border-gray-200 rounded-lg">
-        <table className="w-full" ref={tableRef}>
-          {/* Header Baris 1 - Main Headers */}
-          <thead className="bg-white border-b border-gray-200">
+      {/* Table Container */}
+      <div className="border border-gray-200 rounded-lg overflow-x-auto overflow-y-visible max-h-[80vh]">
+        <table className="w-full min-w-[9216px]" ref={tableRef}>
+          {/* Header */}
+          <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+            {/* Main Categories Row */}
             <tr>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '60px' }}>Aksi</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '80px' }}>Tipe</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '150px' }}>Nama Lengkap</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '100px' }}>Golongan</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '120px' }}>Jabatan</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '80px' }}>Eselon</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '120px' }}>Asal</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '120px' }}>Tujuan</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '120px' }}>Tanggal</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '320px' }} colSpan="2">Transportasi Taksi Pergi</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '300px' }} colSpan="2">Transportasi Pergi</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '320px' }} colSpan="2">Transportasi Taksi Pulang</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '300px' }} colSpan="2">Transportasi Pulang</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '300px' }} colSpan="2">Penginapan</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '340px' }} colSpan="2">Uang Harian Fullboard</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '300px' }} colSpan="2">Uang Harian</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 border-r border-gray-200" style={{ width: '320px' }} colSpan="2">Uang Representasi</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600" style={{ width: '120px' }}>Evidence</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">Aksi</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">Tipe</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Nama Lengkap</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Golongan</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Jabatan</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Eselon</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Asal</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tujuan</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tgl Pergi</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tgl Pulang</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Transportasi</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="2">Penginapan</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="4">Uang Harian</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="2">Representasi</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Evidence</th>
             </tr>
-            {/* Header Baris 2 - Sub Headers */}
-            <tr className="bg-white border-b border-gray-200">
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200">Aksi</th>
-              <th className="px-4 py-2 text-left text-xs text-gray-500 border-r border-gray-200">Tipe</th>
-              <th className="px-4 py-2 text-left text-xs text-gray-500 border-r border-gray-200">Nama Lengkap</th>
-              <th className="px-4 py-2 text-left text-xs text-gray-500 border-r border-gray-200">Golongan</th>
-              <th className="px-4 py-2 text-left text-xs text-gray-500 border-r border-gray-200">Jabatan</th>
-              <th className="px-4 py-2 text-left text-xs text-gray-500 border-r border-gray-200">Eselon</th>
-              <th className="px-4 py-2 text-left text-xs text-gray-500 border-r border-gray-200">Asal</th>
-              <th className="px-4 py-2 text-left text-xs text-gray-500 border-r border-gray-200">Tujuan</th>
-              <th className="px-4 py-2 text-left text-xs text-gray-500 border-r border-gray-200">Tanggal</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '160px' }}>Pagu</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '160px' }}>Aktual</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '150px' }}>Pagu</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '150px' }}>Aktual</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '160px' }}>Pagu</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '160px' }}>Aktual</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '150px' }}>Pagu</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '150px' }}>Aktual</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '150px' }}>Pagu</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '150px' }}>Aktual</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '170px' }}>Pagu</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '170px' }}>Aktual</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '150px' }}>Pagu</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '150px' }}>Aktual</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '160px' }}>Pagu</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500 border-r border-gray-200" style={{ width: '160px' }}>Aktual</th>
-              <th className="px-4 py-2 text-center text-xs text-gray-500">Evidence</th>
+            {/* Subcategories Row */}
+            <tr className="bg-gray-100 border-b border-gray-300">
+              <td colSpan="10" className="px-4 py-2 border-r border-gray-200"></td>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Taksi Pergi</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Transport Pergi</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Taksi Pulang</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Transport Pulang</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Full Board</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Regular</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual</th>
+              <td className="px-4 py-2"></td>
+            </tr>
+            {/* Pagu/Aktual Row */}
+            <tr className="bg-gray-100 border-b border-gray-300">
+              <td colSpan="10" className="px-4 py-2 border-r border-gray-200"></td>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Pagu</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200 w-[32rem]">Aktual</th>
+              <td className="px-4 py-2"></td>
             </tr>
           </thead>
-
-          {/* Body */}
-          <tbody className="bg-white divide-y divide-gray-100">
-            {rows.map((row, rowIndex) => {
-              const rowTotals = calculateRowTotals(row);
-              return (
-                <tr key={row.id}>
-                  {/* Aksi */}
-                  <td className="px-3 py-3 border-r border-gray-200 text-center" style={{ width: '60px' }}>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {rows.map((row, index) => (
+              <tr key={row.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                  <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => deleteRow(rowIndex)}
-                      className="flex items-center justify-center w-full px-2 py-2 text-gray-500 rounded"
+                      onClick={() => deleteRow(row.id)}
+                      className="text-red-600 hover:text-red-800 transition-colors"
                       title="Hapus Baris"
+                      disabled={rows.length <= 1}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                  </td>
-                  {/* Tipe */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '80px' }}>
-                    <select
-                      value={row.person_type}
-                      onChange={(e) => updateCell(rowIndex, 'person_type', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    >
-                      <option value="">Pilih</option>
-                      <option value="main">Main</option>
-                      <option value="tambahan">Tambahan</option>
-                    </select>
-                  </td>
-                  {/* Nama Lengkap */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '150px' }}>
-                    <input
-                      type="text"
-                      value={row.nama}
-                      onChange={(e) => updateCell(rowIndex, 'nama', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                      placeholder="Nama lengkap..."
-                    />
-                  </td>
-                  {/* Golongan */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '100px' }}>
-                    <select
-                      value={row.golongan}
-                      onChange={(e) => updateCell(rowIndex, 'golongan', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    >
-                      <option value="">Pilih...</option>
-                      <option value="I">Golongan I</option>
-                      <option value="II">Golongan II</option>
-                      <option value="III">Golongan III</option>
-                      <option value="IV">Golongan IV</option>
-                      <option value="non-golongan">Non Golongan</option>
-                    </select>
-                  </td>
-                  {/* Jabatan */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '120px' }}>
-                    <input
-                      type="text"
-                      value={row.jabatan}
-                      onChange={(e) => updateCell(rowIndex, 'jabatan', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                      placeholder="Jabatan..."
-                    />
-                  </td>
-                  {/* Eselon */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '80px' }}>
-                    <select
-                      value={row.eselon}
-                      onChange={(e) => updateCell(rowIndex, 'eselon', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    >
-                      <option value="">Pilih...</option>
-                      <option value="I">Eselon I</option>
-                      <option value="II">Eselon II</option>
-                      <option value="III">Eselon III</option>
-                      <option value="IV">Eselon IV</option>
-                      <option value="non-eselon">Non Eselon</option>
-                    </select>
-                  </td>
-                  {/* Asal */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '120px' }}>
-                    <input
-                      type="text"
-                      value={row.asal}
-                      onChange={(e) => updateCell(rowIndex, 'asal', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                      placeholder="Asal..."
-                    />
-                  </td>
-                  {/* Tujuan */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '120px' }}>
-                    <input
-                      type="text"
-                      value={row.tujuan}
-                      onChange={(e) => updateCell(rowIndex, 'tujuan', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                      placeholder="Tujuan..."
-                    />
-                  </td>
-                  {/* Tanggal */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '120px' }}>
-                    <input
-                      type="date"
-                      value={row.tanggal}
-                      onChange={(e) => updateCell(rowIndex, 'tanggal', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    />
-                  </td>
-                  {/* Transportasi Taksi Pergi - Pagu */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '160px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.transport_taksi_pergi_pagu)}
-                      onChange={(e) => updateCell(rowIndex, 'transport_taksi_pergi_pagu', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Transportasi Taksi Pergi - Aktual */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '160px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.transport_taksi_pergi_aktual)}
-                      onChange={(e) => updateCell(rowIndex, 'transport_taksi_pergi_aktual', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Transportasi Pergi - Pagu */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '150px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.transport_pergi_pagu)}
-                      onChange={(e) => updateCell(rowIndex, 'transport_pergi_pagu', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Transportasi Pergi - Aktual */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '150px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.transport_pergi_aktual)}
-                      onChange={(e) => updateCell(rowIndex, 'transport_pergi_aktual', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Transportasi Taksi Pulang - Pagu */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '160px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.transport_taksi_pulang_pagu)}
-                      onChange={(e) => updateCell(rowIndex, 'transport_taksi_pulang_pagu', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Transportasi Taksi Pulang - Aktual */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '160px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.transport_taksi_pulang_aktual)}
-                      onChange={(e) => updateCell(rowIndex, 'transport_taksi_pulang_aktual', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Transportasi Pulang - Pagu */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '150px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.transport_pulang_pagu)}
-                      onChange={(e) => updateCell(rowIndex, 'transport_pulang_pagu', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Transportasi Pulang - Aktual */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '150px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.transport_pulang_aktual)}
-                      onChange={(e) => updateCell(rowIndex, 'transport_pulang_aktual', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Penginapan - Pagu */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '150px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.penginapan_pagu)}
-                      onChange={(e) => updateCell(rowIndex, 'penginapan_pagu', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Penginapan - Aktual */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '150px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.penginapan_aktual)}
-                      onChange={(e) => updateCell(rowIndex, 'penginapan_aktual', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Uang Harian Fullboard - Pagu */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '170px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.uang_harian_fullboard_pagu)}
-                      onChange={(e) => updateCell(rowIndex, 'uang_harian_fullboard_pagu', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Uang Harian Fullboard - Aktual */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '170px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.uang_harian_fullboard_aktual)}
-                      onChange={(e) => updateCell(rowIndex, 'uang_harian_fullboard_aktual', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Uang Harian - Pagu */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '150px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.uang_harian_pagu)}
-                      onChange={(e) => updateCell(rowIndex, 'uang_harian_pagu', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Uang Harian - Aktual */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '150px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.uang_harian_aktual)}
-                      onChange={(e) => updateCell(rowIndex, 'uang_harian_aktual', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Uang Representasi - Pagu */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '160px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.uang_representasi_pagu)}
-                      onChange={(e) => updateCell(rowIndex, 'uang_representasi_pagu', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Uang Representasi - Aktual */}
-                  <td className="px-3 py-3 border-r border-gray-200" style={{ width: '160px' }}>
-                    <input
-                      type="text"
-                      value={formatCurrency(row.uang_representasi_aktual)}
-                      onChange={(e) => updateCell(rowIndex, 'uang_representasi_aktual', parseCurrency(e.target.value))}
-                      placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-base font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
-                    />
-                  </td>
-                  {/* Evidence */}
-                  <td className="px-3 py-3 text-center" style={{ width: '120px' }}>
-                    <div className="flex items-center justify-center gap-2">
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                  <select
+                    value={row.person_type}
+                    onChange={(e) => updateRow(row.id, 'person_type', e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="main">Utama</option>
+                    <option value="tambahan">Tambahan</option>
+                  </select>
+                </td>
+                <td className="px-6 py-4 border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="text"
+                    value={row.nama_lengkap}
+                    onChange={(e) => updateRow(row.id, 'nama_lengkap', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Nama lengkap"
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="text"
+                    value={row.golongan}
+                    onChange={(e) => updateRow(row.id, 'golongan', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Golongan"
+                  />
+                </td>
+                <td className="px-6 py-4 border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="text"
+                    value={row.jabatan}
+                    onChange={(e) => updateRow(row.id, 'jabatan', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Jabatan"
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="text"
+                    value={row.eselon}
+                    onChange={(e) => updateRow(row.id, 'eselon', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Eselon"
+                  />
+                </td>
+                <td className="px-6 py-4 border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="text"
+                    value={row.asal}
+                    onChange={(e) => updateRow(row.id, 'asal', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Asal"
+                  />
+                </td>
+                <td className="px-6 py-4 border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="text"
+                    value={row.tujuan}
+                    onChange={(e) => updateRow(row.id, 'tujuan', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Tujuan"
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="date"
+                    value={row.tanggal_pergi}
+                    onChange={(e) => updateRow(row.id, 'tanggal_pergi', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="date"
+                    value={row.tanggal_pulang}
+                    onChange={(e) => updateRow(row.id, 'tanggal_pulang', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </td>
+
+                {/* Transportasi - Taksi Pergi */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.transport_taksi_pergi_pagu}
+                    onChange={(e) => updateRow(row.id, 'transport_taksi_pergi_pagu', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.transport_taksi_pergi_aktual}
+                    onChange={(e) => updateRow(row.id, 'transport_taksi_pergi_aktual', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+
+                {/* Transportasi - Taksi Pulang */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.transport_taksi_pulang_pagu}
+                    onChange={(e) => updateRow(row.id, 'transport_taksi_pulang_pagu', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.transport_taksi_pulang_aktual}
+                    onChange={(e) => updateRow(row.id, 'transport_taksi_pulang_aktual', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+
+                {/* Transportasi - Lainnya Pergi */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.transport_pergi_pagu}
+                    onChange={(e) => updateRow(row.id, 'transport_pergi_pagu', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.transport_pergi_aktual}
+                    onChange={(e) => updateRow(row.id, 'transport_pergi_aktual', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+
+                {/* Transportasi - Lainnya Pulang */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.transport_pulang_pagu}
+                    onChange={(e) => updateRow(row.id, 'transport_pulang_pagu', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.transport_pulang_aktual}
+                    onChange={(e) => updateRow(row.id, 'transport_pulang_aktual', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+
+                {/* Penginapan */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.penginapan_pagu}
+                    onChange={(e) => updateRow(row.id, 'penginapan_pagu', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.penginapan_aktual}
+                    onChange={(e) => updateRow(row.id, 'penginapan_aktual', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+
+                {/* Uang Harian - Full Board */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.uang_harian_fullboard_pagu}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_pagu', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.uang_harian_fullboard_aktual}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_aktual', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+
+                {/* Uang Harian - Regular */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.uang_harian_pagu}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_pagu', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.uang_harian_aktual}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_aktual', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+
+                {/* Uang Representasi */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.uang_representasi_pagu}
+                    onChange={(e) => updateRow(row.id, 'uang_representasi_pagu', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 w-[32rem]">
+                  <input
+                    type="number"
+                    value={row.uang_representasi_aktual}
+                    onChange={(e) => updateRow(row.id, 'uang_representasi_aktual', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+
+                {/* Evidence */}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div className="flex items-center space-x-2">
+                    <label className="cursor-pointer">
                       <input
                         type="file"
-                        accept="image/*"
-                        onChange={(e) => handleFileUpload(rowIndex, e.target.files[0])}
+                        onChange={(e) => handleFileUpload(row.id, e.target.files[0])}
                         className="hidden"
-                        id={`file-${rowIndex}`}
+                        accept=".pdf,.jpg,.jpeg,.png"
                       />
-                      <label
-                        htmlFor={`file-${rowIndex}`}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded cursor-pointer hover:bg-gray-200 text-sm"
-                      >
-                        <Upload className="w-4 h-4" />
-                        Upload
-                      </label>
-                      {row.evidence && (
-                        <span className="flex items-center gap-1 text-green-600 bg-green-100 px-2 py-1 rounded text-xs">
-                          <CheckCircle className="w-3 h-3" />
-                          OK
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                      <div className="w-8 h-8 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-blue-400 transition-colors">
+                        <Upload className="w-4 h-4 text-gray-400" />
+                      </div>
+                    </label>
+                    {row.evidence_url && (
+                      <button className="text-blue-600 hover:text-blue-800">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+
+            {/* Total Row */}
+            <tr className="bg-gray-50 font-semibold">
+              <td colSpan="10" className="px-6 py-4 text-right text-sm text-gray-900 border-r border-gray-200">
+                Total:
+              </td>
+
+              {/* Transportasi - Taksi Pergi */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.transport_taksi_pergi_pagu.toLocaleString('id-ID')}
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.transport_taksi_pergi_aktual.toLocaleString('id-ID')}
+              </td>
+
+              {/* Transportasi - Lainnya Pergi */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.transport_pergi_pagu.toLocaleString('id-ID')}
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.transport_pergi_aktual.toLocaleString('id-ID')}
+              </td>
+
+              {/* Transportasi - Taksi Pulang */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.transport_taksi_pulang_pagu.toLocaleString('id-ID')}
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.transport_taksi_pulang_aktual.toLocaleString('id-ID')}
+              </td>
+
+              {/* Transportasi - Lainnya Pulang */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.transport_pulang_pagu.toLocaleString('id-ID')}
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.transport_pulang_aktual.toLocaleString('id-ID')}
+              </td>
+
+              {/* Penginapan */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.penginapan_pagu.toLocaleString('id-ID')}
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.penginapan_aktual.toLocaleString('id-ID')}
+              </td>
+
+              {/* Uang Harian - Full Board */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.uang_harian_fullboard_pagu.toLocaleString('id-ID')}
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.uang_harian_fullboard_aktual.toLocaleString('id-ID')}
+              </td>
+
+              {/* Uang Harian - Regular */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.uang_harian_pagu.toLocaleString('id-ID')}
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.uang_harian_aktual.toLocaleString('id-ID')}
+              </td>
+
+              {/* Uang Representasi */}
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.uang_representasi_pagu.toLocaleString('id-ID')}
+              </td>
+              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
+                {totals.uang_representasi_aktual.toLocaleString('id-ID')}
+              </td>
+
+              {/* Total Overall */}
+              <td colSpan="2" className="px-6 py-4 text-sm text-gray-900 text-right">
+                <div className="space-y-1">
+                  <div>Total Pagu: Rp {totals.total_pagu.toLocaleString('id-ID')}</div>
+                  <div>Total Aktual: Rp {totals.total_aktual.toLocaleString('id-ID')}</div>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      {/* Summary */}
-      <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-        <h4 className="text-sm font-semibold text-gray-900 mb-2">Summary</h4>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="text-gray-600">Main Person: </span>
-            <span className="font-medium">
-              Rp {formatCurrency(totals.mainPersonPagu)} / Rp {formatCurrency(totals.mainPersonAktual)}
-            </span>
+      {rows.length === 0 && (
+        <div className="text-center py-12 text-gray-500">
+          <p>Belum ada data. Klik "Tambah Baris" untuk menambahkan data.</p>
+        </div>
+      )}
+
+      {/* Summary Info */}
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">Total Baris:</span> {rows.length}
+            </div>
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">Utama:</span> {rows.filter(r => r.person_type === 'main').length}
+            </div>
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">Tambahan:</span> {rows.filter(r => r.person_type === 'tambahan').length}
+            </div>
           </div>
-          <div>
-            <span className="text-gray-600">Tambahan: </span>
-            <span className="font-medium">
-              Rp {formatCurrency(totals.tambahanPagu)} / Rp {formatCurrency(totals.tambahanAktual)}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-600">Grand Total: </span>
-            <span className="font-bold text-green-600">
-              Rp {formatCurrency(totals.grandPagu)} / Rp {formatCurrency(totals.grandAktual)}
-            </span>
+          <div className="flex items-center space-x-6 text-sm">
+            <div className="text-gray-600">
+              <span className="font-medium">Total Pagu:</span>
+              <span className="ml-2 font-semibold text-blue-600">Rp {totals.total_pagu.toLocaleString('id-ID')}</span>
+            </div>
+            <div className="text-gray-600">
+              <span className="font-medium">Total Aktual:</span>
+              <span className="ml-2 font-semibold text-green-600">Rp {totals.total_aktual.toLocaleString('id-ID')}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  );
-};
-
-// Editable Cell Component
-const EditableCell = ({ type, value, onChange, onFileUpload, options, rowIndex, columnKey, onDeleteRow }) => {
-  const [editing, setEditing] = useState(false);
-  const [tempValue, setTempValue] = useState(value);
-
-  useEffect(() => {
-    setTempValue(value);
-  }, [value]);
-
-  const handleSave = () => {
-    onChange(tempValue);
-    setEditing(false);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleSave();
-    } else if (e.key === 'Escape') {
-      setTempValue(value);
-      setEditing(false);
-    }
-  };
-
-  // Gunakan fungsi formatCurrency dan parseCurrency dari parent scope
-
-  // Render based on type
-  if (type === 'delete') {
-    return (
-      <button
-        onClick={onDeleteRow}
-        className="flex items-center justify-center w-full px-2 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 rounded transition-colors"
-        title="Hapus Baris"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
-    );
-  }
-
-  if (type === 'select') {
-    return (
-      <select
-        value={tempValue}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-      >
-        <option value="">Pilih</option>
-        {options?.map((option) => (
-          <option key={option} value={option}>
-            {option === 'main' ? 'Main' : 'Tambahan'}
-          </option>
-        ))}
-      </select>
-    );
-  }
-
-  if (type === 'date') {
-    return (
-      <input
-        type="date"
-        value={tempValue}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-      />
-    );
-  }
-
-  if (type === 'currency') {
-    return (
-      <input
-        type="text"
-        value={formatCurrency(tempValue)}
-        onChange={(e) => onChange(parseCurrency(e.target.value))}
-        placeholder="0"
-        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-      />
-    );
-  }
-
-  if (type === 'file') {
-    return (
-      <div className="flex items-center gap-2">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => onFileUpload(e.target.files[0])}
-          className="hidden"
-          id={`file-${rowIndex}-${columnKey}`}
-        />
-        <label
-          htmlFor={`file-${rowIndex}-${columnKey}`}
-          className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded cursor-pointer hover:bg-blue-200 text-xs"
-        >
-          <Upload className="w-3 h-3" />
-          Upload
-        </label>
-        {tempValue && (
-          <span className="text-xs text-green-600">✓</span>
-        )}
-      </div>
-    );
-  }
-
-  if (type === 'no') {
-    return (
-      <div className="text-center text-sm font-medium text-gray-600">
-        {rowIndex + 1}
-      </div>
-    );
-  }
-
-  // Default text input
-  return (
-    <input
-      type="text"
-      value={tempValue}
-      onChange={(e) => onChange(e.target.value)}
-      onFocus={() => setEditing(true)}
-      onBlur={handleSave}
-      onKeyDown={handleKeyDown}
-      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-      placeholder="Ketik..."
-    />
   );
 };
 
