@@ -729,51 +729,51 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
               {/* Uang Harian Fullboard */}
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
                 <div className="text-center">
-                  {totals.uang_harian_fullboard_pagu.toLocaleString('id-ID')}
+                  {(totals.uang_harian_fullboard_pagu || 0).toLocaleString('id-ID')}
                 </div>
               </td>
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.uang_harian_fullboard_total.toLocaleString('id-ID')}
+                {(totals.uang_harian_fullboard_aktual || 0).toLocaleString('id-ID')}
               </td>
 
               {/* Uang Harian Luar Kota */}
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
                 <div className="text-center">
-                  {totals.uang_harian_luar_kota_pagu.toLocaleString('id-ID')}
+                  {(totals.uang_harian_luar_kota_pagu || 0).toLocaleString('id-ID')}
                 </div>
               </td>
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.uang_harian_luar_kota_total.toLocaleString('id-ID')}
+                {(totals.uang_harian_luar_kota_aktual || 0).toLocaleString('id-ID')}
               </td>
 
               {/* Uang Harian Dalam Kota */}
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
                 <div className="text-center">
-                  {totals.uang_harian_dalam_kota_pagu.toLocaleString('id-ID')}
+                  {(totals.uang_harian_dalam_kota_pagu || 0).toLocaleString('id-ID')}
                 </div>
               </td>
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.uang_harian_dalam_kota_total.toLocaleString('id-ID')}
+                {(totals.uang_harian_dalam_kota_aktual || 0).toLocaleString('id-ID')}
               </td>
 
               {/* Representasi Luar Kota */}
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
                 <div className="text-center">
-                  {totals.representasi_luar_kota_pagu.toLocaleString('id-ID')}
+                  {(totals.representasi_luar_kota_pagu || 0).toLocaleString('id-ID')}
                 </div>
               </td>
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.representasi_luar_kota_total.toLocaleString('id-ID')}
+                {(totals.representasi_luar_kota_aktual || 0).toLocaleString('id-ID')}
               </td>
 
               {/* Representasi Dalam Kota */}
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
                 <div className="text-center">
-                  {totals.representasi_dalam_kota_pagu.toLocaleString('id-ID')}
+                  {(totals.representasi_dalam_kota_pagu || 0).toLocaleString('id-ID')}
                 </div>
               </td>
               <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.representasi_dalam_kota_total.toLocaleString('id-ID')}
+                {(totals.representasi_dalam_kota_aktual || 0).toLocaleString('id-ID')}
               </td>
 
               {/* Evidence */}
