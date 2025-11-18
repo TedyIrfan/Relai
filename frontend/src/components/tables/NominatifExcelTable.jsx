@@ -2,7 +2,13 @@ import React, { useState, useRef } from 'react';
 import { Plus, Trash2, Save, Send, RefreshCw, CheckCircle, Upload, Eye } from 'lucide-react';
 
 const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) => {
-  const [rows, setRows] = useState(initialData);
+  // Ensure initialData has person_type, default to 'main' for existing rows
+  const processedInitialData = initialData.map(row => ({
+    ...row,
+    person_type: row.person_type || 'main'
+  }));
+
+  const [rows, setRows] = useState(processedInitialData);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -17,13 +23,41 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
 
   // Add new row
   const addRow = (personType = 'main') => {
+    // Find the first main row and first tambahan row to use as references
+    const firstMainRow = rows.find(row => row.person_type === 'main');
+    const firstTambahanRow = rows.find(row => row.person_type === 'tambahan');
+
+    console.log('addRow called:', {
+        personType,
+        firstMainRow: firstMainRow ? 'found' : 'not found',
+        firstTambahanRow: firstTambahanRow ? 'found' : 'not found'
+    });
+
+    // Determine which reference row to copy from
+    let referenceRow = null;
+    if (personType === 'main' && firstMainRow) {
+        // Adding new main row - copy from first main row
+        referenceRow = firstMainRow;
+        console.log('New main row will copy from first main row');
+    } else if (personType === 'tambahan' && firstTambahanRow) {
+        // Adding new tambahan row - copy from first tambahan row
+        referenceRow = firstTambahanRow;
+        console.log('New tambahan row will copy from first tambahan row');
+    } else if (personType === 'tambahan' && firstMainRow) {
+        // First tambahan row - copy from first main row
+        referenceRow = firstMainRow;
+        console.log('First tambahan row will copy from first main row');
+    }
+
     const newRow = {
       id: Date.now(),
       person_type: personType,
-      nama_lengkap: '',
-      golongan: '',
-      jabatan: '',
-      eselon: '',
+      // Copy reference fields if we have a reference row
+      nama_lengkap: referenceRow ? (console.log('Copying nama_lengkap:', referenceRow.nama_lengkap), referenceRow.nama_lengkap) : '',
+      golongan: referenceRow ? (console.log('Copying golongan:', referenceRow.golongan), referenceRow.golongan) : '',
+      jabatan: referenceRow ? (console.log('Copying jabatan:', referenceRow.jabatan), referenceRow.jabatan) : '',
+      eselon: referenceRow ? (console.log('Copying eselon:', referenceRow.eselon), referenceRow.eselon) : '',
+      // Other fields are always empty for new rows
       asal: '',
       tujuan: '',
       tanggal_pergi: '',
@@ -63,14 +97,45 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
       representasi_dalam_kota_aktual_perhari: '',
       evidence_url: null
     };
+
+    console.log('New row created:', newRow);
     setRows([...rows, newRow]);
   };
 
   // Update row data
   const updateRow = (id, field, value) => {
-    const updatedRows = rows.map(row =>
-      row.id === id ? { ...row, [field]: value } : row
-    );
+    const referenceFields = ['nama_lengkap', 'golongan', 'jabatan', 'eselon'];
+
+    console.log('updateRow called:', { id, field, value, currentRows: rows.length });
+
+    // Find the target row that's being updated
+    const targetRow = rows.find(r => r.id === id);
+
+    // Find the first main row and first tambahan row (the acuans)
+    const firstMainRow = rows.find(r => r.person_type === 'main');
+    const firstTambahanRow = rows.find(r => r.person_type === 'tambahan');
+
+    // Check which type of update this is
+    const isFirstMainRowUpdate = firstMainRow && firstMainRow.id === id && referenceFields.includes(field);
+    const isFirstTambahanRowUpdate = firstTambahanRow && firstTambahanRow.id === id && referenceFields.includes(field);
+
+    const updatedRows = rows.map(row => {
+      if (row.id === id) {
+        // Always update the target row
+        console.log('Updating target row:', row.id, field, value);
+        return { ...row, [field]: value };
+      } else if (isFirstMainRowUpdate && row.person_type === 'main') {
+        // If updating first main row reference field, sync all other main rows
+        console.log('Syncing main row to first main row:', row.id, field, value);
+        return { ...row, [field]: value };
+      } else if (isFirstTambahanRowUpdate && row.person_type === 'tambahan') {
+        // If updating first tambahan row reference field, sync all other tambahan rows
+        console.log('Syncing tambahan row to first tambahan row:', row.id, field, value);
+        return { ...row, [field]: value };
+      }
+      return row;
+    });
+
     setRows(updatedRows);
   };
 
@@ -285,17 +350,17 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
           <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
             {/* Main Categories Row */}
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">Aksi</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">Tipe</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Nama Lengkap</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Golongan</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Jabatan</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Eselon</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Asal</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tujuan</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tgl Pergi</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tgl Sampai</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="4">Transportasi</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">Aksi</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">Tipe</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">Nama Lengkap</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">Golongan</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">Jabatan</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">Eselon</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">Asal</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">Tujuan</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">Tgl Pergi</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">Tgl Sampai</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Transportasi</th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="3">Penginapan</th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Uang Harian Meeting</th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Uang Harian</th>
@@ -305,8 +370,12 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
             {/* Subcategories Row */}
             <tr className="bg-gray-100 border-b border-gray-300">
               <td colSpan="10" className="px-4 py-2 border-r border-gray-200"></td>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Pesawat Non-PP</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Taksi</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu Tiket Pesawat NON PP</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual Tiket Pesawat NON PP</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu Taksi</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual Taksi</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Malam</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
@@ -339,14 +408,20 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
             {/* Meeting Types Row */}
             <tr className="bg-gray-100 border-b border-gray-300">
               <td colSpan="10" className="px-4 py-2 border-r border-gray-200"></td>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3"></th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="1"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="1"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="1"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="1"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="1"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="1"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="1"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="1"></th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Meeting Fullboard</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Meeting Fullday</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Luar Kota</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Dalam Kota</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="6">Representasi Luar Kota</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="6">Representasi Dalam Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Representasi Luar Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Representasi Dalam Kota</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -368,121 +443,141 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                   <select
                     value={row.person_type}
                     onChange={(e) => updateRow(row.id, 'person_type', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                   >
                     <option value="main">Utama</option>
                     <option value="tambahan">Tambahan</option>
                   </select>
                 </td>
-                <td className="px-6 py-4 border-r border-gray-200 w-[32rem]">
+                <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
                     type="text"
                     value={row.nama_lengkap}
                     onChange={(e) => updateRow(row.id, 'nama_lengkap', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Nama lengkap"
                   />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 w-[32rem]">
-                  <input
-                    type="text"
+                <td className="px-4 py-3 border-r border-gray-200 w-56">
+                  <select
                     value={row.golongan}
                     onChange={(e) => updateRow(row.id, 'golongan', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Golongan"
-                  />
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 bg-white"
+                  >
+                    <option value="">Pilih Golongan</option>
+                    <option value="I">I</option>
+                    <option value="II">II</option>
+                    <option value="III">III</option>
+                    <option value="IV">IV</option>
+                    <option value="Non Golongan">Non Golongan</option>
+                  </select>
                 </td>
-                <td className="px-6 py-4 border-r border-gray-200 w-[32rem]">
+                <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
                     type="text"
                     value={row.jabatan}
                     onChange={(e) => updateRow(row.id, 'jabatan', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Jabatan"
                   />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 w-[32rem]">
-                  <input
-                    type="text"
+                <td className="px-4 py-3 border-r border-gray-200 w-56">
+                  <select
                     value={row.eselon}
                     onChange={(e) => updateRow(row.id, 'eselon', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Eselon"
-                  />
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 bg-white"
+                  >
+                    <option value="">Pilih Eselon</option>
+                    <option value="I">I</option>
+                    <option value="II">II</option>
+                    <option value="III">III</option>
+                    <option value="IV">IV</option>
+                    <option value="Non Eselon">Non Eselon</option>
+                  </select>
                 </td>
-                <td className="px-6 py-4 border-r border-gray-200 w-[32rem]">
+                <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
                     type="text"
                     value={row.asal}
                     onChange={(e) => updateRow(row.id, 'asal', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Asal"
                   />
                 </td>
-                <td className="px-6 py-4 border-r border-gray-200 w-[32rem]">
+                <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
                     type="text"
                     value={row.tujuan}
                     onChange={(e) => updateRow(row.id, 'tujuan', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Tujuan"
                   />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 w-[32rem]">
+                <td className="px-4 py-3 border-r border-gray-200 w-32">
                   <input
                     type="date"
                     value={row.tanggal_pergi}
                     onChange={(e) => updateRow(row.id, 'tanggal_pergi', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                   />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 w-[32rem]">
+                <td className="px-4 py-3 border-r border-gray-200 w-32">
                   <input
                     type="date"
                     value={row.tanggal_pulang}
                     onChange={(e) => updateRow(row.id, 'tanggal_pulang', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                   />
                 </td>
 
                 {/* Transportasi - Pesawat Non-PP */}
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.transport_pesawat_non_pp_pagu}
-                    onChange={(e) => updateRow(row.id, 'transport_pesawat_non_pp_pagu', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
+                    type="text"
+                    value={row.transport_pesawat_non_pp_pagu ? `Rp ${parseFloat(row.transport_pesawat_non_pp_pagu).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'transport_pesawat_non_pp_pagu', e.target.value.replace(/[^\d]/g, ''))}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.transport_pesawat_non_pp_aktual}
-                    onChange={(e) => updateRow(row.id, 'transport_pesawat_non_pp_aktual', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
+                    type="text"
+                    value={row.transport_pesawat_non_pp_aktual ? `Rp ${parseFloat(row.transport_pesawat_non_pp_aktual).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'transport_pesawat_non_pp_aktual', e.target.value.replace(/[^\d]/g, ''))}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                    placeholder="Rp 0"
                   />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
+                  <div className="text-right font-medium text-gray-700">
+                    Rp {((parseFloat(row.transport_pesawat_non_pp_pagu) || 0) - (parseFloat(row.transport_pesawat_non_pp_aktual) || 0)).toLocaleString('id-ID')}
+                  </div>
                 </td>
 
                 {/* Transportasi - Taksi */}
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.transport_taksi_pagu}
-                    onChange={(e) => updateRow(row.id, 'transport_taksi_pagu', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
+                    type="text"
+                    value={row.transport_taksi_pagu ? `Rp ${parseFloat(row.transport_taksi_pagu).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'transport_taksi_pagu', e.target.value.replace(/[^\d]/g, ''))}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.transport_taksi_aktual}
-                    onChange={(e) => updateRow(row.id, 'transport_taksi_aktual', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
-                    placeholder="0"
+                    type="text"
+                    value={row.transport_taksi_aktual ? `Rp ${parseFloat(row.transport_taksi_aktual).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'transport_taksi_aktual', e.target.value.replace(/[^\d]/g, ''))}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                    placeholder="Rp 0"
                   />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
+                  <div className="text-right font-medium text-gray-700">
+                    Rp {((parseFloat(row.transport_taksi_pagu) || 0) - (parseFloat(row.transport_taksi_aktual) || 0)).toLocaleString('id-ID')}
+                  </div>
                 </td>
 
                 {/* Penginapan */}
@@ -491,7 +586,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.penginapan_jumlah_malam}
                     onChange={(e) => updateRow(row.id, 'penginapan_jumlah_malam', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -500,7 +595,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.penginapan_pagu_perhari}
                     onChange={(e) => updateRow(row.id, 'penginapan_pagu_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -509,7 +604,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.penginapan_aktual_perhari}
                     onChange={(e) => updateRow(row.id, 'penginapan_aktual_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -520,7 +615,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_meeting_fullboard_jumlah_hari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullboard_jumlah_hari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -529,7 +624,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_meeting_fullboard_pagu_perhari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullboard_pagu_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -538,7 +633,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_meeting_fullboard_aktual_perhari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullboard_aktual_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -554,7 +649,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_meeting_fullday_jumlah_hari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullday_jumlah_hari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -563,7 +658,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_meeting_fullday_pagu_perhari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullday_pagu_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -572,7 +667,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_meeting_fullday_aktual_perhari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullday_aktual_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -588,7 +683,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_luar_kota_jumlah_hari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_jumlah_hari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -597,7 +692,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_luar_kota_pagu_perhari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_pagu_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -606,7 +701,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_luar_kota_aktual_perhari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_aktual_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -622,7 +717,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_dalam_kota_jumlah_hari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_jumlah_hari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -631,7 +726,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_dalam_kota_pagu_perhari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_pagu_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -640,7 +735,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.uang_harian_dalam_kota_aktual_perhari}
                     onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_aktual_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -656,7 +751,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.representasi_luar_kota_jumlah_hari}
                     onChange={(e) => updateRow(row.id, 'representasi_luar_kota_jumlah_hari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -665,7 +760,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.representasi_luar_kota_pagu_perhari}
                     onChange={(e) => updateRow(row.id, 'representasi_luar_kota_pagu_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -674,7 +769,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.representasi_luar_kota_aktual_perhari}
                     onChange={(e) => updateRow(row.id, 'representasi_luar_kota_aktual_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -690,7 +785,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.representasi_dalam_kota_jumlah_hari}
                     onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_jumlah_hari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -699,7 +794,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.representasi_dalam_kota_pagu_perhari}
                     onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_pagu_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -708,7 +803,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                     type="number"
                     value={row.representasi_dalam_kota_aktual_perhari}
                     onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_aktual_perhari', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
                   />
                 </td>
@@ -742,88 +837,6 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
               </tr>
             ))}
 
-            {/* Total Row */}
-            <tr className="bg-gray-50 font-semibold">
-              <td colSpan="10" className="px-6 py-4 text-right text-sm text-gray-900 border-r border-gray-200">
-                Total:
-              </td>
-
-              {/* Transportasi - Pesawat Non-PP */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_pesawat_non_pp_pagu.toLocaleString('id-ID')}
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_pesawat_non_pp_aktual.toLocaleString('id-ID')}
-              </td>
-
-              {/* Transportasi - Taksi */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_taksi_pagu.toLocaleString('id-ID')}
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {totals.transport_taksi_aktual.toLocaleString('id-ID')}
-              </td>
-
-              {/* Penginapan */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
-                <div className="text-center">
-                  {totals.penginapan_pagu.toLocaleString('id-ID')}
-                </div>
-              </td>
-
-              {/* Uang Harian Fullboard */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
-                <div className="text-center">
-                  {(totals.uang_harian_fullboard_pagu || 0).toLocaleString('id-ID')}
-                </div>
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {(totals.uang_harian_fullboard_aktual || 0).toLocaleString('id-ID')}
-              </td>
-
-              {/* Uang Harian Luar Kota */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
-                <div className="text-center">
-                  {(totals.uang_harian_luar_kota_pagu || 0).toLocaleString('id-ID')}
-                </div>
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {(totals.uang_harian_luar_kota_aktual || 0).toLocaleString('id-ID')}
-              </td>
-
-              {/* Uang Harian Dalam Kota */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
-                <div className="text-center">
-                  {(totals.uang_harian_dalam_kota_pagu || 0).toLocaleString('id-ID')}
-                </div>
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {(totals.uang_harian_dalam_kota_aktual || 0).toLocaleString('id-ID')}
-              </td>
-
-              {/* Representasi Luar Kota */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
-                <div className="text-center">
-                  {(totals.representasi_luar_kota_pagu || 0).toLocaleString('id-ID')}
-                </div>
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {(totals.representasi_luar_kota_aktual || 0).toLocaleString('id-ID')}
-              </td>
-
-              {/* Representasi Dalam Kota */}
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right" colSpan="3">
-                <div className="text-center">
-                  {(totals.representasi_dalam_kota_pagu || 0).toLocaleString('id-ID')}
-                </div>
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900 border-r border-gray-200 text-right">
-                {(totals.representasi_dalam_kota_aktual || 0).toLocaleString('id-ID')}
-              </td>
-
-              {/* Evidence */}
-              <td className="px-6 py-4"></td>
-            </tr>
           </tbody>
         </table>
       </div>
