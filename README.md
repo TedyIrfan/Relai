@@ -1428,19 +1428,29 @@ GET /api/nominatifs/details/{id}/evidence/{id}/download
 └── [DELETED] - All 11 old components removed & backed up to nominatif_old_backup/
 ```
 
-**🔄 User Flow Experience:**
+**🔄 User Flow Experience (ACTUAL IMPLEMENTATION):**
 
 ```
-1. 📋 User pilih RKA dari Master RKA list
-2. 📊 Click "Input Nominatif" → navigate to /nominatif/:rkaId
-3. 📱 Halaman Excel-like table dengan 18 kolom horizontal
-4. ➕ Add rows dengan [+ Main Person] atau [+ Tambahan Orang]
-5. ✏️ Edit langsung di cells (inline editing)
-6. 📸 Upload evidence foto (optional)
-7. 💾 Click "Save Draft" → simpan sementara
-8. 📤 Click "Submit" → kirim untuk approval
-9. ✅ Automatic navigation & success messages
+1. 📋 User buka menu "Nominatif" di sidebar → /nominatif
+2. ➕ Klik tombol "Buat Nominatif" (hijau) → /nominatif/create
+3. 📝 Isi deskripsi perjalanan + tanggal mulai/selesai
+4. 🎯 Pilih Code RKA dari dropdown (dengan filter kategori A/B/C)
+5. 📊 Klik "Buat Nominatif" → navigate ke /nominatif/:rkaId
+6. 📱 Halaman Excel-like table dengan 18 kolom horizontal
+7. ➕ Add rows dengan [+ Tambah Baris] atau [+ Tambah Orang]
+8. ✏️ Edit langsung di cells (inline editing)
+9. 📸 Upload evidence foto (optional)
+10. 💾 Click "Save Draft" → simpan sementara
+11. 📤 Click "Submit" → kirim untuk approval
+12. ✅ Automatic navigation & success messages
 ```
+
+**🎯 Key Improvements from Original Design:**
+- **Dedicated Nominatif Menu** → More intuitive navigation
+- **Create Form with RKA Dropdown** → Structured data entry
+- **Category Filter (A/B/C)** → Easy RKA selection
+- **Budget Validation** → Show remaining budget automatically
+- **One-Click Creation** → Direct flow to Excel table
 
 **🎯 Technical Implementation:**
 

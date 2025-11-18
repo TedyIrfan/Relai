@@ -134,6 +134,7 @@ class NominatifBiayaRowController extends Controller
         }
 
         $request->validate([
+            // Transportasi fields (sesuai database)
             'transportasi_taksi_pergi_pagu' => 'nullable|numeric|min:0',
             'transportasi_taksi_pergi_aktual' => 'nullable|numeric|min:0',
             'transportasi_pergi_pagu' => 'nullable|numeric|min:0',
@@ -142,14 +143,45 @@ class NominatifBiayaRowController extends Controller
             'transportasi_taksi_pulang_aktual' => 'nullable|numeric|min:0',
             'transportasi_pulang_pagu' => 'nullable|numeric|min:0',
             'transportasi_pulang_aktual' => 'nullable|numeric|min:0',
+
+            // Penginapan fields (sesuai database)
             'penginapan_pagu' => 'nullable|numeric|min:0',
             'penginapan_aktual' => 'nullable|numeric|min:0',
-            'uang_harian_fullboard_pagu' => 'nullable|numeric|min:0',
-            'uang_harian_fullboard_aktual' => 'nullable|numeric|min:0',
-            'uang_harian_pagu' => 'nullable|numeric|min:0',
-            'uang_harian_aktual' => 'nullable|numeric|min:0',
-            'uang_representasi_pagu' => 'nullable|numeric|min:0',
-            'uang_representasi_aktual' => 'nullable|numeric|min:0',
+
+            // Uang Harian Meeting Fullboard (sesuai database)
+            'uang_harian_meeting_fullboard_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_meeting_fullboard_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_meeting_fullboard_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Uang Harian Luar Kota (sesuai database)
+            'uang_harian_luar_kota_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_luar_kota_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_luar_kota_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Uang Harian Dalam Kota (sesuai database)
+            'uang_harian_dalam_kota_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Representasi Luar Kota (sesuai database)
+            'representasi_luar_kota_jumlah_hari' => 'nullable|integer|min:0',
+            'representasi_luar_kota_pagu_perhari' => 'nullable|numeric|min:0',
+            'representasi_luar_kota_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Representasi Dalam Kota (sesuai database)
+            'representasi_dalam_kota_jumlah_hari' => 'nullable|integer|min:0',
+            'representasi_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0',
+            'representasi_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Uang Harian Meeting Fullboard (sesuai database)
+            'uang_harian_meeting_fullboard_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_meeting_fullboard_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_meeting_fullboard_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Uang Harian Meeting Fullday (sesuai database)
+            'uang_harian_meeting_fullday_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_meeting_fullday_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_meeting_fullday_aktual_perhari' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -159,26 +191,48 @@ class NominatifBiayaRowController extends Controller
             // Refresh model to get updated values
             $biayaRow->refresh();
 
-            // Calculate and update totals manually
+            // Calculate and update totals manually (sesuai database fields)
             $totalPagu =
-                $biayaRow->transport_taksi_pergi_pagu +
-                $biayaRow->transport_pergi_pagu +
-                $biayaRow->transport_taksi_pulang_pagu +
-                $biayaRow->transport_pulang_pagu +
+                $biayaRow->transportasi_taksi_pergi_pagu +
+                $biayaRow->transportasi_pergi_pagu +
+                $biayaRow->transportasi_taksi_pulang_pagu +
+                $biayaRow->transportasi_pulang_pagu +
                 $biayaRow->penginapan_pagu +
-                $biayaRow->uang_harian_fullboard_pagu +
-                $biayaRow->uang_harian_pagu +
-                $biayaRow->uang_representasi_pagu;
+                // Uang Harian Meeting Fullboard (jumlah_hari × pagu_perhari)
+                ($biayaRow->uang_harian_meeting_fullboard_jumlah_hari * $biayaRow->uang_harian_meeting_fullboard_pagu_perhari) +
+                // Uang Harian Luar Kota (jumlah_hari × pagu_perhari)
+                ($biayaRow->uang_harian_luar_kota_jumlah_hari * $biayaRow->uang_harian_luar_kota_pagu_perhari) +
+                // Uang Harian Dalam Kota (jumlah_hari × pagu_perhari)
+                ($biayaRow->uang_harian_dalam_kota_jumlah_hari * $biayaRow->uang_harian_dalam_kota_pagu_perhari) +
+                // Uang Harian Meeting Fullboard (jumlah_hari × pagu_perhari)
+                ($biayaRow->uang_harian_meeting_fullboard_jumlah_hari * $biayaRow->uang_harian_meeting_fullboard_pagu_perhari) +
+                // Uang Harian Meeting Fullday (jumlah_hari × pagu_perhari)
+                ($biayaRow->uang_harian_meeting_fullday_jumlah_hari * $biayaRow->uang_harian_meeting_fullday_pagu_perhari) +
+                // Representasi Luar Kota (jumlah_hari × pagu_perhari)
+                ($biayaRow->representasi_luar_kota_jumlah_hari * $biayaRow->representasi_luar_kota_pagu_perhari) +
+                // Representasi Dalam Kota (jumlah_hari × pagu_perhari)
+                ($biayaRow->representasi_dalam_kota_jumlah_hari * $biayaRow->representasi_dalam_kota_pagu_perhari);
 
             $totalAktual =
-                $biayaRow->transport_taksi_pergi_aktual +
-                $biayaRow->transport_pergi_aktual +
-                $biayaRow->transport_taksi_pulang_aktual +
-                $biayaRow->transport_pulang_aktual +
+                $biayaRow->transportasi_taksi_pergi_aktual +
+                $biayaRow->transportasi_pergi_aktual +
+                $biayaRow->transportasi_taksi_pulang_aktual +
+                $biayaRow->transportasi_pulang_aktual +
                 $biayaRow->penginapan_aktual +
-                $biayaRow->uang_harian_fullboard_aktual +
-                $biayaRow->uang_harian_aktual +
-                $biayaRow->uang_representasi_aktual;
+                // Uang Harian Meeting Fullboard (jumlah_hari × aktual_perhari)
+                ($biayaRow->uang_harian_meeting_fullboard_jumlah_hari * $biayaRow->uang_harian_meeting_fullboard_aktual_perhari) +
+                // Uang Harian Luar Kota (jumlah_hari × aktual_perhari)
+                ($biayaRow->uang_harian_luar_kota_jumlah_hari * $biayaRow->uang_harian_luar_kota_aktual_perhari) +
+                // Uang Harian Dalam Kota (jumlah_hari × aktual_perhari)
+                ($biayaRow->uang_harian_dalam_kota_jumlah_hari * $biayaRow->uang_harian_dalam_kota_aktual_perhari) +
+                // Uang Harian Meeting Fullboard (jumlah_hari × aktual_perhari)
+                ($biayaRow->uang_harian_meeting_fullboard_jumlah_hari * $biayaRow->uang_harian_meeting_fullboard_aktual_perhari) +
+                // Uang Harian Meeting Fullday (jumlah_hari × aktual_perhari)
+                ($biayaRow->uang_harian_meeting_fullday_jumlah_hari * $biayaRow->uang_harian_meeting_fullday_aktual_perhari) +
+                // Representasi Luar Kota (jumlah_hari × aktual_perhari)
+                ($biayaRow->representasi_luar_kota_jumlah_hari * $biayaRow->representasi_luar_kota_aktual_perhari) +
+                // Representasi Dalam Kota (jumlah_hari × aktual_perhari)
+                ($biayaRow->representasi_dalam_kota_jumlah_hari * $biayaRow->representasi_dalam_kota_aktual_perhari);
 
             $biayaRow->update([
                 'total_pagu_row' => $totalPagu,
@@ -261,6 +315,7 @@ class NominatifBiayaRowController extends Controller
     public function validate(Request $request)
     {
         $request->validate([
+            // Transportasi fields (sesuai database)
             'transportasi_taksi_pergi_pagu' => 'nullable|numeric|min:0',
             'transportasi_taksi_pergi_aktual' => 'nullable|numeric|min:0',
             'transportasi_pergi_pagu' => 'nullable|numeric|min:0',
@@ -269,14 +324,45 @@ class NominatifBiayaRowController extends Controller
             'transportasi_taksi_pulang_aktual' => 'nullable|numeric|min:0',
             'transportasi_pulang_pagu' => 'nullable|numeric|min:0',
             'transportasi_pulang_aktual' => 'nullable|numeric|min:0',
+
+            // Penginapan fields (sesuai database)
             'penginapan_pagu' => 'nullable|numeric|min:0',
             'penginapan_aktual' => 'nullable|numeric|min:0',
-            'uang_harian_fullboard_pagu' => 'nullable|numeric|min:0',
-            'uang_harian_fullboard_aktual' => 'nullable|numeric|min:0',
-            'uang_harian_pagu' => 'nullable|numeric|min:0',
-            'uang_harian_aktual' => 'nullable|numeric|min:0',
-            'uang_representasi_pagu' => 'nullable|numeric|min:0',
-            'uang_representasi_aktual' => 'nullable|numeric|min:0',
+
+            // Uang Harian Meeting Fullboard (sesuai database)
+            'uang_harian_meeting_fullboard_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_meeting_fullboard_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_meeting_fullboard_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Uang Harian Luar Kota (sesuai database)
+            'uang_harian_luar_kota_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_luar_kota_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_luar_kota_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Uang Harian Dalam Kota (sesuai database)
+            'uang_harian_dalam_kota_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Representasi Luar Kota (sesuai database)
+            'representasi_luar_kota_jumlah_hari' => 'nullable|integer|min:0',
+            'representasi_luar_kota_pagu_perhari' => 'nullable|numeric|min:0',
+            'representasi_luar_kota_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Representasi Dalam Kota (sesuai database)
+            'representasi_dalam_kota_jumlah_hari' => 'nullable|integer|min:0',
+            'representasi_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0',
+            'representasi_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Uang Harian Meeting Fullboard (sesuai database)
+            'uang_harian_meeting_fullboard_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_meeting_fullboard_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_meeting_fullboard_aktual_perhari' => 'nullable|numeric|min:0',
+
+            // Uang Harian Meeting Fullday (sesuai database)
+            'uang_harian_meeting_fullday_jumlah_hari' => 'nullable|integer|min:0',
+            'uang_harian_meeting_fullday_pagu_perhari' => 'nullable|numeric|min:0',
+            'uang_harian_meeting_fullday_aktual_perhari' => 'nullable|numeric|min:0',
         ]);
 
         return response()->json([
@@ -290,25 +376,48 @@ class NominatifBiayaRowController extends Controller
      */
     private function calculateAndUpdateTotals($biayaRow)
     {
+        // Calculate and update totals manually (sesuai database fields)
         $totalPagu =
-            $biayaRow->transport_taksi_pergi_pagu +
-            $biayaRow->transport_pergi_pagu +
-            $biayaRow->transport_taksi_pulang_pagu +
-            $biayaRow->transport_pulang_pagu +
+            $biayaRow->transportasi_taksi_pergi_pagu +
+            $biayaRow->transportasi_pergi_pagu +
+            $biayaRow->transportasi_taksi_pulang_pagu +
+            $biayaRow->transportasi_pulang_pagu +
             $biayaRow->penginapan_pagu +
-            $biayaRow->uang_harian_fullboard_pagu +
-            $biayaRow->uang_harian_pagu +
-            $biayaRow->uang_representasi_pagu;
+            // Uang Harian Fullboard (jumlah_hari × pagu_perhari)
+            ($biayaRow->uang_harian_fullboard_jumlah_hari * $biayaRow->uang_harian_fullboard_pagu_perhari) +
+            // Uang Harian Luar Kota (jumlah_hari × pagu_perhari)
+            ($biayaRow->uang_harian_luar_kota_jumlah_hari * $biayaRow->uang_harian_luar_kota_pagu_perhari) +
+            // Uang Harian Dalam Kota (jumlah_hari × pagu_perhari)
+            ($biayaRow->uang_harian_dalam_kota_jumlah_hari * $biayaRow->uang_harian_dalam_kota_pagu_perhari) +
+            // Uang Harian Meeting Fullboard (jumlah_hari × pagu_perhari)
+            ($biayaRow->uang_harian_meeting_fullboard_jumlah_hari * $biayaRow->uang_harian_meeting_fullboard_pagu_perhari) +
+            // Uang Harian Meeting Fullday (jumlah_hari × pagu_perhari)
+            ($biayaRow->uang_harian_meeting_fullday_jumlah_hari * $biayaRow->uang_harian_meeting_fullday_pagu_perhari) +
+            // Representasi Luar Kota (jumlah_hari × pagu_perhari)
+            ($biayaRow->representasi_luar_kota_jumlah_hari * $biayaRow->representasi_luar_kota_pagu_perhari) +
+            // Representasi Dalam Kota (jumlah_hari × pagu_perhari)
+            ($biayaRow->representasi_dalam_kota_jumlah_hari * $biayaRow->representasi_dalam_kota_pagu_perhari);
 
         $totalAktual =
-            $biayaRow->transport_taksi_pergi_aktual +
-            $biayaRow->transport_pergi_aktual +
-            $biayaRow->transport_taksi_pulang_aktual +
-            $biayaRow->transport_pulang_aktual +
+            $biayaRow->transportasi_taksi_pergi_aktual +
+            $biayaRow->transportasi_pergi_aktual +
+            $biayaRow->transportasi_taksi_pulang_aktual +
+            $biayaRow->transportasi_pulang_aktual +
             $biayaRow->penginapan_aktual +
-            $biayaRow->uang_harian_fullboard_aktual +
-            $biayaRow->uang_harian_aktual +
-            $biayaRow->uang_representasi_aktual;
+            // Uang Harian Fullboard (jumlah_hari × aktual_perhari)
+            ($biayaRow->uang_harian_fullboard_jumlah_hari * $biayaRow->uang_harian_fullboard_aktual_perhari) +
+            // Uang Harian Luar Kota (jumlah_hari × aktual_perhari)
+            ($biayaRow->uang_harian_luar_kota_jumlah_hari * $biayaRow->uang_harian_luar_kota_aktual_perhari) +
+            // Uang Harian Dalam Kota (jumlah_hari × aktual_perhari)
+            ($biayaRow->uang_harian_dalam_kota_jumlah_hari * $biayaRow->uang_harian_dalam_kota_aktual_perhari) +
+            // Uang Harian Meeting Fullboard (jumlah_hari × aktual_perhari)
+            ($biayaRow->uang_harian_meeting_fullboard_jumlah_hari * $biayaRow->uang_harian_meeting_fullboard_aktual_perhari) +
+            // Uang Harian Meeting Fullday (jumlah_hari × aktual_perhari)
+            ($biayaRow->uang_harian_meeting_fullday_jumlah_hari * $biayaRow->uang_harian_meeting_fullday_aktual_perhari) +
+            // Representasi Luar Kota (jumlah_hari × aktual_perhari)
+            ($biayaRow->representasi_luar_kota_jumlah_hari * $biayaRow->representasi_luar_kota_aktual_perhari) +
+            // Representasi Dalam Kota (jumlah_hari × aktual_perhari)
+            ($biayaRow->representasi_dalam_kota_jumlah_hari * $biayaRow->representasi_dalam_kota_aktual_perhari);
 
         $biayaRow->update([
             'total_pagu_row' => $totalPagu,

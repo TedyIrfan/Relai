@@ -37,10 +37,14 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
       penginapan_jumlah_malam: '',
       penginapan_pagu_perhari: '',
       penginapan_aktual_perhari: '',
-      // Uang Harian Fullboard (3 fields)
-      uang_harian_fullboard_jumlah_hari: '',
-      uang_harian_fullboard_pagu_perhari: '',
-      uang_harian_fullboard_aktual_perhari: '',
+      // Uang Harian Meeting Fullboard (3 fields)
+      uang_harian_meeting_fullboard_jumlah_hari: '',
+      uang_harian_meeting_fullboard_pagu_perhari: '',
+      uang_harian_meeting_fullboard_aktual_perhari: '',
+      // Uang Harian Meeting Fullday (3 fields)
+      uang_harian_meeting_fullday_jumlah_hari: '',
+      uang_harian_meeting_fullday_pagu_perhari: '',
+      uang_harian_meeting_fullday_aktual_perhari: '',
       // Uang Harian Luar Kota (3 fields)
       uang_harian_luar_kota_jumlah_hari: '',
       uang_harian_luar_kota_pagu_perhari: '',
@@ -101,9 +105,13 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
       const penginapan_pagu = acc.penginapan_pagu + ((parseFloat(row.penginapan_jumlah_malam) || 0) * (parseFloat(row.penginapan_pagu_perhari) || 0));
       const penginapan_aktual = acc.penginapan_aktual + ((parseFloat(row.penginapan_jumlah_malam) || 0) * (parseFloat(row.penginapan_aktual_perhari) || 0));
 
-      // Uang Harian Fullboard - Hitung total dari jumlah_hari × perhari
-      const uang_harian_fullboard_pagu = acc.uang_harian_fullboard_pagu + ((parseFloat(row.uang_harian_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_fullboard_pagu_perhari) || 0));
-      const uang_harian_fullboard_aktual = acc.uang_harian_fullboard_aktual + ((parseFloat(row.uang_harian_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_fullboard_aktual_perhari) || 0));
+      // Uang Harian Meeting Fullboard - Hitung total dari jumlah_hari × perhari
+      const uang_harian_meeting_fullboard_pagu = acc.uang_harian_meeting_fullboard_pagu + ((parseFloat(row.uang_harian_meeting_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullboard_pagu_perhari) || 0));
+      const uang_harian_meeting_fullboard_aktual = acc.uang_harian_meeting_fullboard_aktual + ((parseFloat(row.uang_harian_meeting_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullboard_aktual_perhari) || 0));
+
+      // Uang Harian Meeting Fullday - Hitung total dari jumlah_hari × perhari
+      const uang_harian_meeting_fullday_pagu = acc.uang_harian_meeting_fullday_pagu + ((parseFloat(row.uang_harian_meeting_fullday_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullday_pagu_perhari) || 0));
+      const uang_harian_meeting_fullday_aktual = acc.uang_harian_meeting_fullday_aktual + ((parseFloat(row.uang_harian_meeting_fullday_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullday_aktual_perhari) || 0));
 
       // Uang Harian Luar Kota - Hitung total dari jumlah_hari × perhari
       const uang_harian_luar_kota_pagu = acc.uang_harian_luar_kota_pagu + ((parseFloat(row.uang_harian_luar_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_luar_kota_pagu_perhari) || 0));
@@ -122,8 +130,8 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
       const representasi_dalam_kota_aktual = acc.representasi_dalam_kota_aktual + ((parseFloat(row.representasi_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_dalam_kota_aktual_perhari) || 0));
 
       // Total keseluruhan
-      const total_pagu_row = transport_pesawat_non_pp_pagu + transport_taksi_pagu + penginapan_pagu + uang_harian_fullboard_pagu + uang_harian_luar_kota_pagu + uang_harian_dalam_kota_pagu + representasi_luar_kota_pagu + representasi_dalam_kota_pagu;
-      const total_aktual_row = transport_pesawat_non_pp_aktual + transport_taksi_aktual + penginapan_aktual + uang_harian_fullboard_aktual + uang_harian_luar_kota_aktual + uang_harian_dalam_kota_aktual + representasi_luar_kota_aktual + representasi_dalam_kota_aktual;
+      const total_pagu_row = transport_pesawat_non_pp_pagu + transport_taksi_pagu + penginapan_pagu + uang_harian_meeting_fullboard_pagu + uang_harian_meeting_fullday_pagu + uang_harian_luar_kota_pagu + uang_harian_dalam_kota_pagu + representasi_luar_kota_pagu + representasi_dalam_kota_pagu;
+      const total_aktual_row = transport_pesawat_non_pp_aktual + transport_taksi_aktual + penginapan_aktual + uang_harian_meeting_fullboard_aktual + uang_harian_meeting_fullday_aktual + uang_harian_luar_kota_aktual + uang_harian_dalam_kota_aktual + representasi_luar_kota_aktual + representasi_dalam_kota_aktual;
 
       return {
         transport_pesawat_non_pp_pagu,
@@ -132,8 +140,10 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
         transport_taksi_aktual,
         penginapan_pagu,
         penginapan_aktual,
-        uang_harian_fullboard_pagu,
-        uang_harian_fullboard_aktual,
+        uang_harian_meeting_fullboard_pagu,
+        uang_harian_meeting_fullboard_aktual,
+        uang_harian_meeting_fullday_pagu,
+        uang_harian_meeting_fullday_aktual,
         uang_harian_luar_kota_pagu,
         uang_harian_luar_kota_aktual,
         uang_harian_dalam_kota_pagu,
@@ -155,8 +165,10 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
       transport_taksi_aktual: 0,
       penginapan_pagu: 0,
       penginapan_aktual: 0,
-      uang_harian_fullboard_pagu: 0,
-      uang_harian_fullboard_aktual: 0,
+      uang_harian_meeting_fullboard_pagu: 0,
+      uang_harian_meeting_fullboard_aktual: 0,
+      uang_harian_meeting_fullday_pagu: 0,
+      uang_harian_meeting_fullday_aktual: 0,
       uang_harian_luar_kota_pagu: 0,
       uang_harian_luar_kota_aktual: 0,
       uang_harian_dalam_kota_pagu: 0,
@@ -285,57 +297,56 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-[32rem] bg-gray-50">Tgl Sampai</th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="4">Transportasi</th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="3">Penginapan</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Uang Harian Fullboard</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Uang Harian Luar Kota</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Uang Harian Dalam Kota</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Representasi Luar Kota</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Representasi Dalam Kota</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Evidence</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Uang Harian Meeting</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Uang Harian</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Representasi</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50" colSpan="5">Evidence</th>
             </tr>
             {/* Subcategories Row */}
             <tr className="bg-gray-100 border-b border-gray-300">
               <td colSpan="10" className="px-4 py-2 border-r border-gray-200"></td>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Pesawat Non-PP</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="2">Taksi</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Malam</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Malam</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jml Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
-              <td className="px-4 py-2"></td>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Eviden</th>
             </tr>
-            {/* Pagu/Aktual Row */}
+            {/* Meeting Types Row */}
             <tr className="bg-gray-100 border-b border-gray-300">
               <td colSpan="10" className="px-4 py-2 border-r border-gray-200"></td>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Penginapan</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Fullboard</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Luar Kota</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Dalam Kota</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Luar Kota</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3">Dalam Kota</th>
-              <td className="px-4 py-2"></td>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="3"></th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Meeting Fullboard</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Meeting Fullday</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Luar Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Dalam Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="6">Representasi Luar Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="6">Representasi Dalam Kota</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -507,8 +518,8 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_fullboard_jumlah_hari}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_jumlah_hari', e.target.value)}
+                    value={row.uang_harian_meeting_fullboard_jumlah_hari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullboard_jumlah_hari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
@@ -516,8 +527,8 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_fullboard_pagu_perhari}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_pagu_perhari', e.target.value)}
+                    value={row.uang_harian_meeting_fullboard_pagu_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullboard_pagu_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
@@ -525,15 +536,49 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_fullboard_aktual_perhari}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_fullboard_aktual_perhari', e.target.value)}
+                    value={row.uang_harian_meeting_fullboard_aktual_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullboard_aktual_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
                     placeholder="0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
                   <div className="text-right font-medium text-gray-700">
-                    {((parseFloat(row.uang_harian_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_fullboard_pagu_perhari) || 0)).toLocaleString('id-ID')}
+                    {((parseFloat(row.uang_harian_meeting_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullboard_pagu_perhari) || 0)).toLocaleString('id-ID')}
+                  </div>
+                </td>
+
+                {/* Uang Harian Meeting Fullday */}
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.uang_harian_meeting_fullday_jumlah_hari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullday_jumlah_hari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.uang_harian_meeting_fullday_pagu_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullday_pagu_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                  <input
+                    type="number"
+                    value={row.uang_harian_meeting_fullday_aktual_perhari}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullday_aktual_perhari', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-right"
+                    placeholder="0"
+                  />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
+                  <div className="text-right font-medium text-gray-700">
+                    {((parseFloat(row.uang_harian_meeting_fullday_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullday_pagu_perhari) || 0)).toLocaleString('id-ID')}
                   </div>
                 </td>
 

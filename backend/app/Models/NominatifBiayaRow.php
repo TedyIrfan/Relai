@@ -22,10 +22,10 @@ class NominatifBiayaRow extends Model
         'penginapan_jumlah_malam',
         'penginapan_pagu_perhari',
         'penginapan_aktual_perhari',
-        // Uang Harian Fullboard (3 fields)
-        'uang_harian_fullboard_jumlah_hari',
-        'uang_harian_fullboard_pagu_perhari',
-        'uang_harian_fullboard_aktual_perhari',
+        // Uang Harian Meeting Fullboard (3 fields)
+        'uang_harian_meeting_fullboard_jumlah_hari',
+        'uang_harian_meeting_fullboard_pagu_perhari',
+        'uang_harian_meeting_fullboard_aktual_perhari',
         // Uang Harian Luar Kota (3 fields)
         'uang_harian_luar_kota_jumlah_hari',
         'uang_harian_luar_kota_pagu_perhari',
@@ -42,6 +42,14 @@ class NominatifBiayaRow extends Model
         'representasi_dalam_kota_jumlah_hari',
         'representasi_dalam_kota_pagu_perhari',
         'representasi_dalam_kota_aktual_perhari',
+        // Uang Harian Meeting Fullboard (3 fields)
+        'uang_harian_meeting_fullboard_jumlah_hari',
+        'uang_harian_meeting_fullboard_pagu_perhari',
+        'uang_harian_meeting_fullboard_aktual_perhari',
+        // Uang Harian Meeting Fullday (3 fields)
+        'uang_harian_meeting_fullday_jumlah_hari',
+        'uang_harian_meeting_fullday_pagu_perhari',
+        'uang_harian_meeting_fullday_aktual_perhari',
     ];
 
     protected $casts = [
@@ -58,14 +66,14 @@ class NominatifBiayaRow extends Model
         'penginapan_total_pagu' => 'decimal:2',
         'penginapan_total_aktual' => 'decimal:2',
         'penginapan_anggaran_berjalan' => 'decimal:2',
-        // Uang Harian Fullboard
-        'uang_harian_fullboard_jumlah_hari' => 'integer',
-        'uang_harian_fullboard_pagu_perhari' => 'decimal:2',
-        'uang_harian_fullboard_aktual_perhari' => 'decimal:2',
+        // Uang Harian Meeting Fullboard
+        'uang_harian_meeting_fullboard_jumlah_hari' => 'integer',
+        'uang_harian_meeting_fullboard_pagu_perhari' => 'decimal:2',
+        'uang_harian_meeting_fullboard_aktual_perhari' => 'decimal:2',
         // Generated columns
-        'uang_harian_fullboard_total_pagu' => 'decimal:2',
-        'uang_harian_fullboard_total_aktual' => 'decimal:2',
-        'uang_harian_fullboard_anggaran_berjalan' => 'decimal:2',
+        'uang_harian_meeting_fullboard_total_pagu' => 'decimal:2',
+        'uang_harian_meeting_fullboard_total_aktual' => 'decimal:2',
+        'uang_harian_meeting_fullboard_anggaran_berjalan' => 'decimal:2',
         // Uang Harian Luar Kota
         'uang_harian_luar_kota_jumlah_hari' => 'integer',
         'uang_harian_luar_kota_pagu_perhari' => 'decimal:2',
@@ -98,6 +106,22 @@ class NominatifBiayaRow extends Model
         'representasi_dalam_kota_total_pagu' => 'decimal:2',
         'representasi_dalam_kota_total_aktual' => 'decimal:2',
         'representasi_dalam_kota_anggaran_berjalan' => 'decimal:2',
+        // Uang Harian Meeting Fullboard
+        'uang_harian_meeting_fullboard_jumlah_hari' => 'integer',
+        'uang_harian_meeting_fullboard_pagu_perhari' => 'decimal:2',
+        'uang_harian_meeting_fullboard_aktual_perhari' => 'decimal:2',
+        // Generated columns
+        'uang_harian_meeting_fullboard_total_pagu' => 'decimal:2',
+        'uang_harian_meeting_fullboard_total_aktual' => 'decimal:2',
+        'uang_harian_meeting_fullboard_anggaran_berjalan' => 'decimal:2',
+        // Uang Harian Meeting Fullday
+        'uang_harian_meeting_fullday_jumlah_hari' => 'integer',
+        'uang_harian_meeting_fullday_pagu_perhari' => 'decimal:2',
+        'uang_harian_meeting_fullday_aktual_perhari' => 'decimal:2',
+        // Generated columns
+        'uang_harian_meeting_fullday_total_pagu' => 'decimal:2',
+        'uang_harian_meeting_fullday_total_aktual' => 'decimal:2',
+        'uang_harian_meeting_fullday_anggaran_berjalan' => 'decimal:2',
         // Total akhir per row
         'total_pagu_row' => 'decimal:2',
         'total_aktual_row' => 'decimal:2',
