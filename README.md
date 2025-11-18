@@ -1481,6 +1481,88 @@ GET /api/nominatifs/details/{id}/evidence/{id}/download
 
 ---
 
+### **🔄 UANG HARIAN STRUCTURE OPTIMIZATION - COMPLETED (100%)**
+
+#### **🎯 Unified Categorization System - IMPLEMENTED**
+
+**✅ Problem Solved:**
+- **Before**: Uang Harian categories were scattered and inconsistent
+- **After**: Unified 3-tier structure with logical grouping
+
+**✅ New Unified Structure:**
+
+**📊 Main Categories (3 Groups):**
+```
+1. Uang Harian Meeting (8 columns)
+   ├── Meeting Fullboard (4 columns): Jml Hari, Pagu/Hari, Aktual/Hari, Total
+   └── Meeting Fullday (4 columns): Jml Hari, Pagu/Hari, Aktual/Hari, Total
+
+2. Uang Harian (8 columns)
+   ├── Luar Kota (4 columns): Jml Hari, Pagu/Hari, Aktual/Hari, Total
+   └── Dalam Kota (4 columns): Jml Hari, Pagu/Hari, Aktual/Hari, Total
+
+3. Representasi (12 columns)
+   ├── Representasi Luar Kota (6 columns): Jml Hari, Pagu/Hari, Aktual/Hari, Total
+   └── Representasi Dalam Kota (6 columns): Jml Hari, Pagu/Hari, Aktual/Hari, Total
+```
+
+**✅ Database Field Updates:**
+- **Renamed**: `uang_harian_fullboard_*` → `uang_harian_meeting_fullboard_*`
+- **Added**: `uang_harian_meeting_fullday_*` fields (3 input fields + generated columns)
+- **Updated**: All total calculations to include new meeting fields
+- **Generated Columns**: Automatic calculations for totals and subtotals
+
+**✅ Frontend Excel Table - 3-Tier Headers:**
+```
+Level 1: Main Categories
+├── Transportasi (4)
+├── Penginapan (3)
+├── Uang Harian Meeting (8)
+├── Uang Harian (8)
+├── Representasi (12)
+└── Evidence (5)
+
+Level 2: Subcategories
+├── Meeting Fullboard + Meeting Fullday
+├── Luar Kota + Dalam Kota
+└── Representasi Luar Kota + Representasi Dalam Kota
+
+Level 3: Column Headers
+├── Jumlah Hari, Pagu/Hari, Aktual/Hari, Total
+└── Evidence upload functionality
+```
+
+**✅ Technical Implementation:**
+
+**Backend Updates:**
+- Migration: `2025_11_18_062243_add_uang_harian_meeting_fields.php`
+- Migration: `2025_11_18_064105_add_missing_meeting_fullday_fields.php`
+- Model: `NominatifBiayaRow.php` - Updated $fillable and $casts
+- Controller: `NominatifBiayaRowController.php` - Updated validation and calculations
+
+**Frontend Updates:**
+- Component: `NominatifExcelTable.jsx` - Unified header structure
+- Input Fields: All 18+ input fields properly positioned
+- Calculations: Real-time totals with Indonesian currency formatting
+- UI: Consistent 3-tier header visual design
+
+**✅ User Experience Improvements:**
+- **Intuitive Grouping**: Related costs grouped together logically
+- **Clean Layout**: Reduced cognitive load with unified categories
+- **Faster Data Entry**: Consistent field patterns across categories
+- **Better Organization**: Meeting vs Regular vs Representasi clearly separated
+
+**✅ Business Logic:**
+- **Uang Harian Meeting**: Fullboard (includes meals) + Fullday (no meals)
+- **Uang Harian Regular**: Luar Kota (outside city) + Dalam Kota (inside city)
+- **Representasi**: Luar Kota (outside city representation) + Dalam Kota (inside city)
+
+**🎉 UANG HARIAN UNIFICATION - 100% COMPLETE!**
+
+**Excel table now has clean, unified structure that matches business logic and user expectations!**
+
+---
+
 ### **🎯 FINAL PROJECT STATUS: NOMINATIF REWORK 100% COMPLETE!**
 
 #### **✅ ALL PHASES COMPLETED:**
