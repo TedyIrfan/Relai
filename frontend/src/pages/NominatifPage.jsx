@@ -205,7 +205,7 @@ const NominatifPage = () => {
     }
   }, [rkaId]);
 
-  // Save nominatif data
+  // Save nominatif data - Optimized version
   const handleSave = async (data) => {
     setSaving(true);
     setError(null);
@@ -221,10 +221,12 @@ const NominatifPage = () => {
       const nominatifPayload = {
         rka_detail_id: parseInt(rkaId),
         deskripsi_perjalanan_dinas: draftData?.deskripsi || `Nominatif RKA ${rkaDetail?.code_rka}`,
-        tanggal_mulai: draftData?.tanggalMulai || data[0]?.tanggal || todayDate,
-        tanggal_selesai: draftData?.tanggalSelesai || data[data.length - 1]?.tanggal || todayDate,
+        tanggal_mulai: draftData?.tanggalMulai || data[0]?.tanggal_pergi || todayDate,
+        tanggal_selesai: draftData?.tanggalSelesai || data[data.length - 1]?.tanggal_sampai || todayDate,
         status: 'draft'
       };
+
+      console.log('🚀 Starting save process with data length:', data.length);
 
       // First, create or get nominatif
       const nominatifResponse = await fetch('http://localhost/api/nominatifs-new', {
@@ -237,93 +239,104 @@ const NominatifPage = () => {
       });
 
       if (!nominatifResponse.ok) {
-        throw new Error('Gagal menyimpan nominatif');
+        const errorText = await nominatifResponse.text();
+        console.error('❌ Nominatif creation failed:', errorText);
+        throw new Error(`Gagal membuat nominatif: ${nominatifResponse.status} - ${errorText}`);
       }
 
       const nominatifResult = await nominatifResponse.json();
       const nominatifId = nominatifResult.data.id;
+      console.log('✅ Nominatif created with ID:', nominatifId);
 
-      // Save detail rows and biaya rows
-      for (const row of data) {
-        // Save detail row
-        const detailPayload = {
-          person_type: row.person_type,
-          person_name: row.nama,
-          nama: row.nama,
-          asal: row.asal,
-          tujuan: row.tujuan,
-          tanggal_pergi: row.tanggal,
-          tanggal_sampai: row.tanggal,
-          golongan: row.golongan,
-          jabatan: row.jabatan,
-          eselon: row.eselon,
-          no: data.indexOf(row) + 1,
-          row_order: data.indexOf(row) + 1
-        };
+      // Prepare bulk data for detail rows
+      const detailRowsData = data.map((row, index) => ({
+        person_type: row.person_type || 'main',
+        nama: row.nama_lengkap || row.nama || '', // Fixed: backend expects 'nama'
+        person_name: row.nama_lengkap || row.nama || '', // Fixed: backend expects 'person_name'
+        golongan: row.golongan || '',
+        jabatan: row.jabatan || '',
+        eselon: row.eselon || '',
+        asal: row.asal || '',
+        tujuan: row.tujuan || '',
+        tanggal_pergi: row.tanggal_pergi || '',
+        tanggal_sampai: row.tanggal_sampai || row.tanggal_pulang || '',
+        no: index + 1,
+        row_order: index + 1
+      }));
 
-        console.log('Creating nominatif with ID:', nominatifId);
-        console.log('Detail payload:', detailPayload);
+      console.log('📦 Preparing bulk detail rows:', detailRowsData.length);
 
-        const detailResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(detailPayload)
-        });
+      // Use bulk API for detail rows
+      const bulkDetailResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/bulk`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ rows: detailRowsData })
+      });
 
-        console.log('Detail Response Status:', detailResponse.status);
-        console.log('Detail Response OK:', detailResponse.ok);
+      if (!bulkDetailResponse.ok) {
+        const errorText = await bulkDetailResponse.text();
+        console.error('❌ Bulk detail creation failed:', errorText);
+        throw new Error(`Gagal membuat detail rows: ${bulkDetailResponse.status} - ${errorText}`);
+      }
 
-        if (!detailResponse.ok) {
-          const errorText = await detailResponse.text();
-          console.error('Detail Response Error:', errorText);
-          throw new Error(`Failed to create detail row: ${detailResponse.status} ${errorText}`);
-        }
+      const detailResult = await bulkDetailResponse.json();
+      const createdDetailRows = detailResult.data;
+      console.log('✅ Bulk detail rows created:', createdDetailRows.length);
 
-        const detailResult = await detailResponse.json();
-        const detailId = detailResult.data.id;
-        console.log('Created detail ID:', detailId);
+      // Update biaya for each detail row (optimized approach)
+      const biayaPromises = data.map(async (row, index) => {
+        const detailId = createdDetailRows[index].id;
 
-        // Save biaya row dengan 19 fields baru
+        // Sesuai dengan database fields yang ada
         const biayaPayload = {
-          // Transportasi (4 fields)
-          transport_pesawat_non_pp_pagu: row.transport_pesawat_non_pp_pagu || 0,
-          transport_pesawat_non_pp_aktual: row.transport_pesawat_non_pp_aktual || 0,
-          transport_taksi_pagu: row.transport_taksi_pagu || 0,
-          transport_taksi_aktual: row.transport_taksi_aktual || 0,
+          // Transportasi (sesuai database yang ada)
+          transport_pesawat_non_pp_pagu: parseFloat(row.transport_pesawat_non_pp_pagu) || 0,
+          transport_pesawat_non_pp_aktual: parseFloat(row.transport_pesawat_non_pp_aktual) || 0,
+          transport_taksi_pagu: parseFloat(row.transport_taksi_pagu) || 0,
+          transport_taksi_aktual: parseFloat(row.transport_taksi_aktual) || 0,
 
-          // Penginapan (3 fields)
-          penginapan_jumlah_malam: row.penginapan_jumlah_malam || 0,
-          penginapan_pagu_perhari: row.penginapan_pagu_perhari || 0,
-          penginapan_aktual_perhari: row.penginapan_aktual_perhari || 0,
+          // Penginapan - Send raw data untuk generated columns
+          penginapan_jumlah_malam: parseInt(row.penginapan_jumlah_malam) || 0,
+          penginapan_pagu_perhari: parseFloat(row.penginapan_pagu_perhari) || 0,
+          penginapan_aktual_perhari: parseFloat(row.penginapan_aktual_perhari) || 0,
 
-          // Uang Harian Fullboard (3 fields)
-          uang_harian_fullboard_jumlah_hari: row.uang_harian_fullboard_jumlah_hari || 0,
-          uang_harian_fullboard_pagu_perhari: row.uang_harian_fullboard_pagu_perhari || 0,
-          uang_harian_fullboard_aktual_perhari: row.uang_harian_fullboard_aktual_perhari || 0,
+          // Uang Harian Meeting Fullboard - Send raw data untuk generated columns
+          uang_harian_meeting_fullboard_jumlah_hari: parseInt(row.uang_harian_meeting_fullboard_jumlah_hari) || 0,
+          uang_harian_meeting_fullboard_pagu_perhari: parseFloat(row.uang_harian_meeting_fullboard_pagu_perhari) || 0,
+          uang_harian_meeting_fullboard_aktual_perhari: parseFloat(row.uang_harian_meeting_fullboard_aktual_perhari) || 0,
 
-          // Uang Harian Luar Kota (3 fields)
-          uang_harian_luar_kota_jumlah_hari: row.uang_harian_luar_kota_jumlah_hari || 0,
-          uang_harian_luar_kota_pagu_perhari: row.uang_harian_luar_kota_pagu_perhari || 0,
-          uang_harian_luar_kota_aktual_perhari: row.uang_harian_luar_kota_aktual_perhari || 0,
+          // Uang Harian Meeting Fullday - Send raw data untuk generated columns
+          uang_harian_meeting_fullday_jumlah_hari: parseInt(row.uang_harian_meeting_fullday_jumlah_hari) || 0,
+          uang_harian_meeting_fullday_pagu_perhari: parseFloat(row.uang_harian_meeting_fullday_pagu_perhari) || 0,
+          uang_harian_meeting_fullday_aktual_perhari: parseFloat(row.uang_harian_meeting_fullday_aktual_perhari) || 0,
 
-          // Uang Harian Dalam Kota (3 fields)
-          uang_harian_dalam_kota_jumlah_hari: row.uang_harian_dalam_kota_jumlah_hari || 0,
-          uang_harian_dalam_kota_pagu_perhari: row.uang_harian_dalam_kota_pagu_perhari || 0,
-          uang_harian_dalam_kota_aktual_perhari: row.uang_harian_dalam_kota_aktual_perhari || 0,
+          // Uang Harian Luar Kota - Send raw data untuk generated columns
+          uang_harian_luar_kota_jumlah_hari: parseInt(row.uang_harian_luar_kota_jumlah_hari) || 0,
+          uang_harian_luar_kota_pagu_perhari: parseFloat(row.uang_harian_luar_kota_pagu_perhari) || 0,
+          uang_harian_luar_kota_aktual_perhari: parseFloat(row.uang_harian_luar_kota_aktual_perhari) || 0,
 
-          // Representasi Luar Kota (3 fields)
-          representasi_luar_kota_jumlah_hari: row.representasi_luar_kota_jumlah_hari || 0,
-          representasi_luar_kota_pagu_perhari: row.representasi_luar_kota_pagu_perhari || 0,
-          representasi_luar_kota_aktual_perhari: row.representasi_luar_kota_aktual_perhari || 0,
+          // Uang Harian Dalam Kota - Send raw data untuk generated columns
+          uang_harian_dalam_kota_jumlah_hari: parseInt(row.uang_harian_dalam_kota_jumlah_hari) || 0,
+          uang_harian_dalam_kota_pagu_perhari: parseFloat(row.uang_harian_dalam_kota_pagu_perhari) || 0,
+          uang_harian_dalam_kota_aktual_perhari: parseFloat(row.uang_harian_dalam_kota_aktual_perhari) || 0,
 
-          // Representasi Dalam Kota (3 fields)
-          representasi_dalam_kota_jumlah_hari: row.representasi_dalam_kota_jumlah_hari || 0,
-          representasi_dalam_kota_pagu_perhari: row.representasi_dalam_kota_pagu_perhari || 0,
-          representasi_dalam_kota_aktual_perhari: row.representasi_dalam_kota_aktual_perhari || 0
+          // Representasi Luar Kota - Send raw data untuk generated columns
+          representasi_luar_kota_jumlah_hari: parseInt(row.representasi_luar_kota_jumlah_hari) || 0,
+          representasi_luar_kota_pagu_perhari: parseFloat(row.representasi_luar_kota_pagu_perhari) || 0,
+          representasi_luar_kota_aktual_perhari: parseFloat(row.representasi_luar_kota_aktual_perhari) || 0,
+
+          // Representasi Dalam Kota - Send raw data untuk generated columns
+          representasi_dalam_kota_jumlah_hari: parseInt(row.representasi_dalam_kota_jumlah_hari) || 0,
+          representasi_dalam_kota_pagu_perhari: parseFloat(row.representasi_dalam_kota_pagu_perhari) || 0,
+          representasi_dalam_kota_aktual_perhari: parseFloat(row.representasi_dalam_kota_aktual_perhari) || 0
         };
+
+        console.log(`💰 Creating biaya for detail ID ${detailId}:`, biayaPayload);
+        console.log(`🔍 Full biaya payload keys:`, Object.keys(biayaPayload));
+        console.log(`🔍 Full biaya payload values:`, biayaPayload);
 
         const biayaResponse = await fetch(`http://localhost/api/nominatifs/details/${detailId}/biaya`, {
           method: 'POST',
@@ -335,32 +348,24 @@ const NominatifPage = () => {
         });
 
         if (!biayaResponse.ok) {
-          throw new Error('Gagal menyimpan biaya row');
+          const errorText = await biayaResponse.text();
+          console.error(`❌ Biaya creation failed for detail ${detailId}:`, errorText);
+          throw new Error(`Gagal membuat biaya row: ${biayaResponse.status} - ${errorText}`);
         }
 
-        // Handle evidence upload if exists
-        if (row.evidence) {
-          const formData = new FormData();
-          formData.append('evidence_file', row.evidence);
+        return await biayaResponse.json();
+      });
 
-          const evidenceResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/evidence`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
-            body: formData
-          });
-
-          if (!evidenceResponse.ok) {
-            throw new Error('Gagal upload evidence');
-          }
-        }
-      }
+      // Execute all biaya updates in parallel
+      const biayaResults = await Promise.all(biayaPromises);
+      console.log('✅ All biaya rows created:', biayaResults.length);
 
       setSuccess('Data berhasil disimpan!');
+      console.log('🎉 Save process completed successfully');
+
     } catch (error) {
       setError(error.message || 'Gagal menyimpan data');
-      console.error('Save error:', error);
+      console.error('❌ Save error:', error);
     } finally {
       setSaving(false);
     }
@@ -374,11 +379,36 @@ const NominatifPage = () => {
 
     try {
       // First save the data
+      console.log('🔄 Submit: Saving data first...');
       await handleSave(data);
 
-      // Then submit
+      // Get the latest nominatif data to find the correct ID
       const token = getToken();
-      const response = await fetch(`http://localhost/api/nominatifs-new/1/submit`, {
+      const nominatifListResponse = await fetch('http://localhost/api/nominatifs-new', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!nominatifListResponse.ok) {
+        throw new Error('Gagal mengambil data nominatif untuk submit');
+      }
+
+      const nominatifList = await nominatifListResponse.json();
+      const dataArray = Array.isArray(nominatifList) ? nominatifList : nominatifList.data || [];
+
+      // Find the nominatif with current RKA ID that's still draft
+      const currentNominatif = dataArray.find(n => n.rka_detail_id == rkaId && n.status === 'draft');
+
+      if (!currentNominatif) {
+        throw new Error('Nominatif tidak ditemukan untuk disubmit');
+      }
+
+      console.log('📤 Submitting nominatif ID:', currentNominatif.id);
+
+      // Then submit
+      const response = await fetch(`http://localhost/api/nominatifs-new/${currentNominatif.id}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -392,11 +422,12 @@ const NominatifPage = () => {
           navigate('/nominatifs');
         }, 2000);
       } else {
-        throw new Error('Gagal mengirim nominatif');
+        const errorText = await response.text();
+        throw new Error(`Gagal mengirim nominatif: ${response.status} - ${errorText}`);
       }
     } catch (error) {
       setError(error.message || 'Gagal mengirim data');
-      console.error('Submit error:', error);
+      console.error('❌ Submit error:', error);
     } finally {
       setSubmitting(false);
     }
@@ -420,10 +451,10 @@ const NominatifPage = () => {
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => navigate('/rka')}
+            onClick={() => navigate('/nominatif')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Kembali ke Daftar RKA
+            Kembali ke Daftar Nominatif
           </button>
         </div>
       </div>
@@ -438,7 +469,7 @@ const NominatifPage = () => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <button
-                onClick={() => navigate('/rka')}
+                onClick={() => navigate('/nominatif')}
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mr-4"
               >
                 <ArrowLeft className="w-5 h-5" />

@@ -4,7 +4,7 @@ export const nominatifService = {
   // Get all nominatifs with pagination and filters
   getAll: async (params = {}) => {
     try {
-      const response = await api.get('/nominatifs', { params });
+      const response = await api.get('/nominatifs-new', { params });
       return { success: true, data: response.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Gagal mengambil data nominatif';
@@ -15,7 +15,7 @@ export const nominatifService = {
   // Get single nominatif by ID
   getById: async (id) => {
     try {
-      const response = await api.get(`/nominatifs/${id}`);
+      const response = await api.get(`/nominatifs-new/${id}`);
       return { success: true, data: response.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Gagal mengambil data nominatif';
@@ -26,7 +26,7 @@ export const nominatifService = {
   // Create new nominatif
   create: async (data) => {
     try {
-      const response = await api.post('/nominatifs', data);
+      const response = await api.post('/nominatifs-new', data);
       return { success: true, data: response.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Gagal membuat nominatif';
@@ -38,7 +38,7 @@ export const nominatifService = {
   // Update existing nominatif
   update: async (id, data) => {
     try {
-      const response = await api.put(`/nominatifs/${id}`, data);
+      const response = await api.put(`/nominatifs-new/${id}`, data);
       return { success: true, data: response.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Gagal mengupdate nominatif';
@@ -50,7 +50,7 @@ export const nominatifService = {
   // Submit nominatif (change status from draft to submitted)
   submit: async (id) => {
     try {
-      const response = await api.post(`/nominatifs/${id}/submit`);
+      const response = await api.post(`/nominatifs-new/${id}/submit`);
       return { success: true, data: response.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Gagal submit nominatif';
@@ -61,7 +61,7 @@ export const nominatifService = {
   // Delete nominatif (draft only)
   delete: async (id) => {
     try {
-      const response = await api.delete(`/nominatifs/${id}`);
+      const response = await api.delete(`/nominatifs-new/${id}`);
       return { success: true, data: response.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Gagal menghapus nominatif';
@@ -72,7 +72,7 @@ export const nominatifService = {
   // Get nominatifs by status
   getByStatus: async (status) => {
     try {
-      const response = await api.get('/nominatifs', { params: { status } });
+      const response = await api.get('/nominatifs-new', { params: { status } });
       return { success: true, data: response.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Gagal mengambil data nominatif';
@@ -218,160 +218,234 @@ export const nominatifService = {
     return apiData;
   },
 
-  // Delete all tambahan orang for a nominatif
-  deleteTambahanOrang: async (nominatifId) => {
+  // === NEW DETAIL ROWS API METHODS (Replacing Tambahan Orang) ===
+
+  // Get all detail rows (persons) for a nominatif
+  getDetailRows: async (nominatifId) => {
     try {
-      const response = await api.delete(`/nominatifs/${nominatifId}/tambahan-orang`);
+      const response = await api.get(`/nominatifs/${nominatifId}/details`);
       return { success: true, data: response.data };
     } catch (error) {
-      const message = error.response?.data?.message || 'Gagal menghapus tambahan orang';
+      const message = error.response?.data?.message || 'Gagal mengambil data detail rows';
       return { success: false, message };
     }
   },
 
-  // === NEW TAMBAHAN ORANG API METHODS ===
-
-  // Get all tambahan orang for a nominatif
-  getTambahanOrang: async (nominatifId) => {
+  // Save/Update single detail row (person)
+  saveDetailRow: async (nominatifId, detailRowData) => {
     try {
-      const response = await api.get(`/nominatifs/${nominatifId}/tambahan-orang`);
-      // Return backend response directly without double-wrapping
-      return response.data;
-    } catch (error) {
-      const message = error.response?.data?.message || 'Gagal mengambil data tambahan orang';
-      return { success: false, message };
-    }
-  },
-
-  // Save/Update single tambahan orang
-  saveTambahanOrang: async (nominatifId, tambahanOrangData) => {
-    try {
-      const response = await api.post(`/nominatifs/${nominatifId}/tambahan-orang`, tambahanOrangData);
+      const response = await api.post(`/nominatifs/${nominatifId}/details`, detailRowData);
       return { success: true, data: response.data };
     } catch (error) {
-      const message = error.response?.data?.message || 'Gagal menyimpan tambahan orang';
+      const message = error.response?.data?.message || 'Gagal menyimpan detail row';
       const errors = error.response?.data?.errors || {};
       return { success: false, message, errors };
     }
   },
 
-  // Update existing tambahan orang
-  updateTambahanOrang: async (tambahanOrangId, tambahanOrangData) => {
+  // Update existing detail row
+  updateDetailRow: async (nominatifId, rowId, detailRowData) => {
     try {
-      const response = await api.put(`/nominatifs/tambahan-orang/${tambahanOrangId}`, tambahanOrangData);
+      const response = await api.put(`/nominatifs/${nominatifId}/details/${rowId}`, detailRowData);
       return { success: true, data: response.data };
     } catch (error) {
-      const message = error.response?.data?.message || 'Gagal mengupdate tambahan orang';
+      const message = error.response?.data?.message || 'Gagal mengupdate detail row';
       const errors = error.response?.data?.errors || {};
       return { success: false, message, errors };
     }
   },
 
-  // Delete specific tambahan orang
-  deleteTambahanOrangById: async (nominatifId, tambahanOrangId) => {
+  // Delete specific detail row
+  deleteDetailRow: async (nominatifId, rowId) => {
     try {
-      const response = await api.delete(`/nominatifs/${nominatifId}/tambahan-orang/${tambahanOrangId}`);
+      const response = await api.delete(`/nominatifs/${nominatifId}/details/${rowId}`);
       return { success: true, data: response.data };
     } catch (error) {
-      const message = error.response?.data?.message || 'Gagal menghapus tambahan orang';
+      const message = error.response?.data?.message || 'Gagal menghapus detail row';
       return { success: false, message };
     }
   },
 
-  // Format tambahan orang data for backend (using existing table structure)
-  formatTambahanOrangData: (formData) => {
-    // Convert frontend structure to backend table structure
-    return {
-      nama_peserta: formData.nama || '',
-      jabatan_peserta: formData.jabatan || '',
-      pagu: formData.pagu || 0,
-      aktual: formData.aktual || 0,
-      anggaran_realisasi: formData.anggaran_realisasi || 0,
-      jumlah_hari: formData.jumlahHari || 0,
-      tanggal_mulai: formData.tanggalMulai || null,
-      tanggal_selesai: formData.tanggalSelesai || null,
-      rute_perjalanan: formData.rutePerjalanan || [],
-      // Transport data handled separately via API calls
-      transportasi_data: formData.transportasiData || [],
-      // Individual sections as JSON
-      penginapan: formData.penginapan || {},
-      uang_harian: formData.uang_harian || {},
-      uang_representasi: formData.uang_representasi || {},
-    };
+  // Bulk save multiple detail rows
+  bulkSaveDetailRows: async (nominatifId, detailRowsData) => {
+    try {
+      const response = await api.post(`/nominatifs/${nominatifId}/details/bulk`, detailRowsData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal menyimpan detail rows';
+      const errors = error.response?.data?.errors || {};
+      return { success: false, message, errors };
+    }
   },
 
-  // Calculate total pagu for tambahan orang
-  calculateTambahanOrangPagu: (formData) => {
-    let total = 0;
+  // === BIAYA ROWS API METHODS (Financial Data) ===
 
-    // Transportasi
-    if (formData.transportasi_data) {
-      formData.transportasi_data.forEach(transport => {
-        total += transport.pagu || 0;
+  // Get biaya rows for a detail row
+  getBiayaRows: async (detailRowId) => {
+    try {
+      const response = await api.get(`/nominatifs/details/${detailRowId}/biaya`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal mengambil data biaya rows';
+      return { success: false, message };
+    }
+  },
+
+  // Save biaya row
+  saveBiayaRow: async (detailRowId, biayaData) => {
+    try {
+      const response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, biayaData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gagal menyimpan biaya row';
+      const errors = error.response?.data?.errors || {};
+      return { success: false, message, errors };
+    }
+  },
+
+  // === NEW DATA FORMATTING METHODS (for 4-table architecture) ===
+
+  // Format Excel table data for new backend structure
+  formatExcelTableData: (rows, rkaDetailId) => {
+    // Separate main row and additional rows
+    const mainRow = rows.find(row => row.person_type === 'main');
+    const additionalRows = rows.filter(row => row.person_type !== 'main');
+
+    // Prepare detail rows (person + route data)
+    const detailRows = [];
+
+    // Add main row
+    if (mainRow) {
+      detailRows.push({
+        person_type: 'main',
+        nama_lengkap: mainRow.nama_lengkap,
+        golongan: mainRow.golongan,
+        jabatan: mainRow.jabatan,
+        eselon: mainRow.eselon,
+        asal: mainRow.asal,
+        tujuan: mainRow.tujuan,
+        tanggal_pergi: mainRow.tanggal_pergi,
+        tanggal_sampai: mainRow.tanggal_sampai,
       });
     }
 
-    // Penginapan
-    if (formData.penginapan?.menginap) {
-      total += (formData.penginapan.jumlahMalam || 1) * (formData.penginapan.paguPerMalam || 0);
-    }
+    // Add additional rows
+    additionalRows.forEach(row => {
+      detailRows.push({
+        person_type: 'tambahan',
+        nama_lengkap: row.nama_lengkap,
+        golongan: row.golongan,
+        jabatan: row.jabatan,
+        eselon: row.eselon,
+        asal: row.asal,
+        tujuan: row.tujuan,
+        tanggal_pergi: row.tanggal_pergi,
+        tanggal_sampai: row.tanggal_sampai,
+      });
+    });
 
-    // Uang harian
-    if (formData.uang_harian?.total) {
-      total += formData.uang_harian.total;
-    }
+    // Prepare biaya rows (financial data) for each person
+    const biayaRows = [];
 
-    // Uang representasi
-    if (formData.uang_representasi?.total) {
-      total += formData.uang_representasi.total;
-    }
+    rows.forEach(row => {
+      const biayaData = {
+        // Transportasi
+        transport_pesawat_non_pp_pagu: parseFloat(row.transport_pesawat_non_pp_pagu) || 0,
+        transport_pesawat_non_pp_aktual: parseFloat(row.transport_pesawat_non_pp_aktual) || 0,
+        transport_taksi_pagu: parseFloat(row.transport_taksi_pagu) || 0,
+        transport_taksi_aktual: parseFloat(row.transport_taksi_aktual) || 0,
 
-    return total;
+        // Penginapan
+        penginapan_jumlah_malam: parseInt(row.penginapan_jumlah_malam) || 0,
+        penginapan_pagu_perhari: parseFloat(row.penginapan_pagu_perhari) || 0,
+        penginapan_aktual_perhari: parseFloat(row.penginapan_aktual_perhari) || 0,
+
+        // Uang Harian Meeting Fullboard
+        uang_harian_meeting_fullboard_jumlah_hari: parseInt(row.uang_harian_meeting_fullboard_jumlah_hari) || 0,
+        uang_harian_meeting_fullboard_pagu_perhari: parseFloat(row.uang_harian_meeting_fullboard_pagu_perhari) || 0,
+        uang_harian_meeting_fullboard_aktual_perhari: parseFloat(row.uang_harian_meeting_fullboard_aktual_perhari) || 0,
+
+        // Uang Harian Meeting Fullday
+        uang_harian_meeting_fullday_jumlah_hari: parseInt(row.uang_harian_meeting_fullday_jumlah_hari) || 0,
+        uang_harian_meeting_fullday_pagu_perhari: parseFloat(row.uang_harian_meeting_fullday_pagu_perhari) || 0,
+        uang_harian_meeting_fullday_aktual_perhari: parseFloat(row.uang_harian_meeting_fullday_aktual_perhari) || 0,
+
+        // Uang Harian Luar Kota
+        uang_harian_luar_kota_jumlah_hari: parseInt(row.uang_harian_luar_kota_jumlah_hari) || 0,
+        uang_harian_luar_kota_pagu_perhari: parseFloat(row.uang_harian_luar_kota_pagu_perhari) || 0,
+        uang_harian_luar_kota_aktual_perhari: parseFloat(row.uang_harian_luar_kota_aktual_perhari) || 0,
+
+        // Uang Harian Dalam Kota
+        uang_harian_dalam_kota_jumlah_hari: parseInt(row.uang_harian_dalam_kota_jumlah_hari) || 0,
+        uang_harian_dalam_kota_pagu_perhari: parseFloat(row.uang_harian_dalam_kota_pagu_perhari) || 0,
+        uang_harian_dalam_kota_aktual_perhari: parseFloat(row.uang_harian_dalam_kota_aktual_perhari) || 0,
+
+        // Representasi Luar Kota
+        representasi_luar_kota_jumlah_hari: parseInt(row.representasi_luar_kota_jumlah_hari) || 0,
+        representasi_luar_kota_pagu_perhari: parseFloat(row.representasi_luar_kota_pagu_perhari) || 0,
+        representasi_luar_kota_aktual_perhari: parseFloat(row.representasi_luar_kota_aktual_perhari) || 0,
+
+        // Representasi Dalam Kota
+        representasi_dalam_kota_jumlah_hari: parseInt(row.representasi_dalam_kota_jumlah_hari) || 0,
+        representasi_dalam_kota_pagu_perhari: parseFloat(row.representasi_dalam_kota_pagu_perhari) || 0,
+        representasi_dalam_kota_aktual_perhari: parseFloat(row.representasi_dalam_kota_aktual_perhari) || 0,
+      };
+
+      biayaRows.push(biayaData);
+    });
+
+    // Main nominatif data
+    const nominatifData = {
+      rka_detail_id: rkaDetailId,
+      deskripsi_perjalanan_dinas: mainRow?.deskripsi_perjalanan || '',
+      jumlah_hari: additionalRows.length + 1, // Total persons
+      tanggal_mulai: mainRow?.tanggal_pergi || new Date().toISOString().split('T')[0],
+      tanggal_selesai: mainRow?.tanggal_sampai || new Date().toISOString().split('T')[0],
+    };
+
+    return {
+      nominatif: nominatifData,
+      detail_rows: detailRows,
+      biaya_rows: biayaRows,
+    };
   },
 
-  // Save individual penginapan record for tambahan orang (Option 2)
-  savePenginapanTambahanOrang: async (penginapanData) => {
-    try {
-      const response = await api.post('/penginapan-tambahan-orang', penginapanData);
-      return { success: true, data: response.data };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Gagal menyimpan penginapan tambahan orang';
-      const errors = error.response?.data?.errors || {};
-      return { success: false, message, errors };
-    }
-  },
+  // Calculate total from Excel table rows
+  calculateTotalsFromRows: (rows) => {
+    let totalPagu = 0;
+    let totalAktual = 0;
 
-  // Get all penginapan records for a tambahan orang
-  getPenginapanTambahanOrang: async (tambahanOrangId) => {
-    try {
-      const response = await api.get(`/penginapan-tambahan-orang/by-tambahan-orang/${tambahanOrangId}`);
-      return { success: true, data: response.data };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Gagal mengambil data penginapan';
-      return { success: false, message };
-    }
-  },
+    rows.forEach(row => {
+      // Transportasi
+      totalPagu += (parseFloat(row.transport_pesawat_non_pp_pagu) || 0) + (parseFloat(row.transport_taksi_pagu) || 0);
+      totalAktual += (parseFloat(row.transport_pesawat_non_pp_aktual) || 0) + (parseFloat(row.transport_taksi_aktual) || 0);
 
-  // Update individual penginapan record
-  updatePenginapanTambahanOrang: async (penginapanId, penginapanData) => {
-    try {
-      const response = await api.put(`/penginapan-tambahan-orang/${penginapanId}`, penginapanData);
-      return { success: true, data: response.data };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Gagal mengupdate penginapan';
-      const errors = error.response?.data?.errors || {};
-      return { success: false, message, errors };
-    }
-  },
+      // Penginapan
+      const penginapanTotal = (parseInt(row.penginapan_jumlah_malam) || 0) * (parseFloat(row.penginapan_pagu_perhari) || 0);
+      totalPagu += penginapanTotal;
+      totalAktual += (parseInt(row.penginapan_jumlah_malam) || 0) * (parseFloat(row.penginapan_aktual_perhari) || 0);
 
-  // Delete individual penginapan record
-  deletePenginapanTambahanOrang: async (penginapanId) => {
-    try {
-      const response = await api.delete(`/penginapan-tambahan-orang/${penginapanId}`);
-      return { success: true, data: response.data };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Gagal menghapus penginapan';
-      return { success: false, message };
-    }
+      // Uang Harian (all types)
+      totalPagu += (parseInt(row.uang_harian_meeting_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullboard_pagu_perhari) || 0);
+      totalAktual += (parseInt(row.uang_harian_meeting_fullboard_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullboard_aktual_perhari) || 0);
+
+      totalPagu += (parseInt(row.uang_harian_meeting_fullday_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullday_pagu_perhari) || 0);
+      totalAktual += (parseInt(row.uang_harian_meeting_fullday_jumlah_hari) || 0) * (parseFloat(row.uang_harian_meeting_fullday_aktual_perhari) || 0);
+
+      totalPagu += (parseInt(row.uang_harian_luar_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_luar_kota_pagu_perhari) || 0);
+      totalAktual += (parseInt(row.uang_harian_luar_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_luar_kota_aktual_perhari) || 0);
+
+      totalPagu += (parseInt(row.uang_harian_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_dalam_kota_pagu_perhari) || 0);
+      totalAktual += (parseInt(row.uang_harian_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.uang_harian_dalam_kota_aktual_perhari) || 0);
+
+      // Representasi (all types)
+      totalPagu += (parseInt(row.representasi_luar_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_luar_kota_pagu_perhari) || 0);
+      totalAktual += (parseInt(row.representasi_luar_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_luar_kota_aktual_perhari) || 0);
+
+      totalPagu += (parseInt(row.representasi_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_dalam_kota_pagu_perhari) || 0);
+      totalAktual += (parseInt(row.representasi_dalam_kota_jumlah_hari) || 0) * (parseFloat(row.representasi_dalam_kota_aktual_perhari) || 0);
+    });
+
+    return { totalPagu, totalAktual };
   }
 };

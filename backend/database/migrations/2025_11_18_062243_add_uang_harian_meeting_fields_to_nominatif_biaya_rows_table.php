@@ -28,17 +28,17 @@ return new class extends Migration
             $table->decimal('uang_harian_meeting_fullday_aktual_perhari', 15, 2)->default(0)->after('uang_harian_meeting_fullday_pagu_perhari');
 
             // Generated Columns untuk Uang Harian Meeting Fullday
-            $table->decimal('uang_harian_meeting_fullday_total_pagu', 15, 2)
+            $table->decimal('uang_harian_meeting_fullday_total_pagu', 15, 2)->nullable()
                   ->generatedAlwaysAs('uang_harian_meeting_fullday_jumlah_hari * uang_harian_meeting_fullday_pagu_perhari')
                   ->stored()
                   ->after('uang_harian_meeting_fullday_aktual_perhari');
 
-            $table->decimal('uang_harian_meeting_fullday_total_aktual', 15, 2)
+            $table->decimal('uang_harian_meeting_fullday_total_aktual', 15, 2)->nullable()
                   ->generatedAlwaysAs('uang_harian_meeting_fullday_jumlah_hari * uang_harian_meeting_fullday_aktual_perhari')
                   ->stored()
                   ->after('uang_harian_meeting_fullday_total_pagu');
 
-            $table->decimal('uang_harian_meeting_fullday_anggaran_berjalan', 15, 2)
+            $table->decimal('uang_harian_meeting_fullday_anggaran_berjalan', 15, 2)->nullable()
                   ->generatedAlwaysAs('uang_harian_meeting_fullday_total_pagu - uang_harian_meeting_fullday_total_aktual')
                   ->stored()
                   ->after('uang_harian_meeting_fullday_total_aktual');

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\NominatifNew;
 use App\Models\RkaDetail;
+use App\Models\User;
+use Laravel\Sanctum\PersonalAccessToken;
 use Carbon\Carbon;
 
 /**
@@ -17,6 +19,51 @@ use Carbon\Carbon;
  */
 class NominatifNewController extends Controller
 {
+    public function __construct()
+    {
+        // Remove auth middleware since we use manual token validation
+    }
+
+    /**
+     * Manually validate Sanctum token and get authenticated user
+     */
+    private function getAuthenticatedUser(Request $request)
+    {
+        $token = $request->bearerToken();
+
+        // Debug logging
+        \Log::info('Token validation attempt', [
+            'token_exists' => !empty($token),
+            'token_length' => $token ? strlen($token) : 0,
+            'authorization_header' => $request->header('Authorization'),
+            'all_headers' => $request->headers->all()
+        ]);
+
+        if (!$token) {
+            \Log::warning('No token provided in request');
+            return null;
+        }
+
+        // Find the token in the personal_access_tokens table
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            \Log::warning('Token not found in personal_access_tokens table', [
+                'token_preview' => substr($token, 0, 20) . '...'
+            ]);
+            return null;
+        }
+
+        \Log::info('Token found successfully', [
+            'token_id' => $accessToken->id,
+            'tokenable_type' => $accessToken->tokenable_type,
+            'tokenable_id' => $accessToken->tokenable_id
+        ]);
+
+        // Get the user associated with this token
+        return $accessToken->tokenable;
+    }
+
     /**
      * @OA\Get(
      *      path="/api/nominatifs-new",
@@ -54,14 +101,15 @@ class NominatifNewController extends Controller
      */
     public function index(Request $request)
     {
-        $query = NominatifNew::with([
-            'rkaDetail',
-            'user',
-            'detailRows' => function ($query) {
-                $query->select('id', 'nominatif_id', 'person_type', 'person_name', 'row_order')
-                      ->orderBy('row_order');
-            }
-        ])->byUser(Auth::id());
+        try {
+            $query = NominatifNew::with([
+                'rkaDetail:id,code_rka,layanan',
+                'user:id,name,email',
+                'detailRows' => function ($query) {
+                    $query->select('id', 'nominatif_id', 'person_type', 'person_name', 'row_order')
+                          ->orderBy('row_order');
+                }
+            ])->byUser(Auth::id());
 
         // Filter by status if provided
         if ($request->has('status')) {
@@ -88,16 +136,25 @@ class NominatifNewController extends Controller
 
         $nominatifs = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        return response()->json([
-            'success' => true,
-            'data' => $nominatifs,
-            'meta' => [
-                'current_page' => $nominatifs->currentPage(),
-                'last_page' => $nominatifs->lastPage(),
-                'per_page' => $nominatifs->perPage(),
-                'total' => $nominatifs->total(),
-            ]
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $nominatifs,
+                'meta' => [
+                    'current_page' => $nominatifs->currentPage(),
+                    'last_page' => $nominatifs->lastPage(),
+                    'per_page' => $nominatifs->perPage(),
+                    'total' => $nominatifs->total(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('NominatifNewController@index error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch nominatifs: ' . $e->getMessage(),
+                'error' => config('app.debug') ? $e->getTrace() : null
+            ], 500);
+        }
     }
 
     /**
@@ -135,6 +192,15 @@ class NominatifNewController extends Controller
      */
     public function store(Request $request)
     {
+        // Manual token validation
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized - Invalid or missing token'
+            ], 401);
+        }
+
         $request->validate([
             'rka_detail_id' => 'required|exists:rka_details,id',
             'deskripsi_perjalanan_dinas' => 'required|string|max:1000',
@@ -149,7 +215,7 @@ class NominatifNewController extends Controller
 
             $nominatif = NominatifNew::create([
                 'rka_detail_id' => $request->rka_detail_id,
-                'user_id' => Auth::id(),
+                'user_id' => $user->id, // Use authenticated user ID from manual validation
                 'deskripsi_perjalanan_dinas' => $request->deskripsi_perjalanan_dinas,
                 'tanggal_mulai' => $request->tanggal_mulai,
                 'tanggal_selesai' => $request->tanggal_selesai,

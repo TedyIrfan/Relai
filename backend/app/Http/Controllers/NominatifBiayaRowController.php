@@ -8,9 +8,38 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\NominatifDetailRow;
 use App\Models\NominatifBiayaRow;
+use App\Models\User;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class NominatifBiayaRowController extends Controller
 {
+    public function __construct()
+    {
+        // Remove auth middleware since we use manual token validation
+    }
+
+    /**
+     * Manually validate Sanctum token and get authenticated user
+     */
+    private function getAuthenticatedUser(Request $request)
+    {
+        $token = $request->bearerToken();
+
+        if (!$token) {
+            return null;
+        }
+
+        // Find the token in the personal_access_tokens table
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            return null;
+        }
+
+        // Get the user associated with this token
+        return $accessToken->tokenable;
+    }
+
     /**
      * Display biaya data for a detail row.
      */
@@ -19,7 +48,7 @@ class NominatifBiayaRowController extends Controller
         $detailRow = NominatifDetailRow::findOrFail($detailRowId);
 
         // Security check
-        if ($detailRow->nominatif->user_id !== Auth::id()) {
+        if ($detailRow->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -30,7 +59,59 @@ class NominatifBiayaRowController extends Controller
 
         if (!$biayaRow) {
             // Create biaya row if it doesn't exist
-            $biayaRow = $detailRow->biayaRow()->create([]);
+            // Filter request to only include valid fields (sesuai database yang ada)
+            $validFields = $request->only([
+                'transport_pesawat_non_pp_pagu',
+                'transport_pesawat_non_pp_aktual',
+                'transport_taksi_pagu',
+                'transport_taksi_aktual',
+                'penginapan_jumlah_malam',
+                'penginapan_pagu_perhari',
+                'penginapan_aktual_perhari',
+                'uang_harian_meeting_fullboard_jumlah_hari',
+                'uang_harian_meeting_fullboard_pagu_perhari',
+                'uang_harian_meeting_fullboard_aktual_perhari',
+                'uang_harian_meeting_fullday_jumlah_hari',
+                'uang_harian_meeting_fullday_pagu_perhari',
+                'uang_harian_meeting_fullday_aktual_perhari',
+                'uang_harian_luar_kota_jumlah_hari',
+                'uang_harian_luar_kota_pagu_perhari',
+                'uang_harian_luar_kota_aktual_perhari',
+                'uang_harian_dalam_kota_jumlah_hari',
+                'uang_harian_dalam_kota_pagu_perhari',
+                'uang_harian_dalam_kota_aktual_perhari',
+                'representasi_luar_kota_jumlah_hari',
+                'representasi_luar_kota_pagu_perhari',
+                'representasi_luar_kota_aktual_perhari',
+                'representasi_dalam_kota_jumlah_hari',
+                'representasi_dalam_kota_pagu_perhari',
+                'representasi_dalam_kota_aktual_perhari'
+            ]);
+
+            // Convert empty strings to 0 for numeric fields
+            $processedFields = [];
+            foreach ($validFields as $key => $value) {
+                if (in_array($key, [
+                    'transport_pesawat_non_pp_pagu', 'transport_pesawat_non_pp_aktual', 'transport_taksi_pagu', 'transport_taksi_aktual',
+                    'penginapan_pagu_perhari', 'penginapan_aktual_perhari',
+                    'uang_harian_fullboard_pagu_perhari', 'uang_harian_fullboard_aktual_perhari',
+                    'uang_harian_luar_kota_pagu_perhari', 'uang_harian_luar_kota_aktual_perhari',
+                    'uang_harian_dalam_kota_pagu_perhari', 'uang_harian_dalam_kota_aktual_perhari',
+                    'representasi_luar_kota_pagu_perhari', 'representasi_luar_kota_aktual_perhari',
+                    'representasi_dalam_kaga_pagu_perhari', 'representasi_dalam_kota_aktual_perhari'
+                ])) {
+                    $processedFields[$key] = empty($value) ? 0 : floatval($value);
+                } elseif (in_array($key, [
+                    'penginapan_jumlah_malam', 'uang_harian_fullboard_jumlah_hari', 'uang_harian_luar_kota_jumlah_hari', 'uang_harian_dalam_kota_jumlah_hari',
+                    'representasi_luar_kota_jumlah_hari', 'representasi_dalam_kota_jumlah_hari'
+                ])) {
+                    $processedFields[$key] = empty($value) ? 0 : intval($value);
+                } else {
+                    $processedFields[$key] = $value;
+                }
+            }
+
+            $biayaRow = $detailRow->biayaRow()->create($processedFields);
         }
 
         return response()->json([
@@ -47,7 +128,7 @@ class NominatifBiayaRowController extends Controller
         $detailRow = NominatifDetailRow::findOrFail($detailRowId);
 
         // Security check
-        if ($detailRow->nominatif->user_id !== Auth::id()) {
+        if ($detailRow->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -97,7 +178,7 @@ class NominatifBiayaRowController extends Controller
         $biayaRow = NominatifBiayaRow::findOrFail($biayaId);
 
         // Security check
-        if ($biayaRow->detailRow->nominatif->user_id !== Auth::id()) {
+        if ($biayaRow->detailRow->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -118,7 +199,7 @@ class NominatifBiayaRowController extends Controller
         $biayaRow = NominatifBiayaRow::findOrFail($biayaId);
 
         // Security check
-        if ($biayaRow->detailRow->nominatif->user_id !== Auth::id()) {
+        if ($biayaRow->detailRow->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -134,15 +215,11 @@ class NominatifBiayaRowController extends Controller
         }
 
         $request->validate([
-            // Transportasi fields (sesuai database)
-            'transportasi_taksi_pergi_pagu' => 'nullable|numeric|min:0',
-            'transportasi_taksi_pergi_aktual' => 'nullable|numeric|min:0',
-            'transportasi_pergi_pagu' => 'nullable|numeric|min:0',
-            'transportasi_pergi_aktual' => 'nullable|numeric|min:0',
-            'transportasi_taksi_pulang_pagu' => 'nullable|numeric|min:0',
-            'transportasi_taksi_pulang_aktual' => 'nullable|numeric|min:0',
-            'transportasi_pulang_pagu' => 'nullable|numeric|min:0',
-            'transportasi_pulang_aktual' => 'nullable|numeric|min:0',
+            // Transportasi fields (sesuai database yang ada)
+            'transport_pesawat_non_pp_pagu' => 'nullable|numeric|min:0',
+            'transport_pesawat_non_pp_aktual' => 'nullable|numeric|min:0',
+            'transport_taksi_pagu' => 'nullable|numeric|min:0',
+            'transport_taksi_aktual' => 'nullable|numeric|min:0',
 
             // Penginapan fields (sesuai database)
             'penginapan_pagu' => 'nullable|numeric|min:0',
@@ -268,7 +345,7 @@ class NominatifBiayaRowController extends Controller
         $biayaRow = NominatifBiayaRow::findOrFail($biayaId);
 
         // Security check
-        if ($biayaRow->detailRow->nominatif->user_id !== Auth::id()) {
+        if ($biayaRow->detailRow->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -315,15 +392,11 @@ class NominatifBiayaRowController extends Controller
     public function validate(Request $request)
     {
         $request->validate([
-            // Transportasi fields (sesuai database)
-            'transportasi_taksi_pergi_pagu' => 'nullable|numeric|min:0',
-            'transportasi_taksi_pergi_aktual' => 'nullable|numeric|min:0',
-            'transportasi_pergi_pagu' => 'nullable|numeric|min:0',
-            'transportasi_pergi_aktual' => 'nullable|numeric|min:0',
-            'transportasi_taksi_pulang_pagu' => 'nullable|numeric|min:0',
-            'transportasi_taksi_pulang_aktual' => 'nullable|numeric|min:0',
-            'transportasi_pulang_pagu' => 'nullable|numeric|min:0',
-            'transportasi_pulang_aktual' => 'nullable|numeric|min:0',
+            // Transportasi fields (sesuai database yang ada)
+            'transport_pesawat_non_pp_pagu' => 'nullable|numeric|min:0',
+            'transport_pesawat_non_pp_aktual' => 'nullable|numeric|min:0',
+            'transport_taksi_pagu' => 'nullable|numeric|min:0',
+            'transport_taksi_aktual' => 'nullable|numeric|min:0',
 
             // Penginapan fields (sesuai database)
             'penginapan_pagu' => 'nullable|numeric|min:0',

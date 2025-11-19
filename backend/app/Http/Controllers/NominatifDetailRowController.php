@@ -7,10 +7,39 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\NominatifNew;
 use App\Models\NominatifDetailRow;
+use App\Models\User;
+use Laravel\Sanctum\PersonalAccessToken;
 use Carbon\Carbon;
 
 class NominatifDetailRowController extends Controller
 {
+    public function __construct()
+    {
+        // Remove auth middleware since we use manual token validation
+    }
+
+    /**
+     * Manually validate Sanctum token and get authenticated user
+     */
+    private function getAuthenticatedUser(Request $request)
+    {
+        $token = $request->bearerToken();
+
+        if (!$token) {
+            return null;
+        }
+
+        // Find the token in the personal_access_tokens table
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            return null;
+        }
+
+        // Get the user associated with this token
+        return $accessToken->tokenable;
+    }
+
     /**
      * Display a listing of detail rows for a nominatif.
      */
@@ -18,7 +47,7 @@ class NominatifDetailRowController extends Controller
     {
         // Check if user owns the nominatif
         $nominatif = NominatifNew::where('id', $nominatifId)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $this->getAuthenticatedUser(app('request'))?->id)
             ->firstOrFail();
 
         $detailRows = NominatifDetailRow::with(['biayaRow', 'evidence'])
@@ -52,7 +81,7 @@ class NominatifDetailRowController extends Controller
 
         // Check if user owns the nominatif
         $nominatif = NominatifNew::where('id', $nominatifId)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $this->getAuthenticatedUser(app('request'))?->id)
             ->firstOrFail();
 
         // Check if nominatif is still editable
@@ -87,24 +116,48 @@ class NominatifDetailRowController extends Controller
 
             // Create corresponding biaya row with default values including totals
             $biayaData = [
+                // Transport fields (matches database schema)
+                'transport_pesawat_non_pp_pagu' => 0,
+                'transport_pesawat_non_pp_aktual' => 0,
                 'transport_taksi_pergi_pagu' => 0,
                 'transport_taksi_pergi_aktual' => 0,
-                'transport_pergi_pagu' => 0,
-                'transport_pergi_aktual' => 0,
                 'transport_taksi_pulang_pagu' => 0,
                 'transport_taksi_pulang_aktual' => 0,
-                'transport_pulang_pagu' => 0,
-                'transport_pulang_aktual' => 0,
-                'penginapan_pagu' => 0,
-                'penginapan_aktual' => 0,
-                'uang_harian_fullboard_pagu' => 0,
-                'uang_harian_fullboard_aktual' => 0,
-                'uang_harian_pagu' => 0,
-                'uang_harian_aktual' => 0,
-                'uang_representasi_pagu' => 0,
-                'uang_representasi_aktual' => 0,
-                'total_pagu_row' => 0,
-                'total_aktual_row' => 0,
+
+                // Penginapan source fields (needed for generated columns)
+                'penginapan_jumlah_malam' => 0,
+                'penginapan_pagu_perhari' => 0,
+                'penginapan_aktual_perhari' => 0,
+
+                // Uang Harian Meeting Fullboard source fields (renamed from fullboard)
+                'uang_harian_meeting_fullboard_jumlah_hari' => 0,
+                'uang_harian_meeting_fullboard_pagu_perhari' => 0,
+                'uang_harian_meeting_fullboard_aktual_perhari' => 0,
+
+                // Uang Harian Meeting Fullday source fields
+                'uang_harian_meeting_fullday_jumlah_hari' => 0,
+                'uang_harian_meeting_fullday_pagu_perhari' => 0,
+                'uang_harian_meeting_fullday_aktual_perhari' => 0,
+
+                // Uang Harian Luar Kota source fields
+                'uang_harian_luar_kota_jumlah_hari' => 0,
+                'uang_harian_luar_kota_pagu_perhari' => 0,
+                'uang_harian_luar_kota_aktual_perhari' => 0,
+
+                // Uang Harian Dalam Kota source fields
+                'uang_harian_dalam_kota_jumlah_hari' => 0,
+                'uang_harian_dalam_kota_pagu_perhari' => 0,
+                'uang_harian_dalam_kota_aktual_perhari' => 0,
+
+                // Representasi Luar Kota source fields
+                'representasi_luar_kota_jumlah_hari' => 0,
+                'representasi_luar_kota_pagu_perhari' => 0,
+                'representasi_luar_kota_aktual_perhari' => 0,
+
+                // Representasi Dalam Kota source fields
+                'representasi_dalam_kota_jumlah_hari' => 0,
+                'representasi_dalam_kota_pagu_perhari' => 0,
+                'representasi_dalam_kota_aktual_perhari' => 0,
             ];
             $detailRow->biayaRow()->create($biayaData);
 
@@ -138,7 +191,7 @@ class NominatifDetailRowController extends Controller
             ->findOrFail($rowId);
 
         // Security check
-        if ($detailRow->nominatif->user_id !== Auth::id()) {
+        if ($detailRow->nominatif->user_id !== $this->getAuthenticatedUser(request())?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -172,7 +225,7 @@ class NominatifDetailRowController extends Controller
         $detailRow = NominatifDetailRow::findOrFail($rowId);
 
         // Security check
-        if ($detailRow->nominatif->user_id !== Auth::id()) {
+        if ($detailRow->nominatif->user_id !== $this->getAuthenticatedUser(request())?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -220,7 +273,7 @@ class NominatifDetailRowController extends Controller
         $detailRow = NominatifDetailRow::findOrFail($rowId);
 
         // Security check
-        if ($detailRow->nominatif->user_id !== Auth::id()) {
+        if ($detailRow->nominatif->user_id !== $this->getAuthenticatedUser(request())?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -269,6 +322,15 @@ class NominatifDetailRowController extends Controller
      */
     public function bulkStore(Request $request, $nominatifId)
     {
+        // Manual token validation
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized - Invalid or missing token'
+            ], 401);
+        }
+
         $request->validate([
             'rows' => 'required|array|min:1',
             'rows.*.person_type' => 'required|in:main,tambahan',
@@ -282,7 +344,7 @@ class NominatifDetailRowController extends Controller
 
         // Check if user owns the nominatif
         $nominatif = NominatifNew::where('id', $nominatifId)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $user->id)
             ->firstOrFail();
 
         // Check if nominatif is still editable
@@ -318,24 +380,48 @@ class NominatifDetailRowController extends Controller
 
                 // Create corresponding biaya row with default values including totals
                 $biayaData = [
+                    // Transport fields (matches database schema)
+                    'transport_pesawat_non_pp_pagu' => 0,
+                    'transport_pesawat_non_pp_aktual' => 0,
                     'transport_taksi_pergi_pagu' => 0,
                     'transport_taksi_pergi_aktual' => 0,
-                    'transport_pergi_pagu' => 0,
-                    'transport_pergi_aktual' => 0,
                     'transport_taksi_pulang_pagu' => 0,
                     'transport_taksi_pulang_aktual' => 0,
-                    'transport_pulang_pagu' => 0,
-                    'transport_pulang_aktual' => 0,
-                    'penginapan_pagu' => 0,
-                    'penginapan_aktual' => 0,
-                    'uang_harian_fullboard_pagu' => 0,
-                    'uang_harian_fullboard_aktual' => 0,
-                    'uang_harian_pagu' => 0,
-                    'uang_harian_aktual' => 0,
-                    'uang_representasi_pagu' => 0,
-                    'uang_representasi_aktual' => 0,
-                    'total_pagu_row' => 0,
-                    'total_aktual_row' => 0,
+
+                    // Penginapan source fields (needed for generated columns)
+                    'penginapan_jumlah_malam' => 0,
+                    'penginapan_pagu_perhari' => 0,
+                    'penginapan_aktual_perhari' => 0,
+
+                    // Uang Harian Meeting Fullboard source fields (renamed from fullboard)
+                    'uang_harian_meeting_fullboard_jumlah_hari' => 0,
+                    'uang_harian_meeting_fullboard_pagu_perhari' => 0,
+                    'uang_harian_meeting_fullboard_aktual_perhari' => 0,
+
+                    // Uang Harian Meeting Fullday source fields
+                    'uang_harian_meeting_fullday_jumlah_hari' => 0,
+                    'uang_harian_meeting_fullday_pagu_perhari' => 0,
+                    'uang_harian_meeting_fullday_aktual_perhari' => 0,
+
+                    // Uang Harian Luar Kota source fields
+                    'uang_harian_luar_kota_jumlah_hari' => 0,
+                    'uang_harian_luar_kota_pagu_perhari' => 0,
+                    'uang_harian_luar_kota_aktual_perhari' => 0,
+
+                    // Uang Harian Dalam Kota source fields
+                    'uang_harian_dalam_kota_jumlah_hari' => 0,
+                    'uang_harian_dalam_kota_pagu_perhari' => 0,
+                    'uang_harian_dalam_kota_aktual_perhari' => 0,
+
+                    // Representasi Luar Kota source fields
+                    'representasi_luar_kota_jumlah_hari' => 0,
+                    'representasi_luar_kota_pagu_perhari' => 0,
+                    'representasi_luar_kota_aktual_perhari' => 0,
+
+                    // Representasi Dalam Kota source fields
+                    'representasi_dalam_kota_jumlah_hari' => 0,
+                    'representasi_dalam_kota_pagu_perhari' => 0,
+                    'representasi_dalam_kota_aktual_perhari' => 0,
                 ];
                 $detailRow->biayaRow()->create($biayaData);
 
@@ -380,7 +466,7 @@ class NominatifDetailRowController extends Controller
 
         // Check if user owns the nominatif
         $nominatif = NominatifNew::where('id', $nominatifId)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $this->getAuthenticatedUser(app('request'))?->id)
             ->firstOrFail();
 
         // Check if nominatif is still editable
@@ -397,7 +483,7 @@ class NominatifDetailRowController extends Controller
             foreach ($request->rows as $rowData) {
                 $detailRow = NominatifDetailRow::where('id', $rowData['id'])
                     ->whereHas('nominatif', function ($query) {
-                        $query->where('user_id', Auth::id());
+                        $query->where('user_id', $this->getAuthenticatedUser(app('request'))?->id);
                     })
                     ->first();
 

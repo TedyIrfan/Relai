@@ -24,6 +24,49 @@ Route::get('/test', [SwaggerController::class, 'test']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/create-user', [AuthController::class, 'createUser']);
 
+// NEW NOMINATIF SYSTEM (Phase 2) - Separated Tables Architecture (Manual Token Validation)
+Route::prefix('nominatifs-new')->group(function () {
+    Route::get('/', [NominatifNewController::class, 'index']);
+    Route::post('/', [NominatifNewController::class, 'store']);
+    Route::get('/{id}', [NominatifNewController::class, 'show']);
+    Route::put('/{id}', [NominatifNewController::class, 'update']);
+    Route::delete('/{id}', [NominatifNewController::class, 'destroy']);
+    Route::post('/{id}/submit', [NominatifNewController::class, 'submit']);
+    Route::get('/search', [NominatifNewController::class, 'search']);
+    Route::get('/statistics', [NominatifNewController::class, 'statistics']);
+});
+
+// Detail Rows (Person + Route Data) - Manual Token Validation
+Route::prefix('nominatifs/{nominatifId}/details')->group(function () {
+    Route::get('/', [NominatifDetailRowController::class, 'index']);
+    Route::post('/', [NominatifDetailRowController::class, 'store']);
+    Route::get('/{rowId}', [NominatifDetailRowController::class, 'show']);
+    Route::put('/{rowId}', [NominatifDetailRowController::class, 'update']);
+    Route::delete('/{rowId}', [NominatifDetailRowController::class, 'destroy']);
+    Route::post('/bulk', [NominatifDetailRowController::class, 'bulkStore']);
+    Route::put('/bulk', [NominatifDetailRowController::class, 'bulkUpdate']);
+});
+
+// Biaya Rows (Financial Data) - Manual Token Validation
+Route::prefix('nominatifs/details/{detailRowId}/biaya')->group(function () {
+    Route::get('/', [NominatifBiayaRowController::class, 'index']);
+    Route::post('/', [NominatifBiayaRowController::class, 'store']);
+    Route::get('/{biayaId}', [NominatifBiayaRowController::class, 'show']);
+    Route::put('/{biayaId}', [NominatifBiayaRowController::class, 'update']);
+    Route::delete('/{biayaId}', [NominatifBiayaRowController::class, 'destroy']);
+});
+
+// Evidence (File Upload) - Manual Token Validation
+Route::prefix('nominatifs/{nominatifId}/evidence')->group(function () {
+    Route::get('/', [NominatifEvidenceController::class, 'index']);
+    Route::get('/all', [NominatifEvidenceController::class, 'getAllEvidence']); // With file type info
+    Route::post('/', [NominatifEvidenceController::class, 'store']);
+    Route::get('/{evidenceId}', [NominatifEvidenceController::class, 'show']);
+    Route::put('/{evidenceId}', [NominatifEvidenceController::class, 'update']);
+    Route::delete('/{evidenceId}', [NominatifEvidenceController::class, 'destroy']);
+    Route::get('/{evidenceId}/download', [NominatifEvidenceController::class, 'download']);
+});
+
 // User CRUD Routes (Protected)
 Route::middleware('auth:sanctum')->group(function () {
     // Authenticated user routes
@@ -52,49 +95,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::post('/nominatifs/{id}/submit', [NominatifController::class, 'submit']); // SUBMIT nominatif
     // Route::delete('/nominatifs/{id}', [NominatifController::class, 'destroy']); // DELETE nominatif
     // Route::delete('/nominatifs/{id}/tambahan-orang', [NominatifController::class, 'deleteTambahanOrang']); // DELETE all tambahan orang
-
-    // NEW NOMINATIF SYSTEM (Phase 2) - Separated Tables Architecture
-    Route::prefix('nominatifs-new')->group(function () {
-        Route::get('/', [NominatifNewController::class, 'index']);
-        Route::post('/', [NominatifNewController::class, 'store']);
-        Route::get('/{id}', [NominatifNewController::class, 'show']);
-        Route::put('/{id}', [NominatifNewController::class, 'update']);
-        Route::delete('/{id}', [NominatifNewController::class, 'destroy']);
-        Route::post('/{id}/submit', [NominatifNewController::class, 'submit']);
-        Route::get('/search', [NominatifNewController::class, 'search']);
-        Route::get('/statistics', [NominatifNewController::class, 'statistics']);
-    });
-
-    // Detail Rows (Person + Route Data)
-    Route::prefix('nominatifs/{nominatifId}/details')->group(function () {
-        Route::get('/', [NominatifDetailRowController::class, 'index']);
-        Route::post('/', [NominatifDetailRowController::class, 'store']);
-        Route::get('/{rowId}', [NominatifDetailRowController::class, 'show']);
-        Route::put('/{rowId}', [NominatifDetailRowController::class, 'update']);
-        Route::delete('/{rowId}', [NominatifDetailRowController::class, 'destroy']);
-        Route::post('/bulk', [NominatifDetailRowController::class, 'bulkStore']);
-        Route::put('/bulk', [NominatifDetailRowController::class, 'bulkUpdate']);
-    });
-
-    // Biaya Rows (Financial Data) - Lazy Loading
-    Route::prefix('nominatifs/details/{detailRowId}/biaya')->group(function () {
-        Route::get('/', [NominatifBiayaRowController::class, 'index']);
-        Route::post('/', [NominatifBiayaRowController::class, 'store']);
-        Route::get('/{biayaId}', [NominatifBiayaRowController::class, 'show']);
-        Route::put('/{biayaId}', [NominatifBiayaRowController::class, 'update']);
-        Route::delete('/{biayaId}', [NominatifBiayaRowController::class, 'destroy']);
-    });
-
-    // Evidence (File Upload) - Direct to Nominatif
-    Route::prefix('nominatifs/{nominatifId}/evidence')->group(function () {
-        Route::get('/', [NominatifEvidenceController::class, 'index']);
-        Route::get('/all', [NominatifEvidenceController::class, 'getAllEvidence']); // With file type info
-        Route::post('/', [NominatifEvidenceController::class, 'store']);
-        Route::get('/{evidenceId}', [NominatifEvidenceController::class, 'show']);
-        Route::put('/{evidenceId}', [NominatifEvidenceController::class, 'update']);
-        Route::delete('/{evidenceId}', [NominatifEvidenceController::class, 'destroy']);
-        Route::get('/{evidenceId}/download', [NominatifEvidenceController::class, 'download']);
-    });
 
     // Legacy Penginapan Routes - Disabled (migrated to new 4-table system)
     // Route::get('/nominatifs/{id}/penginapan', [NominatifController::class, 'getPenginapan']); // GET all penginapan for nominatif

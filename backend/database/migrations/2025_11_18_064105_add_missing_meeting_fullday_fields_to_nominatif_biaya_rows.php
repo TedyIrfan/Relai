@@ -41,10 +41,9 @@ return new class extends Migration
         });
 
         Schema::table('nominatif_biaya_rows', function (Blueprint $table) {
-            // Recreate total_pagu_row including fullday fields
-            $table->decimal('total_pagu_row', 15, 2)->generatedAlwaysAs('
-                transportasi_taksi_pergi_pagu + transportasi_pergi_pagu +
-                transportasi_taksi_pulang_pagu + transportasi_pulang_pagu +
+            // Recreate total_pagu_row including fullday fields (FIX: sesuai database)
+            $table->decimal('total_pagu_row', 15, 2)->nullable()->generatedAlwaysAs('
+                transport_pesawat_non_pp_pagu + transport_taksi_pagu +
                 penginapan_pagu +
                 uang_harian_meeting_fullboard_total_pagu +
                 uang_harian_meeting_fullday_total_pagu +
@@ -54,10 +53,9 @@ return new class extends Migration
                 representasi_dalam_kota_total_pagu
             ')->stored();
 
-            // Recreate total_aktual_row including fullday fields
-            $table->decimal('total_aktual_row', 15, 2)->generatedAlwaysAs('
-                transportasi_taksi_pergi_aktual + transportasi_pergi_aktual +
-                transportasi_taksi_pulang_aktual + transportasi_pulang_aktual +
+            // Recreate total_aktual_row including fullday fields (FIX: sesuai database)
+            $table->decimal('total_aktual_row', 15, 2)->nullable()->generatedAlwaysAs('
+                transport_pesawat_non_pp_aktual + transport_taksi_aktual +
                 penginapan_aktual +
                 uang_harian_meeting_fullboard_total_aktual +
                 uang_harian_meeting_fullday_total_aktual +
@@ -68,7 +66,7 @@ return new class extends Migration
             ')->stored();
 
             // Recreate total_anggaran_berjalan_row
-            $table->decimal('total_anggaran_berjalan_row', 15, 2)
+            $table->decimal('total_anggaran_berjalan_row', 15, 2)->nullable()
                   ->generatedAlwaysAs('total_pagu_row - total_aktual_row')
                   ->stored();
         });

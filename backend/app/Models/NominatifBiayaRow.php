@@ -13,7 +13,7 @@ class NominatifBiayaRow extends Model
 
     protected $fillable = [
         'nominatif_detail_row_id',
-        // Transportasi (4 fields)
+        // Transportasi (sesuai database yang ada)
         'transport_pesawat_non_pp_pagu',
         'transport_pesawat_non_pp_aktual',
         'transport_taksi_pagu',

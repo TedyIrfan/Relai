@@ -27,55 +27,52 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
     const firstMainRow = rows.find(row => row.person_type === 'main');
     const firstTambahanRow = rows.find(row => row.person_type === 'tambahan');
 
-    console.log('addRow called:', {
-        personType,
-        firstMainRow: firstMainRow ? 'found' : 'not found',
-        firstTambahanRow: firstTambahanRow ? 'found' : 'not found'
-    });
-
     // Determine which reference row to copy from
     let referenceRow = null;
-    if (personType === 'main' && firstMainRow) {
-        // Adding new main row - copy from first main row
-        referenceRow = firstMainRow;
-        console.log('New main row will copy from first main row');
-    } else if (personType === 'tambahan' && firstTambahanRow) {
-        // Adding new tambahan row - copy from first tambahan row
-        referenceRow = firstTambahanRow;
-        console.log('New tambahan row will copy from first tambahan row');
-    } else if (personType === 'tambahan' && firstMainRow) {
-        // First tambahan row - copy from first main row
-        referenceRow = firstMainRow;
-        console.log('First tambahan row will copy from first main row');
+    if (personType === 'main') {
+        if (firstMainRow) {
+            // Adding new main row - copy from first main row (acuan)
+            referenceRow = firstMainRow;
+        }
+        // If no first main row, this will be the first main row (no copy)
+    } else if (personType === 'tambahan') {
+        if (firstTambahanRow) {
+            // Adding new tambahan row - copy from first tambahan row
+            referenceRow = firstTambahanRow;
+        } else if (firstMainRow) {
+            // First tambahan row - copy from first main row
+            referenceRow = firstMainRow;
+        }
+        // If no main row exists, this will be the first row (no copy)
     }
 
     const newRow = {
       id: Date.now(),
       person_type: personType,
       // Copy reference fields if we have a reference row
-      nama_lengkap: referenceRow ? (console.log('Copying nama_lengkap:', referenceRow.nama_lengkap), referenceRow.nama_lengkap) : '',
-      golongan: referenceRow ? (console.log('Copying golongan:', referenceRow.golongan), referenceRow.golongan) : '',
-      jabatan: referenceRow ? (console.log('Copying jabatan:', referenceRow.jabatan), referenceRow.jabatan) : '',
-      eselon: referenceRow ? (console.log('Copying eselon:', referenceRow.eselon), referenceRow.eselon) : '',
+      nama_lengkap: referenceRow ? referenceRow.nama_lengkap : '',
+      golongan: referenceRow ? referenceRow.golongan : '',
+      jabatan: referenceRow ? referenceRow.jabatan : '',
+      eselon: referenceRow ? referenceRow.eselon : '',
       // Other fields are always empty for new rows
       asal: '',
       tujuan: '',
       tanggal_pergi: '',
       tanggal_sampai: '',
-      // Transportasi (4 fields baru)
+      // Transportasi (sesuai database yang ada)
       transport_pesawat_non_pp_pagu: '',
       transport_pesawat_non_pp_aktual: '',
       transport_taksi_pagu: '',
       transport_taksi_aktual: '',
-      // Penginapan (3 fields baru)
+      // Penginapan
       penginapan_jumlah_malam: '',
       penginapan_pagu_perhari: '',
       penginapan_aktual_perhari: '',
-      // Uang Harian Meeting Fullboard (3 fields)
+      // Uang Harian Meeting Fullboard (sesuai database)
       uang_harian_meeting_fullboard_jumlah_hari: '',
       uang_harian_meeting_fullboard_pagu_perhari: '',
       uang_harian_meeting_fullboard_aktual_perhari: '',
-      // Uang Harian Meeting Fullday (3 fields)
+      // Uang Harian Meeting Fullday (sesuai database)
       uang_harian_meeting_fullday_jumlah_hari: '',
       uang_harian_meeting_fullday_pagu_perhari: '',
       uang_harian_meeting_fullday_aktual_perhari: '',
@@ -98,18 +95,12 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
       evidence_url: null
     };
 
-    console.log('New row created:', newRow);
     setRows([...rows, newRow]);
   };
 
   // Update row data
   const updateRow = (id, field, value) => {
     const referenceFields = ['nama_lengkap', 'golongan', 'jabatan', 'eselon'];
-
-    console.log('updateRow called:', { id, field, value, currentRows: rows.length });
-
-    // Find the target row that's being updated
-    const targetRow = rows.find(r => r.id === id);
 
     // Find the first main row and first tambahan row (the acuans)
     const firstMainRow = rows.find(r => r.person_type === 'main');
@@ -122,15 +113,12 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
     const updatedRows = rows.map(row => {
       if (row.id === id) {
         // Always update the target row
-        console.log('Updating target row:', row.id, field, value);
         return { ...row, [field]: value };
       } else if (isFirstMainRowUpdate && row.person_type === 'main') {
         // If updating first main row reference field, sync all other main rows
-        console.log('Syncing main row to first main row:', row.id, field, value);
         return { ...row, [field]: value };
       } else if (isFirstTambahanRowUpdate && row.person_type === 'tambahan') {
         // If updating first tambahan row reference field, sync all other tambahan rows
-        console.log('Syncing tambahan row to first tambahan row:', row.id, field, value);
         return { ...row, [field]: value };
       }
       return row;
@@ -300,11 +288,11 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-3">
             <button
-              onClick={addRow}
+              onClick={() => addRow('main')}
               className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
             >
               <Plus className="w-4 h-4" />
-              <span>Tambah Baris</span>
+              <span>Tambah Utama</span>
             </button>
             <button
               onClick={() => addRow('tambahan')}
@@ -361,10 +349,10 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">Tgl Pergi</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">Tgl Sampai</th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="6">Transportasi</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="3">Penginapan</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="4">Penginapan</th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Uang Harian Meeting</th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Uang Harian</th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Representasi</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50" colSpan="8">Uang Representasi</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50" colSpan="5">Evidence</th>
             </tr>
             {/* Subcategories Row */}
@@ -379,6 +367,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Malam</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Total</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Jumlah Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Pagu/Hari</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">Aktual/Hari</th>
@@ -418,10 +407,10 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="1"></th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Meeting Fullboard</th>
               <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Meeting Fullday</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Luar Kota</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Dalam Kota</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Representasi Luar Kota</th>
-              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="4">Representasi Dalam Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="5">Luar Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="5">Dalam Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="7">Representasi Luar Kota</th>
+              <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200" colSpan="7">Representasi Dalam Kota</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -441,7 +430,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
                   <select
-                    value={row.person_type}
+                    value={row.person_type || 'main'}
                     onChange={(e) => updateRow(row.id, 'person_type', e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                   >
@@ -452,7 +441,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
                     type="text"
-                    value={row.nama_lengkap}
+                    value={row.nama_lengkap || ''}
                     onChange={(e) => updateRow(row.id, 'nama_lengkap', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Nama lengkap"
@@ -460,7 +449,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 </td>
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <select
-                    value={row.golongan}
+                    value={row.golongan || ''}
                     onChange={(e) => updateRow(row.id, 'golongan', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 bg-white"
                   >
@@ -475,7 +464,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
                     type="text"
-                    value={row.jabatan}
+                    value={row.jabatan || ''}
                     onChange={(e) => updateRow(row.id, 'jabatan', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Jabatan"
@@ -483,7 +472,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 </td>
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <select
-                    value={row.eselon}
+                    value={row.eselon || ''}
                     onChange={(e) => updateRow(row.id, 'eselon', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 bg-white"
                   >
@@ -498,7 +487,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
                     type="text"
-                    value={row.asal}
+                    value={row.asal || ''}
                     onChange={(e) => updateRow(row.id, 'asal', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Asal"
@@ -507,7 +496,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
                     type="text"
-                    value={row.tujuan}
+                    value={row.tujuan || ''}
                     onChange={(e) => updateRow(row.id, 'tujuan', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Tujuan"
@@ -516,7 +505,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-4 py-3 border-r border-gray-200 w-32">
                   <input
                     type="date"
-                    value={row.tanggal_pergi}
+                    value={row.tanggal_pergi || ''}
                     onChange={(e) => updateRow(row.id, 'tanggal_pergi', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                   />
@@ -524,7 +513,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-4 py-3 border-r border-gray-200 w-32">
                   <input
                     type="date"
-                    value={row.tanggal_pulang}
+                    value={row.tanggal_pulang || ''}
                     onChange={(e) => updateRow(row.id, 'tanggal_pulang', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                   />
@@ -534,7 +523,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="text"
-                    value={row.transport_pesawat_non_pp_pagu ? `Rp ${parseFloat(row.transport_pesawat_non_pp_pagu).toLocaleString('id-ID')}` : ''}
+                    value={row.transport_pesawat_non_pp_pagu ? `Rp ${parseFloat(row.transport_pesawat_non_pp_pagu || 0).toLocaleString('id-ID') || ""}` : ''}
                     onChange={(e) => updateRow(row.id, 'transport_pesawat_non_pp_pagu', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="Rp 0"
@@ -543,7 +532,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="text"
-                    value={row.transport_pesawat_non_pp_aktual ? `Rp ${parseFloat(row.transport_pesawat_non_pp_aktual).toLocaleString('id-ID')}` : ''}
+                    value={row.transport_pesawat_non_pp_aktual ? `Rp ${parseFloat(row.transport_pesawat_non_pp_aktual || 0).toLocaleString('id-ID') || ""}` : ''}
                     onChange={(e) => updateRow(row.id, 'transport_pesawat_non_pp_aktual', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="Rp 0"
@@ -559,7 +548,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="text"
-                    value={row.transport_taksi_pagu ? `Rp ${parseFloat(row.transport_taksi_pagu).toLocaleString('id-ID')}` : ''}
+                    value={row.transport_taksi_pagu ? `Rp ${parseFloat(row.transport_taksi_pagu || 0).toLocaleString('id-ID') || ""}` : ''}
                     onChange={(e) => updateRow(row.id, 'transport_taksi_pagu', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="Rp 0"
@@ -568,7 +557,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="text"
-                    value={row.transport_taksi_aktual ? `Rp ${parseFloat(row.transport_taksi_aktual).toLocaleString('id-ID')}` : ''}
+                    value={row.transport_taksi_aktual ? `Rp ${parseFloat(row.transport_taksi_aktual || 0).toLocaleString('id-ID') || ""}` : ''}
                     onChange={(e) => updateRow(row.id, 'transport_taksi_aktual', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="Rp 0"
@@ -584,7 +573,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.penginapan_jumlah_malam}
+                    value={row.penginapan_jumlah_malam || ''}
                     onChange={(e) => updateRow(row.id, 'penginapan_jumlah_malam', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -592,28 +581,34 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.penginapan_pagu_perhari}
-                    onChange={(e) => updateRow(row.id, 'penginapan_pagu_perhari', e.target.value)}
+                    type="text"
+                    value={row.penginapan_pagu_perhari ? `Rp ${parseFloat(row.penginapan_pagu_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'penginapan_pagu_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.penginapan_aktual_perhari}
-                    onChange={(e) => updateRow(row.id, 'penginapan_aktual_perhari', e.target.value)}
+                    type="text"
+                    value={row.penginapan_aktual_perhari ? `Rp ${parseFloat(row.penginapan_aktual_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'penginapan_aktual_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-right border-r border-gray-200 bg-gray-50">
+                  <div className="text-right font-medium text-gray-700">
+                    Rp {(((parseFloat(row.penginapan_jumlah_malam) || 0) * (parseFloat(row.penginapan_pagu_perhari) || 0)) -
+                      ((parseFloat(row.penginapan_jumlah_malam) || 0) * (parseFloat(row.penginapan_aktual_perhari) || 0))).toLocaleString('id-ID')}
+                  </div>
                 </td>
 
                 {/* Uang Harian Fullboard */}
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_meeting_fullboard_jumlah_hari}
+                    value={row.uang_harian_meeting_fullboard_jumlah_hari || ""}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullboard_jumlah_hari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -622,7 +617,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_meeting_fullboard_pagu_perhari}
+                    value={row.uang_harian_meeting_fullboard_pagu_perhari || ""}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullboard_pagu_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -631,7 +626,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_meeting_fullboard_aktual_perhari}
+                    value={row.uang_harian_meeting_fullboard_aktual_perhari || ""}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullboard_aktual_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -647,7 +642,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_meeting_fullday_jumlah_hari}
+                    value={row.uang_harian_meeting_fullday_jumlah_hari || ""}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullday_jumlah_hari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -656,7 +651,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_meeting_fullday_pagu_perhari}
+                    value={row.uang_harian_meeting_fullday_pagu_perhari || ""}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullday_pagu_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -665,7 +660,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_meeting_fullday_aktual_perhari}
+                    value={row.uang_harian_meeting_fullday_aktual_perhari || ""}
                     onChange={(e) => updateRow(row.id, 'uang_harian_meeting_fullday_aktual_perhari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -681,7 +676,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_luar_kota_jumlah_hari}
+                    value={row.uang_harian_luar_kota_jumlah_hari || ""}
                     onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_jumlah_hari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -689,20 +684,20 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.uang_harian_luar_kota_pagu_perhari}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_pagu_perhari', e.target.value)}
+                    type="text"
+                    value={row.uang_harian_luar_kota_pagu_perhari ? `Rp ${parseFloat(row.uang_harian_luar_kota_pagu_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_pagu_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.uang_harian_luar_kota_aktual_perhari}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_aktual_perhari', e.target.value)}
+                    type="text"
+                    value={row.uang_harian_luar_kota_aktual_perhari ? `Rp ${parseFloat(row.uang_harian_luar_kota_aktual_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_luar_kota_aktual_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
@@ -715,7 +710,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.uang_harian_dalam_kota_jumlah_hari}
+                    value={row.uang_harian_dalam_kota_jumlah_hari || ""}
                     onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_jumlah_hari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -723,20 +718,20 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.uang_harian_dalam_kota_pagu_perhari}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_pagu_perhari', e.target.value)}
+                    type="text"
+                    value={row.uang_harian_dalam_kota_pagu_perhari ? `Rp ${parseFloat(row.uang_harian_dalam_kota_pagu_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_pagu_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.uang_harian_dalam_kota_aktual_perhari}
-                    onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_aktual_perhari', e.target.value)}
+                    type="text"
+                    value={row.uang_harian_dalam_kota_aktual_perhari ? `Rp ${parseFloat(row.uang_harian_dalam_kota_aktual_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'uang_harian_dalam_kota_aktual_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
@@ -749,7 +744,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.representasi_luar_kota_jumlah_hari}
+                    value={row.representasi_luar_kota_jumlah_hari || ""}
                     onChange={(e) => updateRow(row.id, 'representasi_luar_kota_jumlah_hari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -757,20 +752,20 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.representasi_luar_kota_pagu_perhari}
-                    onChange={(e) => updateRow(row.id, 'representasi_luar_kota_pagu_perhari', e.target.value)}
+                    type="text"
+                    value={row.representasi_luar_kota_pagu_perhari ? `Rp ${parseFloat(row.representasi_luar_kota_pagu_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'representasi_luar_kota_pagu_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.representasi_luar_kota_aktual_perhari}
-                    onChange={(e) => updateRow(row.id, 'representasi_luar_kota_aktual_perhari', e.target.value)}
+                    type="text"
+                    value={row.representasi_luar_kota_aktual_perhari ? `Rp ${parseFloat(row.representasi_luar_kota_aktual_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'representasi_luar_kota_aktual_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
@@ -783,7 +778,7 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
                     type="number"
-                    value={row.representasi_dalam_kota_jumlah_hari}
+                    value={row.representasi_dalam_kota_jumlah_hari || ""}
                     onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_jumlah_hari', e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="0"
@@ -791,20 +786,20 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.representasi_dalam_kota_pagu_perhari}
-                    onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_pagu_perhari', e.target.value)}
+                    type="text"
+                    value={row.representasi_dalam_kota_pagu_perhari ? `Rp ${parseFloat(row.representasi_dalam_kota_pagu_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_pagu_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                   <input
-                    type="number"
-                    value={row.representasi_dalam_kota_aktual_perhari}
-                    onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_aktual_perhari', e.target.value)}
+                    type="text"
+                    value={row.representasi_dalam_kota_aktual_perhari ? `Rp ${parseFloat(row.representasi_dalam_kota_aktual_perhari || 0).toLocaleString('id-ID')}` : ''}
+                    onChange={(e) => updateRow(row.id, 'representasi_dalam_kota_aktual_perhari', e.target.value.replace(/[^\d]/g, ''))}
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                    placeholder="0"
+                    placeholder="Rp 0"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">

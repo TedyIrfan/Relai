@@ -9,9 +9,38 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Models\NominatifNew;
 use App\Models\NominatifEvidence;
+use App\Models\User;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class NominatifEvidenceController extends Controller
 {
+    public function __construct()
+    {
+        // Remove auth middleware since we use manual token validation
+    }
+
+    /**
+     * Manually validate Sanctum token and get authenticated user
+     */
+    private function getAuthenticatedUser(Request $request)
+    {
+        $token = $request->bearerToken();
+
+        if (!$token) {
+            return null;
+        }
+
+        // Find the token in the personal_access_tokens table
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            return null;
+        }
+
+        // Get the user associated with this token
+        return $accessToken->tokenable;
+    }
+
     /**
      * Display evidence files for a nominatif.
      */
@@ -20,7 +49,7 @@ class NominatifEvidenceController extends Controller
         $nominatif = NominatifNew::findOrFail($nominatifId);
 
         // Security check
-        if ($nominatif->user_id !== Auth::id()) {
+        if ($nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -43,7 +72,7 @@ class NominatifEvidenceController extends Controller
         $nominatif = NominatifNew::findOrFail($nominatifId);
 
         // Security check
-        if ($nominatif->user_id !== Auth::id()) {
+        if ($nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -66,7 +95,7 @@ class NominatifEvidenceController extends Controller
         DB::beginTransaction();
         try {
             $file = $request->file('evidence_file');
-            $userId = Auth::id();
+            $userId = $this->getAuthenticatedUser(app('request'))?->id;
 
             // Create unique filename
             $fileName = time() . '_' . $userId . '_' . $nominatifId . '_' . $file->getClientOriginalName();
@@ -114,7 +143,7 @@ class NominatifEvidenceController extends Controller
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
         // Security check
-        if ($evidence->nominatif->user_id !== Auth::id()) {
+        if ($evidence->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -135,7 +164,7 @@ class NominatifEvidenceController extends Controller
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
         // Security check
-        if ($evidence->nominatif->user_id !== Auth::id()) {
+        if ($evidence->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -173,7 +202,7 @@ class NominatifEvidenceController extends Controller
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
         // Security check
-        if ($evidence->nominatif->user_id !== Auth::id()) {
+        if ($evidence->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -223,7 +252,7 @@ class NominatifEvidenceController extends Controller
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
         // Security check
-        if ($evidence->nominatif->user_id !== Auth::id()) {
+        if ($evidence->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -253,7 +282,7 @@ class NominatifEvidenceController extends Controller
         $nominatif = NominatifNew::findOrFail($nominatifId);
 
         // Security check
-        if ($nominatif->user_id !== Auth::id()) {
+        if ($nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
