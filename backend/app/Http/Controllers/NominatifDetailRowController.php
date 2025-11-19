@@ -542,13 +542,15 @@ class NominatifDetailRowController extends Controller
     {
         $nominatif = NominatifNew::findOrFail($nominatifId);
 
-        $totalPagu = $nominatif->detailRows()->sum(function ($row) {
-            return $row->biayaRow?->total_pagu_row ?? 0;
-        });
+        $detailRows = $nominatif->detailRows()->with('biayaRow')->get();
 
-        $totalAktual = $nominatif->detailRows()->sum(function ($row) {
-            return $row->biayaRow?->total_aktual_row ?? 0;
-        });
+        $totalPagu = 0;
+        $totalAktual = 0;
+
+        foreach ($detailRows as $row) {
+            $totalPagu += $row->biayaRow?->total_pagu_row ?? 0;
+            $totalAktual += $row->biayaRow?->total_aktual_row ?? 0;
+        }
 
         $nominatif->update([
             'total_pagu' => $totalPagu,

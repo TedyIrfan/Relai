@@ -109,7 +109,7 @@ class NominatifNewController extends Controller
                     $query->select('id', 'nominatif_id', 'person_type', 'person_name', 'row_order')
                           ->orderBy('row_order');
                 }
-            ])->byUser(Auth::id());
+            ]); // ->byUser(Auth::id()); // Temporarily disabled for debugging
 
         // Filter by status if provided
         if ($request->has('status')) {
@@ -204,7 +204,7 @@ class NominatifNewController extends Controller
         $request->validate([
             'rka_detail_id' => 'required|exists:rka_details,id',
             'deskripsi_perjalanan_dinas' => 'required|string|max:1000',
-            'tanggal_mulai' => 'required|date|after_or_equal:today',
+            'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
         ]);
 
@@ -324,7 +324,7 @@ class NominatifNewController extends Controller
         $request->validate([
             'rka_detail_id' => 'sometimes|exists:rka_details,id',
             'deskripsi_perjalanan_dinas' => 'sometimes|string|max:1000',
-            'tanggal_mulai' => 'sometimes|date|after_or_equal:today',
+            'tanggal_mulai' => 'sometimes|date',
             'tanggal_selesai' => 'sometimes|date|after_or_equal:tanggal_mulai',
             'status' => 'sometimes|in:draft,submitted',
         ]);
