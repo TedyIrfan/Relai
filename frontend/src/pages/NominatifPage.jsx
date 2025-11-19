@@ -259,6 +259,7 @@ const NominatifPage = () => {
       if (response.ok) {
         const detailsData = await response.json();
         console.log('📋 Loading detail rows:', detailsData);
+        console.log('🔍 Detail row structure:', detailsData.data[0]);
 
         // Transform data for table
         const tableData = await Promise.all(
@@ -280,15 +281,15 @@ const NominatifPage = () => {
             return {
               id: detail.id,
               person_type: detail.person_type,
-              nama_lengkap: detail.nama,
-              no: detail.no,
-              golongan: detail.golongan,
-              jabatan: detail.jabatan,
-              eselon: detail.eselon,
-              asal: detail.asal,
-              tujuan: detail.tujuan,
-              tanggal_pergi: detail.tanggal_pergi,
-              tanggal_sampai: detail.tanggal_sampai,
+              nama_lengkap: detail.person_name,
+              no: detail.row_order,
+              golongan: detail.golongan || '',
+              jabatan: detail.jabatan || '',
+              eselon: detail.eselon || '',
+              asal: detail.asal || '',
+              tujuan: detail.tujuan || '',
+              tanggal_pergi: detail.tanggal_pergi ? detail.tanggal_pergi.split('T')[0] : '',
+              tanggal_sampai: detail.tanggal_sampai ? detail.tanggal_sampai.split('T')[0] : '',
               // Transportasi fields
               transport_pesawat_non_pp_pagu: biayaData.transport_pesawat_non_pp_pagu || '',
               transport_pesawat_non_pp_aktual: biayaData.transport_pesawat_non_pp_aktual || '',
@@ -323,7 +324,10 @@ const NominatifPage = () => {
           })
         );
 
+        console.log('🔍 Transformed tableData:', tableData[0]);
+        console.log('🔍 Before setNominatifData, current nominatifData:', nominatifData);
         setNominatifData(tableData);
+        console.log('🔍 After setNominatifData, new data length:', tableData.length);
         console.log('✅ Loaded', tableData.length, 'detail rows for editing');
       }
     } catch (error) {

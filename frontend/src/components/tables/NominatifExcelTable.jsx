@@ -3,10 +3,15 @@ import { Plus, Trash2, Save, Send, RefreshCw, CheckCircle, Upload, Eye } from 'l
 
 const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) => {
   // Ensure initialData has person_type, default to 'main' for existing rows
-  const processedInitialData = initialData.map(row => ({
-    ...row,
-    person_type: row.person_type || 'main'
-  }));
+  const processedInitialData = React.useMemo(() =>
+    initialData.map(row => ({
+      ...row,
+      person_type: row.person_type || 'main'
+    })), [initialData]
+  );
+
+  console.log('📊 NominatifExcelTable - initialData:', initialData);
+  console.log('📊 NominatifExcelTable - processedInitialData:', processedInitialData);
 
   const [rows, setRows] = useState(processedInitialData);
   const [loading, setLoading] = useState(false);
@@ -16,10 +21,20 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
 
   // Initialize with one empty row if no data
   React.useEffect(() => {
+    console.log('📊 NominatifExcelTable - useEffect, rows.length:', rows.length);
     if (rows.length === 0) {
+      console.log('📊 NominatifExcelTable - Adding empty row');
       addRow();
     }
   }, []);
+
+  // Update rows when initialData changes (for edit mode)
+  React.useEffect(() => {
+    if (processedInitialData.length > 0) {
+      console.log('📊 NominatifExcelTable - Updating rows with initialData:', processedInitialData);
+      setRows(processedInitialData);
+    }
+  }, [processedInitialData]);
 
   // Add new row
   const addRow = (personType = 'main') => {
