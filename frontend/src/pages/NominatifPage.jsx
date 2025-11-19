@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Send, FileText, AlertCircle } from 'lucide-react';
 import NominatifExcelTable from '../components/tables/NominatifExcelTable';
+import { nominatifService } from '../services/nominatifService';
 
 const NominatifPage = () => {
   const { rkaId } = useParams();
@@ -468,22 +469,15 @@ const NominatifPage = () => {
         console.log(`🔍 Full biaya payload keys:`, Object.keys(biayaPayload));
         console.log(`🔍 Full biaya payload values:`, biayaPayload);
 
-        const biayaResponse = await fetch(`http://localhost/api/nominatifs/details/${detailId}/biaya`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(biayaPayload)
-        });
+        // Gunakan nominatifService yang sudah ada logic anti-duplikasi
+        const biayaResult = await nominatifService.saveBiayaRow(detailId, biayaPayload);
 
-        if (!biayaResponse.ok) {
-          const errorText = await biayaResponse.text();
-          console.error(`❌ Biaya creation failed for detail ${detailId}:`, errorText);
-          throw new Error(`Gagal membuat biaya row: ${biayaResponse.status} - ${errorText}`);
+        if (!biayaResult.success) {
+          console.error(`❌ Biaya creation failed for detail ${detailId}:`, biayaResult);
+          throw new Error(`Gagal membuat biaya row: ${biayaResult.message}`);
         }
 
-        return await biayaResponse.json();
+        return biayaResult.data;
       });
 
       // Execute all biaya updates in parallel

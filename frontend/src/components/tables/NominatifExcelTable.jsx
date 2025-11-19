@@ -10,19 +10,19 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
     })), [initialData]
   );
 
-  console.log('📊 NominatifExcelTable - initialData:', initialData);
-  console.log('📊 NominatifExcelTable - processedInitialData:', processedInitialData);
+  // Removed excessive logging to prevent console spam
 
   const [rows, setRows] = useState(processedInitialData);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const tableRef = useRef(null);
 
   // Initialize with one empty row if no data
   React.useEffect(() => {
-    console.log('📊 NominatifExcelTable - useEffect, rows.length:', rows.length);
-    if (rows.length === 0) {
+    // Only log when actually needed to reduce spam
+    if (rows.length === 0 && process.env.NODE_ENV === 'development') {
       console.log('📊 NominatifExcelTable - Adding empty row');
       addRow();
     }
@@ -31,10 +31,36 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
   // Update rows when initialData changes (for edit mode)
   React.useEffect(() => {
     if (processedInitialData.length > 0) {
-      console.log('📊 NominatifExcelTable - Updating rows with initialData:', processedInitialData);
       setRows(processedInitialData);
     }
   }, [processedInitialData]);
+
+  // Validation function for required fields
+  const validateRows = () => {
+    const errors = {};
+
+    rows.forEach((row, index) => {
+      const rowErrors = {};
+
+      // Validate Golongan - required field
+      if (!row.golongan || row.golongan.trim() === '') {
+        rowErrors.golongan = 'Golongan harus diisi';
+      }
+
+      // Validate Eselon - required field
+      if (!row.eselon || row.eselon.trim() === '') {
+        rowErrors.eselon = 'Eselon harus diisi';
+      }
+
+      // Only add errors object if there are actual errors
+      if (Object.keys(rowErrors).length > 0) {
+        errors[index] = rowErrors;
+      }
+    });
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0; // Return true if no errors
+  };
 
   // Add new row
   const addRow = (personType = 'main') => {
@@ -140,12 +166,36 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
     });
 
     setRows(updatedRows);
+
+    // Clear validation error for this field if it was previously invalid
+    if ((field === 'golongan' || field === 'eselon') && value && value.trim() !== '') {
+      const rowIndex = rows.findIndex(row => row.id === id);
+      if (rowIndex !== -1 && validationErrors[rowIndex]?.[field]) {
+        const newErrors = { ...validationErrors };
+        if (newErrors[rowIndex]) {
+          delete newErrors[rowIndex][field];
+          // If no more errors for this row, remove the entire row entry
+          if (Object.keys(newErrors[rowIndex]).length === 0) {
+            delete newErrors[rowIndex];
+          }
+          setValidationErrors(newErrors);
+        }
+      }
+    }
   };
 
   // Delete row
   const deleteRow = (id) => {
     if (rows.length > 1) {
       setRows(rows.filter(row => row.id !== id));
+
+      // Clear validation errors for deleted row
+      const rowIndex = rows.findIndex(row => row.id === id);
+      if (rowIndex !== -1 && validationErrors[rowIndex]) {
+        const newErrors = { ...validationErrors };
+        delete newErrors[rowIndex];
+        setValidationErrors(newErrors);
+      }
     }
   };
 
@@ -255,6 +305,15 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
 
   // Save draft
   const saveDraft = async () => {
+    // Validate required fields before saving
+    if (!validateRows()) {
+      // If validation fails, show alert and stop saving
+      const errorCount = Object.keys(validationErrors).length;
+      const errorMessages = Object.values(validationErrors).flat().join('\n');
+      alert(`Mohon lengkapi field yang wajib diisi:\n\n${errorMessages}`);
+      return;
+    }
+
     setSaving(true);
     try {
       if (onSave) {
@@ -270,6 +329,15 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
 
   // Submit
   const submitNominatif = async () => {
+    // Validate required fields before submitting
+    if (!validateRows()) {
+      // If validation fails, show alert and stop submission
+      const errorCount = Object.keys(validationErrors).length;
+      const errorMessages = Object.values(validationErrors).flat().join('\n');
+      alert(`Mohon lengkapi field yang wajib diisi:\n\n${errorMessages}`);
+      return;
+    }
+
     setSubmitting(true);
     try {
       if (onSubmit) {
@@ -463,18 +531,29 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                   />
                 </td>
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
-                  <select
-                    value={row.golongan || ''}
-                    onChange={(e) => updateRow(row.id, 'golongan', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 bg-white"
-                  >
-                    <option value="">Pilih Golongan</option>
-                    <option value="I">I</option>
-                    <option value="II">II</option>
-                    <option value="III">III</option>
-                    <option value="IV">IV</option>
-                    <option value="Non Golongan">Non Golongan</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={row.golongan || ''}
+                      onChange={(e) => updateRow(row.id, 'golongan', e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:border-gray-500 bg-white ${
+                        validationErrors[index]?.golongan
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                          : 'border-gray-300 focus:ring-gray-500'
+                      }`}
+                    >
+                      <option value="">Pilih Golongan</option>
+                      <option value="I">I</option>
+                      <option value="II">II</option>
+                      <option value="III">III</option>
+                      <option value="IV">IV</option>
+                      <option value="Non Golongan">Non Golongan</option>
+                    </select>
+                    {validationErrors[index]?.golongan && (
+                      <div className="absolute mt-1 text-xs text-red-600 whitespace-nowrap">
+                        {validationErrors[index].golongan}
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
@@ -486,18 +565,29 @@ const NominatifExcelTable = ({ rkaDetail, initialData = [], onSave, onSubmit }) 
                   />
                 </td>
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
-                  <select
-                    value={row.eselon || ''}
-                    onChange={(e) => updateRow(row.id, 'eselon', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 bg-white"
-                  >
-                    <option value="">Pilih Eselon</option>
-                    <option value="I">I</option>
-                    <option value="II">II</option>
-                    <option value="III">III</option>
-                    <option value="IV">IV</option>
-                    <option value="Non Eselon">Non Eselon</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={row.eselon || ''}
+                      onChange={(e) => updateRow(row.id, 'eselon', e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:border-gray-500 bg-white ${
+                        validationErrors[index]?.eselon
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                          : 'border-gray-300 focus:ring-gray-500'
+                      }`}
+                    >
+                      <option value="">Pilih Eselon</option>
+                      <option value="I">I</option>
+                      <option value="II">II</option>
+                      <option value="III">III</option>
+                      <option value="IV">IV</option>
+                      <option value="Non Eselon">Non Eselon</option>
+                    </select>
+                    {validationErrors[index]?.eselon && (
+                      <div className="absolute mt-1 text-xs text-red-600 whitespace-nowrap">
+                        {validationErrors[index].eselon}
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input

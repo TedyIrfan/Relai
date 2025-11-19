@@ -30,10 +30,15 @@ return new class extends Migration
             $table->decimal('penginapan_pagu_perhari', 15, 2)->default(0);
             $table->decimal('penginapan_aktual_perhari', 15, 2)->default(0);
 
-            // Uang Harian Fullboard (3 fields)
-            $table->integer('uang_harian_fullboard_jumlah_hari')->default(0);
-            $table->decimal('uang_harian_fullboard_pagu_perhari', 15, 2)->default(0);
-            $table->decimal('uang_harian_fullboard_aktual_perhari', 15, 2)->default(0);
+            // Uang Harian Meeting Fullboard (3 fields) - FIX: Add missing base fields
+            $table->integer('uang_harian_meeting_fullboard_jumlah_hari')->default(0);
+            $table->decimal('uang_harian_meeting_fullboard_pagu_perhari', 15, 2)->default(0);
+            $table->decimal('uang_harian_meeting_fullboard_aktual_perhari', 15, 2)->default(0);
+
+            // Uang Harian Meeting Fullday (3 fields) - FIX: Add missing base fields
+            $table->integer('uang_harian_meeting_fullday_jumlah_hari')->default(0);
+            $table->decimal('uang_harian_meeting_fullday_pagu_perhari', 15, 2)->default(0);
+            $table->decimal('uang_harian_meeting_fullday_aktual_perhari', 15, 2)->default(0);
 
             // Uang Harian Luar Kota (3 fields)
             $table->integer('uang_harian_luar_kota_jumlah_hari')->default(0);
@@ -55,60 +60,46 @@ return new class extends Migration
             $table->decimal('representasi_dalam_kota_pagu_perhari', 15, 2)->default(0);
             $table->decimal('representasi_dalam_kota_aktual_perhari', 15, 2)->default(0);
 
-            // Generated Columns for Performance (PostgreSQL)
+            // Manual Calculation Fields (Regular Decimal Fields)
+            // Penginapan Totals
+            $table->decimal('penginapan_total_pagu', 15, 2)->default(0);
+            $table->decimal('penginapan_total_aktual', 15, 2)->default(0);
+            $table->decimal('penginapan_anggaran_berjalan', 15, 2)->default(0);
 
-            // Penginapan Calculations
-            $table->decimal('penginapan_total_pagu', 15, 2)->nullable()->generatedAlwaysAs('penginapan_jumlah_malam * penginapan_pagu_perhari')->stored();
-            $table->decimal('penginapan_total_aktual', 15, 2)->nullable()->generatedAlwaysAs('penginapan_jumlah_malam * penginapan_aktual_perhari')->stored();
-            $table->decimal('penginapan_anggaran_berjalan', 15, 2)->nullable()->generatedAlwaysAs('penginapan_total_pagu - penginapan_total_aktual')->stored();
+            // Uang Harian Meeting Fullboard Totals
+            $table->decimal('uang_harian_meeting_fullboard_total_pagu', 15, 2)->default(0);
+            $table->decimal('uang_harian_meeting_fullboard_total_aktual', 15, 2)->default(0);
+            $table->decimal('uang_harian_meeting_fullboard_anggaran_berjalan', 15, 2)->default(0);
 
-            // Uang Harian Fullboard Calculations
-            $table->decimal('uang_harian_fullboard_total_pagu', 15, 2)->nullable()->generatedAlwaysAs('uang_harian_fullboard_jumlah_hari * uang_harian_fullboard_pagu_perhari')->stored();
-            $table->decimal('uang_harian_fullboard_total_aktual', 15, 2)->nullable()->generatedAlwaysAs('uang_harian_fullboard_jumlah_hari * uang_harian_fullboard_aktual_perhari')->stored();
-            $table->decimal('uang_harian_fullboard_anggaran_berjalan', 15, 2)->nullable()->generatedAlwaysAs('uang_harian_fullboard_total_pagu - uang_harian_fullboard_total_aktual')->stored();
+            // Uang Harian Meeting Fullday Totals
+            $table->decimal('uang_harian_meeting_fullday_total_pagu', 15, 2)->default(0);
+            $table->decimal('uang_harian_meeting_fullday_total_aktual', 15, 2)->default(0);
+            $table->decimal('uang_harian_meeting_fullday_anggaran_berjalan', 15, 2)->default(0);
 
-            // Uang Harian Luar Kota Calculations
-            $table->decimal('uang_harian_luar_kota_total_pagu', 15, 2)->nullable()->generatedAlwaysAs('uang_harian_luar_kota_jumlah_hari * uang_harian_luar_kota_pagu_perhari')->stored();
-            $table->decimal('uang_harian_luar_kota_total_aktual', 15, 2)->nullable()->generatedAlwaysAs('uang_harian_luar_kota_jumlah_hari * uang_harian_luar_kota_aktual_perhari')->stored();
-            $table->decimal('uang_harian_luar_kota_anggaran_berjalan', 15, 2)->nullable()->generatedAlwaysAs('uang_harian_luar_kota_total_pagu - uang_harian_luar_kota_total_aktual')->stored();
+            // Uang Harian Luar Kota Totals
+            $table->decimal('uang_harian_luar_kota_total_pagu', 15, 2)->default(0);
+            $table->decimal('uang_harian_luar_kota_total_aktual', 15, 2)->default(0);
+            $table->decimal('uang_harian_luar_kota_anggaran_berjalan', 15, 2)->default(0);
 
-            // Uang Harian Dalam Kota Calculations
-            $table->decimal('uang_harian_dalam_kota_total_pagu', 15, 2)->nullable()->generatedAlwaysAs('uang_harian_dalam_kota_jumlah_hari * uang_harian_dalam_kota_pagu_perhari')->stored();
-            $table->decimal('uang_harian_dalam_kota_total_aktual', 15, 2)->nullable()->generatedAlwaysAs('uang_harian_dalam_kota_jumlah_hari * uang_harian_dalam_kota_aktual_perhari')->stored();
-            $table->decimal('uang_harian_dalam_kota_anggaran_berjalan', 15, 2)->nullable()->generatedAlwaysAs('uang_harian_dalam_kota_total_pagu - uang_harian_dalam_kota_total_aktual')->stored();
+            // Uang Harian Dalam Kota Totals
+            $table->decimal('uang_harian_dalam_kota_total_pagu', 15, 2)->default(0);
+            $table->decimal('uang_harian_dalam_kota_total_aktual', 15, 2)->default(0);
+            $table->decimal('uang_harian_dalam_kota_anggaran_berjalan', 15, 2)->default(0);
 
-            // Representasi Luar Kota Calculations
-            $table->decimal('representasi_luar_kota_total_pagu', 15, 2)->nullable()->generatedAlwaysAs('representasi_luar_kota_jumlah_hari * representasi_luar_kota_pagu_perhari')->stored();
-            $table->decimal('representasi_luar_kota_total_aktual', 15, 2)->nullable()->generatedAlwaysAs('representasi_luar_kota_jumlah_hari * representasi_luar_kota_aktual_perhari')->stored();
-            $table->decimal('representasi_luar_kota_anggaran_berjalan', 15, 2)->nullable()->generatedAlwaysAs('representasi_luar_kota_total_pagu - representasi_luar_kota_total_aktual')->stored();
+            // Representasi Luar Kota Totals
+            $table->decimal('representasi_luar_kota_total_pagu', 15, 2)->default(0);
+            $table->decimal('representasi_luar_kota_total_aktual', 15, 2)->default(0);
+            $table->decimal('representasi_luar_kota_anggaran_berjalan', 15, 2)->default(0);
 
-            // Representasi Dalam Kota Calculations
-            $table->decimal('representasi_dalam_kota_total_pagu', 15, 2)->nullable()->generatedAlwaysAs('representasi_dalam_kota_jumlah_hari * representasi_dalam_kota_pagu_perhari')->stored();
-            $table->decimal('representasi_dalam_kota_total_aktual', 15, 2)->nullable()->generatedAlwaysAs('representasi_dalam_kota_jumlah_hari * representasi_dalam_kota_aktual_perhari')->stored();
-            $table->decimal('representasi_dalam_kota_anggaran_berjalan', 15, 2)->nullable()->generatedAlwaysAs('representasi_dalam_kota_total_pagu - representasi_dalam_kota_total_aktual')->stored();
+            // Representasi Dalam Kota Totals
+            $table->decimal('representasi_dalam_kota_total_pagu', 15, 2)->default(0);
+            $table->decimal('representasi_dalam_kota_total_aktual', 15, 2)->default(0);
+            $table->decimal('representasi_dalam_kota_anggaran_berjalan', 15, 2)->default(0);
 
-            // Total Akhir per Row (Generated Columns)
-            $table->decimal('total_pagu_row', 15, 2)->nullable()->generatedAlwaysAs('
-                transport_pesawat_non_pp_pagu + transport_taksi_pagu +
-                penginapan_total_pagu +
-                uang_harian_fullboard_total_pagu +
-                uang_harian_luar_kota_total_pagu +
-                uang_harian_dalam_kota_total_pagu +
-                representasi_luar_kota_total_pagu +
-                representasi_dalam_kota_total_pagu
-            ')->stored();
-
-            $table->decimal('total_aktual_row', 15, 2)->nullable()->generatedAlwaysAs('
-                transport_pesawat_non_pp_aktual + transport_taksi_aktual +
-                penginapan_total_aktual +
-                uang_harian_fullboard_total_aktual +
-                uang_harian_luar_kota_total_aktual +
-                uang_harian_dalam_kota_total_aktual +
-                representasi_luar_kota_total_aktual +
-                representasi_dalam_kota_total_aktual
-            ')->stored();
-
-            $table->decimal('total_anggaran_berjalan_row', 15, 2)->nullable()->generatedAlwaysAs('total_pagu_row - total_aktual_row')->stored();
+            // Total Akhir per Row (Manual Calculation)
+            $table->decimal('total_pagu_row', 15, 2)->default(0);
+            $table->decimal('total_aktual_row', 15, 2)->default(0);
+            $table->decimal('total_anggaran_berjalan_row', 15, 2)->default(0);
 
             $table->timestamps();
 

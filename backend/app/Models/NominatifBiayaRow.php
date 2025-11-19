@@ -42,14 +42,38 @@ class NominatifBiayaRow extends Model
         'representasi_dalam_kota_jumlah_hari',
         'representasi_dalam_kota_pagu_perhari',
         'representasi_dalam_kota_aktual_perhari',
-        // Uang Harian Meeting Fullboard (3 fields)
-        'uang_harian_meeting_fullboard_jumlah_hari',
-        'uang_harian_meeting_fullboard_pagu_perhari',
-        'uang_harian_meeting_fullboard_aktual_perhari',
         // Uang Harian Meeting Fullday (3 fields)
         'uang_harian_meeting_fullday_jumlah_hari',
         'uang_harian_meeting_fullday_pagu_perhari',
         'uang_harian_meeting_fullday_aktual_perhari',
+
+        // Manual Calculation Fields (Total per Kategori)
+        'penginapan_total_pagu',
+        'penginapan_total_aktual',
+        'penginapan_anggaran_berjalan',
+        'uang_harian_meeting_fullboard_total_pagu',
+        'uang_harian_meeting_fullboard_total_aktual',
+        'uang_harian_meeting_fullboard_anggaran_berjalan',
+        'uang_harian_meeting_fullday_total_pagu',
+        'uang_harian_meeting_fullday_total_aktual',
+        'uang_harian_meeting_fullday_anggaran_berjalan',
+        'uang_harian_luar_kota_total_pagu',
+        'uang_harian_luar_kota_total_aktual',
+        'uang_harian_luar_kota_anggaran_berjalan',
+        'uang_harian_dalam_kota_total_pagu',
+        'uang_harian_dalam_kota_total_aktual',
+        'uang_harian_dalam_kota_anggaran_berjalan',
+        'representasi_luar_kota_total_pagu',
+        'representasi_luar_kota_total_aktual',
+        'representasi_luar_kota_anggaran_berjalan',
+        'representasi_dalam_kota_total_pagu',
+        'representasi_dalam_kota_total_aktual',
+        'representasi_dalam_kota_anggaran_berjalan',
+
+        // Grand Total Fields
+        'total_pagu_row',
+        'total_aktual_row',
+        'total_anggaran_berjalan_row',
     ];
 
     protected $casts = [
@@ -106,14 +130,6 @@ class NominatifBiayaRow extends Model
         'representasi_dalam_kota_total_pagu' => 'decimal:2',
         'representasi_dalam_kota_total_aktual' => 'decimal:2',
         'representasi_dalam_kota_anggaran_berjalan' => 'decimal:2',
-        // Uang Harian Meeting Fullboard
-        'uang_harian_meeting_fullboard_jumlah_hari' => 'integer',
-        'uang_harian_meeting_fullboard_pagu_perhari' => 'decimal:2',
-        'uang_harian_meeting_fullboard_aktual_perhari' => 'decimal:2',
-        // Generated columns
-        'uang_harian_meeting_fullboard_total_pagu' => 'decimal:2',
-        'uang_harian_meeting_fullboard_total_aktual' => 'decimal:2',
-        'uang_harian_meeting_fullboard_anggaran_berjalan' => 'decimal:2',
         // Uang Harian Meeting Fullday
         'uang_harian_meeting_fullday_jumlah_hari' => 'integer',
         'uang_harian_meeting_fullday_pagu_perhari' => 'decimal:2',
@@ -186,39 +202,50 @@ class NominatifBiayaRow extends Model
         return $this->transport_total_pagu - $this->transport_total_aktual;
     }
 
-    // Validation rules
+    // Validation rules - FIX: Match dengan fillable array
     public static function getValidationRules()
     {
         return [
-            // Transportasi
+            // Transportasi (sesuai database yang ada)
             'transport_pesawat_non_pp_pagu' => 'nullable|numeric|min:0|max:999999999.99',
             'transport_pesawat_non_pp_aktual' => 'nullable|numeric|min:0|max:999999999.99',
             'transport_taksi_pagu' => 'nullable|numeric|min:0|max:999999999.99',
             'transport_taksi_aktual' => 'nullable|numeric|min:0|max:999999999.99',
-            // Penginapan
+
+            // Penginapan (3 fields)
             'penginapan_jumlah_malam' => 'nullable|integer|min:0|max:365',
             'penginapan_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
             'penginapan_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
-            // Uang Harian Fullboard
-            'uang_harian_fullboard_jumlah_hari' => 'nullable|integer|min:0|max:365',
-            'uang_harian_fullboard_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
-            'uang_harian_fullboard_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
-            // Uang Harian Luar Kota
+
+            // Uang Harian Meeting Fullboard (3 fields) - FIX: Correct field names!
+            'uang_harian_meeting_fullboard_jumlah_hari' => 'nullable|integer|min:0|max:365',
+            'uang_harian_meeting_fullboard_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            'uang_harian_meeting_fullboard_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+
+            // Uang Harian Luar Kota (3 fields)
             'uang_harian_luar_kota_jumlah_hari' => 'nullable|integer|min:0|max:365',
             'uang_harian_luar_kota_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
             'uang_harian_luar_kota_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
-            // Uang Harian Dalam Kota
+
+            // Uang Harian Dalam Kota (3 fields)
             'uang_harian_dalam_kota_jumlah_hari' => 'nullable|integer|min:0|max:365',
             'uang_harian_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
             'uang_harian_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
-            // Representasi Luar Kota
+
+            // Representasi Luar Kota (3 fields)
             'representasi_luar_kota_jumlah_hari' => 'nullable|integer|min:0|max:365',
             'representasi_luar_kota_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
             'representasi_luar_kota_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
-            // Representasi Dalam Kota
+
+            // Representasi Dalam Kota (3 fields)
             'representasi_dalam_kota_jumlah_hari' => 'nullable|integer|min:0|max:365',
             'representasi_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
             'representasi_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+
+            // Uang Harian Meeting Fullday (3 fields) - FIX: Add missing fields!
+            'uang_harian_meeting_fullday_jumlah_hari' => 'nullable|integer|min:0|max:365',
+            'uang_harian_meeting_fullday_pagu_perhari' => 'nullable|numeric|min:0|max:999999999.99',
+            'uang_harian_meeting_fullday_aktual_perhari' => 'nullable|numeric|min:0|max:999999999.99',
         ];
     }
 

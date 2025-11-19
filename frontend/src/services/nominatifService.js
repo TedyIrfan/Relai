@@ -291,15 +291,173 @@ export const nominatifService = {
     }
   },
 
-  // Save biaya row
+  // Method saveBiayaRow yang sudah di-fix - copy ke file utama
   saveBiayaRow: async (detailRowId, biayaData) => {
+    // Validasi input
+    if (!detailRowId) {
+      return { success: false, message: 'Detail row ID diperlukan' };
+    }
+
+    if (!biayaData || Object.keys(biayaData).length === 0) {
+      return { success: false, message: 'Data biaya diperlukan' };
+    }
+
+    // Validasi input - User BOLEH kosongkan penginapan, tapi jika input WAJIB lengkap
+    // Logic:
+    // 1. Semua field kosong = BOLEH (tidak ada penginapan)
+    // 2. Ada yang terisi = WAJIB lengkap (tidak boleh setengah-setengah)
+    const penginapanFields = ['penginapan_jumlah_malam', 'penginapan_pagu_perhari', 'penginapan_aktual_perhari'];
+
+    // Cek apakah ada field penginapan yang terisi (tidak kosong/tidak null/tidak undefined)
+    const hasPenginapanData = penginapanFields.some(field => {
+      const value = biayaData[field];
+      return value !== null && value !== undefined && value !== '' && value !== 0;
+    });
+
+    // Cek apakah semua field penginapan terisi dengan benar
+    const isPenginapanComplete = hasPenginapanData && penginapanFields.every(field => {
+      const value = biayaData[field];
+      return value !== null && value !== undefined && value !== '' && !isNaN(parseFloat(value));
+    });
+
+    // Validasi: Jika ada penginapan data, harus lengkap
+    if (hasPenginapanData && !isPenginapanComplete) {
+      return {
+        success: false,
+        message: 'Jika ada data penginapan, maka semua field (jumlah malam, pagu perhari, aktual perhari) harus diisi lengkap. Jika tidak ada penginapan, biarkan semua field kosong.'
+      };
+    }
+
+    console.log('🏨 Penginapan validation:', {
+      hasPenginapanData,
+      isPenginapanComplete,
+      penginapanValues: {
+        jumlah_malam: biayaData.penginapan_jumlah_malam,
+        pagu_perhari: biayaData.penginapan_pagu_perhari,
+        aktual_perhari: biayaData.penginapan_aktual_perhari
+      }
+    });
+
+    // Validasi dan format data biaya - User BOLEH kosongkan, tapi jika input WAJIB lengkap
+    const validatedBiayaData = {
+      // Transport data - User input manual, tidak ada default values
+      transport_pesawat_non_pp_pagu: biayaData.transport_pesawat_non_pp_pagu !== null && biayaData.transport_pesawat_non_pp_pagu !== undefined && biayaData.transport_pesawat_non_pp_pagu !== '' && biayaData.transport_pesawat_non_pp_pagu !== 0 ? parseFloat(biayaData.transport_pesawat_non_pp_pagu) : null,
+      transport_pesawat_non_pp_aktual: biayaData.transport_pesawat_non_pp_aktual !== null && biayaData.transport_pesawat_non_pp_aktual !== undefined && biayaData.transport_pesawat_non_pp_aktual !== '' && biayaData.transport_pesawat_non_pp_aktual !== 0 ? parseFloat(biayaData.transport_pesawat_non_pp_aktual) : null,
+      transport_taksi_pagu: biayaData.transport_taksi_pagu !== null && biayaData.transport_taksi_pagu !== undefined && biayaData.transport_taksi_pagu !== '' && biayaData.transport_taksi_pagu !== 0 ? parseFloat(biayaData.transport_taksi_pagu) : null,
+      transport_taksi_aktual: biayaData.transport_taksi_aktual !== null && biayaData.transport_taksi_aktual !== undefined && biayaData.transport_taksi_aktual !== '' && biayaData.transport_taksi_aktual !== 0 ? parseFloat(biayaData.transport_taksi_aktual) : null,
+
+      // Penginapan data - BOLEH kosong semua atau lengkap semua, tidak ada setengah-setengah
+      penginapan_jumlah_malam: hasPenginapanData && biayaData.penginapan_jumlah_malam !== null && biayaData.penginapan_jumlah_malam !== undefined && biayaData.penginapan_jumlah_malam !== '' && biayaData.penginapan_jumlah_malam !== 0 ? parseInt(biayaData.penginapan_jumlah_malam) : null,
+      penginapan_pagu_perhari: hasPenginapanData && biayaData.penginapan_pagu_perhari !== null && biayaData.penginapan_pagu_perhari !== undefined && biayaData.penginapan_pagu_perhari !== '' && biayaData.penginapan_pagu_perhari !== 0 ? parseFloat(biayaData.penginapan_pagu_perhari) : null,
+      penginapan_aktual_perhari: hasPenginapanData && biayaData.penginapan_aktual_perhari !== null && biayaData.penginapan_aktual_perhari !== undefined && biayaData.penginapan_aktual_perhari !== '' && biayaData.penginapan_aktual_perhari !== 0 ? parseFloat(biayaData.penginapan_aktual_perhari) : null,
+
+      uang_harian_meeting_fullboard_jumlah_hari: biayaData.uang_harian_meeting_fullboard_jumlah_hari !== null && biayaData.uang_harian_meeting_fullboard_jumlah_hari !== undefined && biayaData.uang_harian_meeting_fullboard_jumlah_hari !== '' ? parseInt(biayaData.uang_harian_meeting_fullboard_jumlah_hari) : null,
+      uang_harian_meeting_fullboard_pagu_perhari: biayaData.uang_harian_meeting_fullboard_pagu_perhari !== null && biayaData.uang_harian_meeting_fullboard_pagu_perhari !== undefined && biayaData.uang_harian_meeting_fullboard_pagu_perhari !== '' ? parseFloat(biayaData.uang_harian_meeting_fullboard_pagu_perhari) : null,
+      uang_harian_meeting_fullboard_aktual_perhari: biayaData.uang_harian_meeting_fullboard_aktual_perhari !== null && biayaData.uang_harian_meeting_fullboard_aktual_perhari !== undefined && biayaData.uang_harian_meeting_fullboard_aktual_perhari !== '' ? parseFloat(biayaData.uang_harian_meeting_fullboard_aktual_perhari) : null,
+
+      uang_harian_meeting_fullday_jumlah_hari: biayaData.uang_harian_meeting_fullday_jumlah_hari !== null && biayaData.uang_harian_meeting_fullday_jumlah_hari !== undefined && biayaData.uang_harian_meeting_fullday_jumlah_hari !== '' ? parseInt(biayaData.uang_harian_meeting_fullday_jumlah_hari) : null,
+      uang_harian_meeting_fullday_pagu_perhari: biayaData.uang_harian_meeting_fullday_pagu_perhari !== null && biayaData.uang_harian_meeting_fullday_pagu_perhari !== undefined && biayaData.uang_harian_meeting_fullday_pagu_perhari !== '' ? parseFloat(biayaData.uang_harian_meeting_fullday_pagu_perhari) : null,
+      uang_harian_meeting_fullday_aktual_perhari: biayaData.uang_harian_meeting_fullday_aktual_perhari !== null && biayaData.uang_harian_meeting_fullday_aktual_perhari !== undefined && biayaData.uang_harian_meeting_fullday_aktual_perhari !== '' ? parseFloat(biayaData.uang_harian_meeting_fullday_aktual_perhari) : null,
+
+      uang_harian_luar_kota_jumlah_hari: biayaData.uang_harian_luar_kota_jumlah_hari !== null && biayaData.uang_harian_luar_kota_jumlah_hari !== undefined && biayaData.uang_harian_luar_kota_jumlah_hari !== '' ? parseInt(biayaData.uang_harian_luar_kota_jumlah_hari) : null,
+      uang_harian_luar_kota_pagu_perhari: biayaData.uang_harian_luar_kota_pagu_perhari !== null && biayaData.uang_harian_luar_kota_pagu_perhari !== undefined && biayaData.uang_harian_luar_kota_pagu_perhari !== '' ? parseFloat(biayaData.uang_harian_luar_kota_pagu_perhari) : null,
+      uang_harian_luar_kota_aktual_perhari: biayaData.uang_harian_luar_kota_aktual_perhari !== null && biayaData.uang_harian_luar_kota_aktual_perhari !== undefined && biayaData.uang_harian_luar_kota_aktual_perhari !== '' ? parseFloat(biayaData.uang_harian_luar_kota_aktual_perhari) : null,
+
+      uang_harian_dalam_kota_jumlah_hari: biayaData.uang_harian_dalam_kota_jumlah_hari !== null && biayaData.uang_harian_dalam_kota_jumlah_hari !== undefined && biayaData.uang_harian_dalam_kota_jumlah_hari !== '' ? parseInt(biayaData.uang_harian_dalam_kota_jumlah_hari) : null,
+      uang_harian_dalam_kota_pagu_perhari: biayaData.uang_harian_dalam_kota_pagu_perhari !== null && biayaData.uang_harian_dalam_kota_pagu_perhari !== undefined && biayaData.uang_harian_dalam_kota_pagu_perhari !== '' ? parseFloat(biayaData.uang_harian_dalam_kota_pagu_perhari) : null,
+      uang_harian_dalam_kota_aktual_perhari: biayaData.uang_harian_dalam_kota_aktual_perhari !== null && biayaData.uang_harian_dalam_kota_aktual_perhari !== undefined && biayaData.uang_harian_dalam_kota_aktual_perhari !== '' ? parseFloat(biayaData.uang_harian_dalam_kota_aktual_perhari) : null,
+
+      representasi_luar_kota_jumlah_hari: biayaData.representasi_luar_kota_jumlah_hari !== null && biayaData.representasi_luar_kota_jumlah_hari !== undefined && biayaData.representasi_luar_kota_jumlah_hari !== '' ? parseInt(biayaData.representasi_luar_kota_jumlah_hari) : null,
+      representasi_luar_kota_pagu_perhari: biayaData.representasi_luar_kota_pagu_perhari !== null && biayaData.representasi_luar_kota_pagu_perhari !== undefined && biayaData.representasi_luar_kota_pagu_perhari !== '' ? parseFloat(biayaData.representasi_luar_kota_pagu_perhari) : null,
+      representasi_luar_kota_aktual_perhari: biayaData.representasi_luar_kota_aktual_perhari !== null && biayaData.representasi_luar_kota_aktual_perhari !== undefined && biayaData.representasi_luar_kota_aktual_perhari !== '' ? parseFloat(biayaData.representasi_luar_kota_aktual_perhari) : null,
+
+      representasi_dalam_kota_jumlah_hari: biayaData.representasi_dalam_kota_jumlah_hari !== null && biayaData.representasi_dalam_kota_jumlah_hari !== undefined && biayaData.representasi_dalam_kota_jumlah_hari !== '' ? parseInt(biayaData.representasi_dalam_kota_jumlah_hari) : null,
+      representasi_dalam_kota_pagu_perhari: biayaData.representasi_dalam_kota_pagu_perhari !== null && biayaData.representasi_dalam_kota_pagu_perhari !== undefined && biayaData.representasi_dalam_kota_pagu_perhari !== '' ? parseFloat(biayaData.representasi_dalam_kota_pagu_perhari) : null,
+      representasi_dalam_kota_aktual_perhari: biayaData.representasi_dalam_kota_aktual_perhari !== null && biayaData.representasi_dalam_kota_aktual_perhari !== undefined && biayaData.representasi_dalam_kota_aktual_perhari !== '' ? parseFloat(biayaData.representasi_dalam_kota_aktual_perhari) : null,
+    };
+
     try {
-      const response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, biayaData);
+      // STRATEGI 1: Cek apakah biaya row sudah ada
+      console.log('🔍 Checking existing biaya rows for detailRowId:', detailRowId);
+      const existingBiaya = await nominatifService.getBiayaRows(detailRowId);
+
+      // Debug logging detail
+      console.log('📊 Full existingBiaya response:', JSON.stringify(existingBiaya, null, 2));
+
+      let response;
+
+      // Fix double nested response structure
+      const biayaRow = existingBiaya.data?.data || null;
+
+      // Jika biaya row sudah ada, lakukan update
+      if (existingBiaya.success && biayaRow && biayaRow.id) {
+        console.log('✅ Existing biaya found, updating ID:', biayaRow.id);
+        // ✅ FIX: Gunakan URL BENAR dengan detailRowId
+        response = await api.put(`/nominatifs/details/${detailRowId}/biaya/${biayaRow.id}`, validatedBiayaData);
+        console.log('✅ Update successful:', response.data);
+      } else {
+        console.log('🆕 No existing biaya, creating new...');
+        response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, validatedBiayaData);
+        console.log('✅ Create successful:', response.data);
+      }
+
       return { success: true, data: response.data };
     } catch (error) {
+      console.error('❌ saveBiayaRow error:', error);
+      console.log('🔍 Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      // STRATEGI 2: Fallback jika POST gagal dengan 422
+      if (error.response?.status === 422) {
+        console.log('🔄 422 Error detected, trying fallback update...');
+        console.log('🔍 Error response data:', error.response?.data);
+
+        // Coba dapatkan ID dari error response
+        const errorData = error.response?.data?.data;
+        if (errorData && errorData.id) {
+          try {
+            console.log('🔄 Updating with ID from error response:', errorData.id);
+            // ✅ FIX: Gunakan URL BENAR dengan detailRowId
+            const updateResponse = await api.put(`/nominatifs/details/${detailRowId}/biaya/${errorData.id}`, validatedBiayaData);
+            console.log('✅ Fallback update successful:', updateResponse.data);
+            return { success: true, data: updateResponse.data };
+          } catch (updateError) {
+            console.error('❌ Fallback update failed:', updateError);
+            console.log('🔍 Update error details:', updateError.response?.data);
+          }
+        } else {
+          console.log('❌ No ID found in error response, cannot fallback to update');
+        }
+      }
+
+      // STRATEGI 3: Fallback untuk 404 (ID tidak ditemukan)
+      if (error.response?.status === 404) {
+        console.log('🔄 404 Error detected, trying fallback POST...');
+        try {
+          const createResponse = await api.post(`/nominatifs/details/${detailRowId}/biaya`, validatedBiayaData);
+          console.log('✅ Fallback POST successful:', createResponse.data);
+          return { success: true, data: createResponse.data };
+        } catch (createError) {
+          console.error('❌ Fallback POST failed:', createError);
+        }
+      }
+
+      // Return error jika semua strategi gagal
       const message = error.response?.data?.message || 'Gagal menyimpan biaya row';
       const errors = error.response?.data?.errors || {};
-      return { success: false, message, errors };
+      return {
+        success: false,
+        message: `${message} (${error.response?.status})`,
+        errors,
+        debugInfo: {
+          status: error.response?.status,
+          responseData: error.response?.data
+        }
+      };
     }
   },
 
