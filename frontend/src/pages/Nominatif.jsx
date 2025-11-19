@@ -125,7 +125,7 @@ const Nominatif = () => {
 
   
   const handleEdit = (id) => {
-    navigate(`/nominatif/${id}/edit`);
+    navigate(`/nominatif/${id}`);
   };
 
   const handleDelete = async (id) => {

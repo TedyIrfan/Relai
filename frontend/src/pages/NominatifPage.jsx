@@ -13,6 +13,8 @@ const NominatifPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [nominatif, setNominatif] = useState(null);
 
   // Get draft data from localStorage (from create page)
   const [draftData, setDraftData] = useState(null);
@@ -107,8 +109,8 @@ const NominatifPage = () => {
     }
   }, []);
 
-  // Fetch existing nominatif data
-  useEffect(() => {
+  // DISABLED: Fetch existing nominatif data - now handled in edit mode detection
+  // useEffect(() => {
     const fetchNominatifData = async () => {
       try {
         const token = getToken();
@@ -200,12 +202,136 @@ const NominatifPage = () => {
       }
     };
 
+    // DISABLED: Original create mode logic - now handled in edit mode detection
+    // if (rkaId) {
+    //   fetchNominatifData();
+    // }
+  // }, [rkaId]);
+
+  // Check if this is edit mode by trying to find nominatif with this ID
+  useEffect(() => {
+    const checkEditMode = async () => {
+      try {
+        const token = getToken();
+        const response = await fetch(`http://localhost/api/nominatifs-new/${rkaId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const nominatifData = await response.json();
+          console.log('📝 Edit mode detected, loading nominatif:', nominatifData);
+          setIsEditMode(true);
+          setNominatif(nominatifData.data);
+          // Load existing detail rows for this nominatif
+          await loadNominatifDetailRows(rkaId);
+          setLoading(false); // Stop loading when done
+        } else {
+          console.log('🆕 Create mode, nominatif not found');
+          setIsEditMode(false);
+          setLoading(false); // Stop loading when done
+        }
+      } catch (error) {
+        console.log('🆕 Create mode, error checking nominatif:', error);
+        setIsEditMode(false);
+        setLoading(false); // Stop loading when done
+      }
+    };
+
     if (rkaId) {
-      fetchNominatifData();
+      checkEditMode();
     }
   }, [rkaId]);
 
-  // Save nominatif data - Optimized version
+  // Load existing detail rows for edit mode
+  const loadNominatifDetailRows = async (nominatifId) => {
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const detailsData = await response.json();
+        console.log('📋 Loading detail rows:', detailsData);
+
+        // Transform data for table
+        const tableData = await Promise.all(
+          detailsData.data.map(async (detail) => {
+            // Get biaya data for this detail
+            const biayaResponse = await fetch(`http://localhost/api/nominatifs/details/${detail.id}/biaya`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            let biayaData = {};
+            if (biayaResponse.ok) {
+              const biayaResult = await biayaResponse.json();
+              biayaData = biayaResult.data || {};
+            }
+
+            return {
+              id: detail.id,
+              person_type: detail.person_type,
+              nama_lengkap: detail.nama,
+              no: detail.no,
+              golongan: detail.golongan,
+              jabatan: detail.jabatan,
+              eselon: detail.eselon,
+              asal: detail.asal,
+              tujuan: detail.tujuan,
+              tanggal_pergi: detail.tanggal_pergi,
+              tanggal_sampai: detail.tanggal_sampai,
+              // Transportasi fields
+              transport_pesawat_non_pp_pagu: biayaData.transport_pesawat_non_pp_pagu || '',
+              transport_pesawat_non_pp_aktual: biayaData.transport_pesawat_non_pp_aktual || '',
+              transport_taksi_pagu: biayaData.transport_taksi_pagu || '',
+              transport_taksi_aktual: biayaData.transport_taksi_aktual || '',
+              // Penginapan fields
+              penginapan_jumlah_malam: biayaData.penginapan_jumlah_malam || '',
+              penginapan_pagu_perhari: biayaData.penginapan_pagu_perhari || '',
+              penginapan_aktual_perhari: biayaData.penginapan_aktual_perhari || '',
+              // Meeting fields
+              uang_harian_meeting_fullboard_jumlah_hari: biayaData.uang_harian_meeting_fullboard_jumlah_hari || '',
+              uang_harian_meeting_fullboard_pagu_perhari: biayaData.uang_harian_meeting_fullboard_pagu_perhari || '',
+              uang_harian_meeting_fullboard_aktual_perhari: biayaData.uang_harian_meeting_fullboard_aktual_perhari || '',
+              uang_harian_meeting_fullday_jumlah_hari: biayaData.uang_harian_meeting_fullday_jumlah_hari || '',
+              uang_harian_meeting_fullday_pagu_perhari: biayaData.uang_harian_meeting_fullday_pagu_perhari || '',
+              uang_harian_meeting_fullday_aktual_perhari: biayaData.uang_harian_meeting_fullday_aktual_perhari || '',
+              // Uang Harian fields
+              uang_harian_luar_kota_jumlah_hari: biayaData.uang_harian_luar_kota_jumlah_hari || '',
+              uang_harian_luar_kota_pagu_perhari: biayaData.uang_harian_luar_kota_pagu_perhari || '',
+              uang_harian_luar_kota_aktual_perhari: biayaData.uang_harian_luar_kota_aktual_perhari || '',
+              uang_harian_dalam_kota_jumlah_hari: biayaData.uang_harian_dalam_kota_jumlah_hari || '',
+              uang_harian_dalam_kota_pagu_perhari: biayaData.uang_harian_dalam_kota_pagu_perhari || '',
+              uang_harian_dalam_kota_aktual_perhari: biayaData.uang_harian_dalam_kota_aktual_perhari || '',
+              // Representasi fields
+              representasi_luar_kota_jumlah_hari: biayaData.representasi_luar_kota_jumlah_hari || '',
+              representasi_luar_kota_pagu_perhari: biayaData.representasi_luar_kota_pagu_perhari || '',
+              representasi_luar_kota_aktual_perhari: biayaData.representasi_luar_kota_aktual_perhari || '',
+              representasi_dalam_kota_jumlah_hari: biayaData.representasi_dalam_kota_jumlah_hari || '',
+              representasi_dalam_kota_pagu_perhari: biayaData.representasi_dalam_kota_pagu_perhari || '',
+              representasi_dalam_kota_aktual_perhari: biayaData.representasi_dalam_kota_aktual_perhari || '',
+            };
+          })
+        );
+
+        setNominatifData(tableData);
+        console.log('✅ Loaded', tableData.length, 'detail rows for editing');
+      }
+    } catch (error) {
+      console.error('❌ Error loading detail rows:', error);
+    }
+  };
+
+  // Save nominatif data - Supports both create and edit modes
   const handleSave = async (data) => {
     setSaving(true);
     setError(null);
@@ -362,6 +488,12 @@ const NominatifPage = () => {
 
       setSuccess('Data berhasil disimpan!');
       console.log('🎉 Save process completed successfully');
+
+      // Navigate to the correct nominatif URL using the new nominatif ID
+      if (nominatifId && !isEditMode) {
+        console.log('🔄 Navigating to nominatif URL:', `/nominatif/${nominatifId}`);
+        navigate(`/nominatif/${nominatifId}`, { replace: true });
+      }
 
     } catch (error) {
       setError(error.message || 'Gagal menyimpan data');
