@@ -129,9 +129,15 @@ const Nominatif = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus nominatif ini?')) {
+    // Find the nominatif to show better confirmation message
+    const nominatifToDelete = nominatifs.find(nom => nom.id === id);
+    const statusText = nominatifToDelete?.status || 'unknown';
+
+    if (window.confirm(`Apakah Anda yakin ingin menghapus nominatif ini?`)) {
       try {
         const token = localStorage.getItem('token');
+        console.log('🗑️ Attempting to delete nominatif:', id, 'Status:', statusText);
+
         const response = await fetch(`http://localhost/api/nominatifs-new/${id}`, {
           method: 'DELETE',
           headers: {
@@ -140,11 +146,25 @@ const Nominatif = () => {
           }
         });
 
+        console.log('📡 Delete response status:', response.status);
+
         if (response.ok) {
+          console.log('✅ Nominatif deleted successfully');
           setNominatifs(nominatifs.filter(nom => nom.id !== id));
+
+          // Show success message
+          alert('Nominatif berhasil dihapus');
+        } else {
+          // Handle server errors
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || `Gagal menghapus nominatif (HTTP ${response.status})`;
+
+          console.error('❌ Delete failed:', errorMessage);
+          alert(`Error: ${errorMessage}`);
         }
       } catch (error) {
-        console.error('Error deleting nominatif:', error);
+        console.error('💥 Network error deleting nominatif:', error);
+        alert('Terjadi kesalahan jaringan. Silakan coba lagi.');
       }
     }
   };

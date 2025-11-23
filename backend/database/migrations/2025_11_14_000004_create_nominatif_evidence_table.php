@@ -24,11 +24,11 @@ return new class extends Migration
             $table->string('evidence_foto_type', 50);
             $table->text('keterangan')->nullable();
 
-            $table->timestamps();
-
             // Indexes
             $table->index('nominatif_id');
             $table->index('evidence_foto_type');
+
+            $table->timestamps();
         });
     }
 

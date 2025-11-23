@@ -28,12 +28,12 @@ return new class extends Migration
             $table->decimal('total_pagu', 15, 2)->default(0);
             $table->decimal('total_biaya_aktual', 15, 2)->default(0);
 
-            $table->timestamps();
-
             // Indexes for performance
             $table->index(['user_id', 'status']);
             $table->index(['tanggal_mulai', 'tanggal_selesai']);
             $table->index('rka_detail_id');
+
+            $table->timestamps();
         });
     }
 

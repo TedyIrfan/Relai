@@ -29,12 +29,13 @@ return new class extends Migration
             $table->decimal('anggaran_perjalanan', 15, 2);
             $table->decimal('anggaran_layanan', 15, 2);
             $table->string('sbm', 50);
-            $table->timestamps();
 
             $table->index(['kategori_anggaran_id', 'code_rka']);
             $table->index('wilayah');
             $table->index('status');
             $table->index('layanan');
+
+            $table->timestamps();
         });
     }
 

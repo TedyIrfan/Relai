@@ -101,12 +101,12 @@ return new class extends Migration
             $table->decimal('total_aktual_row', 15, 2)->default(0);
             $table->decimal('total_anggaran_berjalan_row', 15, 2)->default(0);
 
-            $table->timestamps();
-
             // Indexes for Performance
             $table->index('nominatif_detail_row_id');
             $table->index(['total_pagu_row', 'total_aktual_row']);
             $table->index('total_anggaran_berjalan_row');
+
+            $table->timestamps();
         });
     }
 

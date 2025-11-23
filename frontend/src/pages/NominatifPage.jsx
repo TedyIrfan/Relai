@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Save, Send, FileText, AlertCircle } from 'lucide-react';
 import NominatifExcelTable from '../components/tables/NominatifExcelTable';
 import { nominatifService } from '../services/nominatifService';
@@ -7,6 +7,7 @@ import { nominatifService } from '../services/nominatifService';
 const NominatifPage = () => {
   const { rkaId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [rkaDetail, setRkaDetail] = useState(null);
   const [nominatifData, setNominatifData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,6 +110,58 @@ const NominatifPage = () => {
       console.error('Error loading draft data:', error);
     }
   }, []);
+
+  // Detect edit mode and load existing nominatif
+  useEffect(() => {
+    const detectEditMode = async () => {
+      // Check if we're in edit mode by checking URL path
+      const pathname = location.pathname;
+      const isEditPath = pathname.includes('/edit/') || (pathname.includes('/nominatif/') && !pathname.includes('/create') && !pathname.includes('/nominatifs'));
+
+  
+      if (isEditPath && rkaId) {
+        setIsEditMode(true);
+    
+        // Load existing nominatif by rkaId (assuming one nominatif per rka)
+        try {
+          const token = getToken();
+          const response = await fetch(`http://localhost/api/nominatifs/by-rka/${rkaId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('📋 Found existing nominatif:', result);
+
+            if (result.data && result.data.id) {
+              setNominatif(result.data);
+    
+              // Load detail rows for existing nominatif
+              await loadNominatifDetailRows(result.data.id);
+            } else {
+              console.log('ℹ️ No existing nominatif found, creating new one...');
+              setIsEditMode(false);
+            }
+          } else {
+            console.log('ℹ️ No existing nominatif found, creating new one...');
+            setIsEditMode(false);
+          }
+        } catch (error) {
+          console.error('Error loading existing nominatif:', error);
+          setIsEditMode(false);
+        }
+      } else {
+            setIsEditMode(false);
+      }
+    };
+
+    if (rkaId) {
+      detectEditMode();
+    }
+  }, [rkaId, location.pathname]);
 
   // DISABLED: Fetch existing nominatif data - now handled in edit mode detection
   // useEffect(() => {
@@ -223,8 +276,7 @@ const NominatifPage = () => {
 
         if (response.ok) {
           const nominatifData = await response.json();
-          console.log('📝 Edit mode detected, loading nominatif:', nominatifData);
-          setIsEditMode(true);
+              setIsEditMode(true);
           setNominatif(nominatifData.data);
           // Load existing detail rows for this nominatif
           await loadNominatifDetailRows(rkaId);
@@ -259,8 +311,16 @@ const NominatifPage = () => {
 
       if (response.ok) {
         const detailsData = await response.json();
-        console.log('📋 Loading detail rows:', detailsData);
-        console.log('🔍 Detail row structure:', detailsData.data[0]);
+        console.log('📋 Raw API response details:', detailsData);
+
+        if (detailsData.data && detailsData.data.length > 0) {
+          console.log('📋 Sample detail data structure:', detailsData.data[0]);
+          console.log('📋 Tanggal fields in first row:', {
+            id: detailsData.data[0].id,
+            tanggal_pergi: detailsData.data[0].tanggal_pergi,
+            tanggal_sampai: detailsData.data[0].tanggal_sampai
+          });
+        }
 
         // Transform data for table
         const tableData = await Promise.all(
@@ -291,6 +351,7 @@ const NominatifPage = () => {
               tujuan: detail.tujuan || '',
               tanggal_pergi: detail.tanggal_pergi ? detail.tanggal_pergi.split('T')[0] : '',
               tanggal_sampai: detail.tanggal_sampai ? detail.tanggal_sampai.split('T')[0] : '',
+
               // Transportasi fields
               transport_pesawat_non_pp_pagu: biayaData.transport_pesawat_non_pp_pagu || '',
               transport_pesawat_non_pp_aktual: biayaData.transport_pesawat_non_pp_aktual || '',
@@ -325,14 +386,24 @@ const NominatifPage = () => {
           })
         );
 
-        console.log('🔍 Transformed tableData:', tableData[0]);
-        console.log('🔍 Before setNominatifData, current nominatifData:', nominatifData);
+        // Debug transformed data before setting state
+        const debugTableData = tableData.map(row => ({
+          id: row.id,
+          tanggal_pergi: row.tanggal_pergi,
+          tanggal_sampai: row.tanggal_sampai
+        }));
+        console.log('🔄 Transformed table data:', debugTableData);
+
+        // Check if any tanggal_sampai are empty
+        const emptyTanggalSampai = debugTableData.filter(row => !row.tanggal_sampai);
+        if (emptyTanggalSampai.length > 0) {
+          console.warn('⚠️ Rows with empty tanggal_sampai:', emptyTanggalSampai);
+        }
+
         setNominatifData(tableData);
-        console.log('🔍 After setNominatifData, new data length:', tableData.length);
-        console.log('✅ Loaded', tableData.length, 'detail rows for editing');
       }
     } catch (error) {
-      console.error('❌ Error loading detail rows:', error);
+      console.error('Error loading detail rows:', error);
     }
   };
 
@@ -357,11 +428,17 @@ const NominatifPage = () => {
         status: 'draft'
       };
 
-      console.log('🚀 Starting save process with data length:', data.length);
+  
+      // Conditional API call based on edit mode
+      const apiMethod = isEditMode && nominatif ? 'PUT' : 'POST';
+      const apiUrl = isEditMode && nominatif
+        ? `http://localhost/api/nominatifs-new/${nominatif.id}`  // Edit existing
+        : 'http://localhost/api/nominatifs-new'; // Create new
 
-      // First, create or get nominatif
-      const nominatifResponse = await fetch('http://localhost/api/nominatifs-new', {
-        method: 'POST',
+      console.log(`📡 API ${apiMethod} to: ${apiUrl}`);
+
+      const nominatifResponse = await fetch(apiUrl, {
+        method: apiMethod,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -371,14 +448,13 @@ const NominatifPage = () => {
 
       if (!nominatifResponse.ok) {
         const errorText = await nominatifResponse.text();
-        console.error('❌ Nominatif creation failed:', errorText);
-        throw new Error(`Gagal membuat nominatif: ${nominatifResponse.status} - ${errorText}`);
+        console.error(`Nominatif ${apiMethod} failed:`, errorText);
+        throw new Error(`Gagal ${isEditMode ? 'update' : 'membuat'} nominatif: ${nominatifResponse.status} - ${errorText}`);
       }
 
       const nominatifResult = await nominatifResponse.json();
       const nominatifId = nominatifResult.data.id;
-      console.log('✅ Nominatif created with ID:', nominatifId);
-
+    
       // Prepare bulk data for detail rows
       const detailRowsData = data.map((row, index) => ({
         person_type: row.person_type || 'main',
@@ -409,14 +485,13 @@ const NominatifPage = () => {
 
       if (!bulkDetailResponse.ok) {
         const errorText = await bulkDetailResponse.text();
-        console.error('❌ Bulk detail creation failed:', errorText);
+        console.error('Bulk detail creation failed:', errorText);
         throw new Error(`Gagal membuat detail rows: ${bulkDetailResponse.status} - ${errorText}`);
       }
 
       const detailResult = await bulkDetailResponse.json();
       const createdDetailRows = detailResult.data;
-      console.log('✅ Bulk detail rows created:', createdDetailRows.length);
-
+      
       // Update biaya for each detail row (optimized approach)
       const biayaPromises = data.map(async (row, index) => {
         const detailId = createdDetailRows[index].id;
@@ -465,15 +540,12 @@ const NominatifPage = () => {
           representasi_dalam_kota_aktual_perhari: parseFloat(row.representasi_dalam_kota_aktual_perhari) || 0
         };
 
-        console.log(`💰 Creating biaya for detail ID ${detailId}:`, biayaPayload);
-        console.log(`🔍 Full biaya payload keys:`, Object.keys(biayaPayload));
-        console.log(`🔍 Full biaya payload values:`, biayaPayload);
-
+      
         // Gunakan nominatifService yang sudah ada logic anti-duplikasi
         const biayaResult = await nominatifService.saveBiayaRow(detailId, biayaPayload);
 
         if (!biayaResult.success) {
-          console.error(`❌ Biaya creation failed for detail ${detailId}:`, biayaResult);
+          console.error(`Biaya creation failed for detail ${detailId}:`, biayaResult);
           throw new Error(`Gagal membuat biaya row: ${biayaResult.message}`);
         }
 
@@ -482,20 +554,17 @@ const NominatifPage = () => {
 
       // Execute all biaya updates in parallel
       const biayaResults = await Promise.all(biayaPromises);
-      console.log('✅ All biaya rows created:', biayaResults.length);
-
+      
       setSuccess('Data berhasil disimpan!');
-      console.log('🎉 Save process completed successfully');
-
-      // Navigate to the correct nominatif URL using the new nominatif ID
-      if (nominatifId && !isEditMode) {
-        console.log('🔄 Navigating to nominatif URL:', `/nominatif/${nominatifId}`);
-        navigate(`/nominatif/${nominatifId}`, { replace: true });
+      
+      // Navigate to nominatif list page after successful save (both create and edit modes)
+      if (nominatifId) {
+        navigate('/nominatif', { replace: true });
       }
 
     } catch (error) {
       setError(error.message || 'Gagal menyimpan data');
-      console.error('❌ Save error:', error);
+      console.error('Save error:', error);
     } finally {
       setSaving(false);
     }
@@ -508,37 +577,47 @@ const NominatifPage = () => {
     setSuccess(null);
 
     try {
-      // First save the data
+      // First save the data (this will handle both create and update)
       console.log('🔄 Submit: Saving data first...');
       await handleSave(data);
 
-      // Get the latest nominatif data to find the correct ID
+      // Use the existing nominatif ID from state (for edit) or get the latest (for create)
       const token = getToken();
-      const nominatifListResponse = await fetch('http://localhost/api/nominatifs-new', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      let currentNominatifId;
+
+      if (isEditMode && nominatif) {
+        // Edit mode: use existing ID
+        currentNominatifId = nominatif.id;
+        console.log('📤 Submitting existing nominatif ID:', currentNominatifId);
+      } else {
+        // Create mode: get the latest nominatif with current RKA ID
+        const nominatifListResponse = await fetch('http://localhost/api/nominatifs-new', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!nominatifListResponse.ok) {
+          throw new Error('Gagal mengambil data nominatif untuk submit');
         }
-      });
 
-      if (!nominatifListResponse.ok) {
-        throw new Error('Gagal mengambil data nominatif untuk submit');
+        const nominatifList = await nominatifListResponse.json();
+        const dataArray = Array.isArray(nominatifList) ? nominatifList : nominatifList.data || [];
+
+        // Find the nominatif with current RKA ID that's still draft
+        const currentNominatif = dataArray.find(n => n.rka_detail_id == rkaId && n.status === 'draft');
+
+        if (!currentNominatif) {
+          throw new Error('Nominatif tidak ditemukan untuk disubmit');
+        }
+
+        currentNominatifId = currentNominatif.id;
+        console.log('📤 Submitting newly created nominatif ID:', currentNominatifId);
       }
-
-      const nominatifList = await nominatifListResponse.json();
-      const dataArray = Array.isArray(nominatifList) ? nominatifList : nominatifList.data || [];
-
-      // Find the nominatif with current RKA ID that's still draft
-      const currentNominatif = dataArray.find(n => n.rka_detail_id == rkaId && n.status === 'draft');
-
-      if (!currentNominatif) {
-        throw new Error('Nominatif tidak ditemukan untuk disubmit');
-      }
-
-      console.log('📤 Submitting nominatif ID:', currentNominatif.id);
 
       // Then submit
-      const response = await fetch(`http://localhost/api/nominatifs-new/${currentNominatif.id}/submit`, {
+      const response = await fetch(`http://localhost/api/nominatifs-new/${currentNominatifId}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -549,7 +628,7 @@ const NominatifPage = () => {
       if (response.ok) {
         setSuccess('Nominatif berhasil dikirim!');
         setTimeout(() => {
-          navigate('/nominatifs');
+          navigate('/nominatif');
         }, 2000);
       } else {
         const errorText = await response.text();

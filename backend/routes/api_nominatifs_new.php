@@ -25,6 +25,7 @@ Route::prefix('nominatifs-new')->group(function () {
     Route::put('/{id}', [NominatifNewController::class, 'update']);
     Route::delete('/{id}', [NominatifNewController::class, 'destroy']);
     Route::post('/{id}/submit', [NominatifNewController::class, 'submit']);
+    Route::get('/by-rka/{rkaId}', [NominatifNewController::class, 'getByRka']);
 });
 
 // Detail Rows (Person + Route Data)

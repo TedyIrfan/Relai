@@ -35,13 +35,13 @@ return new class extends Migration
             $table->string('eselon', 10);
             $table->string('nama', 255);
 
-            $table->timestamps();
-
             // Indexes for performance
             $table->index(['nominatif_id', 'person_type']);
             $table->index(['tanggal_pergi', 'tanggal_sampai']);
             $table->index('person_name');
             $table->index('row_order');
+
+             $table->timestamps();
         });
     }
 

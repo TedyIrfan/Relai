@@ -373,6 +373,42 @@ class NominatifNewController extends Controller
     }
 
     /**
+     * Get nominatif by RKA ID.
+     */
+    public function getByRka($rkaId)
+    {
+        try {
+            $nominatif = NominatifNew::where('rka_detail_id', $rkaId)
+                ->where('user_id', Auth::id())
+                ->first();
+
+            if (!$nominatif) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nominatif not found for this RKA'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $nominatif
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error getting nominatif by RKA', [
+                'rkaId' => $rkaId,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get nominatif'
+            ], 500);
+        }
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)
@@ -387,13 +423,22 @@ class NominatifNewController extends Controller
             ], 403);
         }
 
-        // Check if can delete
-        if ($nominatif->status === 'submitted') {
+        // Check if can delete - only allow delete for draft and rejected
+        $lockedStatuses = ['submitted', 'approved'];
+        if (in_array($nominatif->status, $lockedStatuses)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot delete submitted nominatif'
+                'message' => 'Cannot delete ' . $nominatif->status . ' nominatif. Only draft and rejected nominatifs can be deleted.'
             ], 422);
         }
+
+        // Log deletion attempt
+        \Log::info('Attempting to delete nominatif', [
+            'nominatif_id' => $id,
+            'status' => $nominatif->status,
+            'user_id' => Auth::id(),
+            'rka_detail_id' => $nominatif->rka_detail_id
+        ]);
 
         // Get RKA details for anggaran update
         $rkaDetail = $nominatif->rkaDetail;
