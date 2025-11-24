@@ -331,8 +331,9 @@ class NominatifNewController extends Controller
 
         $nominatif = NominatifNew::findOrFail($id);
 
-        // Security check
-        if ($nominatif->user_id !== Auth::id()) {
+        // Security check - Use manual token validation consistent with store()
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user || $nominatif->user_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -415,8 +416,9 @@ class NominatifNewController extends Controller
     {
         $nominatif = NominatifNew::findOrFail($id);
 
-        // Security check
-        if ($nominatif->user_id !== Auth::id()) {
+        // Security check - Use manual token validation
+        $user = $this->getAuthenticatedUser(request());
+        if (!$user || $nominatif->user_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -444,7 +446,7 @@ class NominatifNewController extends Controller
         $rkaDetail = $nominatif->rkaDetail;
 
         // Calculate total actual from all rows to return to anggaran_berjalan
-        $totalAktualTrip = $nominatif->detailRows()->sum(function ($row) {
+        $totalAktualTrip = $nominatif->detailRows()->get()->sum(function ($row) {
             return $row->biayaRow?->total_aktual_row ?? 0;
         });
 
@@ -488,8 +490,9 @@ class NominatifNewController extends Controller
     {
         $nominatif = NominatifNew::findOrFail($id);
 
-        // Security check
-        if ($nominatif->user_id !== Auth::id()) {
+        // Security check - Use manual token validation
+        $user = $this->getAuthenticatedUser(request());
+        if (!$user || $nominatif->user_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -515,7 +518,7 @@ class NominatifNewController extends Controller
         $rkaDetail = $nominatif->rkaDetail;
 
         // Calculate total actual from all rows
-        $totalAktualTrip = $nominatif->detailRows()->sum(function ($row) {
+        $totalAktualTrip = $nominatif->detailRows()->get()->sum(function ($row) {
             return $row->biayaRow?->total_aktual_row ?? 0;
         });
 
@@ -652,11 +655,12 @@ class NominatifNewController extends Controller
      */
     private function recalculateTotals($nominatif)
     {
-        $totalPagu = $nominatif->detailRows()->sum(function ($row) {
+        // Get the collection first, then sum with closure
+        $totalPagu = $nominatif->detailRows()->get()->sum(function ($row) {
             return $row->biayaRow?->total_pagu_row ?? 0;
         });
 
-        $totalAktual = $nominatif->detailRows()->sum(function ($row) {
+        $totalAktual = $nominatif->detailRows()->get()->sum(function ($row) {
             return $row->biayaRow?->total_aktual_row ?? 0;
         });
 

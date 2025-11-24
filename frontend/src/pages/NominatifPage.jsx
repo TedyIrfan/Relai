@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Save, Send, FileText, AlertCircle } from 'lucide-react';
 import NominatifExcelTable from '../components/tables/NominatifExcelTable';
 import { nominatifService } from '../services/nominatifService';
@@ -8,6 +8,9 @@ const NominatifPage = () => {
   const { rkaId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams(); // Add search params hook
+  const specificNominatifId = searchParams.get('id'); // Get ?id=... from URL
+
   const [rkaDetail, setRkaDetail] = useState(null);
   const [nominatifData, setNominatifData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,21 +114,24 @@ const NominatifPage = () => {
     }
   }, []);
 
-  // Detect edit mode and load existing nominatif
+  // Detect edit mode and load existing nominatif - STRICT MODE
   useEffect(() => {
-    const detectEditMode = async () => {
-      // Check if we're in edit mode by checking URL path
-      const pathname = location.pathname;
-      const isEditPath = pathname.includes('/edit/') || (pathname.includes('/nominatif/') && !pathname.includes('/create') && !pathname.includes('/nominatifs'));
+    const initializePage = async () => {
+      setLoading(true);
+      setError(null);
 
-  
-      if (isEditPath && rkaId) {
-        setIsEditMode(true);
-    
-        // Load existing nominatif by rkaId (assuming one nominatif per rka)
+      const token = getToken();
+      if (!token) {
+        setError('Token tidak ditemukan. Silakan login kembali.');
+        setLoading(false);
+        return;
+      }
+
+      // SKENARIO 1: EDIT MODE (Ada ID spesifik di URL)
+      if (specificNominatifId && specificNominatifId !== 'undefined') {
+        console.log(`🔍 EDIT MODE: Fetching specific nominatif ID: ${specificNominatifId}`);
         try {
-          const token = getToken();
-          const response = await fetch(`http://localhost/api/nominatifs/by-rka/${rkaId}`, {
+          const response = await fetch(`http://localhost/api/nominatifs-new/${specificNominatifId}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
@@ -134,34 +140,42 @@ const NominatifPage = () => {
 
           if (response.ok) {
             const result = await response.json();
-            console.log('📋 Found existing nominatif:', result);
-
-            if (result.data && result.data.id) {
-              setNominatif(result.data);
-    
-              // Load detail rows for existing nominatif
-              await loadNominatifDetailRows(result.data.id);
+            // Handle response structure
+            const data = result.data?.nominatif || result.data;
+            
+            if (data && data.id) {
+              console.log('✅ Data loaded successfully:', data);
+              setNominatif(data);
+              setIsEditMode(true);
+              await loadNominatifDetailRows(data.id);
             } else {
-              console.log('ℹ️ No existing nominatif found, creating new one...');
-              setIsEditMode(false);
+              throw new Error('Data nominatif tidak valid atau kosong');
             }
           } else {
-            console.log('ℹ️ No existing nominatif found, creating new one...');
-            setIsEditMode(false);
+            const errText = await response.text();
+            throw new Error(`Gagal memuat data nominatif (Status: ${response.status})`);
           }
-        } catch (error) {
-          console.error('Error loading existing nominatif:', error);
-          setIsEditMode(false);
+        } catch (err) {
+          console.error('❌ Fatal Error loading nominatif:', err);
+          setError(`Data tidak ditemukan: ${err.message}. Silakan kembali ke daftar.`);
+          setIsEditMode(false); // Fail safe
         }
-      } else {
-            setIsEditMode(false);
+      } 
+      // SKENARIO 2: CREATE MODE (Tidak ada ID di URL)
+      else {
+        console.log('🆕 CREATE MODE: No specific ID found, initializing new form');
+        setIsEditMode(false);
+        setNominatif(null);
       }
+
+      setLoading(false);
     };
 
+    // Jalankan inisialisasi hanya jika rkaId tersedia (karena itu param wajib dari URL utama)
     if (rkaId) {
-      detectEditMode();
+      initializePage();
     }
-  }, [rkaId, location.pathname]);
+  }, [rkaId, specificNominatifId]); // Dependency array bersih: hanya rerun jika ID berubah
 
   // DISABLED: Fetch existing nominatif data - now handled in edit mode detection
   // useEffect(() => {
@@ -419,6 +433,23 @@ const NominatifPage = () => {
       // Get today's date as default
       const todayDate = new Date().toISOString().split('T')[0];
 
+      // === SAFETY NET LOGIC ===
+      // Cek ID dari state atau URL params untuk memastikan mode Edit
+      const urlParams = new URLSearchParams(location.search);
+      const urlNominatifId = urlParams.get('id');
+      const activeNominatifId = nominatif?.id || urlNominatifId;
+      
+      // Tentukan mode berdasarkan keberadaan ID yang valid
+      const isRealEditMode = !!activeNominatifId;
+
+      console.log('🔒 SAFETY CHECK:', {
+        stateId: nominatif?.id,
+        urlId: urlNominatifId,
+        activeId: activeNominatifId,
+        isEditModeState: isEditMode,
+        DECISION: isRealEditMode ? 'EDIT (PUT)' : 'CREATE (POST)'
+      });
+
       // Create or update nominatif
       const nominatifPayload = {
         rka_detail_id: parseInt(rkaId),
@@ -427,15 +458,33 @@ const NominatifPage = () => {
         tanggal_selesai: draftData?.tanggalSelesai || data[data.length - 1]?.tanggal_sampai || todayDate,
         status: 'draft'
       };
-
   
-      // Conditional API call based on edit mode
-      const apiMethod = isEditMode && nominatif ? 'PUT' : 'POST';
-      const apiUrl = isEditMode && nominatif
-        ? `http://localhost/api/nominatifs-new/${nominatif.id}`  // Edit existing
+      // Conditional API call based on SAFEY NET logic
+      const apiMethod = isRealEditMode ? 'PUT' : 'POST';
+      let apiUrl = isRealEditMode
+        ? `http://localhost/api/nominatifs-new/${activeNominatifId}`  // Edit existing
         : 'http://localhost/api/nominatifs-new'; // Create new
 
+      // CRITICAL FIX: Prevent "undefined" in URL
+      if (apiUrl.includes('undefined')) {
+        console.error('🚨 CRITICAL: Attempted to send request to undefined URL:', apiUrl);
+        console.log('Dump state:', { isEditMode, nominatif, activeNominatifId });
+        
+        if (isRealEditMode && activeNominatifId) {
+             // Force fix URL if ID exists
+             apiUrl = `http://localhost/api/nominatifs-new/${activeNominatifId}`;
+             console.log('✅ URL fixed manually:', apiUrl);
+        } else {
+             throw new Error('Terjadi kesalahan sistem: ID Nominatif hilang. Silakan refresh halaman.');
+        }
+      }
+
       console.log(`📡 API ${apiMethod} to: ${apiUrl}`);
+
+      // Validate ID before PUT
+      if (apiMethod === 'PUT' && !activeNominatifId) {
+        throw new Error('Gagal update: ID Nominatif tidak ditemukan dalam state maupun URL');
+      }
 
       const nominatifResponse = await fetch(apiUrl, {
         method: apiMethod,

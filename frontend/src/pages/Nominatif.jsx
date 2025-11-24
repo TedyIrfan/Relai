@@ -124,8 +124,17 @@ const Nominatif = () => {
   };
 
   
-  const handleEdit = (id) => {
-    navigate(`/nominatif/${id}`);
+  const handleEdit = (nominatif) => {
+    // Jika nominatif punya rka_detail_id, gunakan itu. Jika tidak, fallback ke id (meski mungkin salah konteks)
+    const routeId = nominatif.rka_detail_id || nominatif.rka_detail?.id;
+    
+    if (routeId) {
+      // Kirim ID nominatif spesifik via query param untuk memastikan yang diedit benar
+      navigate(`/nominatif/${routeId}?id=${nominatif.id}`);
+    } else {
+      console.error("Data nominatif tidak lengkap untuk navigasi:", nominatif);
+      alert("Data RKA tidak ditemukan pada nominatif ini.");
+    }
   };
 
   const handleDelete = async (id) => {
@@ -348,7 +357,7 @@ const Nominatif = () => {
                         <div className="flex items-center justify-end gap-2">
                           {(nominatif.status === 'draft' || nominatif.status === 'rejected') && (
                             <button
-                              onClick={() => handleEdit(nominatif.id)}
+                              onClick={() => handleEdit(nominatif)}
                               className="p-1 text-green-600 hover:text-green-800"
                               title="Edit"
                             >
