@@ -263,7 +263,9 @@ const NominatifPage = () => {
                   uang_harian_aktual: row.biaya_row?.uang_harian_aktual || '',
                   uang_representasi_pagu: row.biaya_row?.uang_representasi_pagu || '',
                   uang_representasi_aktual: row.biaya_row?.uang_representasi_aktual || '',
-                  evidence: row.evidence?.[0] || null
+                  evidence_url: row.evidence?.[0]?.evidence_foto_path ? `http://127.0.0.1:8000/storage/${row.evidence[0].evidence_foto_path}` : null,
+                  evidence_filename: row.evidence?.[0]?.evidence_foto_name || "",
+                  evidence_filesize: row.evidence?.[0]?.evidence_foto_size ? `${(row.evidence[0].evidence_foto_size / 1024).toFixed(2)} KB` : ""
                 };
               });
             });
@@ -496,28 +498,88 @@ const NominatifPage = () => {
 
       console.log('📦 Preparing bulk detail rows:', detailRowsData.length);
 
-      // Use bulk API for detail rows
-      const bulkDetailResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/bulk`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ rows: detailRowsData })
-      });
+      // FIX: Separate CREATE vs EDIT mode logic for detail rows
+      let createdDetailRows = [];
 
-      if (!bulkDetailResponse.ok) {
-        const errorText = await bulkDetailResponse.text();
-        console.error('Bulk detail creation failed:', errorText);
-        throw new Error(`Gagal membuat detail rows: ${bulkDetailResponse.status} - ${errorText}`);
+      if (specificNominatifId && isEditMode) {
+        // EDIT MODE: Update existing detail rows
+        console.log('EDIT MODE: Updating existing detail rows');
+
+        // Update existing detail rows with their IDs
+        const updatedDetailRowsData = data.map((row, index) => ({
+          id: row.id, // Include existing ID
+          person_type: row.person_type || 'main',
+          nama: row.nama_lengkap || row.nama || '',
+          person_name: row.nama_lengkap || row.nama || '',
+          golongan: row.golongan || '',
+          jabatan: row.jabatan || '',
+          eselon: row.eselon || '',
+          asal: row.asal || '',
+          tujuan: row.tujuan || '',
+          tanggal_pergi: row.tanggal_pergi || '',
+          tanggal_sampai: row.tanggal_sampai || '',
+          no: index + 1,
+          row_order: index + 1
+        }));
+
+        // Use bulk update API for existing detail rows (if available)
+        const bulkUpdateResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/bulk`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ rows: updatedDetailRowsData })
+        });
+
+        if (!bulkUpdateResponse.ok) {
+          const errorText = await bulkUpdateResponse.text();
+          console.error('Bulk detail update failed:', errorText);
+          // Fallback: Use existing rows data
+          createdDetailRows = data.map((row, index) => ({
+            id: row.id,
+            nominatif_new_id: nominatifId
+          }));
+        } else {
+          const updateResult = await bulkUpdateResponse.json();
+          createdDetailRows = updateResult.data;
+        }
+      } else {
+        // CREATE MODE: Create new detail rows
+        console.log('CREATE MODE: Creating new detail rows');
+
+        const bulkDetailResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/bulk`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ rows: detailRowsData })
+        });
+
+        if (!bulkDetailResponse.ok) {
+          const errorText = await bulkDetailResponse.text();
+          console.error('Bulk detail creation failed:', errorText);
+          throw new Error(`Gagal membuat detail rows: ${bulkDetailResponse.status} - ${errorText}`);
+        }
+
+        const detailResult = await bulkDetailResponse.json();
+        createdDetailRows = detailResult.data;
       }
 
-      const detailResult = await bulkDetailResponse.json();
-      const createdDetailRows = detailResult.data;
-      
       // Update biaya for each detail row (optimized approach)
       const biayaPromises = data.map(async (row, index) => {
-        const detailId = createdDetailRows[index].id;
+        // FIX: Separate CREATE vs EDIT mode logic
+        let detailId;
+        if (specificNominatifId && row.id) {
+          // EDIT MODE: Use existing detail row ID
+          detailId = row.id;
+          console.log(`EDIT MODE: Using existing detail ID ${detailId} for row ${index}`);
+        } else {
+          // CREATE MODE: Use newly created detail row ID
+          detailId = createdDetailRows[index].id;
+          console.log(`CREATE MODE: Using new detail ID ${detailId} for row ${index}`);
+        }
 
         // Sesuai dengan database fields yang ada
         const biayaPayload = {
@@ -577,7 +639,45 @@ const NominatifPage = () => {
 
       // Execute all biaya updates in parallel
       const biayaResults = await Promise.all(biayaPromises);
-      
+
+      // Handle evidence uploads
+      const evidencePromises = data.map(async (row, index) => {
+        if (row.evidence_file && row.evidence_file instanceof File) {
+          try {
+            const formData = new FormData();
+            formData.append('evidence_file', row.evidence_file);
+            formData.append('keterangan', `Evidence untuk ${row.nama_lengkap || row.nama || 'Row ' + (index + 1)}`);
+
+            const token = localStorage.getItem('auth_token');
+            const evidenceResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/evidence`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              },
+              body: formData
+            });
+
+            if (!evidenceResponse.ok) {
+              const errorText = await evidenceResponse.text();
+              console.error(`Evidence upload failed for row ${index}:`, errorText);
+              // Don't throw error for evidence upload failure, just log it
+              return null;
+            }
+
+            const evidenceResult = await evidenceResponse.json();
+            console.log(`Evidence uploaded successfully for row ${index}:`, evidenceResult.data);
+            return evidenceResult.data;
+          } catch (error) {
+            console.error(`Evidence upload error for row ${index}:`, error);
+            return null;
+          }
+        }
+        return null;
+      });
+
+      // Execute all evidence uploads in parallel
+      const evidenceResults = await Promise.all(evidencePromises);
+
       setSuccess('Data berhasil disimpan!');
       
       // Navigate to nominatif list page after successful save (both create and edit modes)

@@ -12,36 +12,42 @@ Dokumentasi ini mencatat semua perbaikan yang dilakukan pada sistem Nominatif un
 **Requirement:** Table daftar nominatif harus menggunakan full width screen dengan padding yang sama seperti navbar
 
 **Analysis:**
+
 - User ingin header/stats cards dan table menggunakan lebar penuh screen
 - Sebelumnya header menggunakan `max-w-7xl mx-auto` (container terbatas)
 - Table harus menggunakan styling yang sama dengan navbar
 
 **Fix Applied:**
+
 ```jsx
 // SEBELUM (container terbatas):
 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
   {/* Header & Stats Cards */}
-</div>
+</div>;
 
 // SESUDAH (full width):
-{/* Header - Full Width */}
+{
+  /* Header - Full Width */
+}
 <div className="bg-white shadow-lg rounded-xl mx-4 mt-4 border-b border-gray-200 relative">
-  <div className="px-4 sm:px-6 lg:px-8">
-    {/* Header content */}
-  </div>
-</div>
+  <div className="px-4 sm:px-6 lg:px-8">{/* Header content */}</div>
+</div>;
 
-{/* Stats Cards - Full Width */}
+{
+  /* Stats Cards - Full Width */
+}
 <div className="px-4 mt-4">
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
     {/* Stats cards */}
   </div>
-</div>
+</div>;
 
-{/* Table - Full Width */}
+{
+  /* Table - Full Width */
+}
 <div className="bg-white shadow-lg rounded-xl mx-4 mt-4 border-b border-gray-200 relative">
   {/* Table content */}
-</div>
+</div>;
 ```
 
 ### 2. Table Column Structure
@@ -50,6 +56,7 @@ Dokumentasi ini mencatat semua perbaikan yang dilakukan pada sistem Nominatif un
 **Requirement:** Table harus menampilkan: Nama, Jabatan, Eselon, Code RKA, Layanan, Deskripsi, Total Pagu, Total Aktual, Anggaran Berjalan, Status, Tanggal, Aksi
 
 **Fix Applied:**
+
 - Backend controller ditambahkan relasi untuk person data
 - Frontend table structure diupdate dengan 12 kolom
 - Column width optimization: 8%/10%/5%/6%/15%/12%/8%/8%/8%/6%/8%/6%
@@ -62,6 +69,7 @@ Dokumentasi ini mencatat semua perbaikan yang dilakukan pada sistem Nominatif un
 **Root Cause:** Method `index()` di backend tidak menghitung total values otomatis seperti method `show()`
 
 **Fix Applied:**
+
 ```php
 // Backend NominatifNewController@index
 $query = NominatifNew::with([
@@ -98,10 +106,12 @@ $nominatifs->getCollection()->transform(function ($nominatif) {
 **Evidence:** Database ada data "2025-11-26" tapi frontend menampilkan kosong
 
 **Root Cause:** Field mapping mismatch
+
 - **Database/Backend:** `tanggal_sampai` ✅
 - **Frontend Input:** `tanggal_pulang` ❌ (mencari field yang tidak ada)
 
 **Fix Applied:**
+
 ```jsx
 // NominatifExcelTable.jsx
 // SEBELUM (SALAH):
@@ -122,12 +132,14 @@ tanggal_sampai: row.tanggal_sampai || row.tanggal_pulang || '', // hapus fallbac
 **Evidence:** Console menunjukkan "🆕 Create mode, nominatif not found" saat seharusnya edit mode
 
 **Root Cause:** Ada dua useEffect yang bentrok:
+
 1. ✅ **Line 118-277:** Benar - menggunakan `specificNominatifId` dari `?id=1`
 2. ❌ **Line 280-313:** Salah - menggunakan `rkaId` (bukan nominatif ID)
 
 Yang kedua menyebabkan API call ke `/api/nominatifs-new/6` (RKA ID) bukan `/api/nominatifs-new/1` (nominatif ID)
 
 **Fix Applied:**
+
 - Hapus useEffect yang kedua (duplicate logic)
 - Enhanced debug logging untuk tracking
 - Fix variable usage untuk menghindari duplikasi parsing
@@ -153,17 +165,21 @@ useEffect(() => {
 **Fix Applied:**
 
 **A. Deskripsi Logic:**
+
 ```javascript
 // SEBELUM (salah):
-deskripsi_perjalanan_dinas: draftData?.deskripsi || `Nominatif RKA ${rkaDetail?.code_rka}`
+deskripsi_perjalanan_dinas: draftData?.deskripsi ||
+  `Nominatif RKA ${rkaDetail?.code_rka}`;
 
 // SESUDAH (benar):
 deskripsi_perjalanan_dinas: isRealEditMode
-  ? (nominatif?.deskripsi_perjalanan_dinas || `Nominatif RKA ${rkaDetail?.code_rka}`)
-  : (draftData?.deskripsi || `Nominatif RKA ${rkaDetail?.code_rka}`)
+  ? nominatif?.deskripsi_perjalanan_dinas ||
+    `Nominatif RKA ${rkaDetail?.code_rka}`
+  : draftData?.deskripsi || `Nominatif RKA ${rkaDetail?.code_rka}`;
 ```
 
 **B. Duplicate Row Prevention:**
+
 ```javascript
 // SEBELUM (salah):
 if (rows.length === 0) addRow();
@@ -185,6 +201,7 @@ if (rows.length === 0 && processedInitialData.length === 0) addRow();
 7. **Single Row:** Edit mode menampilkan 1 row data (tidak duplicate) ✅
 
 ### Console Output Expected:
+
 ```
 🚀 Initializing page with: {rkaId: "6", specificNominatifId: "1", url: "?id=1"}
 🔍 EDIT MODE: Fetching specific nominatif ID: 1
@@ -197,11 +214,13 @@ if (rows.length === 0 && processedInitialData.length === 0) addRow();
 ## Testing Steps
 
 1. **Buat Nominatif Baru:**
+
    - Create new nominatif
    - Verify deskripsi tersimpan dengan benar
    - Check totals calculation works
 
 2. **Edit Nominatif:**
+
    - Buka edit page dari daftar nominatif
    - Verify hanya 1 row yang tampil
    - Edit data (nama, tanggal, etc.)
@@ -215,16 +234,20 @@ if (rows.length === 0 && processedInitialData.length === 0) addRow();
 ## Files Modified
 
 ### Backend:
+
 - `app/Http/Controllers/NominatifNewController.php`
   - Method `index()` - Added biayaRow relation and total calculations
 
 ### Frontend:
+
 - `src/pages/Nominatif.jsx`
+
   - Layout structure change to full width
   - Column width optimization
   - Anggaran Berjalan calculation fix
 
 - `src/pages/NominatifPage.jsx`
+
   - Remove duplicate useEffect
   - Fix deskripsi logic for edit mode
   - Enhanced debug logging

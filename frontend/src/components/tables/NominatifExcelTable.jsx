@@ -8,6 +8,8 @@ import {
   CheckCircle,
   Upload,
   Eye,
+  X,
+  Upload as UploadIcon,
 } from "lucide-react";
 
 // Global CSS untuk menghilangkan arrow buttons dari currency inputs
@@ -66,7 +68,31 @@ const NominatifExcelTable = ({
   // Update rows when initialData changes (for edit mode)
   React.useEffect(() => {
     if (processedInitialData.length > 0) {
-      setRows(processedInitialData);
+      console.log('🔄 ProcessedInitialData changed, preserving evidence...');
+      setRows(prevRows => {
+        // Preserve evidence data when updating from initialData
+        const newRows = processedInitialData.map(initialRow => {
+          const existingRow = prevRows.find(r => r.id === initialRow.id);
+          if (existingRow) {
+            // Merge initial data with existing evidence data
+            const mergedRow = {
+              ...initialRow,
+              // Preserve evidence fields from existing row
+              evidence_files: existingRow.evidence_files || [],
+              evidence_uploading: existingRow.evidence_uploading,
+              evidence_uploaded: existingRow.evidence_uploaded
+            };
+            console.log('🔄 Merging row:', {
+              id: initialRow.id,
+              evidenceCount: existingRow.evidence_files?.length || 0
+            });
+            return mergedRow;
+          }
+          console.log('🔄 New row created:', initialRow.id);
+          return initialRow;
+        });
+        return newRows;
+      });
     }
   }, [processedInitialData]);
 
@@ -168,7 +194,10 @@ const NominatifExcelTable = ({
       representasi_dalam_kota_jumlah_hari: "",
       representasi_dalam_kota_pagu_perhari: "",
       representasi_dalam_kota_aktual_perhari: "",
-      evidence_url: null,
+      // Evidence fields - Changed to array for multiple files
+      evidence_files: [], // Array of { id, url, file, filename, filesize }
+      evidence_uploading: false,
+      evidence_uploaded: false,
     };
 
     setRows([...rows, newRow]);
@@ -176,6 +205,15 @@ const NominatifExcelTable = ({
 
   // Update row data
   const updateRow = (id, field, value) => {
+    console.log('🔄 Updating row:', { id, field, value });
+
+    // Debug: Show current state before update
+    if (field.startsWith('evidence_')) {
+      console.log('🔍 Before evidence update - current row state:',
+        rows.find(r => r.id === id)
+      );
+    }
+
     const referenceFields = ["nama_lengkap", "golongan", "jabatan", "eselon"];
 
     // Find the first main row and first tambahan row (the acuans)
@@ -204,7 +242,28 @@ const NominatifExcelTable = ({
       return row;
     });
 
+    console.log('📋 Setting new rows state:', updatedRows.map(r => ({
+      id: r.id,
+      hasEvidence: !!r.evidence_url,
+      filename: r.evidence_filename
+    })));
+
     setRows(updatedRows);
+
+    // Debug: Check state after setting
+    if (field.startsWith('evidence_')) {
+      setTimeout(() => {
+        // Use the latest state from updatedRows instead of rows
+        const latestState = updatedRows.find(r => r.id === id);
+        console.log('🔍 After setRows - evidence state:', {
+          id,
+          field,
+          evidence_filename: latestState?.evidence_filename,
+          evidence_url: latestState?.evidence_url,
+          evidence_filesize: latestState?.evidence_filesize
+        });
+      }, 100);
+    }
 
     // Clear validation error for this field if it was previously invalid
     if (
@@ -244,11 +303,67 @@ const NominatifExcelTable = ({
 
   // Handle file upload
   const handleFileUpload = (rowId, file) => {
+    console.log('🔄 File upload triggered:', { rowId, file: file?.name, size: file?.size });
+
     if (file) {
       // Create file URL for preview
       const fileUrl = URL.createObjectURL(file);
-      updateRow(rowId, "evidence_url", fileUrl);
-      updateRow(rowId, "evidence_file", file);
+      const fileSize = (file.size / 1024).toFixed(2) + ' KB'; // Convert to KB
+      const fileId = Date.now() + Math.random();
+
+      const newFile = {
+        id: fileId,
+        url: fileUrl,
+        file: file,
+        filename: file.name,
+        filesize: fileSize
+      };
+
+      console.log('📤 Adding new evidence file:', {
+        rowId,
+        fileId,
+        fileName: file.name,
+        fileSize
+      });
+
+      // Set uploading state first
+      setRows(prevRows => prevRows.map(row =>
+        row.id === rowId ? { ...row, evidence_uploading: true } : row
+      ));
+
+      // Simulate processing delay for better UX
+      setTimeout(() => {
+        // Add new file to evidence_files array
+        setRows(prevRows => prevRows.map(row => {
+          if (row.id === rowId) {
+            const updatedFiles = [...(row.evidence_files || []), newFile];
+            return {
+              ...row,
+              evidence_uploading: false,
+              evidence_files: updatedFiles,
+              evidence_uploaded: true
+            };
+          }
+          return row;
+        }));
+
+        console.log('✅ Evidence upload completed for row:', rowId);
+
+        // Clear upload success state after 3 seconds but keep file data
+        setTimeout(() => {
+          setRows(prevRows => {
+            const currentRow = prevRows.find(r => r.id === rowId);
+            console.log('🔄 Evidence count for row:', rowId, currentRow?.evidence_files?.length || 0);
+
+            return prevRows.map(row =>
+              row.id === rowId ? { ...row, evidence_uploaded: false } : row
+            );
+          });
+          console.log('🔄 Cleared upload success state but file data preserved');
+        }, 3000);
+      }, 500); // 500ms delay
+    } else {
+      console.log('❌ No file provided for upload');
     }
   };
 
@@ -808,7 +923,9 @@ const NominatifExcelTable = ({
               >
                 Representasi Dalam Kota
               </th>
-              <th className="px-2 py-2 text-xs font-bold text-gray-700 text-center"></th>
+              <th className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200 bg-purple-100">
+                EVIDENCE
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -1105,7 +1222,6 @@ const NominatifExcelTable = ({
                     }
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="Rp 0"
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1127,7 +1243,6 @@ const NominatifExcelTable = ({
                     }
                     className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                     placeholder="Rp 0"
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                   />
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm text-right border-r border-gray-200 bg-gray-50">
@@ -1604,25 +1719,105 @@ const NominatifExcelTable = ({
 
                 {/* Evidence Column - Add background color for consistency */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200 bg-purple-50">
-                  <div className="flex items-center space-x-2">
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        onChange={(e) =>
-                          handleFileUpload(row.id, e.target.files[0])
-                        }
-                        className="hidden"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                      />
-                      <div className="w-8 h-8 border-2 border-dashed border-purple-300 rounded-md flex items-center justify-center hover:border-purple-500 transition-colors">
-                        <Upload className="w-4 h-4 text-purple-500" />
+                  {/* Simple Evidence Display */}
+                    <div className="w-full max-w-52">
+                      <div className="mb-1">
+                        {/* Upload Button */}
+                        <label className="cursor-pointer">
+                          <input
+                            key={`file-input-${row.id}-${row.evidence_files?.length || 0}`}
+                            type="file"
+                            onChange={(e) =>
+                              handleFileUpload(row.id, e.target.files[0])
+                            }
+                            className="hidden"
+                            accept="image/*"
+                            disabled={row.evidence_uploading}
+                          />
+                          <div className={`w-full px-2 py-1 border-2 border-dashed rounded-md flex items-center justify-center transition-colors text-xs ${
+                            row.evidence_uploading
+                              ? 'border-gray-400 bg-gray-100 cursor-not-allowed'
+                              : 'border-purple-300 hover:border-purple-500'
+                          }`}>
+                            {row.evidence_uploading ? (
+                              <RefreshCw className="w-4 h-4 text-gray-500 animate-spin mr-1" />
+                            ) : (
+                              <Upload className="w-4 h-4 text-purple-500 mr-1" />
+                            )}
+                            <span className="text-gray-600">
+                              {row.evidence_uploading ? 'Uploading...' : 'Upload Evidence'}
+                            </span>
+                          </div>
+                        </label>
                       </div>
-                    </label>
-                    {row.evidence_url && (
-                      <button className="text-purple-600 hover:text-purple-800">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    )}
+
+                      {/* Debug logging for evidence rendering */}
+                      {(() => {
+                        console.log('🔍 Rendering evidence for row:', row.id, {
+                          evidence_files_count: row.evidence_files?.length || 0,
+                          evidence_uploaded: row.evidence_uploaded
+                        });
+                        return null;
+                      })()}
+
+                      {/* Multiple Files List */}
+                      {row.evidence_files && row.evidence_files.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          <div className="text-xs text-gray-600 font-medium mb-1">
+                            📎 Evidence Files ({row.evidence_files.length})
+                          </div>
+                          {row.evidence_files.map((file, index) => (
+                            <div key={file.id} className="bg-white border border-gray-200 rounded p-2">
+                              <div className="flex items-center justify-between text-xs">
+                                <div className="flex-1 min-w-0">
+                                  <div className="truncate text-gray-700 font-medium" title={file.filename}>
+                                    📄 {file.filename}
+                                  </div>
+                                  <div className="text-gray-500">📏 {file.filesize}</div>
+                                </div>
+                                <div className="flex space-x-1 ml-2">
+                                  <button
+                                    className="text-blue-500 hover:text-blue-700 p-1"
+                                    title="View file"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (file.url) {
+                                        window.open(file.url, '_blank');
+                                      }
+                                    }}
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    className="text-red-500 hover:text-red-700 p-1"
+                                    title="Remove file"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      console.log('🗑️ Removing specific evidence file:', file.id);
+
+                                      // Remove specific file from array
+                                      setRows(prevRows => prevRows.map(r =>
+                                        r.id === row.id ? {
+                                          ...r,
+                                          evidence_files: r.evidence_files.filter(f => f.id !== file.id)
+                                        } : r
+                                      ));
+
+                                      console.log('✅ Evidence file removed:', file.id);
+                                    }}
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {row.evidence_uploaded && (
+                        <div className="mt-1 text-xs text-green-600 font-medium">✅ File uploaded!</div>
+                      )}
                   </div>
                 </td>
               </tr>

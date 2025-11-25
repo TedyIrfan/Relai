@@ -88,7 +88,7 @@ class NominatifEvidenceController extends Controller
         }
 
         $request->validate([
-            'evidence_file' => 'required|file|mimes:jpg,jpeg,png|max:5120', // Max 5MB, images only
+            'evidence_file' => 'required|file|mimes:jpg,jpeg,png,gif,bmp,webp,svg|max:10240', // Max 10MB, images only
             'keterangan' => 'nullable|string|max:500'
         ]);
 
@@ -317,31 +317,36 @@ class NominatifEvidenceController extends Controller
     }
 
     /**
-     * Get file type information
+     * Get file type information for image files
      */
     private function getFileTypeInfo($fileName)
     {
         $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-        $imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-        $documentTypes = ['pdf', 'doc', 'docx', 'txt', 'rtf'];
+        $imageTypes = [
+            'jpg' => ['type' => 'JPEG', 'icon' => '📷'],
+            'jpeg' => ['type' => 'JPEG', 'icon' => '📷'],
+            'png' => ['type' => 'PNG', 'icon' => '🖼️'],
+            'gif' => ['type' => 'GIF', 'icon' => '🎞️'],
+            'bmp' => ['type' => 'BMP', 'icon' => '🎨'],
+            'webp' => ['type' => 'WebP', 'icon' => '🌐'],
+            'svg' => ['type' => 'SVG', 'icon' => '🎭']
+        ];
 
-        if (in_array($extension, $imageTypes)) {
+        if (isset($imageTypes[$extension])) {
             return [
                 'type' => 'image',
+                'format' => $imageTypes[$extension]['type'],
                 'category' => 'Image File',
+                'icon' => $imageTypes[$extension]['icon'],
                 'previewable' => true
-            ];
-        } elseif (in_array($extension, $documentTypes)) {
-            return [
-                'type' => 'document',
-                'category' => 'Document File',
-                'previewable' => $extension === 'pdf'
             ];
         } else {
             return [
                 'type' => 'other',
-                'category' => 'Other File',
+                'format' => 'Unknown',
+                'category' => 'File',
+                'icon' => '📎',
                 'previewable' => false
             ];
         }
