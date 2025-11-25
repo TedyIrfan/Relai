@@ -106,9 +106,10 @@ class NominatifNewController extends Controller
                 'rkaDetail:id,code_rka,layanan',
                 'user:id,name,email',
                 'detailRows' => function ($query) {
-                    $query->select('id', 'nominatif_id', 'person_type', 'person_name', 'row_order')
+                    $query->select('id', 'nominatif_id', 'person_type', 'person_name', 'nama', 'jabatan', 'eselon', 'row_order')
                           ->orderBy('row_order');
-                }
+                },
+                'detailRows.biayaRow'
             ]); // ->byUser(Auth::id()); // Temporarily disabled for debugging
 
         // Filter by status if provided
@@ -135,6 +136,23 @@ class NominatifNewController extends Controller
         }
 
         $nominatifs = $query->orderBy('created_at', 'desc')->paginate(10);
+
+        // Calculate totals for each nominatif
+        $nominatifs->getCollection()->transform(function ($nominatif) {
+            $totalPagu = $nominatif->detailRows->sum(function ($row) {
+                return $row->biayaRow?->total_pagu_row ?? 0;
+            });
+            $totalAktual = $nominatif->detailRows->sum(function ($row) {
+                return $row->biayaRow?->total_aktual_row ?? 0;
+            });
+            $totalAnggaranBerjalan = $totalPagu - $totalAktual;
+
+            $nominatif->total_pagu_trip = $totalPagu;
+            $nominatif->total_aktual_trip = $totalAktual;
+            $nominatif->total_anggaran_berjalan_trip = $totalAnggaranBerjalan;
+
+            return $nominatif;
+        });
 
             return response()->json([
                 'success' => true,

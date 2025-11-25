@@ -204,9 +204,9 @@ const Nominatif = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Header - Full Width */}
+      <div className="bg-white shadow-lg rounded-xl mx-4 mt-4 border-b border-gray-200 relative">
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <FileText className="w-6 h-6 text-blue-600 mr-3" />
@@ -230,11 +230,10 @@ const Nominatif = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
+      {/* Stats Cards - Full Width */}
+      <div className="px-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white shadow-lg rounded-xl px-4 py-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Nominatif</p>
@@ -244,7 +243,7 @@ const Nominatif = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white shadow-lg rounded-xl px-4 py-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Draft</p>
@@ -256,7 +255,7 @@ const Nominatif = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white shadow-lg rounded-xl px-4 py-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Submit</p>
@@ -268,44 +267,57 @@ const Nominatif = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Nominatif List */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Daftar Nominatif
-            </h2>
-            <p className="text-sm text-gray-600">
-              Total {isDataLoaded && Array.isArray(nominatifs) ? nominatifs.length : 0} nominatif
-            </p>
-          </div>
+      {/* Nominatif List - FULL WIDTH SCREEN */}
+      <div className="bg-white shadow-lg rounded-xl mx-4 mt-4 border-b border-gray-200 relative">
+        <div className="px-4 sm:px-6 lg:px-8 py-3 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Daftar Nominatif
+          </h2>
+          <p className="text-sm text-gray-600">
+            Total {isDataLoaded && Array.isArray(nominatifs) ? nominatifs.length : 0} nominatif
+          </p>
+        </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <div className="px-4 sm:px-6 lg:px-8 overflow-hidden">
+            <table className="w-full table-fixed">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
+                    Nama
+                  </th>
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '10%'}}>
+                    Jabatan
+                  </th>
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '5%'}}>
+                    Eselon
+                  </th>
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '6%'}}>
                     Code RKA
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                    Deskripsi
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '15%'}}>
                     Layanan
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                    Periode
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '12%'}}>
+                    Deskripsi
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                    Total
+                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
+                    Total Pagu
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
+                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
+                    Total Aktual
+                  </th>
+                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
+                    Anggaran Berjalan
+                  </th>
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '6%'}}>
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                    Dibuat
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
+                    Tanggal
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase">
+                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '6%'}}>
                     Aksi
                   </th>
                 </tr>
@@ -313,7 +325,7 @@ const Nominatif = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
                         Memuat data...
@@ -321,40 +333,62 @@ const Nominatif = () => {
                     </td>
                   </tr>
                 ) : isDataLoaded && Array.isArray(nominatifs) && nominatifs.length > 0 ? (
-                  nominatifs.map((nominatif) => (
+                  nominatifs.map((nominatif) => {
+                    // Get the first main person from detail rows for display
+                    const mainPerson = nominatif.detail_rows?.find(row => row.person_type === 'main');
+                    return (
                     <tr key={nominatif.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 text-sm font-mono text-gray-900">
-                        {nominatif.rka_detail?.code_rka || '-'}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
-                        <div className="max-w-xs truncate">
-                          {nominatif.deskripsi_perjalanan_dinas || '-'}
+                      <td className="px-1 py-1 text-sm text-gray-900">
+                        <div className="truncate" title={mainPerson?.nama || mainPerson?.person_name || '-'}>
+                          {mainPerson?.nama || mainPerson?.person_name || '-'}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
-                        <div className="max-w-xs truncate">
+                      <td className="px-1 py-1 text-sm text-gray-900">
+                        <div className="truncate" title={mainPerson?.jabatan || '-'}>
+                          {mainPerson?.jabatan || '-'}
+                        </div>
+                      </td>
+                      <td className="px-1 py-1 text-sm text-gray-900">
+                        {mainPerson?.eselon || '-'}
+                      </td>
+                      <td className="px-1 py-1 text-sm font-mono text-gray-900">
+                        {nominatif.rka_detail?.code_rka || '-'}
+                      </td>
+                      <td className="px-1 py-1 text-sm text-gray-900">
+                        <div className="truncate" title={nominatif.rka_detail?.layanan || '-'}>
                           {nominatif.rka_detail?.layanan || '-'}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          {formatDate(nominatif.tanggal_mulai)} - {formatDate(nominatif.tanggal_selesai)}
+                      <td className="px-1 py-1 text-sm text-gray-900">
+                        <div className="truncate" title={nominatif.deskripsi_perjalanan_dinas || '-'}>
+                          {nominatif.deskripsi_perjalanan_dinas || '-'}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                        {formatRupiah(nominatif.total_pagu)}
+                      <td className="px-1 py-1 text-sm font-medium text-right text-gray-900">
+                        {formatRupiah(nominatif.total_pagu_trip || nominatif.total_pagu)}
                       </td>
-                      <td className="px-4 py-4 text-sm">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(nominatif.status)}`}>
+                      <td className="px-1 py-1 text-sm font-medium text-right text-gray-900">
+                        {formatRupiah(nominatif.total_aktual_trip || nominatif.total_biaya_aktual)}
+                      </td>
+                      <td className="px-1 py-1 text-sm font-medium text-right text-gray-900">
+                        {formatRupiah(
+                          nominatif.total_anggaran_berjalan_trip ||
+                          ((nominatif.total_pagu_trip || 0) - (nominatif.total_aktual_trip || 0))
+                        )}
+                      </td>
+                      <td className="px-1 py-1 text-sm">
+                        <span className={`inline-flex items-center px-1 py-0 rounded-full text-xs font-medium ${getStatusBadge(nominatif.status)}`}>
                           {nominatif.status}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
-                        {formatDate(nominatif.created_at)}
+                      <td className="px-1 py-1 text-sm text-gray-900">
+                        <div className="flex items-center gap-0.5">
+                          <Calendar className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                          {formatDate(nominatif.tanggal_mulai)}
+                        </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-1 py-1 text-sm text-right">
+                        <div className="flex items-center justify-end gap-0.5">
                           {(nominatif.status === 'draft' || nominatif.status === 'rejected') && (
                             <button
                               onClick={() => handleEdit(nominatif)}
@@ -385,10 +419,11 @@ const Nominatif = () => {
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center">
                         <FileText className="w-12 h-12 text-gray-400 mb-4" />
                         <p className="text-lg font-medium text-gray-900 mb-2">
@@ -413,7 +448,6 @@ const Nominatif = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

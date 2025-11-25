@@ -117,6 +117,12 @@ const NominatifPage = () => {
   // Detect edit mode and load existing nominatif - STRICT MODE
   useEffect(() => {
     const initializePage = async () => {
+      console.log('🚀 Initializing page with:', {
+        rkaId,
+        specificNominatifId,
+        url: location.search
+      });
+
       setLoading(true);
       setError(null);
 
@@ -240,7 +246,7 @@ const NominatifPage = () => {
                   asal: row.asal || '',
                   tujuan: row.tujuan || '',
                   tanggal_pergi: row.tanggal_pergi || '',
-                  tanggal_pulang: row.tanggal_pulang || '',
+                  tanggal_sampai: row.tanggal_sampai || '',
                   transport_taksi_pergi_pagu: row.biaya_row?.transport_taksi_pergi_pagu || '',
                   transport_taksi_pergi_aktual: row.biaya_row?.transport_taksi_pergi_aktual || '',
                   transport_pergi_pagu: row.biaya_row?.transport_pergi_pagu || '',
@@ -276,42 +282,7 @@ const NominatifPage = () => {
     // }
   // }, [rkaId]);
 
-  // Check if this is edit mode by trying to find nominatif with this ID
-  useEffect(() => {
-    const checkEditMode = async () => {
-      try {
-        const token = getToken();
-        const response = await fetch(`http://localhost/api/nominatifs-new/${rkaId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const nominatifData = await response.json();
-              setIsEditMode(true);
-          setNominatif(nominatifData.data);
-          // Load existing detail rows for this nominatif
-          await loadNominatifDetailRows(rkaId);
-          setLoading(false); // Stop loading when done
-        } else {
-          console.log('🆕 Create mode, nominatif not found');
-          setIsEditMode(false);
-          setLoading(false); // Stop loading when done
-        }
-      } catch (error) {
-        console.log('🆕 Create mode, error checking nominatif:', error);
-        setIsEditMode(false);
-        setLoading(false); // Stop loading when done
-      }
-    };
-
-    if (rkaId) {
-      checkEditMode();
-    }
-  }, [rkaId]);
-
+  
   // Load existing detail rows for edit mode
   const loadNominatifDetailRows = async (nominatifId) => {
     try {
@@ -435,14 +406,15 @@ const NominatifPage = () => {
 
       // === SAFETY NET LOGIC ===
       // Cek ID dari state atau URL params untuk memastikan mode Edit
-      const urlParams = new URLSearchParams(location.search);
-      const urlNominatifId = urlParams.get('id');
+      const urlNominatifId = specificNominatifId; // Already parsed from URL
       const activeNominatifId = nominatif?.id || urlNominatifId;
-      
+
       // Tentukan mode berdasarkan keberadaan ID yang valid
       const isRealEditMode = !!activeNominatifId;
 
       console.log('🔒 SAFETY CHECK:', {
+        rkaId,
+        specificNominatifId,
         stateId: nominatif?.id,
         urlId: urlNominatifId,
         activeId: activeNominatifId,
@@ -453,7 +425,9 @@ const NominatifPage = () => {
       // Create or update nominatif
       const nominatifPayload = {
         rka_detail_id: parseInt(rkaId),
-        deskripsi_perjalanan_dinas: draftData?.deskripsi || `Nominatif RKA ${rkaDetail?.code_rka}`,
+        deskripsi_perjalanan_dinas: isRealEditMode
+          ? (nominatif?.deskripsi_perjalanan_dinas || `Nominatif RKA ${rkaDetail?.code_rka}`)
+          : (draftData?.deskripsi || `Nominatif RKA ${rkaDetail?.code_rka}`),
         tanggal_mulai: draftData?.tanggalMulai || data[0]?.tanggal_pergi || todayDate,
         tanggal_selesai: draftData?.tanggalSelesai || data[data.length - 1]?.tanggal_sampai || todayDate,
         status: 'draft'
@@ -515,7 +489,7 @@ const NominatifPage = () => {
         asal: row.asal || '',
         tujuan: row.tujuan || '',
         tanggal_pergi: row.tanggal_pergi || '',
-        tanggal_sampai: row.tanggal_sampai || row.tanggal_pulang || '',
+        tanggal_sampai: row.tanggal_sampai || '',
         no: index + 1,
         row_order: index + 1
       }));
@@ -737,9 +711,10 @@ const NominatifPage = () => {
                 <h1 className="text-xl font-semibold text-gray-900">
                   Input Nominatif
                 </h1>
-                {draftData?.deskripsi && (
+                {/* Show deskripsi for both create and edit mode */}
+                {(draftData?.deskripsi || nominatif?.deskripsi_perjalanan_dinas) && (
                   <p className="text-sm text-gray-900 font-medium">
-                    {draftData.deskripsi}
+                    {draftData?.deskripsi || nominatif?.deskripsi_perjalanan_dinas}
                   </p>
                 )}
                 {rkaDetail && (

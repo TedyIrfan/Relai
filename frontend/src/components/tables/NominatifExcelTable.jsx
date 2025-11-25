@@ -54,14 +54,14 @@ const NominatifExcelTable = ({
   const [validationErrors, setValidationErrors] = useState({});
   const tableRef = useRef(null);
 
-  // Initialize with one empty row if no data
+  // Initialize with one empty row if no data (create mode only)
   React.useEffect(() => {
-    // Only log when actually needed to reduce spam
-    if (rows.length === 0 && process.env.NODE_ENV === "development") {
-      console.log("📊 NominatifExcelTable - Adding empty row");
+    // Only add empty row if we're in create mode (no initial data)
+    if (rows.length === 0 && processedInitialData.length === 0 && process.env.NODE_ENV === "development") {
+      console.log("📊 NominatifExcelTable - Adding empty row (create mode)");
       addRow();
     }
-  }, []);
+  }, [processedInitialData.length]);
 
   // Update rows when initialData changes (for edit mode)
   React.useEffect(() => {
@@ -947,9 +947,9 @@ const NominatifExcelTable = ({
                 <td className="px-4 py-3 border-r border-gray-200 w-32">
                   <input
                     type="date"
-                    value={row.tanggal_pulang || ""}
+                    value={row.tanggal_sampai || ""}
                     onChange={(e) =>
-                      updateRow(row.id, "tanggal_pulang", e.target.value)
+                      updateRow(row.id, "tanggal_sampai", e.target.value)
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
                   />
