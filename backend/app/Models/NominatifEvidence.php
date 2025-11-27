@@ -19,6 +19,7 @@ class NominatifEvidence extends Model
         'evidence_foto_size',
         'evidence_foto_type',
         'keterangan',
+        'user_id', // 🔥 NEW: Track who uploaded
     ];
 
     protected $casts = [

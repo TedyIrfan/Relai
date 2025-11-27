@@ -338,7 +338,24 @@ export const nominatifService = {
       }
     });
 
-    // Validasi dan format data biaya - User BOLEH kosongkan, tapi jika input WAJIB lengkap
+    // 🆕 FIX: Transform evidence array to single file for backend compatibility
+    if (biayaData.evidence_files && Array.isArray(biayaData.evidence_files) && biayaData.evidence_files.length > 0) {
+      // Backend expects single file evidence, take first file for compatibility
+      const primaryEvidenceFile = biayaData.evidence_files[0];
+      biayaData = {
+        ...biayaData,
+        // Convert array to single file format for backend compatibility
+        evidence_file: primaryEvidenceFile.file,
+        evidence_filename: primaryEvidenceFile.filename,
+        evidence_filesize: primaryEvidenceFile.filesize
+      };
+      console.log("🔄 Transforming evidence array to single file for backend compatibility:", {
+        originalArray: biayaData.evidence_files.length,
+        selectedFile: primaryEvidenceFile.filename
+      });
+    }
+
+    // Validasi dan format data biaya - User BOLEH kosongkan penginapan, tapi jika input WAJIB lengkap
     const validatedBiayaData = {
       // Transport data - User input manual, tidak ada default values
       transport_pesawat_non_pp_pagu: biayaData.transport_pesawat_non_pp_pagu !== null && biayaData.transport_pesawat_non_pp_pagu !== undefined && biayaData.transport_pesawat_non_pp_pagu !== '' && biayaData.transport_pesawat_non_pp_pagu !== 0 ? parseFloat(biayaData.transport_pesawat_non_pp_pagu) : null,
@@ -392,9 +409,9 @@ export const nominatifService = {
       // Jika biaya row sudah ada, lakukan update
       if (existingBiaya.success && biayaRow && biayaRow.id) {
         console.log('✅ Existing biaya found, updating ID:', biayaRow.id);
-        // ✅ FIX: Gunakan URL BENAR dengan detailRowId
-        response = await api.put(`/nominatifs/details/${detailRowId}/biaya/${biayaRow.id}`, validatedBiayaData);
-        console.log('✅ Update successful:', response.data);
+        // 🔥 FIX: Gunakan simplified update endpoint yang allow ALL nullable fields
+        response = await api.put(`/nominatifs/details/${detailRowId}/biaya/${biayaRow.id}/simplified`, validatedBiayaData);
+        console.log('✅ Simplified update successful:', response.data);
       } else {
         console.log('🆕 No existing biaya, creating new...');
         response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, validatedBiayaData);

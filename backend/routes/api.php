@@ -52,6 +52,7 @@ Route::prefix('nominatifs/details/{detailRowId}/biaya')->group(function () {
     Route::get('/', [NominatifBiayaRowController::class, 'index']);
     Route::post('/', [NominatifBiayaRowController::class, 'store']);
     Route::get('/{biayaId}', [NominatifBiayaRowController::class, 'show']);
+    Route::put('/{biayaId}/simplified', [NominatifBiayaRowController::class, 'updateSimplified']); // 🔥 FIXED: Add simplified endpoint
     Route::put('/{biayaId}', [NominatifBiayaRowController::class, 'update']);
     Route::delete('/{biayaId}', [NominatifBiayaRowController::class, 'destroy']);
 });
@@ -60,11 +61,17 @@ Route::prefix('nominatifs/details/{detailRowId}/biaya')->group(function () {
 Route::prefix('nominatifs/{nominatifId}/evidence')->group(function () {
     Route::get('/', [NominatifEvidenceController::class, 'index']);
     Route::get('/all', [NominatifEvidenceController::class, 'getAllEvidence']); // With file type info
-    Route::post('/', [NominatifEvidenceController::class, 'store']);
+    // 🔥 DEPRECATED: Removed 'store' route - use specific detail row route below
+    // Route::post('/', [NominatifEvidenceController::class, 'store']); // REMOVED
     Route::get('/{evidenceId}', [NominatifEvidenceController::class, 'show']);
     Route::put('/{evidenceId}', [NominatifEvidenceController::class, 'update']);
     Route::delete('/{evidenceId}', [NominatifEvidenceController::class, 'destroy']);
     Route::get('/{evidenceId}/download', [NominatifEvidenceController::class, 'download']);
+});
+
+// 🔥 FIXED: Evidence for specific detail row (route yang dipanggil frontend)
+Route::prefix('nominatifs/{nominatifId}/details/{detailRowId}/evidence')->group(function () {
+    Route::post('/', [NominatifEvidenceController::class, 'storeWithDetailRow']);
 });
 
 // User CRUD Routes (Protected)
@@ -173,3 +180,6 @@ Route::get('/test', function () {
         'timestamp' => now()->toDateTimeString()
     ]);
 });
+
+// Include new nominatif system routes
+require __DIR__.'/api_nominatifs_new.php';

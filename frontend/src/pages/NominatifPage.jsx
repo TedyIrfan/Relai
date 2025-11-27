@@ -569,16 +569,20 @@ const NominatifPage = () => {
 
       // Update biaya for each detail row (optimized approach)
       const biayaPromises = data.map(async (row, index) => {
-        // FIX: Separate CREATE vs EDIT mode logic
+        // 🔥 ENHANCED: Separate CREATE vs EDIT mode logic with better error handling
         let detailId;
         if (specificNominatifId && row.id) {
           // EDIT MODE: Use existing detail row ID
           detailId = row.id;
-          console.log(`EDIT MODE: Using existing detail ID ${detailId} for row ${index}`);
+          console.log(`✅ EDIT MODE: Using existing detail ID ${detailId} for row ${index}`);
         } else {
-          // CREATE MODE: Use newly created detail row ID
+          // CREATE MODE: Use newly created detail row ID with validation
+          if (!createdDetailRows[index] || !createdDetailRows[index].id) {
+            console.error(`❌ CREATE MODE ERROR: No valid detail row ID found for row ${index}`);
+            throw new Error(`Gagal membuat detail row untuk baris ke-${index + 1}. ID tidak valid.`);
+          }
           detailId = createdDetailRows[index].id;
-          console.log(`CREATE MODE: Using new detail ID ${detailId} for row ${index}`);
+          console.log(`✅ CREATE MODE: Using new detail ID ${detailId} for row ${index}`);
         }
 
         // Sesuai dengan database fields yang ada
@@ -642,44 +646,76 @@ const NominatifPage = () => {
 
       // Handle evidence uploads
       const evidencePromises = data.map(async (row, index) => {
-        if (row.evidence_file && row.evidence_file instanceof File) {
+        // Check if there are evidence files to upload
+        if (row.evidence_files && Array.isArray(row.evidence_files) && row.evidence_files.length > 0) {
+          console.log(`📤 Uploading ${row.evidence_files.length} evidence files for row ${index}`);
+
           try {
-            const formData = new FormData();
-            formData.append('evidence_file', row.evidence_file);
-            formData.append('keterangan', `Evidence untuk ${row.nama_lengkap || row.nama || 'Row ' + (index + 1)}`);
-
-            const token = localStorage.getItem('auth_token');
-            const evidenceResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/evidence`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`
-              },
-              body: formData
-            });
-
-            if (!evidenceResponse.ok) {
-              const errorText = await evidenceResponse.text();
-              console.error(`Evidence upload failed for row ${index}:`, errorText);
-              // Don't throw error for evidence upload failure, just log it
-              return null;
+            // Get detail row ID for evidence association
+            let detailRowId;
+            if (specificNominatifId && row.id) {
+              // EDIT MODE: Use existing detail row ID
+              detailRowId = row.id;
+              console.log(`📤 EDIT MODE: Using detail row ID ${detailRowId} for evidence upload`);
+            } else {
+              // CREATE MODE: Use newly created detail row ID
+              detailRowId = createdDetailRows[index]?.id;
+              console.log(`📤 CREATE MODE: Using new detail row ID ${detailRowId} for evidence upload`);
             }
 
-            const evidenceResult = await evidenceResponse.json();
-            console.log(`Evidence uploaded successfully for row ${index}:`, evidenceResult.data);
-            return evidenceResult.data;
+            if (!detailRowId) {
+              console.error(`❌ No detail row ID found for row ${index}, skipping evidence upload`);
+              return [];
+            }
+
+            // Upload each evidence file
+            const uploadPromises = row.evidence_files.map(async (evidenceFile, fileIndex) => {
+              if (evidenceFile.file && evidenceFile.file instanceof File) {
+                const formData = new FormData();
+                formData.append('evidence_file', evidenceFile.file);
+                formData.append('keterangan', `Evidence ${fileIndex + 1} untuk ${row.nama_lengkap || row.nama || 'Row ' + (index + 1)}`);
+                formData.append('nominatif_detail_row_id', detailRowId); // 🔥 Link to specific detail row
+
+                const token = getToken(); // Use the same getToken function as other API calls
+                // 🔥 FIX: Use the correct route for specific detail row evidence upload
+                const evidenceResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/${detailRowId}/evidence`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: formData
+                });
+
+                if (!evidenceResponse.ok) {
+                  const errorText = await evidenceResponse.text();
+                  console.error(`Evidence upload failed for row ${index}, file ${fileIndex + 1}:`, errorText);
+                  return null;
+                }
+
+                const result = await evidenceResponse.json();
+                console.log(`✅ Evidence ${fileIndex + 1} uploaded successfully for row ${index}:`, result);
+                return result;
+              }
+              return null;
+            });
+
+            const uploadResults = await Promise.all(uploadPromises);
+            console.log(`📊 All evidence uploads completed for row ${index}:`, uploadResults);
+            return uploadResults.filter(result => result !== null);
           } catch (error) {
             console.error(`Evidence upload error for row ${index}:`, error);
-            return null;
+            return [];
           }
         }
-        return null;
+        return [];
       });
 
+  
       // Execute all evidence uploads in parallel
       const evidenceResults = await Promise.all(evidencePromises);
 
       setSuccess('Data berhasil disimpan!');
-      
+
       // Navigate to nominatif list page after successful save (both create and edit modes)
       if (nominatifId) {
         navigate('/nominatif', { replace: true });

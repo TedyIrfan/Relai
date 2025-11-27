@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\NominatifDetailRow;
 use App\Models\NominatifBiayaRow;
-use App\Models\NominatifEvidence;
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -56,7 +55,7 @@ class NominatifBiayaRowController extends Controller
             ], 403);
         }
 
-        // Cari biaya row yang sudah ada
+        // Hanya ambil biaya row yang sudah ada, JANGAN buat data baru
         $biayaRow = NominatifBiayaRow::where('nominatif_detail_row_id', $detailRow->id)->first();
 
         // Log untuk debugging
@@ -67,109 +66,12 @@ class NominatifBiayaRowController extends Controller
             'allBiayaRows' => NominatifBiayaRow::where('nominatif_detail_row_id', $detailRow->id)->get()->toArray()
         ]);
 
-        // 🔥 ENHANCED: Jika belum ada, buat otomatis dengan default values untuk CREATE MODE
+        // Jika belum ada, kirim response kosong dengan status success
         if (!$biayaRow) {
-            \Log::info('🆕 No biaya row found, creating default for CREATE MODE', [
-                'detailRowId' => $detailRowId,
-                'nominatifId' => $detailRow->nominatif_id
-            ]);
-
-            // Default values untuk CREATE MODE - semua field = 0 atau null
-            $defaultBiayaData = [
-                'nominatif_detail_row_id' => $detailRow->id,
-                // Transportasi
-                'transport_pesawat_non_pp_pagu' => 0,
-                'transport_pesawat_non_pp_aktual' => 0,
-                'transport_taksi_pagu' => 0,
-                'transport_taksi_aktual' => 0,
-
-                // Penginapan
-                'penginapan_jumlah_malam' => 0,
-                'penginapan_pagu_perhari' => 0,
-                'penginapan_aktual_perhari' => 0,
-
-                // Uang Harian Meeting Fullboard
-                'uang_harian_meeting_fullboard_jumlah_hari' => 0,
-                'uang_harian_meeting_fullboard_pagu_perhari' => 0,
-                'uang_harian_meeting_fullboard_aktual_perhari' => 0,
-
-                // Uang Harian Meeting Fullday
-                'uang_harian_meeting_fullday_jumlah_hari' => 0,
-                'uang_harian_meeting_fullday_pagu_perhari' => 0,
-                'uang_harian_meeting_fullday_aktual_perhari' => 0,
-
-                // Uang Harian Luar Kota
-                'uang_harian_luar_kota_jumlah_hari' => 0,
-                'uang_harian_luar_kota_pagu_perhari' => 0,
-                'uang_harian_luar_kota_aktual_perhari' => 0,
-
-                // Uang Harian Dalam Kota
-                'uang_harian_dalam_kota_jumlah_hari' => 0,
-                'uang_harian_dalam_kota_pagu_perhari' => 0,
-                'uang_harian_dalam_kota_aktual_perhari' => 0,
-
-                // Representasi Luar Kota
-                'representasi_luar_kota_jumlah_hari' => 0,
-                'representasi_luar_kota_pagu_perhari' => 0,
-                'representasi_luar_kota_aktual_perhari' => 0,
-
-                // Representasi Dalam Kota
-                'representasi_dalam_kota_jumlah_hari' => 0,
-                'representasi_dalam_kota_pagu_perhari' => 0,
-                'representasi_dalam_kota_aktual_perhari' => 0,
-            ];
-
-            // 🔥 CREATE DEFAULT BIAYA ROW untuk memastikan ID selalu tersedia
-            $biayaRow = NominatifBiayaRow::create($defaultBiayaData);
-
-            // Calculate dan update totals (semua 0)
-            $totalsData = [
-                // Penginapan totals (semua 0)
-                'penginapan_total_pagu' => 0,
-                'penginapan_total_aktual' => 0,
-                'penginapan_anggaran_berjalan' => 0,
-
-                // Meeting Fullboard totals (semua 0)
-                'uang_harian_meeting_fullboard_total_pagu' => 0,
-                'uang_harian_meeting_fullboard_total_aktual' => 0,
-                'uang_harian_meeting_fullboard_anggaran_berjalan' => 0,
-
-                // Meeting Fullday totals (semua 0)
-                'uang_harian_meeting_fullday_total_pagu' => 0,
-                'uang_harian_meeting_fullday_total_aktual' => 0,
-                'uang_harian_meeting_fullday_anggaran_berjalan' => 0,
-
-                // Luar Kota totals (semua 0)
-                'uang_harian_luar_kota_total_pagu' => 0,
-                'uang_harian_luar_kota_total_aktual' => 0,
-                'uang_harian_luar_kota_anggaran_berjalan' => 0,
-
-                // Dalam Kota totals (semua 0)
-                'uang_harian_dalam_kota_total_pagu' => 0,
-                'uang_harian_dalam_kota_total_aktual' => 0,
-                'uang_harian_dalam_kota_anggaran_berjalan' => 0,
-
-                // Representasi Luar Kota totals (semua 0)
-                'representasi_luar_kota_total_pagu' => 0,
-                'representasi_luar_kota_total_aktual' => 0,
-                'representasi_luar_kota_anggaran_berjalan' => 0,
-
-                // Representasi Dalam Kota totals (semua 0)
-                'representasi_dalam_kota_total_pagu' => 0,
-                'representasi_dalam_kota_total_aktual' => 0,
-                'representasi_dalam_kota_anggaran_berjalan' => 0,
-
-                // Grand totals (semua 0)
-                'total_pagu_row' => 0,
-                'total_aktual_row' => 0,
-                'total_anggaran_berjalan_row' => 0,
-            ];
-
-            $biayaRow->update($totalsData);
-
-            \Log::info('✅ Default biaya row created successfully', [
-                'biayaRowId' => $biayaRow->id,
-                'detailRowId' => $detailRowId
+            return response()->json([
+                'success' => true,
+                'data' => null,
+                'message' => 'No biaya row found for this detail row'
             ]);
         }
 
@@ -219,55 +121,20 @@ class NominatifBiayaRowController extends Controller
             ], 422);
         }
 
-        // 🔥 FIXED LOGIC: Cek apakah ada data penginapan yang VALID
-        $penginapanJumlahMalam = $request->input('penginapan_jumlah_malam');
-        $penginapanPaguPerhari = $request->input('penginapan_pagu_perhari');
-        $penginapanAktualPerhari = $request->input('penginapan_aktual_perhari');
-
-        $hasPenginapanData = (
-            $penginapanJumlahMalam !== null && $penginapanJumlahMalam !== '' && $penginapanJumlahMalam > 0 ||
-            $penginapanPaguPerhari !== null && $penginapanPaguPerhari !== '' && $penginapanPaguPerhari > 0 ||
-            $penginapanAktualPerhari !== null && $penginapanAktualPerhari !== '' && $penginapanAktualPerhari > 0
-        );
-
-        // 🔥 CUSTOM VALIDATION: Dynamic validation based on penginapan data
-        $validationRules = [
-            // Biaya row validation rules
-            ...NominatifBiayaRow::getValidationRules(),
-            // Evidence file validation
-            'evidence_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,bmp,gif|max:10240', // Max 10MB
-            'evidence_filename' => 'nullable|string|max:255',
-            'evidence_filesize' => 'nullable|integer',
-        ];
-
-        // 🔥 DYNAMIC VALIDATION: Override penginapan rules based on data
-        if ($hasPenginapanData) {
-            // If penginapan data exists, make all penginapan fields required
-            $validationRules['penginapan_jumlah_malam'] = 'required|integer|min:1|max:365';
-            $validationRules['penginapan_pagu_perhari'] = 'required|numeric|min:0|max:999999999.99';
-            $validationRules['penginapan_aktual_perhari'] = 'required|numeric|min:0|max:999999999.99';
-        } else {
-            // If no penginapan data, make penginapan fields optional (nullable)
-            $validationRules['penginapan_jumlah_malam'] = 'nullable|integer|min:0|max:365';
-            $validationRules['penginapan_pagu_perhari'] = 'nullable|numeric|min:0|max:999999999.99';
-            $validationRules['penginapan_aktual_perhari'] = 'nullable|numeric|min:0|max:999999999.99';
-        }
-
-        $request->validate($validationRules);
+        $request->validate(NominatifBiayaRow::getValidationRules());
 
         DB::beginTransaction();
         try {
-            // 🔥 FIXED: Conditional default values untuk penginapan
+            // Set default values untuk fields yang tidak diisi
             $biayaData = $request->all();
             $defaultFields = [
                 'transport_pesawat_non_pp_pagu' => 0,
                 'transport_pesawat_non_pp_aktual' => 0,
                 'transport_taksi_pagu' => 0,
                 'transport_taksi_aktual' => 0,
-                // Only set penginapan defaults if no penginapan data
-                'penginapan_jumlah_malam' => $hasPenginapanData ? ($biayaData['penginapan_jumlah_malam'] ?? 0) : 0,
-                'penginapan_pagu_perhari' => $hasPenginapanData ? ($biayaData['penginapan_pagu_perhari'] ?? 0) : 0,
-                'penginapan_aktual_perhari' => $hasPenginapanData ? ($biayaData['penginapan_aktual_perhari'] ?? 0) : 0,
+                'penginapan_jumlah_malam' => 0,
+                'penginapan_pagu_perhari' => 0,
+                'penginapan_aktual_perhari' => 0,
                 'uang_harian_meeting_fullboard_jumlah_hari' => 0,
                 'uang_harian_meeting_fullboard_pagu_perhari' => 0,
                 'uang_harian_meeting_fullboard_aktual_perhari' => 0,
@@ -288,48 +155,10 @@ class NominatifBiayaRowController extends Controller
                 'representasi_dalam_kota_aktual_perhari' => 0,
             ];
 
-        // 🔥 FIXED: Removed $conditionalDefaults undefined variable
-        // Merge all defaults with request data
-        $biayaData = array_merge($defaultFields, $request->all());
+            // Merge request data dengan default values
+            $biayaData = array_merge($defaultFields, $biayaData);
 
             $biayaRow = $detailRow->biayaRow()->create($biayaData);
-
-            // 🔥 NEW: Handle evidence file upload
-            $evidenceFile = null;
-            if ($request->hasFile('evidence_file')) {
-                $file = $request->file('evidence_file');
-                $userId = $this->getAuthenticatedUser(app('request'))?->id;
-                $nominatifId = $detailRow->nominatif_id;
-
-                // Create unique filename
-                $fileName = time() . '_' . $userId . '_' . $nominatifId . '_' . $detailRow->id . '_' . $file->getClientOriginalName();
-
-                // Store file
-                $path = $file->storeAs(
-                    "evidence/{$userId}/nominatif_{$nominatifId}",
-                    $fileName,
-                    'public'
-                );
-
-                // Create evidence record
-                $evidenceFile = NominatifEvidence::create([
-                    'nominatif_id' => $nominatifId,
-                    'nominatif_detail_row_id' => $detailRow->id, // Link to detail row
-                    'evidence_foto_path' => $path,
-                    'evidence_foto_name' => $file->getClientOriginalName(),
-                    'evidence_foto_size' => $file->getSize(),
-                    'evidence_foto_type' => $file->getMimeType(),
-                    'keterangan' => $request->evidence_keterangan ?? 'Evidence for ' . $detailRow->nama_lengkap,
-                ]);
-
-                \Log::info('📎 Evidence file uploaded and saved:', [
-                    'evidence_id' => $evidenceFile->id,
-                    'nominatif_id' => $nominatifId,
-                    'detail_row_id' => $detailRow->id,
-                    'file_path' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                ]);
-            }
 
             // Calculate ALL totals manually (sama seperti di method update)
             \Log::info('🧮 STORE: CALCULATING ALL TOTALS MANUALLY');
@@ -453,8 +282,7 @@ class NominatifBiayaRowController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Biaya row created successfully',
-                'data' => $biayaRow,
-                'evidence' => $evidenceFile // Include evidence info in response
+                'data' => $biayaRow
             ], 201);
 
         } catch (\Exception $e) {
@@ -462,82 +290,6 @@ class NominatifBiayaRowController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create biaya row',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * 🔥 NEW: Store evidence file separately for existing biaya rows
-     */
-    public function storeEvidence(Request $request, $biayaId)
-    {
-        $biayaRow = NominatifBiayaRow::findOrFail($biayaId);
-
-        // Security check
-        if ($biayaRow->detailRow->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
-
-        // Check if nominatif is still editable
-        if ($biayaRow->detailRow->nominatif->status !== 'draft') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot upload evidence to submitted nominatif'
-            ], 422);
-        }
-
-        // Validate evidence file
-        $request->validate([
-            'evidence_file' => 'required|file|mimes:jpg,jpeg,png,pdf,bmp,gif,webp,svg|max:10240', // Max 10MB
-            'keterangan' => 'nullable|string|max:500'
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $file = $request->file('evidence_file');
-            $userId = $this->getAuthenticatedUser(app('request'))->id;
-            $nominatifId = $biayaRow->detailRow->nominatif_id;
-            $detailRowId = $biayaRow->detailRow->id;
-
-            // Create unique filename
-            $fileName = time() . '_' . $userId . '_' . $nominatifId . '_' . $detailRowId . '_' . $file->getClientOriginalName();
-
-            // Store file
-            $path = $file->storeAs(
-                "evidence/{$userId}/nominatif_{$nominatifId}",
-                $fileName,
-                'public'
-            );
-
-            // Create evidence record with proper linking
-            $evidence = NominatifEvidence::create([
-                'nominatif_id' => $nominatifId,
-                'nominatif_detail_row_id' => $detailRowId, // 🔥 FIX: Link to biaya row
-                'evidence_foto_path' => $path,
-                'evidence_foto_name' => $file->getClientOriginalName(),
-                'evidence_foto_size' => $file->getSize(),
-                'evidence_foto_type' => $file->getMimeType(),
-                'keterangan' => $request->keterangan,
-                'user_id' => $userId, // 🔥 NEW: Track who uploaded
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Evidence uploaded successfully',
-                'data' => $evidence
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to upload evidence',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -593,18 +345,6 @@ class NominatifBiayaRowController extends Controller
                 'request_keys' => array_keys($request->all())
             ]);
 
-        // 🔥 FIXED LOGIC: Conditional Validation untuk penginapan
-        // Cek apakah ada data penginapan yang VALID (tidak kosong/tidak null/tidak 0)
-        $penginapanJumlahMalam = $request->input('penginapan_jumlah_malam');
-        $penginapanPaguPerhari = $request->input('penginapan_pagu_perhari');
-        $penginapanAktualPerhari = $request->input('penginapan_aktual_perhari');
-
-        $hasPenginapanData = (
-            $penginapanJumlahMalam !== null && $penginapanJumlahMalam !== '' && $penginapanJumlahMalam > 0 ||
-            $penginapanPaguPerhari !== null && $penginapanPaguPerhari !== '' && $penginapanPaguPerhari > 0 ||
-            $penginapanAktualPerhari !== null && $penginapanAktualPerhari !== '' && $penginapanAktualPerhari > 0
-        );
-
         // Comprehensive validation untuk SEMUA fields yang dikirim frontend
         $request->validate([
             // Transportasi fields (sesuai database yang ada)
@@ -613,10 +353,10 @@ class NominatifBiayaRowController extends Controller
             'transport_taksi_pagu' => 'nullable|numeric|min:0',
             'transport_taksi_aktual' => 'nullable|numeric|min:0',
 
-            // Penginapan fields (sesuai database) - 🔥 FIXED: Proper conditional validation!
-            'penginapan_jumlah_malam' => $hasPenginapanData ? 'required|integer|min:1|max:365' : 'nullable|integer|min:0|max:365',
-            'penginapan_pagu_perhari' => $hasPenginapanData ? 'required|numeric|min:0|max:999999999.99' : 'nullable|numeric|min:0|max:999999999.99',
-            'penginapan_aktual_perhari' => $hasPenginapanData ? 'required|numeric|min:0|max:999999999.99' : 'nullable|numeric|min:0|max:999999999.99',
+            // Penginapan fields (sesuai database) - FIX: Tambah missing fields!
+            'penginapan_jumlah_malam' => 'nullable|integer|min:0',
+            'penginapan_pagu_perhari' => 'nullable|numeric|min:0',
+            'penginapan_aktual_perhari' => 'nullable|numeric|min:0',
 
             // Uang Harian Meeting Fullboard (sesuai database)
             'uang_harian_meeting_fullboard_jumlah_hari' => 'nullable|integer|min:0',
@@ -647,12 +387,6 @@ class NominatifBiayaRowController extends Controller
             'representasi_dalam_kota_jumlah_hari' => 'nullable|integer|min:0',
             'representasi_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0',
             'representasi_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0',
-
-            // Evidence file validation (NEW)
-            'evidence_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,bmp,gif|max:10240', // Max 10MB
-            'evidence_filename' => 'nullable|string|max:255',
-            'evidence_filesize' => 'nullable|integer',
-            'evidence_keterangan' => 'nullable|string|max:500',
         ]);
 
         DB::beginTransaction();
@@ -688,47 +422,6 @@ class NominatifBiayaRowController extends Controller
             ]);
 
             $biayaRow->update($updateData);
-
-            // 🔥 NEW: Handle evidence file upload for update
-            $evidenceFile = null;
-            if ($request->hasFile('evidence_file')) {
-                $file = $request->file('evidence_file');
-                $userId = $this->getAuthenticatedUser(app('request'))?->id;
-                $nominatifId = $biayaRow->detailRow->nominatif_id;
-                $detailRowId = $biayaRow->detailRow->id;
-
-                // Delete existing evidence for this detail row (optional - remove if multiple evidence per row is allowed)
-                NominatifEvidence::where('nominatif_detail_row_id', $detailRowId)->delete();
-
-                // Create unique filename
-                $fileName = time() . '_' . $userId . '_' . $nominatifId . '_' . $detailRowId . '_' . $file->getClientOriginalName();
-
-                // Store file
-                $path = $file->storeAs(
-                    "evidence/{$userId}/nominatif_{$nominatifId}",
-                    $fileName,
-                    'public'
-                );
-
-                // Create evidence record
-                $evidenceFile = NominatifEvidence::create([
-                    'nominatif_id' => $nominatifId,
-                    'nominatif_detail_row_id' => $detailRowId,
-                    'evidence_foto_path' => $path,
-                    'evidence_foto_name' => $file->getClientOriginalName(),
-                    'evidence_foto_size' => $file->getSize(),
-                    'evidence_foto_type' => $file->getMimeType(),
-                    'keterangan' => $request->evidence_keterangan ?? 'Evidence for ' . $biayaRow->detailRow->nama_lengkap,
-                ]);
-
-                \Log::info('📎 Evidence file updated and saved:', [
-                    'evidence_id' => $evidenceFile->id,
-                    'nominatif_id' => $nominatifId,
-                    'detail_row_id' => $detailRowId,
-                    'file_path' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                ]);
-            }
 
             // Refresh model to get updated values
             $biayaRow->refresh();
@@ -855,36 +548,15 @@ class NominatifBiayaRowController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Biaya row updated successfully',
-                'data' => $biayaRow,
-                'evidence' => $evidenceFile // Include evidence info in response
+                'data' => $biayaRow
             ]);
 
-              } catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
-
-            // 🔍 Enhanced Debug Logging
-            \Log::error('❌ UPDATE BIAYA ROW ERROR', [
-                'biayaId' => $biayaId,
-                'request_data' => $request->all(),
-                'request_headers' => $request->headers->all(),
-                'error_message' => $e->getMessage(),
-                'error_code' => $e->getCode(),
-                'error_file' => $e->getFile(),
-                'error_line' => $e->getLine(),
-                'error_trace' => $e->getTraceAsString(),
-                'detail_row_id' => $biayaRow->detailRow->id ?? 'unknown',
-                'nominatif_id' => $biayaRow->detailRow->nominatif_id ?? 'unknown',
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update biaya row',
-                'error' => $e->getMessage(),
-                'debug_info' => [
-                    'biaya_id' => $biayaId,
-                    'detail_row_id' => $biayaRow->detailRow->id ?? null,
-                    'error_details' => $e->getMessage()
-                ]
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -1069,321 +741,5 @@ class NominatifBiayaRowController extends Controller
                 'total_pagu' => $totalPagu,
                 'total_biaya_aktual' => $totalAktual,
             ]);
-    }
-
-    /**
-     * 🔥 NEW: Simplified update method that allows all fields to be nullable
-     */
-    public function updateSimplified(Request $request, $biayaId)
-    {
-        // 🔥 DEBUG: Log semua request yang masuk
-        \Log::info('🔥 updateSimplified() called with:', [
-            'biayaId' => $biayaId,
-            'request_all' => $request->all(),
-            'request_keys' => array_keys($request->all()),
-            'has_penginapan_jumlah_malam' => $request->has('penginapan_jumlah_malam'),
-            'has_penginapan_pagu_perhari' => $request->has('penginapan_pagu_perhari'),
-            'has_penginapan_aktual_perhari' => $request->has('penginapan_aktual_perhari'),
-            'input_penginapan_jumlah_malam' => $request->input('penginapan_jumlah_malam'),
-            'input_penginapan_pagu_perhari' => $request->input('penginapan_pagu_perhari'),
-            'input_penginapan_aktual_perhari' => $request->input('penginapan_aktual_perhari'),
-        ]);
-
-        $biayaRow = NominatifBiayaRow::findOrFail($biayaId);
-
-        // Security check
-        if ($biayaRow->detailRow->nominatif->user_id !== $this->getAuthenticatedUser($request)?->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
-
-        // Check if nominatif is still editable
-        if ($biayaRow->detailRow->nominatif->status !== 'draft') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot edit biaya in submitted nominatif'
-            ], 422);
-        }
-
-        \Log::info('🔥 SIMPLIFIED UPDATE REQUEST', [
-            'biayaId' => $biayaId,
-            'request_data' => $request->all(),
-            'current_biaya' => $biayaRow->toArray()
-        ]);
-
-        // 🔥 SIMPLE VALIDATION: Allow ALL fields to be nullable
-        $request->validate([
-            'transport_pesawat_non_pp_pagu' => 'nullable|numeric|min:0',
-            'transport_pesawat_non_pp_aktual' => 'nullable|numeric|min:0',
-            'transport_taksi_pagu' => 'nullable|numeric|min:0',
-            'transport_taksi_aktual' => 'nullable|numeric|min:0',
-            'penginapan_jumlah_malam' => 'nullable|integer|min:0',
-            'penginapan_pagu_perhari' => 'nullable|numeric|min:0',
-            'penginapan_aktual_perhari' => 'nullable|numeric|min:0',
-            'uang_harian_meeting_fullboard_jumlah_hari' => 'nullable|integer|min:0',
-            'uang_harian_meeting_fullboard_pagu_perhari' => 'nullable|numeric|min:0',
-            'uang_harian_meeting_fullboard_aktual_perhari' => 'nullable|numeric|min:0',
-            'uang_harian_meeting_fullday_jumlah_hari' => 'nullable|integer|min:0',
-            'uang_harian_meeting_fullday_pagu_perhari' => 'nullable|numeric|min:0',
-            'uang_harian_meeting_fullday_aktual_perhari' => 'nullable|numeric|min:0',
-            'uang_harian_luar_kota_jumlah_hari' => 'nullable|integer|min:0',
-            'uang_harian_luar_kota_pagu_perhari' => 'nullable|numeric|min:0',
-            'uang_harian_luar_kota_aktual_perhari' => 'nullable|numeric|min:0',
-            'uang_harian_dalam_kota_jumlah_hari' => 'nullable|integer|min:0',
-            'uang_harian_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0',
-            'uang_harian_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0',
-            'representasi_luar_kota_jumlah_hari' => 'nullable|integer|min:0',
-            'representasi_luar_kota_pagu_perhari' => 'nullable|numeric|min:0',
-            'representasi_luar_kota_aktual_perhari' => 'nullable|numeric|min:0',
-            'representasi_dalam_kota_jumlah_hari' => 'nullable|integer|min:0',
-            'representasi_dalam_kota_pagu_perhari' => 'nullable|numeric|min:0',
-            'representasi_dalam_kota_aktual_perhari' => 'nullable|numeric|min:0',
-        ]);
-
-        DB::beginTransaction();
-        try {
-            // 🔥 SMART UPDATE: Only update fields that are actually sent
-            $updateData = [];
-
-            // Transportasi fields - update only if sent
-            if ($request->has('transport_pesawat_non_pp_pagu')) {
-                $updateData['transport_pesawat_non_pp_pagu'] = (float) $request->input('transport_pesawat_non_pp_pagu');
-            }
-            if ($request->has('transport_pesawat_non_pp_aktual')) {
-                $updateData['transport_pesawat_non_pp_aktual'] = (float) $request->input('transport_pesawat_non_pp_aktual');
-            }
-            if ($request->has('transport_taksi_pagu')) {
-                $updateData['transport_taksi_pagu'] = (float) $request->input('transport_taksi_pagu');
-            }
-            if ($request->has('transport_taksi_aktual')) {
-                $updateData['transport_taksi_aktual'] = (float) $request->input('transport_taksi_aktual');
-            }
-
-            // Penginapan fields - update only if sent
-            if ($request->has('penginapan_jumlah_malam')) {
-                $updateData['penginapan_jumlah_malam'] = (int) $request->input('penginapan_jumlah_malam');
-            }
-            if ($request->has('penginapan_pagu_perhari')) {
-                $updateData['penginapan_pagu_perhari'] = (float) $request->input('penginapan_pagu_perhari');
-            }
-            if ($request->has('penginapan_aktual_perhari')) {
-                $updateData['penginapan_aktual_perhari'] = (float) $request->input('penginapan_aktual_perhari');
-            }
-
-            // Uang Harian Meeting Fullboard
-            if ($request->has('uang_harian_meeting_fullboard_jumlah_hari')) {
-                $updateData['uang_harian_meeting_fullboard_jumlah_hari'] = (int) $request->input('uang_harian_meeting_fullboard_jumlah_hari');
-            }
-            if ($request->has('uang_harian_meeting_fullboard_pagu_perhari')) {
-                $updateData['uang_harian_meeting_fullboard_pagu_perhari'] = (float) $request->input('uang_harian_meeting_fullboard_pagu_perhari');
-            }
-            if ($request->has('uang_harian_meeting_fullboard_aktual_perhari')) {
-                $updateData['uang_harian_meeting_fullboard_aktual_perhari'] = (float) $request->input('uang_harian_meeting_fullboard_aktual_perhari');
-            }
-
-            // Uang Harian Meeting Fullday
-            if ($request->has('uang_harian_meeting_fullday_jumlah_hari')) {
-                $updateData['uang_harian_meeting_fullday_jumlah_hari'] = (int) $request->input('uang_harian_meeting_fullday_jumlah_hari');
-            }
-            if ($request->has('uang_harian_meeting_fullday_pagu_perhari')) {
-                $updateData['uang_harian_meeting_fullday_pagu_perhari'] = (float) $request->input('uang_harian_meeting_fullday_pagu_perhari');
-            }
-            if ($request->has('uang_harian_meeting_fullday_aktual_perhari')) {
-                $updateData['uang_harian_meeting_fullday_aktual_perhari'] = (float) $request->input('uang_harian_meeting_fullday_aktual_perhari');
-            }
-
-            // Uang Harian Luar Kota
-            if ($request->has('uang_harian_luar_kota_jumlah_hari')) {
-                $updateData['uang_harian_luar_kota_jumlah_hari'] = (int) $request->input('uang_harian_luar_kota_jumlah_hari');
-            }
-            if ($request->has('uang_harian_luar_kota_pagu_perhari')) {
-                $updateData['uang_harian_luar_kota_pagu_perhari'] = (float) $request->input('uang_harian_luar_kota_pagu_perhari');
-            }
-            if ($request->has('uang_harian_luar_kota_aktual_perhari')) {
-                $updateData['uang_harian_luar_kota_aktual_perhari'] = (float) $request->input('uang_harian_luar_kota_aktual_perhari');
-            }
-
-            // Uang Harian Dalam Kota
-            if ($request->has('uang_harian_dalam_kota_jumlah_hari')) {
-                $updateData['uang_harian_dalam_kota_jumlah_hari'] = (int) $request->input('uang_harian_dalam_kota_jumlah_hari');
-            }
-            if ($request->has('uang_harian_dalam_kota_pagu_perhari')) {
-                $updateData['uang_harian_dalam_kota_pagu_perhari'] = (float) $request->input('uang_harian_dalam_kota_pagu_perhari');
-            }
-            if ($request->has('uang_harian_dalam_kota_aktual_perhari')) {
-                $updateData['uang_harian_dalam_kota_aktual_perhari'] = (float) $request->input('uang_harian_dalam_kota_aktual_perhari');
-            }
-
-            // Representasi Luar Kota
-            if ($request->has('representasi_luar_kota_jumlah_hari')) {
-                $updateData['representasi_luar_kota_jumlah_hari'] = (int) $request->input('representasi_luar_kota_jumlah_hari');
-            }
-            if ($request->has('representasi_luar_kota_pagu_perhari')) {
-                $updateData['representasi_luar_kota_pagu_perhari'] = (float) $request->input('representasi_luar_kota_pagu_perhari');
-            }
-            if ($request->has('representasi_luar_kota_aktual_perhari')) {
-                $updateData['representasi_luar_kota_aktual_perhari'] = (float) $request->input('representasi_luar_kota_aktual_perhari');
-            }
-
-            // Representasi Dalam Kota
-            if ($request->has('representasi_dalam_kota_jumlah_hari')) {
-                $updateData['representasi_dalam_kota_jumlah_hari'] = (int) $request->input('representasi_dalam_kota_jumlah_hari');
-            }
-            if ($request->has('representasi_dalam_kota_pagu_perhari')) {
-                $updateData['representasi_dalam_kota_pagu_perhari'] = (float) $request->input('representasi_dalam_kota_pagu_perhari');
-            }
-            if ($request->has('representasi_dalam_kota_aktual_perhari')) {
-                $updateData['representasi_dalam_kota_aktual_perhari'] = (float) $request->input('representasi_dalam_kota_aktual_perhari');
-            }
-
-            \Log::info('🔥 UPDATE DATA PREPARED', [
-                'updateData' => $updateData,
-                'updateCount' => count($updateData)
-            ]);
-
-            // Perform update
-            $biayaRow->update($updateData);
-
-            // Refresh model to get updated values
-            $biayaRow->refresh();
-
-            // 🔥 CRITICAL: Calculate and update ALL totals after simplified update
-            // Individual Category Calculations
-            $penginapanTotalPagu = $biayaRow->penginapan_jumlah_malam * $biayaRow->penginapan_pagu_perhari;
-            $penginapanTotalAktual = $biayaRow->penginapan_jumlah_malam * $biayaRow->penginapan_aktual_perhari;
-            $penginapanAnggaranBerjalan = $penginapanTotalPagu - $penginapanTotalAktual;
-
-            $meetingFullboardTotalPagu = $biayaRow->uang_harian_meeting_fullboard_jumlah_hari * $biayaRow->uang_harian_meeting_fullboard_pagu_perhari;
-            $meetingFullboardTotalAktual = $biayaRow->uang_harian_meeting_fullboard_jumlah_hari * $biayaRow->uang_harian_meeting_fullboard_aktual_perhari;
-            $meetingFullboardAnggaranBerjalan = $meetingFullboardTotalPagu - $meetingFullboardTotalAktual;
-
-            $meetingFulldayTotalPagu = $biayaRow->uang_harian_meeting_fullday_jumlah_hari * $biayaRow->uang_harian_meeting_fullday_pagu_perhari;
-            $meetingFulldayTotalAktual = $biayaRow->uang_harian_meeting_fullday_jumlah_hari * $biayaRow->uang_harian_meeting_fullday_aktual_perhari;
-            $meetingFulldayAnggaranBerjalan = $meetingFulldayTotalPagu - $meetingFulldayTotalAktual;
-
-            $luarKotaTotalPagu = $biayaRow->uang_harian_luar_kota_jumlah_hari * $biayaRow->uang_harian_luar_kota_pagu_perhari;
-            $luarKotaTotalAktual = $biayaRow->uang_harian_luar_kota_jumlah_hari * $biayaRow->uang_harian_luar_kota_aktual_perhari;
-            $luarKotaAnggaranBerjalan = $luarKotaTotalPagu - $luarKotaTotalAktual;
-
-            $dalamKotaTotalPagu = $biayaRow->uang_harian_dalam_kota_jumlah_hari * $biayaRow->uang_harian_dalam_kota_pagu_perhari;
-            $dalamKotaTotalAktual = $biayaRow->uang_harian_dalam_kota_jumlah_hari * $biayaRow->uang_harian_dalam_kota_aktual_perhari;
-            $dalamKotaAnggaranBerjalan = $dalamKotaTotalPagu - $dalamKotaTotalAktual;
-
-            $representasiLuarKotaTotalPagu = $biayaRow->representasi_luar_kota_jumlah_hari * $biayaRow->representasi_luar_kota_pagu_perhari;
-            $representasiLuarKotaTotalAktual = $biayaRow->representasi_luar_kota_jumlah_hari * $biayaRow->representasi_luar_kota_aktual_perhari;
-            $representasiLuarKotaAnggaranBerjalan = $representasiLuarKotaTotalPagu - $representasiLuarKotaTotalAktual;
-
-            $representasiDalamKotaTotalPagu = $biayaRow->representasi_dalam_kota_jumlah_hari * $biayaRow->representasi_dalam_kota_pagu_perhari;
-            $representasiDalamKotaTotalAktual = $biayaRow->representasi_dalam_kota_jumlah_hari * $biayaRow->representasi_dalam_kota_aktual_perhari;
-            $representasiDalamKotaAnggaranBerjalan = $representasiDalamKotaTotalPagu - $representasiDalamKotaTotalAktual;
-
-            // Grand Totals
-            $totalPagu =
-                $biayaRow->transport_pesawat_non_pp_pagu +
-                $biayaRow->transport_taksi_pagu +
-                $penginapanTotalPagu +
-                $meetingFullboardTotalPagu +
-                $meetingFulldayTotalPagu +
-                $luarKotaTotalPagu +
-                $dalamKotaTotalPagu +
-                $representasiLuarKotaTotalPagu +
-                $representasiDalamKotaTotalPagu;
-
-            $totalAktual =
-                $biayaRow->transport_pesawat_non_pp_aktual +
-                $biayaRow->transport_taksi_aktual +
-                $penginapanTotalAktual +
-                $meetingFullboardTotalAktual +
-                $meetingFulldayTotalAktual +
-                $luarKotaTotalAktual +
-                $dalamKotaTotalAktual +
-                $representasiLuarKotaTotalAktual +
-                $representasiDalamKotaTotalAktual;
-
-            $totalAnggaranBerjalan = $totalPagu - $totalAktual;
-
-            // Update ALL calculated fields
-            $allTotalsUpdate = [
-                // Penginapan totals
-                'penginapan_total_pagu' => $penginapanTotalPagu,
-                'penginapan_total_aktual' => $penginapanTotalAktual,
-                'penginapan_anggaran_berjalan' => $penginapanAnggaranBerjalan,
-
-                // Meeting Fullboard totals
-                'uang_harian_meeting_fullboard_total_pagu' => $meetingFullboardTotalPagu,
-                'uang_harian_meeting_fullboard_total_aktual' => $meetingFullboardTotalAktual,
-                'uang_harian_meeting_fullboard_anggaran_berjalan' => $meetingFullboardAnggaranBerjalan,
-
-                // Meeting Fullday totals
-                'uang_harian_meeting_fullday_total_pagu' => $meetingFulldayTotalPagu,
-                'uang_harian_meeting_fullday_total_aktual' => $meetingFulldayTotalAktual,
-                'uang_harian_meeting_fullday_anggaran_berjalan' => $meetingFulldayAnggaranBerjalan,
-
-                // Luar Kota totals
-                'uang_harian_luar_kota_total_pagu' => $luarKotaTotalPagu,
-                'uang_harian_luar_kota_total_aktual' => $luarKotaTotalAktual,
-                'uang_harian_luar_kota_anggaran_berjalan' => $luarKotaAnggaranBerjalan,
-
-                // Dalam Kota totals
-                'uang_harian_dalam_kota_total_pagu' => $dalamKotaTotalPagu,
-                'uang_harian_dalam_kota_total_aktual' => $dalamKotaTotalAktual,
-                'uang_harian_dalam_kota_anggaran_berjalan' => $dalamKotaAnggaranBerjalan,
-
-                // Representasi Luar Kota totals
-                'representasi_luar_kota_total_pagu' => $representasiLuarKotaTotalPagu,
-                'representasi_luar_kota_total_aktual' => $representasiLuarKotaTotalAktual,
-                'representasi_luar_kota_anggaran_berjalan' => $representasiLuarKotaAnggaranBerjalan,
-
-                // Representasi Dalam Kota totals
-                'representasi_dalam_kota_total_pagu' => $representasiDalamKotaTotalPagu,
-                'representasi_dalam_kota_total_aktual' => $representasiDalamKotaTotalAktual,
-                'representasi_dalam_kota_anggaran_berjalan' => $representasiDalamKotaAnggaranBerjalan,
-
-                // Grand totals
-                'total_pagu_row' => $totalPagu,
-                'total_aktual_row' => $totalAktual,
-                'total_anggaran_berjalan_row' => $totalAnggaranBerjalan,
-            ];
-
-            \Log::info('💾 SIMPLIFIED UPDATE: TOTALS CALCULATED', [
-                'biayaId' => $biayaId,
-                'totals_update' => $allTotalsUpdate
-            ]);
-
-            $biayaRow->update($allTotalsUpdate);
-
-            // Update nominatif totals
-            $this->updateNominatifTotals($biayaRow->detailRow->nominatif_id);
-
-            DB::commit();
-
-            \Log::info('✅ BIAYA ROW UPDATED SUCCESSFULLY', [
-                'biayaId' => $biayaId,
-                'updatedData' => $updateData,
-                'result' => $biayaRow->toArray()
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Biaya row updated successfully',
-                'data' => $biayaRow
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('❌ BIAYA ROW UPDATE FAILED', [
-                'biayaId' => $biayaId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update biaya row: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
-        }
     }
 }

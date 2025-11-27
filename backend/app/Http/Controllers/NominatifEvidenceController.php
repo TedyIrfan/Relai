@@ -22,11 +22,19 @@ class NominatifEvidenceController extends Controller
     /**
      * Manually validate Sanctum token and get authenticated user
      */
-    private function getAuthenticatedUser(Request $request)
+    /**
+     * 🔥 FIXED: Enhanced method to handle authentication for both nominatif and detail row
+     */
+    private function getAuthenticatedUser(Request $request, $detailRowId = null)
     {
         $token = $request->bearerToken();
 
         if (!$token) {
+            \Log::warning('No token provided in request', [
+                'headers' => $request->headers->all(),
+                'url' => $request->fullUrl(),
+                'method' => $request->method()
+            ]);
             return null;
         }
 
@@ -34,11 +42,34 @@ class NominatifEvidenceController extends Controller
         $accessToken = PersonalAccessToken::findToken($token);
 
         if (!$accessToken) {
+            \Log::warning('Invalid token provided', [
+                'token' => $token,
+                'token_exists' => PersonalAccessToken::findToken($token) !== null
+            ]);
             return null;
         }
 
         // Get the user associated with this token
-        return $accessToken->tokenable;
+        $user = $accessToken->tokenable;
+
+        if (!$user) {
+            \Log::warning('Token exists but no user associated', [
+                'token_id' => $accessToken->id,
+                'tokenable_type' => get_class($accessToken->tokenable),
+                'tokenable_id' => $accessToken->tokenable_id
+            ]);
+            return null;
+        }
+
+        \Log::info('User authenticated successfully', [
+            'user_id' => $user->id,
+            'user_email' => $user->email ?? 'no-email',
+            'token_id' => $accessToken->id,
+            'detailRowId' => $detailRowId,
+            'request_url' => $request->fullUrl()
+        ]);
+
+        return $user;
     }
 
     /**
@@ -64,77 +95,7 @@ class NominatifEvidenceController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly uploaded evidence file in storage.
-     */
-    public function store(Request $request, $nominatifId)
-    {
-        $nominatif = NominatifNew::findOrFail($nominatifId);
-
-        // Security check
-        if ($nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
-
-        // Check if nominatif is still editable
-        if ($nominatif->status !== 'draft') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot upload evidence to submitted nominatif'
-            ], 422);
-        }
-
-        $request->validate([
-            'evidence_file' => 'required|file|mimes:jpg,jpeg,png,gif,bmp,webp,svg|max:10240', // Max 10MB, images only
-            'keterangan' => 'nullable|string|max:500'
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $file = $request->file('evidence_file');
-            $userId = $this->getAuthenticatedUser(app('request'))?->id;
-
-            // Create unique filename
-            $fileName = time() . '_' . $userId . '_' . $nominatifId . '_' . $file->getClientOriginalName();
-
-            // Store file
-            $path = $file->storeAs(
-                "evidence/{$userId}/nominatif_{$nominatifId}",
-                $fileName,
-                'public'
-            );
-
-            // Create evidence record
-            $evidence = NominatifEvidence::create([
-                'nominatif_id' => $nominatifId,
-                'evidence_foto_path' => $path,
-                'evidence_foto_name' => $file->getClientOriginalName(),
-                'evidence_foto_size' => $file->getSize(),
-                'evidence_foto_type' => $file->getMimeType(),
-                'keterangan' => $request->keterangan,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Evidence uploaded successfully',
-                'data' => $evidence
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to upload evidence',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
+  
     /**
      * Display the specified evidence file.
      */
@@ -302,6 +263,79 @@ class NominatifEvidenceController extends Controller
             'success' => true,
             'data' => $evidenceFiles
         ]);
+    }
+
+    /**
+     * Store evidence with nominatif_detail_row_id support
+     */
+    public function storeWithDetailRow(Request $request, $nominatifId, $detailRowId = null)
+    {
+        $nominatif = NominatifNew::findOrFail($nominatifId);
+
+        // Security check
+        if ($nominatif->user_id !== $this->getAuthenticatedUser($request)?->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        // Check if nominatif is still editable
+        if ($nominatif->status !== 'draft') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot upload evidence to submitted nominatif'
+            ], 422);
+        }
+
+        $request->validate([
+            'evidence_file' => 'required|file|mimes:jpg,jpeg,png,pdf,bmp,gif,webp,svg|max:10240', // Max 10MB, images + PDF
+            'keterangan' => 'nullable|string|max:500'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $file = $request->file('evidence_file');
+            $userId = $this->getAuthenticatedUser($request)?->id;
+
+            // Create unique filename
+            $fileName = time() . '_' . $userId . '_' . $nominatifId . '_' . ($detailRowId ?? 'general') . '_' . $file->getClientOriginalName();
+
+            // Store file
+            $path = $file->storeAs(
+                "evidence/{$userId}/nominatif_{$nominatifId}",
+                $fileName,
+                'public'
+            );
+
+            // Create evidence record
+            $evidence = NominatifEvidence::create([
+                'nominatif_id' => $nominatifId,
+                'nominatif_detail_row_id' => $detailRowId, // Link to specific biaya row or null
+                'evidence_foto_path' => $path,
+                'evidence_foto_name' => $file->getClientOriginalName(),
+                'evidence_foto_size' => $file->getSize(),
+                'evidence_foto_type' => $file->getMimeType(),
+                'keterangan' => $request->keterangan,
+                'user_id' => $userId, // 🔥 Tambahkan user_id
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Evidence uploaded successfully',
+                'data' => $evidence
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload evidence',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

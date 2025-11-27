@@ -59,7 +59,11 @@ const NominatifExcelTable = ({
   // Initialize with one empty row if no data (create mode only)
   React.useEffect(() => {
     // Only add empty row if we're in create mode (no initial data)
-    if (rows.length === 0 && processedInitialData.length === 0 && process.env.NODE_ENV === "development") {
+    if (
+      rows.length === 0 &&
+      processedInitialData.length === 0 &&
+      process.env.NODE_ENV === "development"
+    ) {
       console.log("📊 NominatifExcelTable - Adding empty row (create mode)");
       addRow();
     }
@@ -68,11 +72,11 @@ const NominatifExcelTable = ({
   // Update rows when initialData changes (for edit mode)
   React.useEffect(() => {
     if (processedInitialData.length > 0) {
-      console.log('🔄 ProcessedInitialData changed, preserving evidence...');
-      setRows(prevRows => {
+      console.log("🔄 ProcessedInitialData changed, preserving evidence...");
+      setRows((prevRows) => {
         // Preserve evidence data when updating from initialData
-        const newRows = processedInitialData.map(initialRow => {
-          const existingRow = prevRows.find(r => r.id === initialRow.id);
+        const newRows = processedInitialData.map((initialRow) => {
+          const existingRow = prevRows.find((r) => r.id === initialRow.id);
           if (existingRow) {
             // Merge initial data with existing evidence data
             const mergedRow = {
@@ -80,15 +84,15 @@ const NominatifExcelTable = ({
               // Preserve evidence fields from existing row
               evidence_files: existingRow.evidence_files || [],
               evidence_uploading: existingRow.evidence_uploading,
-              evidence_uploaded: existingRow.evidence_uploaded
+              evidence_uploaded: existingRow.evidence_uploaded,
             };
-            console.log('🔄 Merging row:', {
+            console.log("🔄 Merging row:", {
               id: initialRow.id,
-              evidenceCount: existingRow.evidence_files?.length || 0
+              evidenceCount: existingRow.evidence_files?.length || 0,
             });
             return mergedRow;
           }
-          console.log('🔄 New row created:', initialRow.id);
+          console.log("🔄 New row created:", initialRow.id);
           return initialRow;
         });
         return newRows;
@@ -205,12 +209,13 @@ const NominatifExcelTable = ({
 
   // Update row data
   const updateRow = (id, field, value) => {
-    console.log('🔄 Updating row:', { id, field, value });
+    console.log("🔄 Updating row:", { id, field, value });
 
     // Debug: Show current state before update
-    if (field.startsWith('evidence_')) {
-      console.log('🔍 Before evidence update - current row state:',
-        rows.find(r => r.id === id)
+    if (field.startsWith("evidence_")) {
+      console.log(
+        "🔍 Before evidence update - current row state:",
+        rows.find((r) => r.id === id)
       );
     }
 
@@ -242,25 +247,28 @@ const NominatifExcelTable = ({
       return row;
     });
 
-    console.log('📋 Setting new rows state:', updatedRows.map(r => ({
-      id: r.id,
-      hasEvidence: !!r.evidence_url,
-      filename: r.evidence_filename
-    })));
+    console.log(
+      "📋 Setting new rows state:",
+      updatedRows.map((r) => ({
+        id: r.id,
+        hasEvidence: !!r.evidence_url,
+        filename: r.evidence_filename,
+      }))
+    );
 
     setRows(updatedRows);
 
     // Debug: Check state after setting
-    if (field.startsWith('evidence_')) {
+    if (field.startsWith("evidence_")) {
       setTimeout(() => {
         // Use the latest state from updatedRows instead of rows
-        const latestState = updatedRows.find(r => r.id === id);
-        console.log('🔍 After setRows - evidence state:', {
+        const latestState = updatedRows.find((r) => r.id === id);
+        console.log("🔍 After setRows - evidence state:", {
           id,
           field,
           evidence_filename: latestState?.evidence_filename,
           evidence_url: latestState?.evidence_url,
-          evidence_filesize: latestState?.evidence_filesize
+          evidence_filesize: latestState?.evidence_filesize,
         });
       }, 100);
     }
@@ -303,12 +311,16 @@ const NominatifExcelTable = ({
 
   // Handle file upload
   const handleFileUpload = (rowId, file) => {
-    console.log('🔄 File upload triggered:', { rowId, file: file?.name, size: file?.size });
+    console.log("🔄 File upload triggered:", {
+      rowId,
+      file: file?.name,
+      size: file?.size,
+    });
 
     if (file) {
       // Create file URL for preview
       const fileUrl = URL.createObjectURL(file);
-      const fileSize = (file.size / 1024).toFixed(2) + ' KB'; // Convert to KB
+      const fileSize = (file.size / 1024).toFixed(2) + " KB"; // Convert to KB
       const fileId = Date.now() + Math.random();
 
       const newFile = {
@@ -316,54 +328,64 @@ const NominatifExcelTable = ({
         url: fileUrl,
         file: file,
         filename: file.name,
-        filesize: fileSize
+        filesize: fileSize,
       };
 
-      console.log('📤 Adding new evidence file:', {
+      console.log("📤 Adding new evidence file:", {
         rowId,
         fileId,
         fileName: file.name,
-        fileSize
+        fileSize,
       });
 
       // Set uploading state first
-      setRows(prevRows => prevRows.map(row =>
-        row.id === rowId ? { ...row, evidence_uploading: true } : row
-      ));
+      setRows((prevRows) =>
+        prevRows.map((row) =>
+          row.id === rowId ? { ...row, evidence_uploading: true } : row
+        )
+      );
 
       // Simulate processing delay for better UX
       setTimeout(() => {
         // Add new file to evidence_files array
-        setRows(prevRows => prevRows.map(row => {
-          if (row.id === rowId) {
-            const updatedFiles = [...(row.evidence_files || []), newFile];
-            return {
-              ...row,
-              evidence_uploading: false,
-              evidence_files: updatedFiles,
-              evidence_uploaded: true
-            };
-          }
-          return row;
-        }));
+        setRows((prevRows) =>
+          prevRows.map((row) => {
+            if (row.id === rowId) {
+              const updatedFiles = [...(row.evidence_files || []), newFile];
+              return {
+                ...row,
+                evidence_uploading: false,
+                evidence_files: updatedFiles,
+                evidence_uploaded: true,
+              };
+            }
+            return row;
+          })
+        );
 
-        console.log('✅ Evidence upload completed for row:', rowId);
+        console.log("✅ Evidence upload completed for row:", rowId);
 
         // Clear upload success state after 3 seconds but keep file data
         setTimeout(() => {
-          setRows(prevRows => {
-            const currentRow = prevRows.find(r => r.id === rowId);
-            console.log('🔄 Evidence count for row:', rowId, currentRow?.evidence_files?.length || 0);
+          setRows((prevRows) => {
+            const currentRow = prevRows.find((r) => r.id === rowId);
+            console.log(
+              "🔄 Evidence count for row:",
+              rowId,
+              currentRow?.evidence_files?.length || 0
+            );
 
-            return prevRows.map(row =>
+            return prevRows.map((row) =>
               row.id === rowId ? { ...row, evidence_uploaded: false } : row
             );
           });
-          console.log('🔄 Cleared upload success state but file data preserved');
+          console.log(
+            "🔄 Cleared upload success state but file data preserved"
+          );
         }, 3000);
       }, 500); // 500ms delay
     } else {
-      console.log('❌ No file provided for upload');
+      console.log("❌ No file provided for upload");
     }
   };
 
@@ -553,7 +575,9 @@ const NominatifExcelTable = ({
 
         // Check if we're in edit mode (single nominatif page) vs create mode
         const currentPath = window.location.pathname;
-        const isCreateMode = currentPath.includes('/create') || !currentPath.includes('/nominatif/');
+        const isCreateMode =
+          currentPath.includes("/create") ||
+          !currentPath.includes("/nominatif/");
 
         if (isCreateMode) {
           console.log("🔄 Create mode detected, redirecting...");
@@ -607,7 +631,7 @@ const NominatifExcelTable = ({
 
   // Inject CSS to remove arrow buttons from currency inputs
   React.useEffect(() => {
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = globalStyles;
     document.head.appendChild(style);
 
@@ -1720,104 +1744,124 @@ const NominatifExcelTable = ({
                 {/* Evidence Column - Add background color for consistency */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200 bg-purple-50">
                   {/* Simple Evidence Display */}
-                    <div className="w-full max-w-52">
-                      <div className="mb-1">
-                        {/* Upload Button */}
-                        <label className="cursor-pointer">
-                          <input
-                            key={`file-input-${row.id}-${row.evidence_files?.length || 0}`}
-                            type="file"
-                            onChange={(e) =>
-                              handleFileUpload(row.id, e.target.files[0])
-                            }
-                            className="hidden"
-                            accept="image/*"
-                            disabled={row.evidence_uploading}
-                          />
-                          <div className={`w-full px-2 py-1 border-2 border-dashed rounded-md flex items-center justify-center transition-colors text-xs ${
+                  <div className="w-full max-w-52">
+                    <div className="mb-1">
+                      {/* Upload Button */}
+                      <label className="cursor-pointer">
+                        <input
+                          key={`file-input-${row.id}-${
+                            row.evidence_files?.length || 0
+                          }`}
+                          type="file"
+                          onChange={(e) =>
+                            handleFileUpload(row.id, e.target.files[0])
+                          }
+                          className="hidden"
+                          accept="image/*"
+                          disabled={row.evidence_uploading}
+                        />
+                        <div
+                          className={`w-full px-2 py-1 border-2 border-dashed rounded-md flex items-center justify-center transition-colors text-xs ${
                             row.evidence_uploading
-                              ? 'border-gray-400 bg-gray-100 cursor-not-allowed'
-                              : 'border-purple-300 hover:border-purple-500'
-                          }`}>
-                            {row.evidence_uploading ? (
-                              <RefreshCw className="w-4 h-4 text-gray-500 animate-spin mr-1" />
-                            ) : (
-                              <Upload className="w-4 h-4 text-purple-500 mr-1" />
-                            )}
-                            <span className="text-gray-600">
-                              {row.evidence_uploading ? 'Uploading...' : 'Upload Evidence'}
-                            </span>
-                          </div>
-                        </label>
-                      </div>
+                              ? "border-gray-400 bg-gray-100 cursor-not-allowed"
+                              : "border-purple-300 hover:border-purple-500"
+                          }`}
+                        >
+                          {row.evidence_uploading ? (
+                            <RefreshCw className="w-4 h-4 text-gray-500 animate-spin mr-1" />
+                          ) : (
+                            <Upload className="w-4 h-4 text-purple-500 mr-1" />
+                          )}
+                          <span className="text-gray-600">
+                            {row.evidence_uploading
+                              ? "Uploading..."
+                              : "Upload Evidence"}
+                          </span>
+                        </div>
+                      </label>
+                    </div>
 
-                      {/* Debug logging for evidence rendering */}
-                      {(() => {
-                        console.log('🔍 Rendering evidence for row:', row.id, {
-                          evidence_files_count: row.evidence_files?.length || 0,
-                          evidence_uploaded: row.evidence_uploaded
-                        });
-                        return null;
-                      })()}
-
-                      {/* Multiple Files List */}
-                      {row.evidence_files && row.evidence_files.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          <div className="text-xs text-gray-600 font-medium mb-1">
-                            📎 Evidence Files ({row.evidence_files.length})
-                          </div>
-                          {row.evidence_files.map((file, index) => (
-                            <div key={file.id} className="bg-white border border-gray-200 rounded p-2">
-                              <div className="flex items-center justify-between text-xs">
-                                <div className="flex-1 min-w-0">
-                                  <div className="truncate text-gray-700 font-medium" title={file.filename}>
-                                    📄 {file.filename}
-                                  </div>
-                                  <div className="text-gray-500">📏 {file.filesize}</div>
+                    {/* Multiple Files List */}
+                    {row.evidence_files && row.evidence_files.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        <div className="text-xs text-gray-600 font-medium mb-1">
+                          📎 Evidence Files ({row.evidence_files.length})
+                        </div>
+                        {row.evidence_files.map((file, index) => (
+                          <div
+                            key={file.id}
+                            className="bg-white border border-gray-200 rounded p-2"
+                          >
+                            <div className="flex items-center justify-between text-xs">
+                              <div className="flex-1 min-w-0">
+                                <div
+                                  className="truncate text-gray-700 font-medium"
+                                  title={file.filename}
+                                >
+                                  📄 {file.filename}
                                 </div>
-                                <div className="flex space-x-1 ml-2">
-                                  <button
-                                    className="text-blue-500 hover:text-blue-700 p-1"
-                                    title="View file"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (file.url) {
-                                        window.open(file.url, '_blank');
-                                      }
-                                    }}
-                                  >
-                                    <Eye className="w-3 h-3" />
-                                  </button>
-                                  <button
-                                    className="text-red-500 hover:text-red-700 p-1"
-                                    title="Remove file"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      console.log('🗑️ Removing specific evidence file:', file.id);
-
-                                      // Remove specific file from array
-                                      setRows(prevRows => prevRows.map(r =>
-                                        r.id === row.id ? {
-                                          ...r,
-                                          evidence_files: r.evidence_files.filter(f => f.id !== file.id)
-                                        } : r
-                                      ));
-
-                                      console.log('✅ Evidence file removed:', file.id);
-                                    }}
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </button>
+                                <div className="text-gray-500">
+                                  📏 {file.filesize}
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                              <div className="flex space-x-1 ml-2">
+                                <button
+                                  className="text-blue-500 hover:text-blue-700 p-1"
+                                  title="View file"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (file.url) {
+                                      window.open(file.url, "_blank");
+                                    }
+                                  }}
+                                >
+                                  <Eye className="w-3 h-3" />
+                                </button>
+                                <button
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                  title="Remove file"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    console.log(
+                                      "🗑️ Removing specific evidence file:",
+                                      file.id
+                                    );
 
-                      {row.evidence_uploaded && (
-                        <div className="mt-1 text-xs text-green-600 font-medium">✅ File uploaded!</div>
-                      )}
+                                    // Remove specific file from array
+                                    setRows((prevRows) =>
+                                      prevRows.map((r) =>
+                                        r.id === row.id
+                                          ? {
+                                              ...r,
+                                              evidence_files:
+                                                r.evidence_files.filter(
+                                                  (f) => f.id !== file.id
+                                                ),
+                                            }
+                                          : r
+                                      )
+                                    );
+
+                                    console.log(
+                                      "✅ Evidence file removed:",
+                                      file.id
+                                    );
+                                  }}
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {row.evidence_uploaded && (
+                      <div className="mt-1 text-xs text-green-600 font-medium">
+                        ✅ File uploaded!
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>

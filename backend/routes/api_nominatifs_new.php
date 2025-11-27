@@ -44,18 +44,25 @@ Route::prefix('nominatifs/details/{detailRowId}/biaya')->group(function () {
     Route::get('/', [NominatifBiayaRowController::class, 'index']);
     Route::post('/', [NominatifBiayaRowController::class, 'store']);
     Route::get('/{biayaId}', [NominatifBiayaRowController::class, 'show']);
+    Route::put('/{biayaId}/simplified', [NominatifBiayaRowController::class, 'updateSimplified']); // 🔥 FIXED: Put specific route first!
     Route::put('/{biayaId}', [NominatifBiayaRowController::class, 'update']);
     Route::delete('/{biayaId}', [NominatifBiayaRowController::class, 'destroy']);
 });
 
 // Evidence (File Upload) - On Demand Loading
-Route::prefix('nominatifs/details/{detailRowId}/evidence')->group(function () {
+Route::prefix('nominatifs/{nominatifId}/evidence')->group(function () {
     Route::get('/', [NominatifEvidenceController::class, 'index']);
     Route::post('/', [NominatifEvidenceController::class, 'store']);
+    Route::get('/all', [NominatifEvidenceController::class, 'getAllEvidence']);
     Route::get('/{evidenceId}', [NominatifEvidenceController::class, 'show']);
     Route::put('/{evidenceId}', [NominatifEvidenceController::class, 'update']);
     Route::delete('/{evidenceId}', [NominatifEvidenceController::class, 'destroy']);
     Route::get('/{evidenceId}/download', [NominatifEvidenceController::class, 'download']);
+});
+
+// Evidence for specific detail row
+Route::prefix('nominatifs/{nominatifId}/details/{detailRowId}/evidence')->group(function () {
+    Route::post('/', [NominatifEvidenceController::class, 'storeWithDetailRow']);
 });
 
 // Utility Routes
