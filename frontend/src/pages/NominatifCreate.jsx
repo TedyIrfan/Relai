@@ -368,25 +368,7 @@ const NominatifCreate = () => {
               </button>
             </div>
 
-            {/* Instructions */}
-            <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-gray-600 mt-0.5" />
-                <div className="text-sm text-gray-600">
-                  <h4 className="font-medium text-gray-900 mb-1">Cara Menggunakan:</h4>
-                  <ol className="space-y-1 list-decimal list-inside">
-                    <li>Isi deskripsi lengkap perjalanan dinas</li>
-                    <li>Pilih tanggal mulai dan selesai (opsional)</li>
-                    <li>Klik dropdown untuk memilih Code RKA</li>
-                    <li>Pilih RKA yang memiliki anggaran tersedia</li>
-                    <li>Klik "Buat Nominatif" untuk lanjut ke Excel table</li>
-                    <li>Isi data person dan biaya di form Excel-like table</li>
-                    <li>Simpan sebagai draft atau submit untuk approval</li>
-                  </ol>
-                </div>
-              </div>
             </div>
-          </div>
         </div>
       </div>
     </div>

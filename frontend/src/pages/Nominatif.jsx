@@ -302,13 +302,7 @@ const Nominatif = () => {
                   <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '12%'}}>
                     Deskripsi
                   </th>
-                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
-                    Total Pagu
-                  </th>
-                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
-                    Total Aktual
-                  </th>
-                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
+                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '10%'}}>
                     Anggaran Berjalan
                   </th>
                   <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '6%'}}>
@@ -325,7 +319,7 @@ const Nominatif = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
                         Memuat data...
@@ -363,12 +357,6 @@ const Nominatif = () => {
                         <div className="truncate" title={nominatif.deskripsi_perjalanan_dinas || '-'}>
                           {nominatif.deskripsi_perjalanan_dinas || '-'}
                         </div>
-                      </td>
-                      <td className="px-1 py-1 text-sm font-medium text-right text-gray-900">
-                        {formatRupiah(nominatif.total_pagu_trip || nominatif.total_pagu)}
-                      </td>
-                      <td className="px-1 py-1 text-sm font-medium text-right text-gray-900">
-                        {formatRupiah(nominatif.total_aktual_trip || nominatif.total_biaya_aktual)}
                       </td>
                       <td className="px-1 py-1 text-sm font-medium text-right text-gray-900">
                         {formatRupiah(
@@ -423,7 +411,7 @@ const Nominatif = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center">
                         <FileText className="w-12 h-12 text-gray-400 mb-4" />
                         <p className="text-lg font-medium text-gray-900 mb-2">
