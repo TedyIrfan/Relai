@@ -4,7 +4,6 @@ import {
   Trash2,
   Save,
   Send,
-  RefreshCw,
   CheckCircle,
   Upload,
   Eye,
@@ -37,15 +36,7 @@ const NominatifExcelTable = ({
   onSave,
   onSubmit,
 }) => {
-  // Ensure initialData has person_type, default to 'main' for existing rows
-  const processedInitialData = React.useMemo(
-    () =>
-      initialData.map((row) => ({
-        ...row,
-        person_type: row.person_type || "main",
-      })),
-    [initialData]
-  );
+  const processedInitialData = initialData;
 
   // Removed excessive logging to prevent console spam
 
@@ -128,38 +119,17 @@ const NominatifExcelTable = ({
   };
 
   // Add new row
-  const addRow = (personType = "main") => {
-    // Find the first main row and first tambahan row to use as references
-    const firstMainRow = rows.find((row) => row.person_type === "main");
-    const firstTambahanRow = rows.find((row) => row.person_type === "tambahan");
-
-    // Determine which reference row to copy from
-    let referenceRow = null;
-    if (personType === "main") {
-      if (firstMainRow) {
-        // Adding new main row - copy from first main row (acuan)
-        referenceRow = firstMainRow;
-      }
-      // If no first main row, this will be the first main row (no copy)
-    } else if (personType === "tambahan") {
-      if (firstTambahanRow) {
-        // Adding new tambahan row - copy from first tambahan row
-        referenceRow = firstTambahanRow;
-      } else if (firstMainRow) {
-        // First tambahan row - copy from first main row
-        referenceRow = firstMainRow;
-      }
-      // If no main row exists, this will be the first row (no copy)
-    }
+  const addRow = () => {
+    // Find the first row to use as reference
+    const firstRow = rows[0];
 
     const newRow = {
       id: Date.now(),
-      person_type: personType,
       // Copy reference fields if we have a reference row
-      nama_lengkap: referenceRow ? referenceRow.nama_lengkap : "",
-      golongan: referenceRow ? referenceRow.golongan : "",
-      jabatan: referenceRow ? referenceRow.jabatan : "",
-      eselon: referenceRow ? referenceRow.eselon : "",
+      nama_lengkap: firstRow ? firstRow.nama_lengkap : "",
+      golongan: firstRow ? firstRow.golongan : "",
+      jabatan: firstRow ? firstRow.jabatan : "",
+      eselon: firstRow ? firstRow.eselon : "",
       // Other fields are always empty for new rows
       asal: "",
       tujuan: "",
@@ -219,29 +189,9 @@ const NominatifExcelTable = ({
       );
     }
 
-    const referenceFields = ["nama_lengkap", "golongan", "jabatan", "eselon"];
-
-    // Find the first main row and first tambahan row (the acuans)
-    const firstMainRow = rows.find((r) => r.person_type === "main");
-    const firstTambahanRow = rows.find((r) => r.person_type === "tambahan");
-
-    // Check which type of update this is
-    const isFirstMainRowUpdate =
-      firstMainRow && firstMainRow.id === id && referenceFields.includes(field);
-    const isFirstTambahanRowUpdate =
-      firstTambahanRow &&
-      firstTambahanRow.id === id &&
-      referenceFields.includes(field);
-
     const updatedRows = rows.map((row) => {
       if (row.id === id) {
         // Always update the target row
-        return { ...row, [field]: value };
-      } else if (isFirstMainRowUpdate && row.person_type === "main") {
-        // If updating first main row reference field, sync all other main rows
-        return { ...row, [field]: value };
-      } else if (isFirstTambahanRowUpdate && row.person_type === "tambahan") {
-        // If updating first tambahan row reference field, sync all other tambahan rows
         return { ...row, [field]: value };
       }
       return row;
@@ -575,18 +525,34 @@ const NominatifExcelTable = ({
 
         // Check if we're in edit mode (single nominatif page) vs create mode
         const currentPath = window.location.pathname;
-        const isCreateMode =
-          currentPath.includes("/create") ||
-          !currentPath.includes("/nominatif/");
+        const hasIdParameter = window.location.search.includes('id=');
 
-        if (isCreateMode) {
-          console.log("🔄 Create mode detected, redirecting...");
-          setTimeout(() => {
-            window.location.href = "/nominatif"; // Redirect ke halaman awal nominatif
-          }, 1000);
-        } else {
-          console.log("📝 Edit mode detected, staying on current page");
-          // Tidak redirect di edit mode - biarkan user lanjut edit
+        console.log("🔍 URL Analysis:", {
+          pathname: currentPath,
+          search: window.location.search,
+          hasIdParameter: hasIdParameter
+        });
+
+        // EDIT MODE = ada ID parameter di URL
+        // CREATE MODE = tidak ada ID parameter
+        const isCreateMode = !hasIdParameter;
+
+        // MATIKAN SEMUA REDIRECT UNTUK TESTING DATABASE UPDATE
+        console.log("📝 Current Path:", currentPath);
+        console.log("📝 Is Create Mode:", isCreateMode);
+
+        console.log("🚫 ALL REDIRECTS DISABLED - Testing Database Update");
+
+        // TIDAK REDIRECT DIMANAPUN MODE (CREATE/EDIT)
+        if (false) { // DISABLED - ganti true untuk enable redirect
+          if (isCreateMode) {
+            console.log("🔄 Create mode detected, redirecting...");
+            setTimeout(() => {
+              window.location.href = "/nominatif"; // Redirect ke halaman awal nominatif
+            }, 1000);
+          } else {
+            console.log("📝 Edit mode detected, staying on current page");
+          }
         }
       }
     } catch (error) {
@@ -622,11 +588,6 @@ const NominatifExcelTable = ({
     } finally {
       setSubmitting(false);
     }
-  };
-
-  // Load draft (placeholder)
-  const loadDraft = () => {
-    console.log("Loading draft...");
   };
 
   // Inject CSS to remove arrow buttons from currency inputs
@@ -668,30 +629,15 @@ const NominatifExcelTable = ({
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => addRow("main")}
-            className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
+            onClick={() => addRow()}
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
           >
             <Plus className="w-4 h-4" />
-            <span>Tambah Utama</span>
-          </button>
-          <button
-            onClick={() => addRow("tambahan")}
-            className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Orang</span>
+            <span className="font-medium">Tambah Row</span>
           </button>
         </div>
 
         <div className="flex items-center space-x-2">
-          <button
-            onClick={loadDraft}
-            disabled={!rkaDetail || loading}
-            className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span>Muat Draft</span>
-          </button>
           <button
             onClick={saveDraft}
             disabled={loading || saving}
@@ -720,9 +666,6 @@ const NominatifExcelTable = ({
             <tr>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">
                 Aksi
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">
-                Tipe
               </th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
                 Nama Lengkap
@@ -966,18 +909,6 @@ const NominatifExcelTable = ({
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
-                  <select
-                    value={row.person_type || "main"}
-                    onChange={(e) =>
-                      updateRow(row.id, "person_type", e.target.value)
-                    }
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
-                  >
-                    <option value="main">Utama</option>
-                    <option value="tambahan">Tambahan</option>
-                  </select>
                 </td>
                 <td className="px-4 py-3 border-r border-gray-200 w-56">
                   <input
@@ -1882,14 +1813,6 @@ const NominatifExcelTable = ({
           <div className="flex items-center space-x-4">
             <div className="text-sm text-gray-600">
               <span className="font-medium">Total Baris:</span> {rows.length}
-            </div>
-            <div className="text-sm text-gray-600">
-              <span className="font-medium">Utama:</span>{" "}
-              {rows.filter((r) => r.person_type === "main").length}
-            </div>
-            <div className="text-sm text-gray-600">
-              <span className="font-medium">Tambahan:</span>{" "}
-              {rows.filter((r) => r.person_type === "tambahan").length}
             </div>
           </div>
           <div className="flex items-center space-x-6 text-sm">

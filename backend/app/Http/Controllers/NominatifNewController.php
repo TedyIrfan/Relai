@@ -106,7 +106,7 @@ class NominatifNewController extends Controller
                 'rkaDetail:id,code_rka,layanan',
                 'user:id,name,email',
                 'detailRows' => function ($query) {
-                    $query->select('id', 'nominatif_id', 'person_type', 'person_name', 'nama', 'jabatan', 'eselon', 'row_order')
+                    $query->select('id', 'nominatif_id', 'person_name', 'nama', 'jabatan', 'eselon', 'row_order')
                           ->orderBy('row_order');
                 },
                 'detailRows.biayaRow'
@@ -652,8 +652,6 @@ class NominatifNewController extends Controller
 
         $summary = [
             'total_rows' => $detailRows->count(),
-            'main_person_rows' => $detailRows->where('person_type', 'main')->count(),
-            'tambahan_orang_rows' => $detailRows->where('person_type', 'tambahan')->count(),
             'total_pagu_calculated' => $detailRows->sum(function ($row) {
                 return $row->biayaRow?->total_pagu_row ?? 0;
             }),

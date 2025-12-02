@@ -238,7 +238,6 @@ const NominatifPage = () => {
                 console.log('Processing row:', row);
                 return {
                   id: row.id,
-                  person_type: row.person_type,
                   nama_lengkap: row.nama || row.person_name || '',
                   golongan: row.golongan || '',
                   jabatan: row.jabatan || '',
@@ -328,7 +327,6 @@ const NominatifPage = () => {
 
             return {
               id: detail.id,
-              person_type: detail.person_type,
               nama_lengkap: detail.person_name,
               no: detail.row_order,
               golongan: detail.golongan || '',
@@ -482,7 +480,6 @@ const NominatifPage = () => {
     
       // Prepare bulk data for detail rows
       const detailRowsData = data.map((row, index) => ({
-        person_type: row.person_type || 'main',
         nama: row.nama_lengkap || row.nama || '', // Fixed: backend expects 'nama'
         person_name: row.nama_lengkap || row.nama || '', // Fixed: backend expects 'person_name'
         golongan: row.golongan || '',
@@ -508,9 +505,8 @@ const NominatifPage = () => {
         // Update existing detail rows with their IDs
         const updatedDetailRowsData = data.map((row, index) => ({
           id: row.id, // Include existing ID
-          person_type: row.person_type || 'main',
-          nama: row.nama_lengkap || row.nama || '',
-          person_name: row.nama_lengkap || row.nama || '',
+          person_name: row.nama_lengkap || row.nama || '', // Backend expects person_name
+          nama: row.nama_lengkap || row.nama || '', // Backend expects nama
           golongan: row.golongan || '',
           jabatan: row.jabatan || '',
           eselon: row.eselon || '',
@@ -521,6 +517,13 @@ const NominatifPage = () => {
           no: index + 1,
           row_order: index + 1
         }));
+
+        // Debug: Log data yang akan dikirim ke bulk update API
+        console.log('📦 Preparing bulk update data:', {
+          nominatifId: nominatifId,
+          rowsCount: updatedDetailRowsData.length,
+          rowsData: updatedDetailRowsData
+        });
 
         // Use bulk update API for existing detail rows (if available)
         const bulkUpdateResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/bulk`, {
@@ -534,15 +537,24 @@ const NominatifPage = () => {
 
         if (!bulkUpdateResponse.ok) {
           const errorText = await bulkUpdateResponse.text();
-          console.error('Bulk detail update failed:', errorText);
-          // Fallback: Use existing rows data
-          createdDetailRows = data.map((row, index) => ({
-            id: row.id,
-            nominatif_new_id: nominatifId
-          }));
+          console.error('❌ Bulk detail update FAILED:', {
+            status: bulkUpdateResponse.status,
+            statusText: bulkUpdateResponse.statusText,
+            errorText: errorText
+          });
+          throw new Error(`Gagal update detail rows: ${bulkUpdateResponse.status} - ${errorText}`);
         } else {
+          console.log('✅ Bulk update response OK, parsing result...');
           const updateResult = await bulkUpdateResponse.json();
+          console.log('📦 Update result data:', updateResult);
+
+          if (!updateResult.success) {
+            console.error('❌ Backend returned failure:', updateResult);
+            throw new Error(`Backend error: ${updateResult.message || 'Unknown error'}`);
+          }
+
           createdDetailRows = updateResult.data;
+          console.log('✅ Updated rows from backend:', createdDetailRows);
         }
       } else {
         // CREATE MODE: Create new detail rows

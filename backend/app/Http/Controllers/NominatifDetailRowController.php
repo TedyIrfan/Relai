@@ -67,7 +67,6 @@ class NominatifDetailRowController extends Controller
     public function store(Request $request, $nominatifId)
     {
         $request->validate([
-            'person_type' => 'required|in:main,tambahan',
             'person_name' => 'required|string|max:255',
             'asal' => 'required|string|max:100',
             'tujuan' => 'required|string|max:100',
@@ -100,8 +99,7 @@ class NominatifDetailRowController extends Controller
 
             $detailRow = NominatifDetailRow::create([
                 'nominatif_id' => $nominatifId,
-                'person_type' => $request->person_type,
-                'person_name' => $request->person_name,
+                                'person_name' => $request->person_name,
                 'row_order' => $maxRowOrder + 1,
                 'asal' => $request->asal,
                 'tujuan' => $request->tujuan,
@@ -210,8 +208,7 @@ class NominatifDetailRowController extends Controller
     public function update(Request $request, $rowId)
     {
         $request->validate([
-            'person_type' => 'sometimes|in:main,tambahan',
-            'person_name' => 'sometimes|string|max:255',
+                        'person_name' => 'sometimes|string|max:255',
             'asal' => 'sometimes|string|max:100',
             'tujuan' => 'sometimes|string|max:100',
             'tanggal_pergi' => 'sometimes|date',
@@ -333,8 +330,7 @@ class NominatifDetailRowController extends Controller
 
         $request->validate([
             'rows' => 'required|array|min:1',
-            'rows.*.person_type' => 'required|in:main,tambahan',
-            'rows.*.person_name' => 'required|string|max:255',
+                        'rows.*.person_name' => 'required|string|max:255',
             'rows.*.asal' => 'required|string|max:100',
             'rows.*.tujuan' => 'required|string|max:100',
             'rows.*.tanggal_pergi' => 'required|date',
@@ -364,8 +360,7 @@ class NominatifDetailRowController extends Controller
             foreach ($request->rows as $index => $rowData) {
                 $detailRow = NominatifDetailRow::create([
                     'nominatif_id' => $nominatifId,
-                    'person_type' => $rowData['person_type'],
-                    'person_name' => $rowData['person_name'],
+                                        'person_name' => $rowData['person_name'],
                     'row_order' => $maxRowOrder + $index + 1,
                     'asal' => $rowData['asal'],
                     'tujuan' => $rowData['tujuan'],
@@ -454,16 +449,21 @@ class NominatifDetailRowController extends Controller
      */
     public function bulkUpdate(Request $request, $nominatifId)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'rows' => 'required|array',
             'rows.*.id' => 'required|exists:nominatif_detail_rows,id',
-            'rows.*.person_type' => 'sometimes|in:main,tambahan',
             'rows.*.person_name' => 'sometimes|string|max:255',
             'rows.*.asal' => 'sometimes|string|max:100',
             'rows.*.tujuan' => 'sometimes|string|max:100',
             'rows.*.nama' => 'sometimes|string|max:255',
+            'rows.*.golongan' => 'sometimes|string|max:10',
+            'rows.*.jabatan' => 'sometimes|string|max:255',
+            'rows.*.eselon' => 'sometimes|string|max:10',
+            'rows.*.tanggal_pergi' => 'sometimes|date',
+            'rows.*.tanggal_sampai' => 'sometimes|date',
         ]);
 
+        
         // Check if user owns the nominatif
         $nominatif = NominatifNew::where('id', $nominatifId)
             ->where('user_id', $this->getAuthenticatedUser(app('request'))?->id)
@@ -477,20 +477,38 @@ class NominatifDetailRowController extends Controller
             ], 422);
         }
 
+        // Debug: Log incoming data
+        \Log::info('=== BULK UPDATE START ===');
+        \Log::info('Request data:', [
+            'nominatifId' => $nominatifId,
+            'rows_count' => count($validatedData['rows']),
+            'raw_rows' => $request->rows,
+            'validated_rows' => $validatedData['rows']
+        ]);
+
         DB::beginTransaction();
         try {
             $updatedRows = [];
-            foreach ($request->rows as $rowData) {
-                // DISABLED: Security check in bulkUpdate - temporarily disabled for testing
-                $detailRow = NominatifDetailRow::where('id', $rowData['id'])
-                    // ->whereHas('nominatif', function ($query) {
-                    //     $query->where('user_id', $this->getAuthenticatedUser(app('request'))?->id);
-                    // })
-                    ->first();
+            foreach ($validatedData['rows'] as $index => $rowData) {
+                \Log::info("=== PROCESSING ROW {$index} ===");
+                \Log::info('Row data to update:', $rowData);
+
+                $detailRow = NominatifDetailRow::where('id', $rowData['id'])->first();
 
                 if ($detailRow) {
-                    $detailRow->update($rowData);
-                    $updatedRows[] = $detailRow;
+                    \Log::info('Found detail row:', $detailRow->toArray());
+
+                    // Update dengan semua field yang dikirim
+                    $updateResult = $detailRow->update($rowData);
+
+                    \Log::info('Update result:', [
+                        'success' => $updateResult,
+                        'updated_row' => $detailRow->fresh()->toArray()
+                    ]);
+
+                    $updatedRows[] = $detailRow->fresh();
+                } else {
+                    \Log::warning('Detail row NOT found for ID:', $rowData['id']);
                 }
             }
 
@@ -521,7 +539,6 @@ class NominatifDetailRowController extends Controller
     public function validate(Request $request)
     {
         $request->validate([
-            'person_type' => 'required|in:main,tambahan',
             'person_name' => 'required|string|max:255',
             'asal' => 'required|string|max:100',
             'tujuan' => 'required|string|max:100',

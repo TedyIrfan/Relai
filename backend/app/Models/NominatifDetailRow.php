@@ -13,7 +13,6 @@ class NominatifDetailRow extends Model
 
     protected $fillable = [
         'nominatif_id',
-        'person_type',
         'person_name',
         'row_order',
         'asal',
@@ -49,15 +48,6 @@ class NominatifDetailRow extends Model
     }
 
     // Scopes
-    public function scopeMainPerson($query)
-    {
-        return $query->where('person_type', 'main');
-    }
-
-    public function scopeTambahanOrang($query)
-    {
-        return $query->where('person_type', 'tambahan');
-    }
 
     public function scopeByDateRange($query, $startDate, $endDate)
     {
