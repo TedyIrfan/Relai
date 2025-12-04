@@ -288,37 +288,71 @@ class NominatifEvidenceController extends Controller
             ], 422);
         }
 
+        // 🔥 FIXED: Support both file upload and Google Drive links
         $request->validate([
-            'evidence_file' => 'required|file|mimes:jpg,jpeg,png,pdf,bmp,gif,webp,svg|max:10240', // Max 10MB, images + PDF
+            'evidence_link' => 'required_without:evidence_file|url|max:1000',
+            'evidence_name' => 'required|string|max:255',
+            'evidence_file' => 'required_without:evidence_link|file|mimes:jpg,jpeg,png,pdf,bmp,gif,webp,svg|max:10240', // Max 10MB, images + PDF
             'keterangan' => 'nullable|string|max:500'
         ]);
 
         DB::beginTransaction();
         try {
-            $file = $request->file('evidence_file');
             $userId = $this->getAuthenticatedUser($request)?->id;
+            $evidenceData = [];
 
-            // Create unique filename
-            $fileName = time() . '_' . $userId . '_' . $nominatifId . '_' . ($detailRowId ?? 'general') . '_' . $file->getClientOriginalName();
+            // Handle Google Drive Link
+            if ($request->filled('evidence_link')) {
+                \Log::info("🔗 Storing Google Drive evidence", [
+                    'nominatif_id' => $nominatifId,
+                    'detail_row_id' => $detailRowId,
+                    'evidence_link' => $request->evidence_link,
+                    'evidence_name' => $request->evidence_name
+                ]);
 
-            // Store file
-            $path = $file->storeAs(
-                "evidence/{$userId}/nominatif_{$nominatifId}",
-                $fileName,
-                'public'
-            );
+                $evidenceData = [
+                    'nominatif_id' => $nominatifId,
+                    'nominatif_detail_row_id' => $detailRowId,
+                    'evidence_link' => $request->evidence_link,
+                    'evidence_name' => $request->evidence_name,
+                    'keterangan' => $request->keterangan,
+                    'user_id' => $userId,
+                ];
+            }
+            // Handle File Upload (legacy)
+            else {
+                $file = $request->file('evidence_file');
+
+                \Log::info("📁 Storing file evidence", [
+                    'nominatif_id' => $nominatifId,
+                    'detail_row_id' => $detailRowId,
+                    'filename' => $file->getClientOriginalName()
+                ]);
+
+                // Create unique filename
+                $fileName = time() . '_' . $userId . '_' . $nominatifId . '_' . ($detailRowId ?? 'general') . '_' . $file->getClientOriginalName();
+
+                // Store file
+                $path = $file->storeAs(
+                    "evidence/{$userId}/nominatif_{$nominatifId}",
+                    $fileName,
+                    'public'
+                );
+
+                $evidenceData = [
+                    'nominatif_id' => $nominatifId,
+                    'nominatif_detail_row_id' => $detailRowId,
+                    'evidence_foto_path' => $path,
+                    'evidence_foto_name' => $file->getClientOriginalName(),
+                    'evidence_foto_size' => $file->getSize(),
+                    'evidence_foto_type' => $file->getMimeType(),
+                    'keterangan' => $request->keterangan,
+                    'user_id' => $userId,
+                ];
+            }
 
             // Create evidence record
-            $evidence = NominatifEvidence::create([
-                'nominatif_id' => $nominatifId,
-                'nominatif_detail_row_id' => $detailRowId, // Link to specific biaya row or null
-                'evidence_foto_path' => $path,
-                'evidence_foto_name' => $file->getClientOriginalName(),
-                'evidence_foto_size' => $file->getSize(),
-                'evidence_foto_type' => $file->getMimeType(),
-                'keterangan' => $request->keterangan,
-                'user_id' => $userId, // 🔥 Tambahkan user_id
-            ]);
+            $evidence = NominatifEvidence::create($evidenceData);
 
             DB::commit();
 

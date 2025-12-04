@@ -285,15 +285,6 @@ const Nominatif = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
-                    Nama
-                  </th>
-                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '10%'}}>
-                    Jabatan
-                  </th>
-                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '5%'}}>
-                    Eselon
-                  </th>
-                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '6%'}}>
                     Code RKA
                   </th>
                   <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '15%'}}>
@@ -319,7 +310,7 @@ const Nominatif = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
                         Memuat data...
@@ -332,19 +323,6 @@ const Nominatif = () => {
                     const mainPerson = nominatif.detail_rows?.find(row => row.person_type === 'main');
                     return (
                     <tr key={nominatif.id} className="hover:bg-gray-50">
-                      <td className="px-1 py-1 text-sm text-gray-900">
-                        <div className="truncate" title={mainPerson?.nama || mainPerson?.person_name || '-'}>
-                          {mainPerson?.nama || mainPerson?.person_name || '-'}
-                        </div>
-                      </td>
-                      <td className="px-1 py-1 text-sm text-gray-900">
-                        <div className="truncate" title={mainPerson?.jabatan || '-'}>
-                          {mainPerson?.jabatan || '-'}
-                        </div>
-                      </td>
-                      <td className="px-1 py-1 text-sm text-gray-900">
-                        {mainPerson?.eselon || '-'}
-                      </td>
                       <td className="px-1 py-1 text-sm font-mono text-gray-900">
                         {nominatif.rka_detail?.code_rka || '-'}
                       </td>
@@ -411,7 +389,7 @@ const Nominatif = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center">
                         <FileText className="w-12 h-12 text-gray-400 mb-4" />
                         <p className="text-lg font-medium text-gray-900 mb-2">

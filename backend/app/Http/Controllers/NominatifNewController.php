@@ -106,7 +106,7 @@ class NominatifNewController extends Controller
                 'rkaDetail:id,code_rka,layanan',
                 'user:id,name,email',
                 'detailRows' => function ($query) {
-                    $query->select('id', 'nominatif_id', 'person_name', 'nama', 'jabatan', 'eselon', 'row_order')
+                    $query->select('id', 'nominatif_id', 'person_name', 'jabatan', 'eselon', 'row_order')
                           ->orderBy('row_order');
                 },
                 'detailRows.biayaRow'
@@ -310,7 +310,7 @@ class NominatifNewController extends Controller
             },
             'detailRows.biayaRow',
             'detailRows.evidence' => function ($query) {
-                $query->select('id', 'nominatif_detail_row_id', 'evidence_foto_name', 'evidence_foto_size');
+                $query->select('id', 'nominatif_id', 'nominatif_detail_row_id', 'evidence_link', 'evidence_name', 'keterangan');
             }
         ])->findOrFail($id);
 

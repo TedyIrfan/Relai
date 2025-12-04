@@ -14,16 +14,15 @@ class NominatifEvidence extends Model
     protected $fillable = [
         'nominatif_id',
         'nominatif_detail_row_id',
-        'evidence_foto_path',
-        'evidence_foto_name',
-        'evidence_foto_size',
-        'evidence_foto_type',
+        'evidence_link', // Evidence URL (any link)
+        'evidence_name', // Display name for the evidence
         'keterangan',
-        'user_id', // 🔥 NEW: Track who uploaded
+        'user_id', // Track who uploaded
     ];
 
     protected $casts = [
-        'evidence_foto_size' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // Relationships
@@ -39,61 +38,111 @@ class NominatifEvidence extends Model
 
     
     // Accessors
-    public function getFormattedFileSizeAttribute()
+    public function getGoogleDriveIdAttribute()
     {
-        $bytes = $this->evidence_foto_size;
-        $units = ['B', 'KB', 'MB', 'GB'];
+        // Extract Google Drive ID from URL for preview display
+        $url = $this->evidence_link;
 
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
+        if (preg_match('/\/d\/([a-zA-Z0-9-_]+)/', $url, $matches)) {
+            return $matches[1];
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return null;
     }
 
-    public function getFileExtensionAttribute()
+    public function getPreviewUrlAttribute()
     {
-        return pathinfo($this->evidence_foto_name, PATHINFO_EXTENSION);
+        // Generate preview URL for Google Drive
+        if ($this->google_drive_id) {
+            return "https://drive.google.com/file/d/{$this->google_drive_id}/preview";
+        }
+
+        return $this->evidence_link;
     }
 
-    public function isImageAttribute()
+    public function getThumbnailUrlAttribute()
     {
-        return in_array(strtolower($this->file_extension), ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
+        // Generate thumbnail URL for Google Drive (if available)
+        if ($this->google_drive_id) {
+            return "https://drive.google.com/thumbnail?id={$this->google_drive_id}&sz=w200";
+        }
+
+        return null;
     }
 
-    public function isPdfAttribute()
+    public function getIsGoogleDriveLinkAttribute()
     {
-        return strtolower($this->file_extension) === 'pdf';
+        return strpos($this->evidence_link, 'drive.google.com') !== false;
+    }
+
+    public function getIsGoogleDocsLinkAttribute()
+    {
+        return strpos($this->evidence_link, 'docs.google.com') !== false;
+    }
+
+    public function getDocumentTypeAttribute()
+    {
+        if ($this->is_google_docs_link) {
+            if (strpos($this->evidence_link, '/document/') !== false) {
+                return 'Google Docs';
+            } elseif (strpos($this->evidence_link, '/spreadsheets/') !== false) {
+                return 'Google Sheets';
+            } elseif (strpos($this->evidence_link, '/presentation/') !== false) {
+                return 'Google Slides';
+            } elseif (strpos($this->evidence_link, '/forms/') !== false) {
+                return 'Google Forms';
+            }
+        } elseif ($this->is_google_drive_link) {
+            return 'Google Drive File';
+        }
+
+        return 'Web Link';
     }
 
     // Scopes
-    public function scopeImages($query)
+    public function scopeGoogleDrive($query)
     {
-        return $query->whereIn('evidence_foto_type', ['image/jpeg', 'image/png', 'image/gif', 'image/bmp']);
+        return $query->where('evidence_link', 'like', '%drive.google.com%');
     }
 
-    public function scopePdfs($query)
+    public function scopeGoogleDocs($query)
     {
-        return $query->where('evidence_foto_type', 'application/pdf');
+        return $query->where('evidence_link', 'like', '%docs.google.com%');
+    }
+
+    public function scopeByName($query, $name)
+    {
+        return $query->where('evidence_name', 'like', "%{$name}%");
     }
 
     // Validation rules
     public static function getValidationRules()
     {
         return [
-            'evidence_foto' => 'required|file|mimes:jpg,jpeg,png,pdf,bmp,gif|max:5120', // Max 5MB
+            'evidence_link' => 'required|url|max:1000',
+            'evidence_name' => 'required|string|max:255',
             'keterangan' => 'nullable|string|max:500',
         ];
     }
 
-    public static function getAllowedMimeTypes()
+    public static function getGoogleDriveValidationRules()
     {
         return [
-            'image/jpeg',
-            'image/png',
-            'image/gif',
-            'image/bmp',
-            'application/pdf',
+            'evidence_link' => 'required|url|regex:/^https:\/\/(drive|docs)\.google\.com\/.*/|max:1000',
+            'evidence_name' => 'required|string|max:255',
+            'keterangan' => 'nullable|string|max:500',
+        ];
+    }
+
+    public static function getValidationMessages()
+    {
+        return [
+            'evidence_link.required' => 'Link Google Drive wajib diisi',
+            'evidence_link.url' => 'Format link tidak valid',
+            'evidence_link.regex' => 'Link harus berupa Google Drive atau Google Docs',
+            'evidence_link.max' => 'Link terlalu panjang (maks 1000 karakter)',
+            'evidence_name.required' => 'Nama evidence wajib diisi',
+            'evidence_name.max' => 'Nama evidence terlalu panjang (maks 255 karakter)',
         ];
     }
 }

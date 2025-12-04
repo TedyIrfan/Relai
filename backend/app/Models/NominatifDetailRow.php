@@ -23,7 +23,6 @@ class NominatifDetailRow extends Model
         'golongan',
         'jabatan',
         'eselon',
-        'nama',
     ];
 
     protected $casts = [

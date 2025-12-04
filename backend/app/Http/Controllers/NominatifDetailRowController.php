@@ -75,7 +75,6 @@ class NominatifDetailRowController extends Controller
             'golongan' => 'nullable|string|max:10',
             'jabatan' => 'nullable|string|max:255',
             'eselon' => 'nullable|string|max:10',
-            'nama' => 'required|string|max:255',
         ]);
 
         // Check if user owns the nominatif
@@ -99,7 +98,7 @@ class NominatifDetailRowController extends Controller
 
             $detailRow = NominatifDetailRow::create([
                 'nominatif_id' => $nominatifId,
-                                'person_name' => $request->person_name,
+                'person_name' => $request->person_name,
                 'row_order' => $maxRowOrder + 1,
                 'asal' => $request->asal,
                 'tujuan' => $request->tujuan,
@@ -109,7 +108,6 @@ class NominatifDetailRowController extends Controller
                 'golongan' => $request->golongan,
                 'jabatan' => $request->jabatan,
                 'eselon' => $request->eselon,
-                'nama' => $request->nama,
             ]);
 
             // Create corresponding biaya row with default values including totals
@@ -208,7 +206,7 @@ class NominatifDetailRowController extends Controller
     public function update(Request $request, $rowId)
     {
         $request->validate([
-                        'person_name' => 'sometimes|string|max:255',
+            'person_name' => 'sometimes|string|max:255',
             'asal' => 'sometimes|string|max:100',
             'tujuan' => 'sometimes|string|max:100',
             'tanggal_pergi' => 'sometimes|date',
@@ -216,7 +214,6 @@ class NominatifDetailRowController extends Controller
             'golongan' => 'sometimes|string|max:10',
             'jabatan' => 'sometimes|string|max:255',
             'eselon' => 'sometimes|string|max:10',
-            'nama' => 'sometimes|string|max:255',
         ]);
 
         $detailRow = NominatifDetailRow::findOrFail($rowId);
@@ -239,7 +236,26 @@ class NominatifDetailRowController extends Controller
 
         DB::beginTransaction();
         try {
-            $detailRow->update($request->all());
+            // Debug: Log incoming request data
+            \Log::info('NominatifDetailRow update attempt:', [
+                'rowId' => $rowId,
+                'requestData' => $request->all(),
+                'currentData' => $detailRow->toArray()
+            ]);
+
+            // Update only fillable fields
+            $updateData = $request->only($detailRow->getFillable());
+            \Log::info('Update data to be saved:', ['updateData' => $updateData]);
+
+            $result = $detailRow->update($updateData);
+
+            \Log::info('Update result:', [
+                'result' => $result,
+                'updatedData' => $detailRow->fresh()->toArray()
+            ]);
+
+            // Auto-sort rows by person_name after update
+            $this->autoSortByName($detailRow->nominatif_id);
 
             // Update nominatif totals
             $this->updateNominatifTotals($detailRow->nominatif_id);
@@ -291,11 +307,11 @@ class NominatifDetailRowController extends Controller
         try {
             $detailRow->delete();
 
+            // Auto-sort rows by person_name after deletion
+            $this->autoSortByName($nominatifId);
+
             // Update nominatif totals
             $this->updateNominatifTotals($nominatifId);
-
-            // Reorder remaining rows
-            $this->reorderRows($nominatifId);
 
             DB::commit();
 
@@ -335,7 +351,6 @@ class NominatifDetailRowController extends Controller
             'rows.*.tujuan' => 'required|string|max:100',
             'rows.*.tanggal_pergi' => 'required|date',
             'rows.*.tanggal_sampai' => 'required|date|after_or_equal:rows.*.tanggal_pergi',
-            'rows.*.nama' => 'required|string|max:255',
         ]);
 
         // Check if user owns the nominatif
@@ -360,7 +375,7 @@ class NominatifDetailRowController extends Controller
             foreach ($request->rows as $index => $rowData) {
                 $detailRow = NominatifDetailRow::create([
                     'nominatif_id' => $nominatifId,
-                                        'person_name' => $rowData['person_name'],
+                    'person_name' => $rowData['person_name'],
                     'row_order' => $maxRowOrder + $index + 1,
                     'asal' => $rowData['asal'],
                     'tujuan' => $rowData['tujuan'],
@@ -370,7 +385,6 @@ class NominatifDetailRowController extends Controller
                     'golongan' => $rowData['golongan'] ?? null,
                     'jabatan' => $rowData['jabatan'] ?? null,
                     'eselon' => $rowData['eselon'] ?? null,
-                    'nama' => $rowData['nama'],
                 ]);
 
                 // Create corresponding biaya row with default values including totals
@@ -423,6 +437,13 @@ class NominatifDetailRowController extends Controller
                 $createdRows[] = $detailRow;
             }
 
+            // Auto-sort rows by person_name
+            $this->autoSortByName($nominatifId);
+            $createdRows = NominatifDetailRow::where('nominatif_id', $nominatifId)
+                ->orderBy('row_order')
+                ->with(['biayaRow', 'evidence'])
+                ->get();
+
             // Update nominatif totals
             $this->updateNominatifTotals($nominatifId);
 
@@ -430,7 +451,7 @@ class NominatifDetailRowController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Detail rows created successfully',
+                'message' => 'Detail rows created and auto-sorted successfully',
                 'data' => $createdRows
             ], 201);
 
@@ -455,7 +476,6 @@ class NominatifDetailRowController extends Controller
             'rows.*.person_name' => 'sometimes|string|max:255',
             'rows.*.asal' => 'sometimes|string|max:100',
             'rows.*.tujuan' => 'sometimes|string|max:100',
-            'rows.*.nama' => 'sometimes|string|max:255',
             'rows.*.golongan' => 'sometimes|string|max:10',
             'rows.*.jabatan' => 'sometimes|string|max:255',
             'rows.*.eselon' => 'sometimes|string|max:10',
@@ -512,6 +532,13 @@ class NominatifDetailRowController extends Controller
                 }
             }
 
+            // Auto-sort rows by person_name after update
+            $this->autoSortByName($nominatifId);
+            $updatedRows = NominatifDetailRow::where('nominatif_id', $nominatifId)
+                ->orderBy('row_order')
+                ->with(['biayaRow', 'evidence'])
+                ->get();
+
             // Update nominatif totals
             $this->updateNominatifTotals($nominatifId);
 
@@ -519,7 +546,7 @@ class NominatifDetailRowController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Detail rows updated successfully',
+                'message' => 'Detail rows updated and auto-sorted successfully',
                 'data' => $updatedRows
             ]);
 
@@ -544,7 +571,6 @@ class NominatifDetailRowController extends Controller
             'tujuan' => 'required|string|max:100',
             'tanggal_pergi' => 'required|date',
             'tanggal_sampai' => 'required|date|after_or_equal:tanggal_pergi',
-            'nama' => 'required|string|max:255',
         ]);
 
         return response()->json([
@@ -587,6 +613,23 @@ class NominatifDetailRowController extends Controller
 
         foreach ($rows as $index => $row) {
             $row->update(['row_order' => $index + 1]);
+        }
+    }
+
+    /**
+     * Auto-sort rows by person_name (alphabetical)
+     */
+    private function autoSortByName($nominatifId)
+    {
+        $rows = NominatifDetailRow::where('nominatif_id', $nominatifId)
+            ->orderBy('person_name', 'asc')
+            ->get();
+
+        foreach ($rows as $index => $row) {
+            $row->update([
+                'row_order' => $index + 1,
+                'no' => $index + 1
+            ]);
         }
     }
 }

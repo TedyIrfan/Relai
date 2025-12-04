@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Save, Send, FileText, AlertCircle } from 'lucide-react';
 import NominatifExcelTable from '../components/tables/NominatifExcelTable';
@@ -10,6 +10,8 @@ const NominatifPage = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams(); // Add search params hook
   const specificNominatifId = searchParams.get('id'); // Get ?id=... from URL
+
+  const tableRef = useRef(null);
 
   const [rkaDetail, setRkaDetail] = useState(null);
   const [nominatifData, setNominatifData] = useState([]);
@@ -325,6 +327,17 @@ const NominatifPage = () => {
               biayaData = biayaResult.data || {};
             }
 
+            // Get evidence data for this detail
+            let evidenceData = [];
+            if (detail.evidence && Array.isArray(detail.evidence)) {
+              evidenceData = detail.evidence.map(ev => ({
+                id: ev.id,
+                evidence_link: ev.evidence_link,
+                evidence_name: ev.evidence_name,
+                keterangan: ev.keterangan
+              }));
+            }
+
             return {
               id: detail.id,
               nama_lengkap: detail.person_name,
@@ -367,6 +380,9 @@ const NominatifPage = () => {
               representasi_dalam_kota_jumlah_hari: biayaData.representasi_dalam_kota_jumlah_hari || '',
               representasi_dalam_kota_pagu_perhari: biayaData.representasi_dalam_kota_pagu_perhari || '',
               representasi_dalam_kota_aktual_perhari: biayaData.representasi_dalam_kota_aktual_perhari || '',
+
+              // Evidence data
+              evidence_files: evidenceData,
             };
           })
         );
@@ -375,9 +391,20 @@ const NominatifPage = () => {
         const debugTableData = tableData.map(row => ({
           id: row.id,
           tanggal_pergi: row.tanggal_pergi,
-          tanggal_sampai: row.tanggal_sampai
+          tanggal_sampai: row.tanggal_sampai,
+          evidence_count: row.evidence_files?.length || 0
         }));
         console.log('🔄 Transformed table data:', debugTableData);
+
+        // Debug evidence data specifically
+        const rowsWithEvidence = tableData.filter(row => row.evidence_files && row.evidence_files.length > 0);
+        if (rowsWithEvidence.length > 0) {
+          console.log('🔍 Evidence data loaded:', rowsWithEvidence.map(row => ({
+            id: row.id,
+            evidence_count: row.evidence_files.length,
+            first_evidence: row.evidence_files[0]
+          })));
+        }
 
         // Check if any tanggal_sampai are empty
         const emptyTanggalSampai = debugTableData.filter(row => !row.tanggal_sampai);
@@ -478,10 +505,28 @@ const NominatifPage = () => {
       const nominatifResult = await nominatifResponse.json();
       const nominatifId = nominatifResult.data.id;
     
-      // Prepare bulk data for detail rows
-      const detailRowsData = data.map((row, index) => ({
-        nama: row.nama_lengkap || row.nama || '', // Fixed: backend expects 'nama'
-        person_name: row.nama_lengkap || row.nama || '', // Fixed: backend expects 'person_name'
+      // 🔥 COLLECT EVIDENCE FROM INPUT FIELDS - Get current evidence data
+      const dataWithEvidence = tableRef.current ? tableRef.current.collectEvidenceFromInputs() : data;
+
+      // 🔥 FRONTEND AUTO-SORT: Sort data by person_name alphabetically before sending to backend
+      const sortedData = [...dataWithEvidence].sort((a, b) => {
+        const nameA = (a.nama_lengkap || a.nama || '').toLowerCase();
+        const nameB = (b.nama_lengkap || b.nama || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+
+      console.log('🔄 Frontend Auto-Sort Results:', {
+        originalOrder: data.map(row => row.nama_lengkap || row.nama || 'Unnamed'),
+        sortedOrder: sortedData.map(row => row.nama_lengkap || row.nama || 'Unnamed'),
+        withEvidence: dataWithEvidence.map(row => ({
+          name: row.nama_lengkap || row.nama || 'Unnamed',
+          hasEvidence: row.evidence_files && row.evidence_files.length > 0
+        }))
+      });
+
+      // Prepare bulk data for detail rows with sorted order
+      const detailRowsData = sortedData.map((row, index) => ({
+        person_name: row.nama_lengkap || row.nama || '', // Backend expects person_name only
         golongan: row.golongan || '',
         jabatan: row.jabatan || '',
         eselon: row.eselon || '',
@@ -493,20 +538,19 @@ const NominatifPage = () => {
         row_order: index + 1
       }));
 
-      console.log('📦 Preparing bulk detail rows:', detailRowsData.length);
+      console.log('📦 Preparing bulk detail rows (sorted):', detailRowsData.length);
 
       // FIX: Separate CREATE vs EDIT mode logic for detail rows
       let createdDetailRows = [];
 
       if (specificNominatifId && isEditMode) {
-        // EDIT MODE: Update existing detail rows
-        console.log('EDIT MODE: Updating existing detail rows');
+        // EDIT MODE: Update existing detail rows with auto-sort
+        console.log('EDIT MODE: Updating existing detail rows with auto-sort');
 
-        // Update existing detail rows with their IDs
-        const updatedDetailRowsData = data.map((row, index) => ({
+        // 🔥 FRONTEND AUTO-SORT: Update existing detail rows with their IDs using sorted data
+        const updatedDetailRowsData = sortedData.map((row, index) => ({
           id: row.id, // Include existing ID
-          person_name: row.nama_lengkap || row.nama || '', // Backend expects person_name
-          nama: row.nama_lengkap || row.nama || '', // Backend expects nama
+          person_name: row.nama_lengkap || row.nama || '', // Backend expects person_name only
           golongan: row.golongan || '',
           jabatan: row.jabatan || '',
           eselon: row.eselon || '',
@@ -680,40 +724,46 @@ const NominatifPage = () => {
               return [];
             }
 
-            // Upload each evidence file
-            const uploadPromises = row.evidence_files.map(async (evidenceFile, fileIndex) => {
-              if (evidenceFile.file && evidenceFile.file instanceof File) {
-                const formData = new FormData();
-                formData.append('evidence_file', evidenceFile.file);
-                formData.append('keterangan', `Evidence ${fileIndex + 1} untuk ${row.nama_lengkap || row.nama || 'Row ' + (index + 1)}`);
-                formData.append('nominatif_detail_row_id', detailRowId); // 🔥 Link to specific detail row
+            // 🔥 REMOVED: Manual evidence clear tidak diperlukan
+            // Backend storeWithDetailRow sudah handle create/update evidence secara otomatis
+            console.log(`🔧 Processing evidence for detail row ${detailRowId}`);
 
-                const token = getToken(); // Use the same getToken function as other API calls
-                // 🔥 FIX: Use the correct route for specific detail row evidence upload
+            // Save each evidence (Google Drive links)
+            const uploadPromises = row.evidence_files.map(async (evidence, fileIndex) => {
+              if (evidence.evidence_link) {
+                const evidenceData = {
+                  evidence_link: evidence.evidence_link,
+                  evidence_name: evidence.evidence_name,
+                  keterangan: evidence.keterangan || `Evidence ${fileIndex + 1} untuk ${row.person_name || row.nama_lengkap || row.nama || 'Row ' + (index + 1)}`,
+                  nominatif_detail_row_id: detailRowId,
+                };
+
+                const token = getToken();
                 const evidenceResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/${detailRowId}/evidence`, {
                   method: 'POST',
                   headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                   },
-                  body: formData
+                  body: JSON.stringify(evidenceData)
                 });
 
                 if (!evidenceResponse.ok) {
                   const errorText = await evidenceResponse.text();
-                  console.error(`Evidence upload failed for row ${index}, file ${fileIndex + 1}:`, errorText);
+                  console.error(`Evidence save failed for row ${index}, evidence ${fileIndex + 1}:`, errorText);
                   return null;
                 }
 
                 const result = await evidenceResponse.json();
-                console.log(`✅ Evidence ${fileIndex + 1} uploaded successfully for row ${index}:`, result);
+                console.log(`✅ Evidence ${fileIndex + 1} saved successfully for row ${index}:`, result);
                 return result;
               }
               return null;
             });
 
-            const uploadResults = await Promise.all(uploadPromises);
-            console.log(`📊 All evidence uploads completed for row ${index}:`, uploadResults);
-            return uploadResults.filter(result => result !== null);
+            const saveResults = await Promise.all(uploadPromises);
+            console.log(`📊 All evidence saves completed for row ${index}:`, saveResults);
+            return saveResults.filter(result => result !== null);
           } catch (error) {
             console.error(`Evidence upload error for row ${index}:`, error);
             return [];
@@ -723,14 +773,17 @@ const NominatifPage = () => {
       });
 
   
-      // Execute all evidence uploads in parallel
+      // Execute all evidence saves in parallel
       const evidenceResults = await Promise.all(evidencePromises);
 
-      setSuccess('Data berhasil disimpan!');
+      setSuccess('Data berhasil disimpan! 🔄 Data telah diurutkan berdasarkan nama secara otomatis.');
 
       // Navigate to nominatif list page after successful save (both create and edit modes)
       if (nominatifId) {
-        navigate('/nominatif', { replace: true });
+        // Brief delay to allow user to see the success message with auto-sort notification
+        setTimeout(() => {
+          navigate('/nominatif', { replace: true });
+        }, 1500); // 1.5 second delay
       }
 
     } catch (error) {
@@ -910,6 +963,7 @@ const NominatifPage = () => {
 
         {/* Excel Table */}
         <NominatifExcelTable
+          ref={tableRef}
           rkaDetail={rkaDetail}
           initialData={nominatifData}
           onSave={handleSave}

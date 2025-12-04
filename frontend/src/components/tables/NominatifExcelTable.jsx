@@ -1,14 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, forwardRef } from "react";
 import {
   Plus,
   Trash2,
   Save,
   Send,
   CheckCircle,
-  Upload,
-  Eye,
-  X,
-  Upload as UploadIcon,
 } from "lucide-react";
 
 // Global CSS untuk menghilangkan arrow buttons dari currency inputs
@@ -30,12 +26,12 @@ const globalStyles = `
   }
 `;
 
-const NominatifExcelTable = ({
+const NominatifExcelTable = forwardRef(({
   rkaDetail,
   initialData = [],
   onSave,
   onSubmit,
-}) => {
+}, ref) => {
   const processedInitialData = initialData;
 
   // Removed excessive logging to prevent console spam
@@ -64,6 +60,8 @@ const NominatifExcelTable = ({
   React.useEffect(() => {
     if (processedInitialData.length > 0) {
       console.log("🔄 ProcessedInitialData changed, preserving evidence...");
+      console.log("🔍 DEBUG - First row evidence data:", processedInitialData[0]);
+
       setRows((prevRows) => {
         // Preserve evidence data when updating from initialData
         const newRows = processedInitialData.map((initialRow) => {
@@ -80,10 +78,16 @@ const NominatifExcelTable = ({
             console.log("🔄 Merging row:", {
               id: initialRow.id,
               evidenceCount: existingRow.evidence_files?.length || 0,
+              hasEvidenceFiles: !!mergedRow.evidence_files,
+              firstEvidence: mergedRow.evidence_files?.[0]?.evidence_link || 'NO EVIDENCE'
             });
             return mergedRow;
           }
-          console.log("🔄 New row created:", initialRow.id);
+          console.log("🔄 New row created:", initialRow.id, {
+            hasEvidenceFiles: !!initialRow.evidence_files,
+            evidenceCount: initialRow.evidence_files?.length || 0,
+            firstEvidence: initialRow.evidence_files?.[0]?.evidence_link || 'NO EVIDENCE'
+          });
           return initialRow;
         });
         return newRows;
@@ -118,19 +122,17 @@ const NominatifExcelTable = ({
     return Object.keys(errors).length === 0; // Return true if no errors
   };
 
-  // Add new row
+  // Add new row - always create empty row (fix edit mode bug)
   const addRow = () => {
-    // Find the first row to use as reference
-    const firstRow = rows[0];
+    console.log("➕ Adding new empty row - all fields should be blank");
 
     const newRow = {
       id: Date.now(),
-      // Copy reference fields if we have a reference row
-      nama_lengkap: firstRow ? firstRow.nama_lengkap : "",
-      golongan: firstRow ? firstRow.golongan : "",
-      jabatan: firstRow ? firstRow.jabatan : "",
-      eselon: firstRow ? firstRow.eselon : "",
-      // Other fields are always empty for new rows
+      // All fields should be empty for new rows (both create and edit mode)
+      nama_lengkap: "",
+      golongan: "",
+      jabatan: "",
+      eselon: "",
       asal: "",
       tujuan: "",
       tanggal_pergi: "",
@@ -191,8 +193,26 @@ const NominatifExcelTable = ({
 
     const updatedRows = rows.map((row) => {
       if (row.id === id) {
-        // Always update the target row
-        return { ...row, [field]: value };
+        if (field === 'evidence_link') {
+          // Handle evidence_link field specially
+          const evidenceFiles = value ? [{
+            id: Date.now(),
+            evidence_link: value,
+            evidence_name: value.split('/').pop() || 'Link Google Drive',
+            keterangan: "",
+          }] : [];
+
+          console.log("🔧 Updating evidence_link field:", {
+            id,
+            newLink: value,
+            evidenceFiles
+          });
+
+          return { ...row, evidence_files: evidenceFiles };
+        } else {
+          // Always update the target row for other fields
+          return { ...row, [field]: value };
+        }
       }
       return row;
     });
@@ -259,85 +279,219 @@ const NominatifExcelTable = ({
     }
   };
 
-  // Handle file upload
-  const handleFileUpload = (rowId, file) => {
-    console.log("🔄 File upload triggered:", {
+  // Handle auto evidence input (on paste)
+  const handleAutoEvidenceInput = (rowId, link) => {
+    console.log("🔄 Auto evidence input (paste detected):", {
       rowId,
-      file: file?.name,
-      size: file?.size,
+      link: link,
     });
 
-    if (file) {
-      // Create file URL for preview
-      const fileUrl = URL.createObjectURL(file);
-      const fileSize = (file.size / 1024).toFixed(2) + " KB"; // Convert to KB
+    if (link && isGoogleDriveLink(link)) {
       const fileId = Date.now() + Math.random();
+      const autoName = generateAutoName(link);
 
-      const newFile = {
+      const newEvidence = {
         id: fileId,
-        url: fileUrl,
-        file: file,
-        filename: file.name,
-        filesize: fileSize,
+        evidence_link: link,
+        evidence_name: autoName,
+        keterangan: "",
+        preview_url: generatePreviewUrl(link),
+        thumbnail_url: generateThumbnailUrl(link),
+        document_type: getDocumentType(link),
+        is_google_drive: true,
       };
 
-      console.log("📤 Adding new evidence file:", {
+      console.log("📤 Auto-adding evidence from paste:", {
         rowId,
         fileId,
-        fileName: file.name,
-        fileSize,
+        autoName,
+        documentType: newEvidence.document_type,
       });
 
-      // Set uploading state first
+      // Add new evidence to array immediately
       setRows((prevRows) =>
-        prevRows.map((row) =>
-          row.id === rowId ? { ...row, evidence_uploading: true } : row
-        )
+        prevRows.map((row) => {
+          if (row.id === rowId) {
+            const updatedEvidence = [...(row.evidence_files || []), newEvidence];
+            return {
+              ...row,
+              evidence_files: updatedEvidence,
+              evidence_uploaded: true, // Show success indicator
+            };
+          }
+          return row;
+        })
       );
 
-      // Simulate processing delay for better UX
+      // Clear success indicator after 2 seconds
       setTimeout(() => {
-        // Add new file to evidence_files array
         setRows((prevRows) =>
-          prevRows.map((row) => {
-            if (row.id === rowId) {
-              const updatedFiles = [...(row.evidence_files || []), newFile];
-              return {
-                ...row,
-                evidence_uploading: false,
-                evidence_files: updatedFiles,
-                evidence_uploaded: true,
-              };
-            }
-            return row;
-          })
+          prevRows.map((row) =>
+            row.id === rowId ? { ...row, evidence_uploaded: false } : row
+          )
         );
+      }, 2000);
 
-        console.log("✅ Evidence upload completed for row:", rowId);
+      return true; // Success
+    } else if (link) {
+      console.log("⚠️ Not a Google Drive link, ignoring:", link);
+      return false;
+    }
+    return false;
+  };
 
-        // Clear upload success state after 3 seconds but keep file data
-        setTimeout(() => {
-          setRows((prevRows) => {
-            const currentRow = prevRows.find((r) => r.id === rowId);
-            console.log(
-              "🔄 Evidence count for row:",
-              rowId,
-              currentRow?.evidence_files?.length || 0
-            );
-
-            return prevRows.map((row) =>
-              row.id === rowId ? { ...row, evidence_uploaded: false } : row
-            );
-          });
-          console.log(
-            "🔄 Cleared upload success state but file data preserved"
-          );
-        }, 3000);
-      }, 500); // 500ms delay
-    } else {
-      console.log("❌ No file provided for upload");
+  // Add evidence manually (if needed)
+  const handleAddEvidence = (rowId, link) => {
+    if (link) {
+      handleAutoEvidenceInput(rowId, link);
     }
   };
+
+  // Toggle evidence edit mode
+  const toggleEditMode = (rowId, evidenceId) => {
+    setRows((prevRows) =>
+      prevRows.map((row) => {
+        if (row.id === rowId) {
+          const updatedEvidence = (row.evidence_files || []).map((evidence) =>
+            evidence.id === evidenceId
+              ? { ...evidence, isEditing: true }
+              : evidence
+          );
+          return { ...row, evidence_files: updatedEvidence };
+        }
+        return row;
+      })
+    );
+  };
+
+  // Cancel evidence edit mode
+  const cancelEdit = (rowId, evidenceId) => {
+    setRows((prevRows) =>
+      prevRows.map((row) => {
+        if (row.id === rowId) {
+          const updatedEvidence = (row.evidence_files || []).map((evidence) =>
+            evidence.id === evidenceId
+              ? { ...evidence, isEditing: false }
+              : evidence
+          );
+          return { ...row, evidence_files: updatedEvidence };
+        }
+        return row;
+      })
+    );
+  };
+
+  // Update evidence link
+  const updateEvidenceLink = (rowId, evidenceId, newLink) => {
+    setRows((prevRows) =>
+      prevRows.map((row) => {
+        if (row.id === rowId) {
+          const updatedEvidence = (row.evidence_files || []).map((evidence) =>
+            evidence.id === evidenceId
+              ? {
+                  ...evidence,
+                  evidence_link: newLink,
+                  preview_url: generatePreviewUrl(newLink),
+                  thumbnail_url: generateThumbnailUrl(newLink),
+                  document_type: getDocumentType(newLink),
+                  is_google_drive: isGoogleDriveLink(newLink),
+                  evidence_name: generateAutoName(newLink),
+                }
+              : evidence
+          );
+          return { ...row, evidence_files: updatedEvidence };
+        }
+        return row;
+      })
+    );
+  };
+
+  // Auto-generate evidence name from URL
+  const generateAutoName = (link) => {
+    const docType = getDocumentType(link);
+    const timestamp = new Date().toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    return `${docType} - ${timestamp}`;
+  };
+
+  // Helper functions for Google Drive links
+  const generatePreviewUrl = (link) => {
+    if (isGoogleDriveLink(link)) {
+      const match = link.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
+      }
+    }
+    return link;
+  };
+
+  const generateThumbnailUrl = (link) => {
+    if (isGoogleDriveLink(link)) {
+      const match = link.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200`;
+      }
+    }
+    return null;
+  };
+
+  const getDocumentType = (link) => {
+    if (link.includes('docs.google.com')) {
+      if (link.includes('/document/')) return 'Google Docs';
+      if (link.includes('/spreadsheets/')) return 'Google Sheets';
+      if (link.includes('/presentation/')) return 'Google Slides';
+      if (link.includes('/forms/')) return 'Google Forms';
+    }
+    if (link.includes('drive.google.com')) return 'Google Drive File';
+    return 'Web Link';
+  };
+
+  const isGoogleDriveLink = (link) => {
+    return link.includes('drive.google.com') || link.includes('docs.google.com');
+  };
+
+  // Collect evidence from input fields
+  const collectEvidenceFromInputs = () => {
+    console.log("🔍 COLLECT EVIDENCE - Starting collection...");
+    console.log("📊 Total rows:", rows.length);
+
+    const result = rows.map((row) => {
+      const inputElement = document.getElementById(`evidence-input-${row.id}`);
+      const evidenceLink = inputElement ? inputElement.value.trim() : '';
+
+      console.log(`🔍 Row ${row.id} - Evidence input found:`, !!inputElement);
+      console.log(`🔍 Row ${row.id} - Evidence link value:`, evidenceLink);
+
+      if (evidenceLink) {
+        console.log(`✅ Row ${row.id} - Adding evidence:`, evidenceLink);
+        return {
+          ...row,
+          evidence_files: [{
+            id: 1,
+            evidence_link: evidenceLink,
+            evidence_name: evidenceLink.split('/').pop() || 'Link Google Drive',
+            keterangan: "",
+          }]
+        };
+      } else {
+        console.log(`❌ Row ${row.id} - No evidence found`);
+        return {
+          ...row,
+          evidence_files: []
+        };
+      }
+    });
+
+    console.log("🎯 FINAL EVIDENCE RESULT:", result);
+    return result;
+  };
+
+  // Expose function to parent
+  React.useImperativeHandle(ref, () => ({
+    collectEvidenceFromInputs
+  }));
 
   // Calculate totals
   const totals = React.useMemo(() => {
@@ -541,18 +695,14 @@ const NominatifExcelTable = ({
         console.log("📝 Current Path:", currentPath);
         console.log("📝 Is Create Mode:", isCreateMode);
 
-        console.log("🚫 ALL REDIRECTS DISABLED - Testing Database Update");
-
-        // TIDAK REDIRECT DIMANAPUN MODE (CREATE/EDIT)
-        if (false) { // DISABLED - ganti true untuk enable redirect
-          if (isCreateMode) {
-            console.log("🔄 Create mode detected, redirecting...");
-            setTimeout(() => {
-              window.location.href = "/nominatif"; // Redirect ke halaman awal nominatif
-            }, 1000);
-          } else {
-            console.log("📝 Edit mode detected, staying on current page");
-          }
+        // Redirect to nominatif list after successful save
+        if (isCreateMode) {
+          console.log("🔄 Create mode detected, redirecting...");
+          setTimeout(() => {
+            window.location.href = "/nominatif"; // Redirect ke halaman awal nominatif
+          }, 1000);
+        } else {
+          console.log("📝 Edit mode detected, staying on current page");
         }
       }
     } catch (error) {
@@ -1672,128 +1822,34 @@ const NominatifExcelTable = ({
                   </div>
                 </td>
 
-                {/* Evidence Column - Add background color for consistency */}
+                {/* Evidence Column - Direct Input */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200 bg-purple-50">
-                  {/* Simple Evidence Display */}
-                  <div className="w-full max-w-52">
-                    <div className="mb-1">
-                      {/* Upload Button */}
-                      <label className="cursor-pointer">
+                  {/* Auto Evidence Input Area */}
+                  <div className="w-full max-w-64">
+                    {/* Auto-Processing Input Field */}
+                    <div className="mb-2">
+                      <div className="relative">
                         <input
-                          key={`file-input-${row.id}-${
-                            row.evidence_files?.length || 0
-                          }`}
-                          type="file"
-                          onChange={(e) =>
-                            handleFileUpload(row.id, e.target.files[0])
-                          }
-                          className="hidden"
-                          accept="image/*"
-                          disabled={row.evidence_uploading}
+                          type="text"
+                          placeholder="Masukan Link Google Drive"
+                          className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          id={`evidence-input-${row.id}`}
+                          value={row.evidence_files && row.evidence_files.length > 0 ? row.evidence_files[0].evidence_link : ''}
+                          onChange={(e) => {
+                            const newLink = e.target.value;
+                            console.log(`🔧 EVIDENCE INPUT CHANGE - Row ${row.id}:`, {
+                              newLink,
+                              oldValue: row.evidence_files?.[0]?.evidence_link || ''
+                            });
+
+                            // Update row state with new evidence link
+                            updateRow(row.id, 'evidence_link', newLink);
+                          }}
                         />
-                        <div
-                          className={`w-full px-2 py-1 border-2 border-dashed rounded-md flex items-center justify-center transition-colors text-xs ${
-                            row.evidence_uploading
-                              ? "border-gray-400 bg-gray-100 cursor-not-allowed"
-                              : "border-purple-300 hover:border-purple-500"
-                          }`}
-                        >
-                          {row.evidence_uploading ? (
-                            <RefreshCw className="w-4 h-4 text-gray-500 animate-spin mr-1" />
-                          ) : (
-                            <Upload className="w-4 h-4 text-purple-500 mr-1" />
-                          )}
-                          <span className="text-gray-600">
-                            {row.evidence_uploading
-                              ? "Uploading..."
-                              : "Upload Evidence"}
-                          </span>
-                        </div>
-                      </label>
-                    </div>
-
-                    {/* Multiple Files List */}
-                    {row.evidence_files && row.evidence_files.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        <div className="text-xs text-gray-600 font-medium mb-1">
-                          📎 Evidence Files ({row.evidence_files.length})
-                        </div>
-                        {row.evidence_files.map((file, index) => (
-                          <div
-                            key={file.id}
-                            className="bg-white border border-gray-200 rounded p-2"
-                          >
-                            <div className="flex items-center justify-between text-xs">
-                              <div className="flex-1 min-w-0">
-                                <div
-                                  className="truncate text-gray-700 font-medium"
-                                  title={file.filename}
-                                >
-                                  📄 {file.filename}
-                                </div>
-                                <div className="text-gray-500">
-                                  📏 {file.filesize}
-                                </div>
-                              </div>
-                              <div className="flex space-x-1 ml-2">
-                                <button
-                                  className="text-blue-500 hover:text-blue-700 p-1"
-                                  title="View file"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (file.url) {
-                                      window.open(file.url, "_blank");
-                                    }
-                                  }}
-                                >
-                                  <Eye className="w-3 h-3" />
-                                </button>
-                                <button
-                                  className="text-red-500 hover:text-red-700 p-1"
-                                  title="Remove file"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    console.log(
-                                      "🗑️ Removing specific evidence file:",
-                                      file.id
-                                    );
-
-                                    // Remove specific file from array
-                                    setRows((prevRows) =>
-                                      prevRows.map((r) =>
-                                        r.id === row.id
-                                          ? {
-                                              ...r,
-                                              evidence_files:
-                                                r.evidence_files.filter(
-                                                  (f) => f.id !== file.id
-                                                ),
-                                            }
-                                          : r
-                                      )
-                                    );
-
-                                    console.log(
-                                      "✅ Evidence file removed:",
-                                      file.id
-                                    );
-                                  }}
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                                              </div>
                       </div>
-                    )}
 
-                    {row.evidence_uploaded && (
-                      <div className="mt-1 text-xs text-green-600 font-medium">
-                        ✅ File uploaded!
-                      </div>
-                    )}
-                  </div>
+                                        </div>
                 </td>
               </tr>
             ))}
@@ -1833,6 +1889,8 @@ const NominatifExcelTable = ({
       </div>
     </div>
   );
-};
+});
+
+NominatifExcelTable.displayName = 'NominatifExcelTable';
 
 export default NominatifExcelTable;
