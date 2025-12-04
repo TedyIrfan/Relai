@@ -206,6 +206,8 @@ class NominatifDetailRowController extends Controller
     public function update(Request $request, $rowId)
     {
         $request->validate([
+            'rows' => 'sometimes|array',
+            'rows.*.id' => 'sometimes|exists:nominatif_detail_rows,id',
             'person_name' => 'sometimes|string|max:255',
             'asal' => 'sometimes|string|max:100',
             'tujuan' => 'sometimes|string|max:100',
@@ -243,30 +245,95 @@ class NominatifDetailRowController extends Controller
                 'currentData' => $detailRow->toArray()
             ]);
 
-            // Update only fillable fields
-            $updateData = $request->only($detailRow->getFillable());
-            \Log::info('Update data to be saved:', ['updateData' => $updateData]);
+            // Check if this is bulk data structure
+            if ($request->has('rows') && is_array($request->rows)) {
+                \Log::info('🔄 Bulk data structure detected, processing all rows');
 
-            $result = $detailRow->update($updateData);
+                $updatedRows = [];
+                foreach ($request->rows as $rowData) {
+                    $targetDetailRow = NominatifDetailRow::where('id', $rowData['id'])->first();
 
-            \Log::info('Update result:', [
-                'result' => $result,
-                'updatedData' => $detailRow->fresh()->toArray()
-            ]);
+                    if ($targetDetailRow) {
+                        \Log::info("Found target row data in bulk structure:", [
+                            'targetRowData' => $rowData
+                        ]);
 
-            // Auto-sort rows by person_name after update
-            $this->autoSortByName($detailRow->nominatif_id);
+                        // Create update data with only fillable fields
+                        $updateData = [];
+                        foreach ($targetDetailRow->getFillable() as $field) {
+                            if (isset($rowData[$field])) {
+                                $updateData[$field] = $rowData[$field];
+                            }
+                        }
 
-            // Update nominatif totals
-            $this->updateNominatifTotals($detailRow->nominatif_id);
+                        \Log::info("Update data to be saved:", [
+                            'updateData' => $updateData
+                        ]);
 
-            DB::commit();
+                        $updateResult = $targetDetailRow->update($updateData);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Detail row updated successfully',
-                'data' => $detailRow->load(['biayaRow', 'evidence'])
-            ]);
+                        \Log::info("Update result:", [
+                            'result' => $updateResult,
+                            'updatedData' => $targetDetailRow->fresh()->toArray()
+                        ]);
+
+                        $updatedRows[] = $targetDetailRow->fresh();
+                    }
+                }
+
+                // Update evidence descriptions if person_name changed (sebelum commit!)
+                $this->updateEvidenceDescriptions($updatedRows);
+
+                // Auto-sort rows by person_name after update
+                $this->autoSortByName($detailRow->nominatif_id);
+
+                // Update nominatif totals
+                $this->updateNominatifTotals($detailRow->nominatif_id);
+
+                DB::commit();
+
+                // Get final sorted rows
+                $finalRows = NominatifDetailRow::where('nominatif_id', $detailRow->nominatif_id)
+                    ->orderBy('row_order')
+                    ->with(['biayaRow', 'evidence'])
+                    ->get();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'All detail rows updated successfully',
+                    'data' => $finalRows
+                ]);
+            } else {
+                // Single row update (legacy behavior)
+                $updateData = $request->only($detailRow->getFillable());
+                \Log::info('Update data to be saved:', ['updateData' => $updateData]);
+
+                $result = $detailRow->update($updateData);
+
+                \Log::info('Update result:', [
+                    'result' => $result,
+                    'updatedData' => $detailRow->fresh()->toArray()
+                ]);
+
+                // Update evidence descriptions if person_name changed (sebelum commit!)
+                if (isset($updateData['person_name'])) {
+                    $this->updateEvidenceDescriptions([$detailRow->fresh()]);
+                }
+
+                // Auto-sort rows by person_name after update
+                $this->autoSortByName($detailRow->nominatif_id);
+
+                // Update nominatif totals
+                $this->updateNominatifTotals($detailRow->nominatif_id);
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Detail row updated successfully',
+                    'data' => $detailRow->load(['biayaRow', 'evidence'])
+                ]);
+            }
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -561,6 +628,36 @@ class NominatifDetailRowController extends Controller
     }
 
     /**
+     * Update evidence descriptions when person_name changes
+     */
+    private function updateEvidenceDescriptions($updatedRows)
+    {
+        foreach ($updatedRows as $row) {
+            $evidence = $row->evidence()->first();
+            if ($evidence) {
+                // Extract the evidence number from existing description
+                $evidenceNumber = '1';
+                if (preg_match('/Evidence (\d+) untuk /', $evidence->keterangan, $matches)) {
+                    $evidenceNumber = $matches[1];
+                }
+
+                // Update description with new person_name
+                $newDescription = "Evidence {$evidenceNumber} untuk {$row->person_name}";
+
+                \Log::info("🔄 Updating evidence description", [
+                    'row_id' => $row->id,
+                    'evidence_id' => $evidence->id,
+                    'old_description' => $evidence->keterangan,
+                    'new_description' => $newDescription,
+                    'person_name' => $row->person_name
+                ]);
+
+                $evidence->update(['keterangan' => $newDescription]);
+            }
+        }
+    }
+
+    /**
      * Validate detail row data
      */
     public function validate(Request $request)
@@ -591,10 +688,35 @@ class NominatifDetailRowController extends Controller
         $totalPagu = 0;
         $totalAktual = 0;
 
-        foreach ($detailRows as $row) {
-            $totalPagu += $row->biayaRow?->total_pagu_row ?? 0;
-            $totalAktual += $row->biayaRow?->total_aktual_row ?? 0;
+        \Log::info("💰 Calculating totals for nominatif {$nominatifId}", [
+            'detail_rows_count' => $detailRows->count(),
+            'rows_with_biaya' => $detailRows->whereNotNull('biayaRow')->count()
+        ]);
+
+        foreach ($detailRows as $index => $row) {
+            $rowPagu = $row->biayaRow?->total_pagu_row ?? 0;
+            $rowAktual = $row->biayaRow?->total_aktual_row ?? 0;
+
+            \Log::info("📊 Row {$index} calculation", [
+                'row_id' => $row->id,
+                'person_name' => $row->person_name,
+                'row_pagu' => $rowPagu,
+                'row_aktual' => $rowAktual,
+                'running_total_pagu' => $totalPagu + $rowPagu,
+                'running_total_aktual' => $totalAktual + $rowAktual
+            ]);
+
+            $totalPagu += $rowPagu;
+            $totalAktual += $rowAktual;
         }
+
+        \Log::info("💰 Final totals to be saved", [
+            'nominatif_id' => $nominatifId,
+            'total_pagu' => $totalPagu,
+            'total_aktual' => $totalAktual,
+            'expected_pagu' => 3 * 200000, // 3 rows × 200k
+            'expected_aktual' => 3 * 100000  // 3 rows × 100k
+        ]);
 
         $nominatif->update([
             'total_pagu' => $totalPagu,

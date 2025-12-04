@@ -351,8 +351,14 @@ class NominatifEvidenceController extends Controller
                 ];
             }
 
-            // Create evidence record
-            $evidence = NominatifEvidence::create($evidenceData);
+            // Create or update evidence record (prevent duplicates)
+            $evidence = NominatifEvidence::updateOrCreate(
+                [
+                    'nominatif_id' => $nominatifId,
+                    'nominatif_detail_row_id' => $detailRowId
+                ],
+                $evidenceData
+            );
 
             DB::commit();
 

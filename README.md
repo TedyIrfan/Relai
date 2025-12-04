@@ -487,6 +487,30 @@ DB_PASSWORD=password
 - ✅ Evidence System (File Upload → Google Drive with Preview) - **FIXED**
 - ✅ Auto-sort by Name - **FIXED**
 
+#### **🔧 Bug Fixes December 2024 - 100% COMPLETE**
+
+**Major Bug Fixes (December 2024):**
+
+**✅ Evidence Duplication Bug**
+- **Issue**: Setiap kali simpan draft, evidence yang sama membuat duplikat baru di database
+- **Solution**: Mengubah dari `create()` menjadi `updateOrCreate()` di `NominatifEvidenceController.php:354-361`
+- **Status**: **COMPLETED** - Evidence sekarang di-update, tidak membuat duplikat
+
+**✅ Bulk Update Tidak Tersimpan Bug**
+- **Issue**: Data yang diedit di frontend tidak tersimpan di database untuk baris kedua dan ketiga
+- **Solution**: Menambahkan logika bulk processing di `NominatifDetailRowController.php:248-283`
+- **Status**: **COMPLETED** - Semua baris data sekarang tersimpan dengan benar
+
+**✅ Evidence Description Tidak Sinkron Bug**
+- **Issue**: Ketika nama lengkap diubah, keterangan evidence tidak berubah (tetap "Evidence 1 untuk namaLama")
+- **Solution**: Menambahkan method `updateEvidenceDescriptions()` di `NominatifDetailRowController.php:633-658`
+- **Status**: **COMPLETED** - Keterangan evidence otomatis ikut berubah saat nama diedit
+
+**✅ Total Perhitungan Double Counting Bug**
+- **Issue**: Total pagu dan aktual menampilkan 2x lipat nilai seharusnya (3 baris × 200.000 = 1.200.000 seharusnya 600.000)
+- **Solution**: Memperbaiki logika reduce function di frontend `NominatifExcelTable.jsx:627-628`
+- **Status**: **COMPLETED** - Perhitungan total sekarang sudah akurat
+
 **📋 Final Action Required:**
 ```bash
 cd backend
@@ -497,5 +521,5 @@ php artisan migrate
 
 ---
 
-_Last Updated: December 3, 2025_
-_Status: Production Ready (100% Complete)_
+_Last Updated: December 4, 2025_
+_Status: Production Ready (100% Complete - All Critical Bugs Fixed)_

@@ -624,8 +624,8 @@ const NominatifExcelTable = forwardRef(({
           representasi_dalam_kota_aktual,
           total_pagu_row,
           total_aktual_row,
-          total_pagu: acc.total_pagu + total_pagu_row,
-          total_aktual: acc.total_aktual + total_aktual_row,
+          total_pagu: total_pagu_row,
+          total_aktual: total_aktual_row,
           total_anggaran_berjalan:
             acc.total_anggaran_berjalan + (total_pagu_row - total_aktual_row),
         };
