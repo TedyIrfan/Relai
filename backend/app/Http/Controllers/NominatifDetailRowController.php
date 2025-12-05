@@ -677,7 +677,7 @@ class NominatifDetailRowController extends Controller
     }
 
     /**
-     * Update nominatif totals
+     * Update nominatif totals and RKA budget
      */
     private function updateNominatifTotals($nominatifId)
     {
@@ -718,9 +718,45 @@ class NominatifDetailRowController extends Controller
             'expected_aktual' => 3 * 100000  // 3 rows × 100k
         ]);
 
+        // Get old values for budget calculation
+        $oldAktual = $nominatif->total_aktual_trip ?? 0;
+
         $nominatif->update([
             'total_pagu' => $totalPagu,
             'total_biaya_aktual' => $totalAktual,
+            'total_pagu_trip' => $totalPagu,
+            'total_aktual_trip' => $totalAktual,
+            'total_anggaran_berjalan_trip' => $totalPagu - $totalAktual,
+        ]);
+
+        // 🎯 FIX: Update RKA budget when nominatif is saved
+        $this->updateRKABudget($nominatif, $totalAktual, $oldAktual);
+    }
+
+    /**
+     * Update RKA budget when nominatif detail rows are saved
+     */
+    private function updateRKABudget($nominatif, $newAktual, $oldAktual)
+    {
+        $rkaDetail = $nominatif->rkaDetail;
+
+        // 🎯 NOMINATIF LOGIC:
+        // Anggaran Berjalan = Total PAGU yang diinput user (dari nominatif.total_pagu_trip)
+        // Anggaran Layanan Used = Total AKTUAL yang dipakai user (dari nominatif.total_aktual_trip)
+        $rkaDetail->update([
+            'anggaran_berjalan' => $nominatif->total_pagu_trip,     // Total pagu yang diinput
+            'anggaran_layanan_used' => $nominatif->total_aktual_trip, // Total aktual yang dipakai
+        ]);
+
+        \Log::info('RKA Budget updated - From Nominatif', [
+            'nominatif_id' => $nominatif->id,
+            'rka_code' => $rkaDetail->code_rka,
+            'nominatif_total_pagu_trip' => $nominatif->total_pagu_trip,
+            'nominatif_total_aktual_trip' => $nominatif->total_aktual_trip,
+            'rka_anggaran_berjalan_set' => $nominatif->total_pagu_trip,
+            'rka_anggaran_layanan_used_set' => $nominatif->total_aktual_trip,
+            'rka_anggaran_sp2d' => $rkaDetail->anggaran_sp2d,
+            'rka_anggaran_tersisa' => $rkaDetail->anggaran_layanan - $nominatif->total_pagu_trip - $rkaDetail->anggaran_sp2d,
         ]);
     }
 

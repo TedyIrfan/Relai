@@ -246,6 +246,8 @@ class NominatifNewController extends Controller
                 'total_anggaran_berjalan_trip' => $rkaDetail->anggaran_berjalan,
             ]);
 
+            // 🎯 NOTE: Budget reduction will happen when detail rows are saved via recalculateTotals() method
+
             DB::commit();
 
             return response()->json([
@@ -444,7 +446,7 @@ class NominatifNewController extends Controller
         }
 
         // Check if can delete - only allow delete for draft and rejected
-        $lockedStatuses = ['submitted', 'approved'];
+        $lockedStatuses = ['submitted']; // 🎯 REMOVED: approved status
         if (in_array($nominatif->status, $lockedStatuses)) {
             return response()->json([
                 'success' => false,
@@ -470,11 +472,19 @@ class NominatifNewController extends Controller
 
         DB::beginTransaction();
         try {
-            // If this was a draft, return the anggaran to anggaran_berjalan
+            // 🎯 CORRECT: Delete draft - kembalikan anggaran_berjalan
             if ($totalAktualTrip > 0) {
                 $rkaDetail->update([
-                    'anggaran_berjalan' => $rkaDetail->anggaran_berjalan + $totalAktualTrip,
-                    'anggaran_layanan_used' => $rkaDetail->anggaran_layanan_used - $totalAktualTrip,
+                    'anggaran_berjalan' => $rkaDetail->anggaran_berjalan - $totalAktualTrip,    // Kurangi aktual
+                    'anggaran_layanan_used' => $rkaDetail->anggaran_layanan_used - $totalAktualTrip, // Kurangi tracking
+                ]);
+
+                \Log::info('Budget returned to RKA after draft deletion', [
+                    'nominatif_id' => $id,
+                    'total_aktual_returned' => $totalAktualTrip,
+                    'rka_anggaran_berjalan_after' => $rkaDetail->anggaran_berjalan,
+                    'rka_anggaran_sp2d' => $rkaDetail->anggaran_sp2d,
+                    'rka_anggaran_tersisa' => $rkaDetail->anggaran_layanan - $rkaDetail->anggaran_berjalan - $rkaDetail->anggaran_sp2d,
                 ]);
             }
 
@@ -487,7 +497,7 @@ class NominatifNewController extends Controller
                 'message' => 'Nominatif deleted successfully',
                 'anggaran_returned' => [
                     'total_aktual_returned' => $totalAktualTrip,
-                    'rka_anggaran_berjalan' => $rkaDetail->anggaran_berjalan,
+                    'rka_anggaran_berjalan_after' => $rkaDetail->anggaran_berjalan,
                 ]
             ]);
 
@@ -542,11 +552,15 @@ class NominatifNewController extends Controller
 
         DB::beginTransaction();
         try {
-            // Update RKA anggaran - move from anggaran_berjalan to anggaran_sp2d
+            // 🎯 CORRECT: Submit - pindahkan dari anggaran_berjalan ke SP2D
+            // anggaran_berjalan BERKURANG, anggaran_sp2d BERTAMBAH
+
+            // Update RKA anggaran - move from anggaran_berjalan to SP2D
+            // Gunakan total_aktual untuk SP2D (uang yang benar-benar dipakai)
             $rkaDetail->update([
-                'anggaran_berjalan' => $rkaDetail->anggaran_berjalan + $totalAktualTrip,
-                'anggaran_sp2d' => $rkaDetail->anggaran_sp2d - $totalAktualTrip,
-                'anggaran_layanan_used' => $rkaDetail->anggaran_layanan_used + $totalAktualTrip,
+                'anggaran_berjalan' => $rkaDetail->anggaran_berjalan - $totalAktualTrip, // Kurangi aktual yang dipakai
+                'anggaran_sp2d' => $rkaDetail->anggaran_sp2d + $totalAktualTrip,      // Pindah ke SP2D
+                // anggaran_layanan_used TIDAK berubah (tetap tracking)
             ]);
 
             // Update nominatif status
@@ -566,6 +580,7 @@ class NominatifNewController extends Controller
                     'total_aktual_trip' => $totalAktualTrip,
                     'rka_anggaran_berjalan' => $rkaDetail->anggaran_berjalan,
                     'rka_anggaran_sp2d' => $rkaDetail->anggaran_sp2d,
+                    'rka_anggaran_tersisa' => $rkaDetail->anggaran_layanan - $rkaDetail->anggaran_berjalan - $rkaDetail->anggaran_sp2d,
                 ]
             ]);
 
@@ -667,7 +682,7 @@ class NominatifNewController extends Controller
     }
 
     /**
-     * Recalculate totals for a nominatif
+     * Recalculate totals for a nominatif and update RKA budget
      */
     private function recalculateTotals($nominatif)
     {
@@ -689,6 +704,24 @@ class NominatifNewController extends Controller
             'total_pagu_trip' => $totalPagu,
             'total_aktual_trip' => $totalAktual,
             'total_anggaran_berjalan_trip' => $totalAnggaranBerjalan,
+        ]);
+
+        // 🎯 NEW: Update RKA budget when saving draft
+        $this->updateRKABudget($nominatif, $totalAktual);
+    }
+
+    /**
+     * Update RKA budget when nominatif is created/updated (draft mode)
+     */
+    private function updateRKABudget($nominatif, $totalAktual)
+    {
+        $rkaDetail = $nominatif->rkaDetail;
+
+        // 🎯 NOMINATIF LOGIC:
+        // Ambil dari nominatif setelah update
+        $rkaDetail->update([
+            'anggaran_berjalan' => $nominatif->total_pagu_trip,     // Total pagu yang diinput
+            'anggaran_layanan_used' => $nominatif->total_aktual_trip, // Total aktual yang dipakai
         ]);
     }
 }

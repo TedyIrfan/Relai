@@ -1063,12 +1063,63 @@ class NominatifBiayaRowController extends Controller
             ->where('dr.nominatif_id', $nominatifId)
             ->sum('br.total_aktual_row');
 
+        // Get old aktual for budget calculation
+        $oldAktual = $nominatif->total_aktual_trip ?? 0;
+
         DB::table('nominatifs_new')
             ->where('id', $nominatifId)
             ->update([
                 'total_pagu' => $totalPagu,
                 'total_biaya_aktual' => $totalAktual,
+                'total_pagu_trip' => $totalPagu,
+                'total_aktual_trip' => $totalAktual,
+                'total_anggaran_berjalan_trip' => $totalPagu - $totalAktual,
             ]);
+
+        // 🎯 FIX: Update RKA budget when biaya rows are updated
+        $this->updateRKABudget($nominatifId, $totalAktual, $oldAktual);
+    }
+
+    /**
+     * Update RKA budget when nominatif biaya rows are updated
+     */
+    private function updateRKABudget($nominatifId, $newAktual, $oldAktual)
+    {
+        // 🎯 FIX: Get the LATEST totals from database, not from stale nominatif object
+        $totalPagu = DB::table('nominatif_detail_rows as dr')
+            ->join('nominatif_biaya_rows as br', 'dr.id', '=', 'br.nominatif_detail_row_id')
+            ->where('dr.nominatif_id', $nominatifId)
+            ->sum('br.total_pagu_row');
+
+        // Get nominatif with RKA detail
+        $nominatif = DB::table('nominatifs_new as nn')
+            ->join('rka_details as rd', 'nn.rka_detail_id', '=', 'rd.id')
+            ->where('nn.id', $nominatifId)
+            ->select('nn.*', 'rd.code_rka', 'rd.anggaran_layanan', 'rd.anggaran_sp2d')
+            ->first();
+
+        if ($nominatif) {
+            // 🎯 NOMINATIF LOGIC:
+            // Anggaran Berjalan = Total PAGU yang diinput user (real-time calculation)
+            // Anggaran Layanan Used = Total AKTUAL yang dipakai user (real-time calculation)
+            DB::table('rka_details')
+                ->where('id', $nominatif->rka_detail_id)
+                ->update([
+                    'anggaran_berjalan' => $newAktual ? $totalPagu : 0,     // Total pagu yang diinput (real-time)
+                    'anggaran_layanan_used' => $newAktual,                 // Total aktual yang dipakai
+                ]);
+
+            \Log::info('RKA Budget updated - From Biaya Row (FIXED)', [
+                'nominatif_id' => $nominatifId,
+                'rka_code' => $nominatif->code_rka,
+                'real_time_total_pagu' => $totalPagu,
+                'total_aktual_trip' => $newAktual,
+                'rka_anggaran_berjalan_set' => $newAktual ? $totalPagu : 0,
+                'rka_anggaran_layanan_used_set' => $newAktual,
+                'rka_anggaran_sp2d' => $nominatif->anggaran_sp2d,
+                'rka_anggaran_tersisa' => ($nominatif->anggaran_layanan ?? 0) - $totalPagu - ($nominatif->anggaran_sp2d ?? 0),
+            ]);
+        }
     }
 
     /**
