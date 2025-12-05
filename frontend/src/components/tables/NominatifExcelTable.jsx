@@ -794,7 +794,7 @@ const NominatifExcelTable = forwardRef(
           <div className="flex items-center space-x-3">
             <button
               onClick={() => addRow()}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
+              className="px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
             >
               <Plus className="w-4 h-4" />
               <span className="font-medium">Tambah Row</span>
@@ -805,7 +805,7 @@ const NominatifExcelTable = forwardRef(
             <button
               onClick={saveDraft}
               disabled={loading || saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? "Menyimpan..." : "Simpan Draft"}</span>
@@ -813,7 +813,7 @@ const NominatifExcelTable = forwardRef(
             <button
               onClick={submitNominatif}
               disabled={loading || submitting}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-white border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle className="w-4 h-4" />
               <span>{submitting ? "Mengirim..." : "Submit"}</span>
@@ -857,37 +857,37 @@ const NominatifExcelTable = forwardRef(
                 </th>
                 <th
                   className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="6"
+                  colSpan="4"
                 >
                   Transportasi
                 </th>
                 <th
                   className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="4"
+                  colSpan="3"
                 >
                   Penginapan
                 </th>
                 <th
                   className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="8"
+                  colSpan="6"
                 >
                   Uang Harian Meeting
                 </th>
                 <th
                   className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="8"
+                  colSpan="6"
                 >
                   Uang Harian
                 </th>
                 <th
                   className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="8"
+                  colSpan="6"
                 >
                   Uang Representasi
                 </th>
                 <th
                   className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50"
-                  colSpan="5"
+                  colSpan="1"
                 >
                   Evidence
                 </th>
@@ -895,7 +895,7 @@ const NominatifExcelTable = forwardRef(
               {/* Subcategories Row */}
               <tr className="bg-gray-100 border-b border-gray-300">
                 <td
-                  colSpan="10"
+                  colSpan="9"
                   className="px-4 py-2 border-r border-gray-200"
                 ></td>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
@@ -905,16 +905,10 @@ const NominatifExcelTable = forwardRef(
                   Aktual Tiket Pesawat NON PP
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Total
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Pagu Taksi
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Aktual Taksi
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Total
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Jumlah Malam
@@ -925,8 +919,15 @@ const NominatifExcelTable = forwardRef(
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Aktual/Hari
                 </th>
+
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Total
+                  Jumlah Hari
+                </th>
+                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                  Pagu/Hari
+                </th>
+                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                  Aktual/Hari
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Jumlah Hari
@@ -938,7 +939,13 @@ const NominatifExcelTable = forwardRef(
                   Aktual/Hari
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Total
+                  Jumlah Hari
+                </th>
+                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                  Pagu/Hari
+                </th>
+                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                  Aktual/Hari
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Jumlah Hari
@@ -950,9 +957,6 @@ const NominatifExcelTable = forwardRef(
                   Aktual/Hari
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Total
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Jumlah Hari
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
@@ -962,9 +966,6 @@ const NominatifExcelTable = forwardRef(
                   Aktual/Hari
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Total
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Jumlah Hari
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
@@ -972,33 +973,6 @@ const NominatifExcelTable = forwardRef(
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Aktual/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Total
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Jumlah Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Total
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Jumlah Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Total
                 </th>
                 <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
                   Eviden
@@ -1012,49 +986,49 @@ const NominatifExcelTable = forwardRef(
                 ></td>
                 <th
                   className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="6"
+                  colSpan="5"
                 ></th>
                 <th
                   className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="4"
+                  colSpan="1"
                 ></th>
                 <th
-                  className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="4"
+                  className="pl-1 pr-3 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
+                  colSpan="3"
                 >
                   Meeting Fullboard
                 </th>
                 <th
                   className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="4"
+                  colSpan="3"
                 >
                   Meeting Fullday
                 </th>
                 <th
                   className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="4"
+                  colSpan="3"
                 >
                   Luar Kota
                 </th>
                 <th
                   className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="4"
+                  colSpan="3"
                 >
                   Dalam Kota
                 </th>
                 <th
                   className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="4"
+                  colSpan="3"
                 >
                   Representasi Luar Kota
                 </th>
                 <th
                   className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="4"
+                  colSpan="3"
                 >
                   Representasi Dalam Kota
                 </th>
-                <th className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200 bg-purple-100">
+                <th className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200 bg-gray-100">
                   EVIDENCE
                 </th>
               </tr>
@@ -1240,15 +1214,6 @@ const NominatifExcelTable = forwardRef(
                       placeholder="Rp 0"
                     />
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
-                    <div className="text-right font-medium text-gray-700">
-                      Rp{" "}
-                      {(
-                        (parseFloat(row.transport_pesawat_non_pp_pagu) || 0) -
-                        (parseFloat(row.transport_pesawat_non_pp_aktual) || 0)
-                      ).toLocaleString("id-ID")}
-                    </div>
-                  </td>
 
                   {/* Transportasi - Taksi */}
                   <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1296,15 +1261,6 @@ const NominatifExcelTable = forwardRef(
                       className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                       placeholder="Rp 0"
                     />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200 bg-gray-50">
-                    <div className="text-right font-medium text-gray-700">
-                      Rp{" "}
-                      {(
-                        (parseFloat(row.transport_taksi_pagu) || 0) -
-                        (parseFloat(row.transport_taksi_aktual) || 0)
-                      ).toLocaleString("id-ID")}
-                    </div>
                   </td>
 
                   {/* Penginapan */}
@@ -1366,18 +1322,7 @@ const NominatifExcelTable = forwardRef(
                       placeholder="Rp 0"
                     />
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-right border-r border-gray-200 bg-gray-50">
-                    <div className="text-right font-medium text-gray-700">
-                      Rp{" "}
-                      {(
-                        (parseFloat(row.penginapan_jumlah_malam) || 0) *
-                          (parseFloat(row.penginapan_pagu_perhari) || 0) -
-                        (parseFloat(row.penginapan_jumlah_malam) || 0) *
-                          (parseFloat(row.penginapan_aktual_perhari) || 0)
-                      ).toLocaleString("id-ID")}
-                    </div>
-                  </td>
-
+      
                   {/* Uang Harian Fullboard */}
                   <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                     <input
@@ -1441,25 +1386,7 @@ const NominatifExcelTable = forwardRef(
                       placeholder="Rp 0"
                     />
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-right border-r border-gray-200 bg-gray-50">
-                    <div className="text-right font-medium text-gray-700">
-                      Rp{" "}
-                      {(
-                        (parseFloat(
-                          row.uang_harian_meeting_fullboard_jumlah_hari
-                        ) || 0) *
-                          (parseFloat(
-                            row.uang_harian_meeting_fullboard_pagu_perhari
-                          ) || 0) -
-                        (parseFloat(
-                          row.uang_harian_meeting_fullboard_jumlah_hari
-                        ) || 0) *
-                          (parseFloat(
-                            row.uang_harian_meeting_fullboard_aktual_perhari
-                          ) || 0)
-                      ).toLocaleString("id-ID")}
-                    </div>
-                  </td>
+                
 
                   {/* Uang Harian Meeting Fullday */}
                   <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1521,25 +1448,7 @@ const NominatifExcelTable = forwardRef(
                       placeholder="Rp 0"
                     />
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-right border-r border-gray-200 bg-gray-50">
-                    <div className="text-right font-medium text-gray-700">
-                      Rp{" "}
-                      {(
-                        (parseFloat(
-                          row.uang_harian_meeting_fullday_jumlah_hari
-                        ) || 0) *
-                          (parseFloat(
-                            row.uang_harian_meeting_fullday_pagu_perhari
-                          ) || 0) -
-                        (parseFloat(
-                          row.uang_harian_meeting_fullday_jumlah_hari
-                        ) || 0) *
-                          (parseFloat(
-                            row.uang_harian_meeting_fullday_aktual_perhari
-                          ) || 0)
-                      ).toLocaleString("id-ID")}
-                    </div>
-                  </td>
+                  
 
                   {/* Uang Harian Luar Kota */}
                   <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1600,22 +1509,7 @@ const NominatifExcelTable = forwardRef(
                       placeholder="Rp 0"
                     />
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-right border-r border-gray-200 bg-gray-50">
-                    <div className="text-right font-medium text-gray-700">
-                      Rp{" "}
-                      {(
-                        (parseFloat(row.uang_harian_luar_kota_jumlah_hari) ||
-                          0) *
-                          (parseFloat(row.uang_harian_luar_kota_pagu_perhari) ||
-                            0) -
-                        (parseFloat(row.uang_harian_luar_kota_jumlah_hari) ||
-                          0) *
-                          (parseFloat(
-                            row.uang_harian_luar_kota_aktual_perhari
-                          ) || 0)
-                      ).toLocaleString("id-ID")}
-                    </div>
-                  </td>
+                  
 
                   {/* Uang Harian Dalam Kota */}
                   <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1676,23 +1570,7 @@ const NominatifExcelTable = forwardRef(
                       placeholder="Rp 0"
                     />
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-right border-r border-gray-200 bg-gray-50">
-                    <div className="text-right font-medium text-gray-700">
-                      Rp{" "}
-                      {(
-                        (parseFloat(row.uang_harian_dalam_kota_jumlah_hari) ||
-                          0) *
-                          (parseFloat(
-                            row.uang_harian_dalam_kota_pagu_perhari
-                          ) || 0) -
-                        (parseFloat(row.uang_harian_dalam_kota_jumlah_hari) ||
-                          0) *
-                          (parseFloat(
-                            row.uang_harian_dalam_kota_aktual_perhari
-                          ) || 0)
-                      ).toLocaleString("id-ID")}
-                    </div>
-                  </td>
+                  
 
                   {/* Representasi Luar Kota */}
                   <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1753,24 +1631,7 @@ const NominatifExcelTable = forwardRef(
                       placeholder="Rp 0"
                     />
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-right border-r border-gray-200 bg-gray-50">
-                    <div className="text-right font-medium text-gray-700">
-                      Rp{" "}
-                      {(
-                        (parseFloat(row.representasi_luar_kota_jumlah_hari) ||
-                          0) *
-                          (parseFloat(
-                            row.representasi_luar_kota_pagu_perhari
-                          ) || 0) -
-                        (parseFloat(row.representasi_luar_kota_jumlah_hari) ||
-                          0) *
-                          (parseFloat(
-                            row.representasi_luar_kota_aktual_perhari
-                          ) || 0)
-                      ).toLocaleString("id-ID")}
-                    </div>
-                  </td>
-
+                  
                   {/* Representasi Dalam Kota */}
                   <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                     <input
@@ -1830,26 +1691,10 @@ const NominatifExcelTable = forwardRef(
                       placeholder="Rp 0"
                     />
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-right border-r border-gray-200 bg-gray-50">
-                    <div className="text-right font-medium text-gray-700">
-                      Rp{" "}
-                      {(
-                        (parseFloat(row.representasi_dalam_kota_jumlah_hari) ||
-                          0) *
-                          (parseFloat(
-                            row.representasi_dalam_kota_pagu_perhari
-                          ) || 0) -
-                        (parseFloat(row.representasi_dalam_kota_jumlah_hari) ||
-                          0) *
-                          (parseFloat(
-                            row.representasi_dalam_kota_aktual_perhari
-                          ) || 0)
-                      ).toLocaleString("id-ID")}
-                    </div>
-                  </td>
+                  
 
                   {/* Evidence Column - Direct Input */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200 bg-purple-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200 bg-white-50">
                     {/* Auto Evidence Input Area */}
                     <div className="w-full max-w-64">
                       {/* Auto-Processing Input Field */}
@@ -1858,7 +1703,7 @@ const NominatifExcelTable = forwardRef(
                           <input
                             type="text"
                             placeholder="Masukan Link Google Drive"
-                            className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                             id={`evidence-input-${row.id}`}
                             value={
                               row.evidence_files &&

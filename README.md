@@ -66,14 +66,15 @@ relai/
 - Complete migration system dengan rollback capability
 - PgAdmin 4 untuk database management
 
-#### **🏗️ Nominatif System Rework - 90% COMPLETE**
+#### **🏗️ Nominatif System Rework - 100% COMPLETE**
 
-**Backend API (90%):**
+**Backend API (100%):**
 
 - 4 new separated tables: `nominatifs_new`, `nominatif_detail_rows`, `nominatif_biaya_rows`, `nominatif_evidence`
 - Complete CRUD API dengan authentication
 - File upload system untuk evidence photos
 - Manual calculation system (21 calculated fields)
+- **Auto-sync RKA budget system** dengan real-time calculation
 
 **Frontend Interface (100%):**
 
@@ -82,6 +83,7 @@ relai/
 - Dynamic row management (unlimited main/tambahan rows)
 - Real-time calculations dengan Indonesian currency formatting
 - API integration dengan error handling
+- **Seamless budget tracking** - Edit biaya langsung update RKA table otomatis
 
 #### **🔧 Recent Bug Fixes (November 2024) - 100% COMPLETE**
 
@@ -141,6 +143,11 @@ relai/
   - Issue: Saat save draft, data tidak auto-sort by Nama lengkap
   - Solution: Auto-sort by person_name sudah diimplement di controller
   - Status: **COMPLETED** - Auto-sort functionality added
+
+- **✅ Automatic Sync Between Nominatif and RKA**: Fixed!
+  - Issue: Edit biaya rows di nominatif tidak otomatis update RKA table
+  - Solution: Fixed race condition di NominatifBiayaRowController dengan real-time calculation
+  - Status: **COMPLETED** - RKA table now auto-syncs with nominatif edits
 
 #### **📋 REQUIRED ACTIONS**
 
@@ -510,6 +517,11 @@ DB_PASSWORD=password
 - **Issue**: Total pagu dan aktual menampilkan 2x lipat nilai seharusnya (3 baris × 200.000 = 1.200.000 seharusnya 600.000)
 - **Solution**: Memperbaiki logika reduce function di frontend `NominatifExcelTable.jsx:627-628`
 - **Status**: **COMPLETED** - Perhitungan total sekarang sudah akurat
+
+**✅ RKA Auto-Sync Race Condition Bug**
+- **Issue**: Edit biaya rows di nominatif tidak otomatis update RKA (contoh: 20jt→25jt→30jt tetap 20jt di RKA)
+- **Solution**: Fixed race condition di `NominatifBiayaRowController.php:1088-1090` dengan real-time calculation
+- **Status**: **COMPLETED** - RKA table sekarang auto-sync 100% saat edit biaya rows
 
 **📋 Final Action Required:**
 ```bash
