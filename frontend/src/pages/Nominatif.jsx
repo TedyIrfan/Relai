@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock } from 'lucide-react';
 import Notifikasi from '../components/Notifikasi';
+import KonfirmasiDialog from '../components/KonfirmasiDialog';
 
 const Nominatif = () => {
   const navigate = useNavigate();
   const [nominatifs, setNominatifs] = useState([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [dialogKonfirmasi, setDialogKonfirmasi] = useState({
+    isOpen: false,
+    nominatifId: null
+  });
 
   // Fetch nominatif list
   useEffect(() => {
@@ -172,22 +177,20 @@ const Nominatif = () => {
     }
   };
 
-  const handleSubmit = async (id) => {
-    // Tampilkan warning dialog terlebih dahulu
-    const konfirmasi = window.confirm(
-      'PERINGATAN!\n\n' +
-      'Setelah nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n' +
-      'Pastikan semua data sudah benar sebelum melanjutkan.\n\n' +
-      'Lanjutkan kirim nominatif?'
-    );
+  const handleSubmit = (id) => {
+    // Buka dialog konfirmasi
+    setDialogKonfirmasi({
+      isOpen: true,
+      nominatifId: id
+    });
+  };
 
-    if (!konfirmasi) {
-      return; // Batalkan jika user tidak setuju
-    }
+  const handleConfirmSubmit = async () => {
+    const { nominatifId } = dialogKonfirmasi;
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost/api/nominatifs-new/${id}/submit`, {
+      const response = await fetch(`http://localhost/api/nominatifs-new/${nominatifId}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -203,7 +206,7 @@ const Nominatif = () => {
 
         // Update status nominatif di local state
         setNominatifs(nominatifs.map(nom =>
-          nom.id === id ? { ...nom, status: 'submitted' } : nom
+          nom.id === nominatifId ? { ...nom, status: 'submitted' } : nom
         ));
 
         // Auto refresh setelah 1 detik untuk memastikan data terbaru
@@ -223,12 +226,32 @@ const Nominatif = () => {
         window.tampilkanNotifikasi('Terjadi kesalahan jaringan', 'error');
       }
     }
+
+    // Tutup dialog
+    setDialogKonfirmasi({ isOpen: false, nominatifId: null });
+  };
+
+  const handleCloseDialog = () => {
+    setDialogKonfirmasi({ isOpen: false, nominatifId: null });
   };
 
   return (
     <>
       {/* Komponen Notifikasi - di luar container utama */}
       <Notifikasi />
+
+      {/* Komponen Dialog Konfirmasi */}
+      <KonfirmasiDialog
+        isOpen={dialogKonfirmasi.isOpen}
+        onClose={handleCloseDialog}
+        onConfirm={handleConfirmSubmit}
+        title="Konfirmasi Pengiriman Nominatif"
+        message="Setelah nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n\nPastikan semua data sudah benar sebelum melanjutkan."
+        confirmText="Ya, Kirim"
+        cancelText="Batal"
+        type="success"
+        iconType="warning"
+      />
 
       <div className="min-h-screen bg-gray-50">
         {/* Header - Full Width */}
@@ -450,7 +473,6 @@ const Nominatif = () => {
             </table>
           </div>
         </div>
-      </div>
       </div>
     </>
   );
