@@ -26,6 +26,12 @@ class NominatifBiayaRowController extends Controller
     {
         $token = $request->bearerToken();
 
+        \Log::info('getAuthenticatedUser - Debug', [
+            'hasToken' => !empty($token),
+            'tokenLength' => $token ? strlen($token) : 0,
+            'tokenStart' => $token ? substr($token, 0, 20) . '...' : 'none'
+        ]);
+
         if (!$token) {
             return null;
         }
@@ -33,12 +39,25 @@ class NominatifBiayaRowController extends Controller
         // Find the token in the personal_access_tokens table
         $accessToken = PersonalAccessToken::findToken($token);
 
+        \Log::info('getAuthenticatedUser - Token Check', [
+            'accessTokenFound' => $accessToken ? true : false,
+            'tokenableId' => $accessToken?->tokenable_id,
+            'tokenableType' => $accessToken?->tokenable_type
+        ]);
+
         if (!$accessToken) {
             return null;
         }
 
         // Get the user associated with this token
-        return $accessToken->tokenable;
+        $user = $accessToken->tokenable;
+
+        \Log::info('getAuthenticatedUser - Result', [
+            'userId' => $user?->id,
+            'userEmail' => $user?->email
+        ]);
+
+        return $user;
     }
 
     /**
@@ -48,8 +67,25 @@ class NominatifBiayaRowController extends Controller
     {
         $detailRow = NominatifDetailRow::findOrFail($detailRowId);
 
-        // Security check
-        if ($detailRow->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
+        // Security check dengan debug logging
+        $authenticatedUserId = $this->getAuthenticatedUser(app('request'))?->id;
+        $nominatifOwnerId = $detailRow->nominatif->user_id;
+
+        \Log::info('NominatifBiayaRowController::index - Security Check', [
+            'detailRowId' => $detailRowId,
+            'authenticatedUserId' => $authenticatedUserId,
+            'nominatifOwnerId' => $nominatifOwnerId,
+            'isAuthorized' => $authenticatedUserId == $nominatifOwnerId,
+            'nominatifId' => $detailRow->nominatif_id
+        ]);
+
+        if ($nominatifOwnerId !== $authenticatedUserId) {
+            \Log::error('NominatifBiayaRowController::index - UNAUTHORIZED', [
+                'detailRowId' => $detailRowId,
+                'authenticatedUserId' => $authenticatedUserId,
+                'nominatifOwnerId' => $nominatifOwnerId,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -67,9 +103,10 @@ class NominatifBiayaRowController extends Controller
             'allBiayaRows' => NominatifBiayaRow::where('nominatif_detail_row_id', $detailRow->id)->get()->toArray()
         ]);
 
-        // 🔥 ENHANCED: Jika belum ada, buat otomatis dengan default values untuk CREATE MODE
+        // 🔥 FIXED: Method index SEHARUSNYA TIDAK membuat data baru!
+        // Ini READ-ONLY method untuk mengambil data yang sudah ada
         if (!$biayaRow) {
-            \Log::info('🆕 No biaya row found, creating default for CREATE MODE', [
+            \Log::warning('⚠️ No biaya row found for EDIT MODE - NOT creating new data!', [
                 'detailRowId' => $detailRowId,
                 'nominatifId' => $detailRow->nominatif_id
             ]);
@@ -119,70 +156,31 @@ class NominatifBiayaRowController extends Controller
                 'representasi_dalam_kota_aktual_perhari' => 0,
             ];
 
-            // 🔥 CREATE DEFAULT BIAYA ROW untuk memastikan ID selalu tersedia
-            $biayaRow = NominatifBiayaRow::create($defaultBiayaData);
+            // 🔥 CRITICAL FIX: JANGAN buat data baru di method index!
+            // Return empty object instead
+            $biayaRow = (object) $defaultBiayaData;
+            $biayaRow->id = null; // Explicitly set id to null
 
-            // Calculate dan update totals (semua 0)
-            $totalsData = [
-                // Penginapan totals (semua 0)
-                'penginapan_total_pagu' => 0,
-                'penginapan_total_aktual' => 0,
-                'penginapan_anggaran_berjalan' => 0,
-
-                // Meeting Fullboard totals (semua 0)
-                'uang_harian_meeting_fullboard_total_pagu' => 0,
-                'uang_harian_meeting_fullboard_total_aktual' => 0,
-                'uang_harian_meeting_fullboard_anggaran_berjalan' => 0,
-
-                // Meeting Fullday totals (semua 0)
-                'uang_harian_meeting_fullday_total_pagu' => 0,
-                'uang_harian_meeting_fullday_total_aktual' => 0,
-                'uang_harian_meeting_fullday_anggaran_berjalan' => 0,
-
-                // Luar Kota totals (semua 0)
-                'uang_harian_luar_kota_total_pagu' => 0,
-                'uang_harian_luar_kota_total_aktual' => 0,
-                'uang_harian_luar_kota_anggaran_berjalan' => 0,
-
-                // Dalam Kota totals (semua 0)
-                'uang_harian_dalam_kota_total_pagu' => 0,
-                'uang_harian_dalam_kota_total_aktual' => 0,
-                'uang_harian_dalam_kota_anggaran_berjalan' => 0,
-
-                // Representasi Luar Kota totals (semua 0)
-                'representasi_luar_kota_total_pagu' => 0,
-                'representasi_luar_kota_total_aktual' => 0,
-                'representasi_luar_kota_anggaran_berjalan' => 0,
-
-                // Representasi Dalam Kota totals (semua 0)
-                'representasi_dalam_kota_total_pagu' => 0,
-                'representasi_dalam_kota_total_aktual' => 0,
-                'representasi_dalam_kota_anggaran_berjalan' => 0,
-
-                // Grand totals (semua 0)
-                'total_pagu_row' => 0,
-                'total_aktual_row' => 0,
-                'total_anggaran_berjalan_row' => 0,
-            ];
-
-            $biayaRow->update($totalsData);
-
-            \Log::info('✅ Default biaya row created successfully', [
-                'biayaRowId' => $biayaRow->id,
-                'detailRowId' => $detailRowId
-            ]);
+            \Log::warning('⚠️ Returning empty structure instead of creating new database record');
         }
 
         // Debug logging untuk response
         \Log::info('NominatifBiayaRowController::index - returning data', [
-            'biayaRowObject' => $biayaRow,
+            'detailRowId' => $detailRowId,
             'biayaRowId' => $biayaRow?->id,
-            'biayaRowToArray' => $biayaRow?->toArray()
+            'isRealData' => $biayaRow?->id !== null,
+            'transport_pesawat_non_pp_pagu' => $biayaRow?->transport_pesawat_non_pp_pagu,
+            'transport_taksi_pagu' => $biayaRow?->transport_taksi_pagu,
         ]);
+
+        // Convert to array properly
+        $dataToReturn = is_object($biayaRow) && method_exists($biayaRow, 'toArray')
+            ? $biayaRow->toArray()
+            : (array) $biayaRow;
 
         return response()->json([
             'success' => true,
-            'data' => $biayaRow->toArray() // Convert to array untuk memastikan id tersedia
+            'data' => $dataToReturn
         ]);
     }
 

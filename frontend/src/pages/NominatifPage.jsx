@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, useSearchParams } from 'react-rout
 import { ArrowLeft, Save, Send, FileText, AlertCircle } from 'lucide-react';
 import NominatifExcelTable from '../components/tables/NominatifExcelTable';
 import { nominatifService } from '../services/nominatifService';
+import useNotification from '../hooks/useNotification';
 
 const NominatifPage = () => {
   const { rkaId } = useParams();
@@ -12,6 +13,7 @@ const NominatifPage = () => {
   const specificNominatifId = searchParams.get('id'); // Get ?id=... from URL
 
   const tableRef = useRef(null);
+  const { success: showSuccess, error: showError, notifications, close } = useNotification();
 
   const [rkaDetail, setRkaDetail] = useState(null);
   const [nominatifData, setNominatifData] = useState([]);
@@ -248,14 +250,14 @@ const NominatifPage = () => {
                   tujuan: row.tujuan || '',
                   tanggal_pergi: row.tanggal_pergi || '',
                   tanggal_sampai: row.tanggal_sampai || '',
-                  transport_taksi_pergi_pagu: row.biaya_row?.transport_taksi_pergi_pagu || '',
-                  transport_taksi_pergi_aktual: row.biaya_row?.transport_taksi_pergi_aktual || '',
-                  transport_pergi_pagu: row.biaya_row?.transport_pergi_pagu || '',
-                  transport_pergi_aktual: row.biaya_row?.transport_pergi_aktual || '',
-                  transport_taksi_pulang_pagu: row.biaya_row?.transport_taksi_pulang_pagu || '',
-                  transport_taksi_pulang_aktual: row.biaya_row?.transport_taksi_pulang_aktual || '',
-                  transport_pulang_pagu: row.biaya_row?.transport_pulang_pagu || '',
-                  transport_pulang_aktual: row.biaya_row?.transport_pulang_aktual || '',
+                  transport_taksi_pergi_pagu: row.biaya_row?.transport_pesawat_non_pp_pagu || '',
+                  transport_taksi_pergi_aktual: row.biaya_row?.transport_pesawat_non_pp_aktual || '',
+                  transport_pergi_pagu: row.biaya_row?.transport_pesawat_non_pp_pagu || '',
+                  transport_pergi_aktual: row.biaya_row?.transport_pesawat_non_pp_aktual || '',
+                  transport_taksi_pulang_pagu: row.biaya_row?.transport_taksi_pagu || '',
+                  transport_taksi_pulang_aktual: row.biaya_row?.transport_taksi_aktual || '',
+                  transport_pulang_pagu: row.biaya_row?.transport_taksi_pagu || '',
+                  transport_pulang_aktual: row.biaya_row?.transport_taksi_aktual || '',
                   penginapan_pagu: row.biaya_row?.penginapan_pagu || '',
                   penginapan_aktual: row.biaya_row?.penginapan_aktual || '',
                   uang_harian_fullboard_pagu: row.biaya_row?.uang_harian_fullboard_pagu || '',
@@ -324,7 +326,17 @@ const NominatifPage = () => {
             let biayaData = {};
             if (biayaResponse.ok) {
               const biayaResult = await biayaResponse.json();
+              console.log(`🔍 DEBUG: Biaya data for detail ${detail.id}:`, biayaResult);
               biayaData = biayaResult.data || {};
+              console.log(`🔍 DEBUG: Extracted biayaData:`, biayaData);
+              console.log(`🔍 DEBUG: Transport fields:`, {
+                pesawat_non_pp_pagu: biayaData.transport_pesawat_non_pp_pagu,
+                taksi_pagu: biayaData.transport_taksi_pagu,
+                pesawat_non_pp_aktual: biayaData.transport_pesawat_non_pp_aktual,
+                taksi_aktual: biayaData.transport_taksi_aktual
+              });
+            } else {
+              console.error(`❌ DEBUG: Failed to load biaya for detail ${detail.id}:`, biayaResponse.status);
             }
 
             // Get evidence data for this detail
@@ -384,6 +396,13 @@ const NominatifPage = () => {
               // Evidence data
               evidence_files: evidenceData,
             };
+
+            console.log(`🔍 DEBUG: Final table data for detail ${detail.id}:`, {
+              id: detail.id,
+              nama_lengkap: detail.person_name,
+              transport_pesawat_non_pp_pagu: biayaData.transport_pesawat_non_pp_pagu,
+              transport_taksi_pagu: biayaData.transport_taksi_pagu
+            });
           })
         );
 
@@ -850,17 +869,43 @@ const NominatifPage = () => {
       });
 
       if (response.ok) {
-        setSuccess('Nominatif berhasil dikirim!');
+        const result = await response.json();
+
+        // Show success notification with details
+        showSuccess('Nominatif berhasil dikirim!', {
+          duration: 3000
+        });
+
+        // Show budget details in notification
+        if (result.anggaran_updated) {
+          showSuccess(
+            `SP2D: ${formatRupiah(result.anggaran_updated.sp2d_amount)} | ` +
+            `Tersisa: ${formatRupiah(result.anggaran_updated.rka_anggaran_tersisa)}`,
+            { duration: 5000 }
+          );
+        }
+
+        // Auto refresh dan redirect
         setTimeout(() => {
           navigate('/nominatif');
+          // Force refresh RKA data by triggering a custom event
+          window.dispatchEvent(new CustomEvent('rkaDataUpdated'));
         }, 2000);
       } else {
         const errorText = await response.text();
+        showError(`Gagal mengirim nominatif: ${response.status} - ${errorText}`, {
+          duration: 0 // Don't auto-close error notifications
+        });
         throw new Error(`Gagal mengirim nominatif: ${response.status} - ${errorText}`);
       }
     } catch (error) {
       setError(error.message || 'Gagal mengirim data');
       console.error('❌ Submit error:', error);
+
+      // Show error notification
+      showError(error.message || 'Gagal mengirim data', {
+        duration: 0 // Don't auto-close error notifications
+      });
     } finally {
       setSubmitting(false);
     }
@@ -969,6 +1014,59 @@ const NominatifPage = () => {
           onSave={handleSave}
           onSubmit={handleSubmit}
         />
+      </div>
+
+      {/* Notification Container */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {notifications.map(notification => (
+          <div
+            key={notification.id}
+            className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 mb-2 min-w-[320px] max-w-[400px]"
+            style={{
+              opacity: notification.timestamp ? 1 : 0,
+              transform: notification.timestamp ? 'translateX(0)' : 'translateX(100%)',
+              transition: 'all 0.3s ease-in-out'
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                {notification.type === 'success' && (
+                  <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {notification.type === 'error' && (
+                  <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {notification.type === 'warning' && (
+                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className={`text-sm font-medium ${
+                  notification.type === 'success' ? 'text-green-800' :
+                  notification.type === 'error' ? 'text-red-800' :
+                  notification.type === 'warning' ? 'text-yellow-800' :
+                  'text-blue-800'
+                }`}>
+                  {notification.message}
+                </p>
+              </div>
+              <button
+                onClick={() => close(notification.id)}
+                className="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock } from 'lucide-react';
+import Notifikasi from '../components/Notifikasi';
 
 const Nominatif = () => {
   const navigate = useNavigate();
@@ -138,74 +139,100 @@ const Nominatif = () => {
   };
 
   const handleDelete = async (id) => {
-    // Find the nominatif to show better confirmation message
-    const nominatifToDelete = nominatifs.find(nom => nom.id === id);
-    const statusText = nominatifToDelete?.status || 'unknown';
+    try {
+      const token = localStorage.getItem('token');
 
-    if (window.confirm(`Apakah Anda yakin ingin menghapus nominatif ini?`)) {
-      try {
-        const token = localStorage.getItem('token');
-        console.log('🗑️ Attempting to delete nominatif:', id, 'Status:', statusText);
-
-        const response = await fetch(`http://localhost/api/nominatifs-new/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        console.log('📡 Delete response status:', response.status);
-
-        if (response.ok) {
-          console.log('✅ Nominatif deleted successfully');
-          setNominatifs(nominatifs.filter(nom => nom.id !== id));
-
-          // Show success message
-          alert('Nominatif berhasil dihapus');
-        } else {
-          // Handle server errors
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData.message || `Gagal menghapus nominatif (HTTP ${response.status})`;
-
-          console.error('❌ Delete failed:', errorMessage);
-          alert(`Error: ${errorMessage}`);
+      const response = await fetch(`http://localhost/api/nominatifs-new/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      } catch (error) {
-        console.error('💥 Network error deleting nominatif:', error);
-        alert('Terjadi kesalahan jaringan. Silakan coba lagi.');
+      });
+
+      if (response.ok) {
+        // Tampilkan notifikasi sukses
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi('Nominatif berhasil dihapus', 'success');
+        }
+
+        setNominatifs(nominatifs.filter(nom => nom.id !== id));
+      } else {
+        // Tampilkan notifikasi error
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi('Gagal menghapus nominatif', 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting nominatif:', error);
+      // Tampilkan notifikasi error jaringan
+      if (window.tampilkanNotifikasi) {
+        window.tampilkanNotifikasi('Terjadi kesalahan jaringan', 'error');
       }
     }
   };
 
   const handleSubmit = async (id) => {
-    if (window.confirm('Apakah Anda yakin ingin submit nominatif ini?')) {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost/api/nominatifs-new/${id}/submit`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+    // Tampilkan warning dialog terlebih dahulu
+    const konfirmasi = window.confirm(
+      'PERINGATAN!\n\n' +
+      'Setelah nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n' +
+      'Pastikan semua data sudah benar sebelum melanjutkan.\n\n' +
+      'Lanjutkan kirim nominatif?'
+    );
 
-        if (response.ok) {
-          // Update status nominatif di local state
-          setNominatifs(nominatifs.map(nom =>
-            nom.id === id ? { ...nom, status: 'submitted' } : nom
-          ));
+    if (!konfirmasi) {
+      return; // Batalkan jika user tidak setuju
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost/api/nominatifs-new/${id}/submit`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      } catch (error) {
-        console.error('Error submitting nominatif:', error);
+      });
+
+      if (response.ok) {
+        // Tampilkan notifikasi sukses
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi('Nominatif berhasil dikirim', 'success');
+        }
+
+        // Update status nominatif di local state
+        setNominatifs(nominatifs.map(nom =>
+          nom.id === id ? { ...nom, status: 'submitted' } : nom
+        ));
+
+        // Auto refresh setelah 1 detik untuk memastikan data terbaru
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        // Tampilkan notifikasi error
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi('Gagal mengirim nominatif', 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting nominatif:', error);
+      // Tampilkan notifikasi error jaringan
+      if (window.tampilkanNotifikasi) {
+        window.tampilkanNotifikasi('Terjadi kesalahan jaringan', 'error');
       }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header - Full Width */}
-      <div className="bg-white shadow-lg rounded-xl mx-4 mt-4 border-b border-gray-200 relative">
+    <>
+      {/* Komponen Notifikasi - di luar container utama */}
+      <Notifikasi />
+
+      <div className="min-h-screen bg-gray-50">
+        {/* Header - Full Width */}
+        <div className="bg-white shadow-lg rounded-xl mx-4 mt-4 border-b border-gray-200 relative">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
@@ -296,6 +323,9 @@ const Nominatif = () => {
                   <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '10%'}}>
                     Anggaran Berjalan
                   </th>
+                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '10%'}}>
+                    Anggaran SP2D
+                  </th>
                   <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '6%'}}>
                     Status
                   </th>
@@ -310,7 +340,7 @@ const Nominatif = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
                         Memuat data...
@@ -340,6 +370,13 @@ const Nominatif = () => {
                         {formatRupiah(
                           // 🎯 NEW: Anggaran Berjalan = Total Pagu yang diinput user (total_pagu_trip)
                           nominatif.total_pagu_trip || nominatif.total_pagu || 0
+                        )}
+                      </td>
+                      <td className="px-1 py-1 text-sm font-medium text-right text-gray-900">
+                        {formatRupiah(
+                          // 🎯 SP2D: Total Pagu - Total Aktual (selisih)
+                          (nominatif.total_pagu_trip || nominatif.total_pagu || 0) -
+                          (nominatif.total_aktual_trip || nominatif.total_biaya_aktual || 0)
                         )}
                       </td>
                       <td className="px-1 py-1 text-sm">
@@ -389,7 +426,7 @@ const Nominatif = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center">
                         <FileText className="w-12 h-12 text-gray-400 mb-4" />
                         <p className="text-lg font-medium text-gray-900 mb-2">
@@ -414,6 +451,8 @@ const Nominatif = () => {
           </div>
         </div>
       </div>
+      </div>
+    </>
   );
 };
 

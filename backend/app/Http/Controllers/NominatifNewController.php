@@ -555,11 +555,32 @@ class NominatifNewController extends Controller
             // 🎯 CORRECT: Submit - pindahkan dari anggaran_berjalan ke SP2D
             // anggaran_berjalan BERKURANG, anggaran_sp2d BERTAMBAH
 
-            // Update RKA anggaran - move from anggaran_berjalan to SP2D
-            // Gunakan total_aktual untuk SP2D (uang yang benar-benar dipakai)
+            // 🎯 RKA LOGIC: Kosongkan anggaran_berjalan, pindahkan SP2D (selisih)
+            // RKA tersisa = Anggaran Layanan - 0 - SP2D baru
+            $totalPaguTrip = $nominatif->detailRows()->get()->sum(function ($row) {
+                return $row->biayaRow?->total_pagu_row ?? 0;
+            });
+
+            $totalAktualTrip = $nominatif->detailRows()->get()->sum(function ($row) {
+                return $row->biayaRow?->total_aktual_row ?? 0;
+            });
+
+            $sp2dAmount = $totalPaguTrip - $totalAktualTrip; // 🎯 SP2D = Selisih
+
+            \Log::info('🔍 SP2D CALCULATION DEBUG', [
+                'nominatif_id' => $nominatif->id,
+                'rka_detail_id' => $rkaDetail->id,
+                'code_rka' => $rkaDetail->code_rka,
+                'total_pagu_trip' => $totalPaguTrip,
+                'total_aktual_trip' => $totalAktualTrip,
+                'sp2d_amount' => $sp2dAmount,
+                'before_sp2d' => $rkaDetail->anggaran_sp2d,
+                'after_sp2d' => $rkaDetail->anggaran_sp2d + $sp2dAmount
+            ]);
+
             $rkaDetail->update([
-                'anggaran_berjalan' => $rkaDetail->anggaran_berjalan - $totalAktualTrip, // Kurangi aktual yang dipakai
-                'anggaran_sp2d' => $rkaDetail->anggaran_sp2d + $totalAktualTrip,      // Pindah ke SP2D
+                'anggaran_berjalan' => 0,                                      // Kosongkan yang berjalan
+                'anggaran_sp2d' => $rkaDetail->anggaran_sp2d + $sp2dAmount,     // Pindahkan SP2D ke RKA
                 // anggaran_layanan_used TIDAK berubah (tetap tracking)
             ]);
 
@@ -577,10 +598,12 @@ class NominatifNewController extends Controller
                 'message' => 'Nominatif submitted successfully',
                 'data' => $nominatif,
                 'anggaran_updated' => [
+                    'total_pagu_trip' => $totalPaguTrip,
                     'total_aktual_trip' => $totalAktualTrip,
-                    'rka_anggaran_berjalan' => $rkaDetail->anggaran_berjalan,
+                    'sp2d_amount' => $sp2dAmount,  // 🎯 SP2D yang dipindahkan ke RKA
+                    'rka_anggaran_berjalan' => 0,
                     'rka_anggaran_sp2d' => $rkaDetail->anggaran_sp2d,
-                    'rka_anggaran_tersisa' => $rkaDetail->anggaran_layanan - $rkaDetail->anggaran_berjalan - $rkaDetail->anggaran_sp2d,
+                    'rka_anggaran_tersisa' => $rkaDetail->anggaran_layanan - 0 - $rkaDetail->anggaran_sp2d,
                 ]
             ]);
 
