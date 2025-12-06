@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\NominatifDetailRow;
@@ -1049,17 +1050,69 @@ class NominatifBiayaRowController extends Controller
      */
     private function updateNominatifTotals($nominatifId)
     {
+        // 🚀 FIX: Prevent race condition with cache-based debouncer
+        $cacheKey = "nominatif_totals_updating_{$nominatifId}";
+
+        // Check if already updating
+        if (Cache::has($cacheKey)) {
+            \Log::info("⏱️ UPDATE SKIPPED - Already updating nominatif {$nominatifId}");
+            return;
+        }
+
+        // Lock for 500ms to prevent duplicate updates
+        Cache::put($cacheKey, true, now()->addMilliseconds(500));
+
+        // ⚡ Add small delay to ensure all database updates are committed
+        usleep(100000); // 100ms delay
+
         $nominatif = DB::table('nominatifs_new')->where('id', $nominatifId)->first();
+
+        // Debug: Cek semua detail rows untuk nominatif ini
+        $detailRows = DB::table('nominatif_detail_rows')
+            ->where('nominatif_id', $nominatifId)
+            ->get();
+
+        \Log::info("🔍 DEBUG UPDATE TOTALS - Nominatif ID: {$nominatifId}", [
+            'detail_rows_count' => $detailRows->count(),
+            'detail_rows' => $detailRows->toArray()
+        ]);
+
+        // Debug: Cek semua biaya rows untuk detail rows ini
+        $biayaRows = DB::table('nominatif_biaya_rows')
+            ->whereIn('nominatif_detail_row_id', $detailRows->pluck('id'))
+            ->get();
+
+        \Log::info("💰 DEBUG BIAYA ROWS", [
+            'biaya_rows_count' => $biayaRows->count(),
+            'biaya_rows' => $biayaRows->toArray()
+        ]);
+
+        // Debug: Cek join query step by step
+        $joinQuery = DB::table('nominatif_detail_rows as dr')
+            ->join('nominatif_biaya_rows as br', 'dr.id', '=', 'br.nominatif_detail_row_id')
+            ->where('dr.nominatif_id', $nominatifId)
+            ->select('dr.id as detail_id', 'dr.person_name', 'br.id as biaya_id', 'br.total_pagu_row', 'br.total_aktual_row')
+            ->get();
+
+        \Log::info("🔗 DEBUG JOIN QUERY RESULT", [
+            'join_results_count' => $joinQuery->count(),
+            'join_results' => $joinQuery->toArray()
+        ]);
 
         $totalPagu = DB::table('nominatif_detail_rows as dr')
             ->join('nominatif_biaya_rows as br', 'dr.id', '=', 'br.nominatif_detail_row_id')
             ->where('dr.nominatif_id', $nominatifId)
-            ->sum('br.total_pagu_row');
+            ->sum(DB::raw('COALESCE(br.total_pagu_row, 0)'));
 
         $totalAktual = DB::table('nominatif_detail_rows as dr')
             ->join('nominatif_biaya_rows as br', 'dr.id', '=', 'br.nominatif_detail_row_id')
             ->where('dr.nominatif_id', $nominatifId)
-            ->sum('br.total_aktual_row');
+            ->sum(DB::raw('COALESCE(br.total_aktual_row, 0)'));
+
+        \Log::info("📊 DEBUG FINAL TOTALS", [
+            'calculated_total_pagu' => $totalPagu,
+            'calculated_total_aktual' => $totalAktual
+        ]);
 
         // Get old aktual for budget calculation
         $oldAktual = $nominatif->total_aktual_trip ?? 0;

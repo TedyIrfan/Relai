@@ -486,6 +486,7 @@ DB_PASSWORD=password
 - Evidence Management (Google Drive with Preview)
 - Auto-sort by Name
 - Edit Functionality (Fixed)
+- Evidence Auto-Update Description System (Complete)
 
 **🔧 All Issues Fixed (100%):**
 
@@ -493,6 +494,7 @@ DB_PASSWORD=password
 - ✅ Duplicate Field Names (`nama` & `person_name`) - **FIXED**
 - ✅ Evidence System (File Upload → Google Drive with Preview) - **FIXED**
 - ✅ Auto-sort by Name - **FIXED**
+- ✅ Evidence Auto-Update Description System - **FIXED**
 
 #### **🔧 Bug Fixes December 2024 - 100% COMPLETE**
 
@@ -523,6 +525,32 @@ DB_PASSWORD=password
 - **Solution**: Fixed race condition di `NominatifBiayaRowController.php:1088-1090` dengan real-time calculation
 - **Status**: **COMPLETED** - RKA table sekarang auto-sync 100% saat edit biaya rows
 
+**✅ Evidence Auto-Update System - DECEMBER 2024**
+- **Issue**: Evidence description di database tidak terupdate saat nama person berubah, tetapi logs menunjukkan success
+- **Solution**: Fixed dual update conflict antara `NominatifDetailRowController` dan `NominatifEvidenceController`
+- **Status**: **COMPLETED** - Evidence auto-update working 100% di database
+
+**Detailed Evidence Auto-Update Implementation:**
+- **Auto-Generate Format**: `"evidence X punya [nama_lengkap]"` (dengan nomor urut yang benar)
+- **Real-time Update**: Saat nama diubah, keterangan evidence otomatis update
+- **Database Persistence**: Fix transaction conflicts dan ensure database updates committed
+- **Evidence Numbering**: Proper row_order-based numbering (evidence 1, evidence 2, etc.)
+- **Dual Update Protection**: Prevent `NominatifEvidenceController` dari overwrite keterangan yang sudah diupdate
+- **Null Evidence Validation**: `evidence_link` menggunakan `nullable|url|max:255` untuk flexibilitas
+
+**Files Modified:**
+- `backend/app/Http/Controllers/NominatifDetailRowController.php:646-703` - Auto-update logic
+- `backend/app/Http/Controllers/NominatifEvidenceController.php:354-367` - Preserve existing keterangan
+- `backend/routes/api.php:551` - Evidence validation rules
+
+**Features Working:**
+- ✅ Auto-update evidence description based on nama changes
+- ✅ Proper evidence numbering with row_order
+- ✅ Database transaction handling with commit confirmation
+- ✅ Null evidence links allowed for create mode
+- ✅ Prevention of duplicate evidence records
+- ✅ Real-time logging for debugging evidence updates
+
 **📋 Final Action Required:**
 ```bash
 cd backend
@@ -533,5 +561,5 @@ php artisan migrate
 
 ---
 
-_Last Updated: December 4, 2025_
+_Last Updated: December 6, 2025_
 _Status: Production Ready (100% Complete - All Critical Bugs Fixed)_

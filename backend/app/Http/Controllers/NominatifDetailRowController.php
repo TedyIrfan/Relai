@@ -281,6 +281,9 @@ class NominatifDetailRowController extends Controller
                     }
                 }
 
+                // Process evidence links and create/update evidence records
+                $this->processEvidenceLinks($updatedRows, $request->rows, $detailRow->nominatif_id);
+
                 // Update evidence descriptions if person_name changed (sebelum commit!)
                 $this->updateEvidenceDescriptions($updatedRows);
 
@@ -290,7 +293,14 @@ class NominatifDetailRowController extends Controller
                 // Update nominatif totals
                 $this->updateNominatifTotals($detailRow->nominatif_id);
 
+                \Log::info("💳 COMMITTING DATABASE TRANSACTION", [
+                    'nominatif_id' => $detailRow->nominatif_id,
+                    'evidence_updates_completed' => count($updatedRows)
+                ]);
+
                 DB::commit();
+
+                \Log::info("✅ DATABASE TRANSACTION COMMITTED SUCCESSFULLY");
 
                 // Get final sorted rows
                 $finalRows = NominatifDetailRow::where('nominatif_id', $detailRow->nominatif_id)
@@ -548,6 +558,7 @@ class NominatifDetailRowController extends Controller
             'rows.*.eselon' => 'sometimes|string|max:10',
             'rows.*.tanggal_pergi' => 'sometimes|date',
             'rows.*.tanggal_sampai' => 'sometimes|date',
+            'rows.*.evidence_link' => 'nullable|url|max:255', // ✅ Allow null/empty
         ]);
 
         
@@ -556,13 +567,25 @@ class NominatifDetailRowController extends Controller
             ->where('user_id', $this->getAuthenticatedUser(app('request'))?->id)
             ->firstOrFail();
 
+        // DEBUG: Log nominatif status check
+        \Log::info("🔍 NOMINATIF STATUS CHECK - ID: {$nominatifId}", [
+            'nominatif_id' => $nominatif->id,
+            'nominatif_status' => $nominatif->status,
+            'nominatif_user_id' => $nominatif->user_id,
+            'authenticated_user_id' => $this->getAuthenticatedUser(app('request'))?->id,
+            'is_draft' => $nominatif->status === 'draft'
+        ]);
+
         // Check if nominatif is still editable
         if ($nominatif->status !== 'draft') {
+            \Log::error("❌ EDIT BLOCKED - Nominatif {$nominatifId} status is '{$nominatif->status}', expected 'draft'");
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot edit rows in submitted nominatif'
             ], 422);
         }
+
+        \Log::info("✅ EDIT ALLOWED - Nominatif {$nominatifId} status is '{$nominatif->status}'");
 
         // Debug: Log incoming data
         \Log::info('=== BULK UPDATE START ===');
@@ -632,27 +655,106 @@ class NominatifDetailRowController extends Controller
      */
     private function updateEvidenceDescriptions($updatedRows)
     {
+        // Get all evidence for this nominatif to determine correct numbering
+        $nominatifId = $updatedRows[0]->nominatif_id ?? null;
+        if (!$nominatifId) return;
+
+        // Get all rows for this nominatif ordered by row_order
+        $allRows = NominatifDetailRow::where('nominatif_id', $nominatifId)
+            ->orderBy('row_order')
+            ->get();
+
+        // Create mapping of row_id to evidence number
+        $rowToEvidenceNumber = [];
+        foreach ($allRows as $index => $row) {
+            $rowToEvidenceNumber[$row->id] = $index + 1;
+        }
+
         foreach ($updatedRows as $row) {
             $evidence = $row->evidence()->first();
             if ($evidence) {
-                // Extract the evidence number from existing description
-                $evidenceNumber = '1';
-                if (preg_match('/Evidence (\d+) untuk /', $evidence->keterangan, $matches)) {
-                    $evidenceNumber = $matches[1];
-                }
+                // Use correct evidence number based on row_order
+                $evidenceNumber = $rowToEvidenceNumber[$row->id] ?? '1';
 
-                // Update description with new person_name
-                $newDescription = "Evidence {$evidenceNumber} untuk {$row->person_name}";
+                // Update description with new person_name sesuai format yang diminta
+                $newDescription = "evidence {$evidenceNumber} punya {$row->person_name}";
 
                 \Log::info("🔄 Updating evidence description", [
                     'row_id' => $row->id,
                     'evidence_id' => $evidence->id,
+                    'row_order' => $row->row_order,
+                    'evidence_number' => $evidenceNumber,
                     'old_description' => $evidence->keterangan,
                     'new_description' => $newDescription,
                     'person_name' => $row->person_name
                 ]);
 
-                $evidence->update(['keterangan' => $newDescription]);
+                // Update evidence keterangan in database with force save
+                $evidence->keterangan = $newDescription;
+                $updateResult = $evidence->save();
+
+                // Force refresh to confirm database update
+                $freshEvidence = $evidence->fresh();
+
+                \Log::info("💾 Evidence database update result", [
+                    'evidence_id' => $evidence->id,
+                    'update_success' => $updateResult,
+                    'old_keterangan' => $evidence->keterangan,
+                    'final_keterangan' => $freshEvidence->keterangan,
+                    'updated_at' => $freshEvidence->updated_at,
+                    'is_dirty' => $evidence->isDirty('keterangan'),
+                    'was_changed' => $evidence->wasChanged('keterangan')
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Process evidence links from bulk update and create/update evidence records
+     */
+    private function processEvidenceLinks($updatedRows, $requestData, $nominatifId)
+    {
+        // Create row order mapping for evidence numbering
+        $rowOrderMap = [];
+        foreach ($updatedRows as $index => $row) {
+            $rowOrderMap[$row->id] = $index + 1;
+        }
+
+        foreach ($requestData as $rowData) {
+            $rowId = $rowData['id'];
+
+            // Check if evidence_link is provided and not empty
+            if (isset($rowData['evidence_link']) && !empty($rowData['evidence_link'])) {
+                $detailRow = NominatifDetailRow::find($rowId);
+                if ($detailRow) {
+                    $evidenceNumber = $rowOrderMap[$rowId] ?? 1;
+                    $personName = $detailRow->person_name ?? 'Unknown';
+
+                    // Generate evidence description
+                    $evidenceDescription = "evidence {$evidenceNumber} punya {$personName}";
+
+                    // Create or update evidence record
+                    $evidence = NominatifEvidence::updateOrCreate(
+                        [
+                            'nominatif_id' => $nominatifId,
+                            'nominatif_detail_row_id' => $rowId
+                        ],
+                        [
+                            'evidence_link' => $rowData['evidence_link'],
+                            'evidence_name' => "Evidence {$evidenceNumber} - {$personName}",
+                            'keterangan' => $evidenceDescription,
+                            'user_id' => $this->getAuthenticatedUser(app('request'))?->id
+                        ]
+                    );
+
+                    \Log::info("🔗 Evidence processed", [
+                        'row_id' => $rowId,
+                        'evidence_link' => $rowData['evidence_link'],
+                        'evidence_description' => $evidenceDescription,
+                        'evidence_id' => $evidence->id,
+                        'person_name' => $personName
+                    ]);
+                }
             }
         }
     }

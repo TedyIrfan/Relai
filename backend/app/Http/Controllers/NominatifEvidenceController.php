@@ -352,6 +352,20 @@ class NominatifEvidenceController extends Controller
             }
 
             // Create or update evidence record (prevent duplicates)
+            // ALWAYS preserve existing keterangan - ignore frontend keterangan
+            $existingEvidence = NominatifEvidence::where('nominatif_id', $nominatifId)
+                ->where('nominatif_detail_row_id', $detailRowId)
+                ->first();
+
+            if ($existingEvidence) {
+                $evidenceData['keterangan'] = $existingEvidence->keterangan;
+                \Log::info("🔒 PRESERVING existing keterangan", [
+                    'evidence_id' => $existingEvidence->id,
+                    'existing_keterangan' => $existingEvidence->keterangan,
+                    'frontend_keterangan' => $request->keterangan ?? 'null'
+                ]);
+            }
+
             $evidence = NominatifEvidence::updateOrCreate(
                 [
                     'nominatif_id' => $nominatifId,
@@ -359,6 +373,15 @@ class NominatifEvidenceController extends Controller
                 ],
                 $evidenceData
             );
+
+            \Log::info("🔒 Evidence preserved/updated", [
+                'evidence_id' => $evidence->id,
+                'nominatif_id' => $nominatifId,
+                'detail_row_id' => $detailRowId,
+                'final_keterangan' => $evidence->keterangan,
+                'was_existing' => $existingEvidence ? true : false,
+                'keterangan_provided' => isset($request->keterangan) ? true : false
+            ]);
 
             DB::commit();
 
