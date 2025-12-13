@@ -23,7 +23,8 @@ const KonfirmasiDialog = ({
   const warnaButton = {
     warning: 'bg-yellow-600 hover:bg-yellow-700',
     danger: 'bg-red-600 hover:bg-red-700',
-    info: 'bg-blue-600 hover:bg-blue-700'
+    info: 'bg-blue-600 hover:bg-blue-700',
+    success: 'bg-green-600 hover:bg-green-700'
   };
 
   return (

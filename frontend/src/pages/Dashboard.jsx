@@ -34,9 +34,60 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await dashboardService.getDashboardData();
-      setDashboardData(response.data);
-      setSelectedYear(response.data.tahun);
+      // Fetch from RKA details API to get actual data
+      const response = await fetch('http://localhost:80/api/rka-details');
+
+      if (response.ok) {
+        const rkaData = await response.json();
+
+        // Calculate totals from RKA data
+        const totals = {
+          totalAnggaran: 0,
+          anggaranBerjalan: 0,
+          anggaranSP2D: 0,
+          sisaAnggaran: 0
+        };
+
+        // Group by kategori for charts
+        const kategoriData = {
+          A: { nama: 'Kategori A - Dinas Pimpinan', anggaran: 0, berjalan: 0, sp2d: 0, sisa: 0 },
+          B: { nama: 'Kategori B - Tata Usaha', anggaran: 0, berjalan: 0, sp2d: 0, sisa: 0 },
+          C: { nama: 'Kategori C - Konferensi', anggaran: 0, berjalan: 0, sp2d: 0, sisa: 0 }
+        };
+
+        rkaData.forEach(item => {
+          const kategori = item.kategoriAnggaran || 'C';
+          const anggaranLayanan = parseFloat(item.anggaranLayanan) || 0;
+          const anggaranBerjalan = parseFloat(item.anggaran_berjalan) || 0;
+          const anggaranSp2d = parseFloat(item.anggaran_sp2d) || 0;
+          const anggaranTersisa = parseFloat(item.anggaran_tersisa) || 0;
+
+          // Sum to totals
+          totals.totalAnggaran += anggaranTersisa; // Total = Sum of all anggaran_tersisa
+          totals.anggaranBerjalan += anggaranBerjalan;
+          totals.anggaranSP2D += anggaranSp2d;
+          totals.sisaAnggaran += anggaranTersisa;
+
+          // Sum by kategori
+          if (kategoriData[kategori]) {
+            kategoriData[kategori].anggaran += anggaranLayanan;
+            kategoriData[kategori].berjalan += anggaranBerjalan;
+            kategoriData[kategori].sp2d += anggaranSp2d;
+            kategoriData[kategori].sisa += anggaranTersisa;
+          }
+        });
+
+        setDashboardData({
+          tahun: 2025,
+          totalAnggaran: totals.totalAnggaran,
+          anggaranBerjalan: totals.anggaranBerjalan,
+          anggaranSP2D: totals.anggaranSP2D,
+          sisaAnggaran: totals.sisaAnggaran,
+          kategori: Object.values(kategoriData)
+        });
+      } else {
+        throw new Error('Failed to fetch RKA data');
+      }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
       // Set fallback data dengan real 2025 data
