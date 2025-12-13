@@ -832,28 +832,28 @@ const NominatifExcelTable = forwardRef(
                   Aksi
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Nama Lengkap
+                  Nama Lengkap <span className="text-red-500">*</span>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Golongan
+                  Golongan <span className="text-red-500">*</span>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Jabatan
+                  Jabatan <span className="text-red-500">*</span>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Eselon
+                  Eselon <span className="text-red-500">*</span>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Asal
+                  Asal <span className="text-red-500">*</span>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Tujuan
+                  Tujuan <span className="text-red-500">*</span>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">
-                  Tgl Pergi
+                  Tgl Pergi <span className="text-red-500">*</span>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">
-                  Tgl Sampai
+                  Tgl Sampai <span className="text-red-500">*</span>
                 </th>
                 <th
                   className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"

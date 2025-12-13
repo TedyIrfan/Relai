@@ -10,6 +10,7 @@ import MasterRKA from './pages/MasterRKA';
 import Nominatif from './pages/Nominatif';
 import NominatifPage from './pages/NominatifPage';
 import NominatifCreate from './pages/NominatifCreate';
+import NonNominatif from './pages/NonNominatif';
 
 function App() {
   return (
@@ -56,6 +57,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <NominatifCreate />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/non-nominatif" element={
+            <ProtectedRoute>
+              <Layout>
+                <NonNominatif />
               </Layout>
             </ProtectedRoute>
           } />

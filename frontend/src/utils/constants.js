@@ -11,7 +11,8 @@ export const ROUTES = {
   dashboard: '/dashboard',
   masterSbm: '/master-sbm',
   masterRka: '/master-rka',
-  nominatif: '/nominatif'
+  nominatif: '/nominatif',
+  nonNominatif: '/non-nominatif'
 };
 
 export const MENU_ITEMS = [
@@ -41,6 +42,13 @@ export const MENU_ITEMS = [
     name: 'Nominatif',
     icon: 'Users',
     route: ROUTES.nominatif,
+    active: true
+  },
+  {
+    id: 'non-nominatif',
+    name: 'Non Nominatif',
+    icon: 'FileText',
+    route: ROUTES.nonNominatif,
     active: true
   }
 ];
