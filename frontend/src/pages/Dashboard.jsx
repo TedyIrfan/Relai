@@ -63,7 +63,7 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
           const anggaranTersisa = parseFloat(item.anggaran_tersisa) || 0;
 
           // Sum to totals
-          totals.totalAnggaran += anggaranTersisa; // Total = Sum of all anggaran_tersisa
+          totals.totalAnggaran += anggaranLayanan; // Total = Sum of all anggaranLayanan (total budget)
           totals.anggaranBerjalan += anggaranBerjalan;
           totals.anggaranSP2D += anggaranSp2d;
           totals.sisaAnggaran += anggaranTersisa;
@@ -77,12 +77,15 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
           }
         });
 
+        // Calculate sisa anggaran as total - (berjalan + sp2d)
+        const calculatedSisa = totals.totalAnggaran - totals.anggaranBerjalan - totals.anggaranSP2D;
+
         setDashboardData({
           tahun: 2025,
           totalAnggaran: totals.totalAnggaran,
           anggaranBerjalan: totals.anggaranBerjalan,
           anggaranSP2D: totals.anggaranSP2D,
-          sisaAnggaran: totals.sisaAnggaran,
+          sisaAnggaran: calculatedSisa,
           kategori: Object.values(kategoriData)
         });
       } else {
