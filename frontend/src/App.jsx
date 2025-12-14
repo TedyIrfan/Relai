@@ -11,6 +11,7 @@ import Nominatif from './pages/Nominatif';
 import NominatifPage from './pages/NominatifPage';
 import NominatifCreate from './pages/NominatifCreate';
 import NonNominatif from './pages/NonNominatif';
+import NonNominatifCreate from './pages/NonNominatifCreate';
 
 function App() {
   return (
@@ -64,6 +65,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <NonNominatif />
+              </Layout>
+            </ProtectedRoute>
+          } />
+            <Route path="/non-nominatif/create" element={
+            <ProtectedRoute>
+              <Layout>
+                <NonNominatifCreate />
               </Layout>
             </ProtectedRoute>
           } />
