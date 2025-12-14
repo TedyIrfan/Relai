@@ -632,5 +632,256 @@ php artisan migrate
 
 **🎉 System 100% siap untuk production use dengan modern Excel-like interface!**
 
-_Last Updated: December 13, 2024_
-_Status: Production Ready (100% Complete - All Critical Bugs Fixed)_
+---
+
+## 🆕 **NON-NOMINATIF SYSTEM - DECEMBER 2024**
+
+### **📊 Non-Nominatif Overview**
+
+Non-Nominatif adalah sistem pengelolaan pengeluaran non-perjalanan dinas dengan flow yang sederhana:
+
+**Konsep Dasar:**
+- Input sederhana: Deskripsi, Tanggal, Dana Anggaran, Pilih RKA
+- Tidak ada detail rows seperti nominatif (cuma 1 transaksi)
+- Evidence opsional (link Google Drive)
+- Draft → Submit → Auto-update RKA budget
+
+### **🗄️ Database Schema**
+
+#### **Tabel `non_nominatifs`**
+```sql
+CREATE TABLE non_nominatifs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    rka_detail_id BIGINT NOT NULL,              -- FK ke rka_details
+    user_id BIGINT NOT NULL,                    -- FK ke users
+    deskripsi_kegiatan VARCHAR(255) NOT NULL,
+    tanggal_kegiatan DATE,
+    dana_anggaran DECIMAL(15,2) NOT NULL DEFAULT 0,
+    evidence_link VARCHAR(255) NULL,           -- Link Google Drive (opsional)
+    status ENUM('draft', 'submitted', 'rejected') DEFAULT 'draft',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+#### **Flow RKA Integration**
+```sql
+-- Update RKA saat draft:
+UPDATE rka_details
+SET anggaran_berjalan = anggaran_berjalan + dana_anggaran
+WHERE id = ?;
+
+-- Update RKA saat submit:
+UPDATE rka_details
+SET anggaran_berjalan = anggaran_berjalan - dana_anggaran,
+    anggaran_sp2d = anggaran_sp2d + dana_anggaran
+WHERE id = ?;
+```
+
+### **🖥️ Frontend Implementation**
+
+#### **URL Routes:**
+- `/non-nominatif` - List semua data
+- `/non-nominatif/create` - Form create baru
+
+#### **UI Components:**
+```
+┌─────────────────────────────────────────┐
+│ Non-Nominatif List                      │
+│ ┌─ Code RKA ── Layanan ───────────────┐ │
+│ │ 5.01.01.001 │ Belanja ATK Kantor   │ │
+│ │ Deskripsi: Pembelian ATK Desember    │ │
+│ │ Dana: Rp 5.000.000                 │ │
+│ │ Status: Draft    | Tgl: 2024-12-14  │ │
+│ │           [Edit] [Delete] [Submit] │ │
+│ └─────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+```
+
+#### **Create Form:**
+```
+┌─────────────────────────────────────────┐
+│ Buat Non-Nominatif Baru                 │
+│                                         │
+│ Deskripsi Kegiatan: [_____________]     │
+│ Tanggal:           [2024-12-14]        │
+│ Dana Anggaran:     [Rp 5.000.000]     │
+│ Pilih Code RKA:     [Dropdown ▼]       │
+│                                         │
+│ 🔗 Link Google Drive: [url__________]  │
+│    Opsional untuk bukti pendukung       │
+│                                         │
+│      [Batal] [Save Draft] [Kirim]     │
+└─────────────────────────────────────────┘
+```
+
+### **🔄 User Flow**
+
+```
+1. Login → Dashboard
+2. Menu "Non-Nominatif" → List data
+3. "Buat Non-Nominatif" → Form input
+4. Input: Deskripsi, Tanggal, Dana, Pilih RKA
+5. "Simpan Draft" → Save & Kembali ke list
+   atau
+   "Kirim" → Submit & Update RKA budget
+6. Status: Draft → Submitted → Auto-SP2D
+```
+
+### **🔧 Backend API Structure**
+
+#### **Controllers:**
+```php
+NonNominatifController:
+- index()           // GET /api/non-nominatifs
+- store()           // POST /api/non-nominatifs
+- update()          // PUT /api/non-nominatifs/{id}
+- destroy()         // DELETE /api/non-nominatifs/{id}
+- submit()          // POST /api/non-nominatifs/{id}/submit
+```
+
+#### **Models:**
+```php
+NonNominatif Model:
+- Relations: belongsTo RkaDetail, belongsTo User
+- Calculated fields (optional)
+- Auto RKA budget updates
+```
+
+#### **API Response Format:**
+```json
+// List Response
+{
+  "data": [
+    {
+      "id": 1,
+      "deskripsi_kegiatan": "Pembelian ATK",
+      "tanggal_kegiatan": "2024-12-14",
+      "dana_anggaran": 5000000,
+      "evidence_link": "https://drive.google.com/file/d/...",
+      "status": "draft",
+      "rka_detail": {
+        "code_rka": "5.01.01.001",
+        "layanan": "Belanja ATK Kantor"
+      }
+    }
+  ]
+}
+```
+
+### **⚡ Key Features**
+
+#### **Simple Input:**
+- Cuma 4 required fields
+- Tidak ada complex table seperti nominatif
+- Evidence opsional (1 link Google Drive)
+
+#### **Budget Tracking:**
+- Auto-update RKA saat submit
+- Real-time budget validation
+- Warning jika melebihi available budget
+
+#### **Status Management:**
+- Draft: Bisa diedit/dihapus
+- Submitted: Tidak bisa diubah
+- Auto-redirect ke list setelah action
+
+#### **Search & Filter:**
+- RKA dropdown dengan search
+- Category filter (A, B, C)
+- Budget validation warning
+
+### **📊 Comparison: Nominatif vs Non-Nominatif**
+
+| Feature | Nominatif | Non-Nominatif |
+|---------|-----------|---------------|
+| **Input Form** | Complex (18 columns) | Simple (4 fields) |
+| **Detail Data** | Table rows (nama, jabatan, dll) | Tidak ada |
+| **Evidence** | Multiple per row | 1 link opsional |
+| **Budget Calc** | Auto 21 fields | Single dana_anggaran |
+| **User Flow** | Create → Edit Page → Save | Create → Direct Save |
+| **Complexity** | High | Low |
+
+### **🔧 Technical Implementation**
+
+#### **Frontend Files:**
+- `NonNominatif.jsx` - List page dengan table
+- `NonNominatifCreate.jsx` - Create form sederhana
+- Color theme: Blue (konsisten dengan Nominatif)
+
+#### **Database Features:**
+- Simple table structure
+- Foreign key relationships
+- Indexes for performance
+- Timestamps for audit
+
+#### **API Features:**
+- RESTful endpoints
+- Token authentication
+- Error handling
+- Real-time RKA updates
+
+### **📝 Usage Examples**
+
+#### **Example 1: Pembelian ATK**
+```
+Input:
+- Deskripsi: Pembelian ATK bulanan
+- Tanggal: 2024-12-14
+- Dana: Rp 5.000.000
+- RKA: 5.01.01.001 (Belanja ATK)
+- Evidence: https://drive.google.com/file/invoice-atk
+
+Result:
+- Status: Draft (bisa diedit)
+- RKA: +Rp 5.000.000 (anggaran_berjalan)
+```
+
+#### **Example 2: Maintenance AC**
+```
+Input:
+- Deskripsi: Maintenance AC ruang meeting
+- Tanggal: 2024-12-15
+- Dana: Rp 2.500.000
+- RKA: 5.02.01.002 (Maintenance Gedung)
+- Evidence: (kosong)
+
+Result:
+- Status: Submitted (langsung SP2D)
+- RKA: -Rp 2.500.000 (berjalan) → +Rp 2.500.000 (sp2d)
+```
+
+### **🎯 Status Implementation**
+
+#### **✅ Frontend - 100% Complete**
+- List page dengan table 7 kolom
+- Create form sederhana
+- Evidence link opsional
+- Responsive design
+- Color consistency (blue theme)
+
+#### **⏳ Backend - Pending Implementation**
+- Database migration
+- Model & Controller
+- API endpoints
+- RKA budget integration
+
+#### **🔧 Required Actions:**
+```bash
+# Create migration
+php artisan make:migration create_non_nominatifs_table
+
+# Create model & controller
+php artisan make:model NonNominatif
+php artisan make:controller Api/NonNominatifController
+
+# Add routes to api.php
+Route::apiResource('non-nominatifs', NonNominatifController);
+```
+
+### **🎉 Non-Nominatif Status: Ready for Backend Implementation**
+
+**Frontend sudah 100% siap dengan UI simple dan user-friendly!**
+
+_Last Updated: December 14, 2024_
+_Status: Frontend Complete (100%) - Backend Pending_
