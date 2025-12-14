@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock } from 'lucide-react';
 import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
+import nonNominatifService from '../services/nonNominatifService';
 
 const NonNominatif = () => {
   const navigate = useNavigate();
@@ -19,67 +20,45 @@ const NonNominatif = () => {
     const fetchNonNominatifs = async () => {
       try {
         setLoading(true);
-        const user = JSON.parse(localStorage.getItem('user'));
-        const token = user?.token || localStorage.getItem('token');
+        const data = await nonNominatifService.getAll();
 
-        if (!token) {
-          console.error('No token found');
-          setNonNominatifs([]);
-          setLoading(false);
-          return;
-        }
+        console.log('API Response:', data);
 
-        // TODO: Ganti API endpoint ketika backend sudah ada
-        const response = await fetch('http://localhost/api/non-nominatifs', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        // Handle different response structures
+        let nonNominatifArray = [];
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('API Response:', data);
-
-          // Handle different response structures
-          let nonNominatifArray = [];
-
-          if (Array.isArray(data)) {
-            nonNominatifArray = data;
-          } else if (data && Array.isArray(data.data)) {
-            nonNominatifArray = data.data;
-          } else if (data && Array.isArray(data.results)) {
-            nonNominatifArray = data.results;
-          } else if (data && Array.isArray(data.non_nominatifs)) {
-            nonNominatifArray = data.non_nominatifs;
-          } else if (data && typeof data === 'object') {
-            // Try to find array in nested properties (for Laravel pagination)
-            if (data.data && Array.isArray(data.data.data)) {
-              nonNominatifArray = data.data.data;
-            } else if (data.data && Array.isArray(data.data.results)) {
-              nonNominatifArray = data.data.results;
-            } else {
-              // Try to find array in nested properties
-              const possibleArrays = Object.values(data).filter(val => Array.isArray(val));
-              if (possibleArrays.length > 0) {
-                nonNominatifArray = possibleArrays[0];
-              }
+        if (Array.isArray(data)) {
+          nonNominatifArray = data;
+        } else if (data && Array.isArray(data.data)) {
+          nonNominatifArray = data.data;
+        } else if (data && Array.isArray(data.results)) {
+          nonNominatifArray = data.results;
+        } else if (data && Array.isArray(data.non_nominatifs)) {
+          nonNominatifArray = data.non_nominatifs;
+        } else if (data && typeof data === 'object') {
+          // Try to find array in nested properties (for Laravel pagination)
+          if (data.data && Array.isArray(data.data.data)) {
+            nonNominatifArray = data.data.data;
+          } else if (data.data && Array.isArray(data.data.results)) {
+            nonNominatifArray = data.data.results;
+          } else {
+            // Try to find array in nested properties
+            const possibleArrays = Object.values(data).filter(val => Array.isArray(val));
+            if (possibleArrays.length > 0) {
+              nonNominatifArray = possibleArrays[0];
             }
           }
+        }
 
-          if (Array.isArray(nonNominatifArray)) {
-            setNonNominatifs(nonNominatifArray);
-            setIsDataLoaded(true);
-            console.log('Successfully loaded', nonNominatifArray.length, 'non-nominatifs');
-          } else {
-            console.warn('Unexpected data structure:', data);
-            console.log('Available keys:', Object.keys(data));
-            setNonNominatifs([]);
-            setIsDataLoaded(true);
-          }
+        if (Array.isArray(nonNominatifArray)) {
+          setNonNominatifs(nonNominatifArray);
+          setIsDataLoaded(true);
+          console.log('Successfully loaded', nonNominatifArray.length, 'non-nominatifs');
         } else {
-          console.error('API Error:', response.status, response.statusText);
+          console.warn('Unexpected data structure:', data);
+          console.log('Available keys:', Object.keys(data));
           setNonNominatifs([]);
+          setIsDataLoaded(true);
         }
       } catch (error) {
         console.error('Error fetching non-nominatifs:', error);
@@ -129,8 +108,7 @@ const NonNominatif = () => {
   };
 
   const handleEdit = (nonNominatif) => {
-    // TODO: Implement inline edit atau modal edit
-    alert('Fitur edit akan segera hadir');
+    navigate(`/non-nominatif/${nonNominatif.id}/edit`);
   };
 
   const handleDelete = async (id) => {
@@ -178,23 +156,25 @@ const NonNominatif = () => {
 
   const handleConfirmSubmit = async () => {
     const { nonNominatifId } = dialogKonfirmasi;
+    const nonNominatif = nonNominatifs.find(n => n.id === nonNominatifId);
 
     try {
-      const token = localStorage.getItem('token');
+      const response = await nonNominatifService.submit(nonNominatifId);
 
-      // TODO: Ganti API endpoint ketika backend sudah ada
-      const response = await fetch(`http://localhost/api/non-nominatifs/${nonNominatifId}/submit`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        // Tampilkan notifikasi sukses
+      if (response) {
+        // Show success popup notification
         if (window.tampilkanNotifikasi) {
-          window.tampilkanNotifikasi('Non-Nominatif berhasil dikirim', 'success');
+          window.tampilkanNotifikasi('Non-nominatif berhasil dikirim', 'success');
+
+          // Show second notification with details
+          setTimeout(() => {
+            if (window.tampilkanNotifikasi && nonNominatif) {
+              window.tampilkanNotifikasi(
+                `${nonNominatif.deskripsi_kegiatan}\nRp ${parseInt(nonNominatif.total_anggaran_terpakai).toLocaleString('id-ID')}`,
+                'info'
+              );
+            }
+          }, 500);
         }
 
         // Update status non-nominatif di local state
@@ -202,21 +182,18 @@ const NonNominatif = () => {
           nom.id === nonNominatifId ? { ...nom, status: 'submitted' } : nom
         ));
 
-        // Auto refresh setelah 1 detik untuk memastikan data terbaru
+        // Refresh data after delay to show notifications
         setTimeout(() => {
           window.location.reload();
-        }, 1000);
-      } else {
-        // Tampilkan notifikasi error
-        if (window.tampilkanNotifikasi) {
-          window.tampilkanNotifikasi('Gagal mengirim non-nominatif', 'error');
-        }
+        }, 2000);
       }
     } catch (error) {
       console.error('Error submitting non-nominatif:', error);
-      // Tampilkan notifikasi error jaringan
+      // Show error popup notification
       if (window.tampilkanNotifikasi) {
-        window.tampilkanNotifikasi('Terjadi kesalahan jaringan', 'error');
+        window.tampilkanNotifikasi('Gagal mengirim non-nominatif', 'error');
+      } else {
+        alert('Gagal mengirim non-nominatif');
       }
     }
 
@@ -229,7 +206,7 @@ const NonNominatif = () => {
   };
 
   return (
-    <>
+      <>
       {/* Komponen Notifikasi - di luar container utama */}
       <Notifikasi />
 
@@ -377,7 +354,7 @@ const NonNominatif = () => {
                         </div>
                       </td>
                       <td className="px-1 py-1 text-sm font-medium text-right text-gray-900">
-                        {formatRupiah(nonNominatif.dana_anggaran || 0)}
+                        {formatRupiah(nonNominatif.total_anggaran_terpakai || 0)}
                       </td>
                       <td className="px-1 py-1 text-sm">
                         <span className={`inline-flex items-center px-1 py-0 rounded-full text-xs font-medium ${getStatusBadge(nonNominatif.status)}`}>
@@ -387,7 +364,7 @@ const NonNominatif = () => {
                       <td className="px-1 py-1 text-sm text-gray-900">
                         <div className="flex items-center gap-0.5">
                           <Calendar className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                          {formatDate(nonNominatif.tanggal_kegiatan)}
+                          {formatDate(nonNominatif.tanggal)}
                         </div>
                       </td>
                       <td className="px-1 py-1 text-sm text-right">

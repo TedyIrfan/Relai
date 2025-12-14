@@ -16,6 +16,7 @@ use App\Http\Controllers\NominatifNewController;
 use App\Http\Controllers\NominatifDetailRowController;
 use App\Http\Controllers\NominatifBiayaRowController;
 use App\Http\Controllers\NominatifEvidenceController;
+use App\Http\Controllers\Api\NonNominatifController;
 
 // Test endpoint for Swagger
 Route::get('/test', [SwaggerController::class, 'test']);
@@ -56,6 +57,10 @@ Route::prefix('nominatifs/details/{detailRowId}/biaya')->group(function () {
     Route::put('/{biayaId}', [NominatifBiayaRowController::class, 'update']);
     Route::delete('/{biayaId}', [NominatifBiayaRowController::class, 'destroy']);
 });
+
+// NON-NOMINATIF SYSTEM - Sanctum Token Validation
+Route::middleware('auth:sanctum')->apiResource('non-nominatifs', NonNominatifController::class);
+Route::middleware('auth:sanctum')->post('non-nominatifs/{id}/submit', [NonNominatifController::class, 'submit']);
 
 // Evidence (File Upload) - Manual Token Validation
 Route::prefix('nominatifs/{nominatifId}/evidence')->group(function () {

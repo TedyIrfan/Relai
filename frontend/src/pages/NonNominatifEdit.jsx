@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, DollarSign, Calendar, Save, Send, Link } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, DollarSign, Calendar, Save, Send, Link, Edit } from 'lucide-react';
 import nonNominatifService from '../services/nonNominatifService';
 import Notifikasi from '../components/Notifikasi';
 
-const NonNominatifCreate = () => {
+const NonNominatifEdit = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [rkaList, setRkaList] = useState([]);
   const [selectedRKA, setSelectedRKA] = useState('');
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   // State untuk form data non-nominatif
   const [formData, setFormData] = useState({
@@ -29,6 +31,50 @@ const NonNominatifCreate = () => {
 
   // Get selected RKA data
   const getSelectedRKAData = () => rkaList.find(r => r.id == selectedRKA);
+
+  // Fetch existing non-nominatif data
+  useEffect(() => {
+    const fetchNonNominatifData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await nonNominatifService.getById(id);
+        console.log('Full response:', response);
+
+        // Extract actual data from response
+        const data = response.data || response;
+        console.log('Non Nominatif data extracted:', data);
+
+        // Set form data
+        const formDataToSet = {
+          deskripsiKegiatan: data.deskripsi_kegiatan || '',
+          tanggalKegiatan: data.tanggal ? data.tanggal.split('T')[0] : '',
+          danaAnggaran: data.total_anggaran_terpakai || '',
+          evidenceLink: data.evidence_link || ''
+        };
+
+        console.log('Form data to set:', formDataToSet);
+        setFormData(formDataToSet);
+
+        // Set selected RKA
+        if (data.rka_detail_id) {
+          console.log('Setting selected RKA to:', data.rka_detail_id);
+          setSelectedRKA(data.rka_detail_id.toString());
+        }
+      } catch (error) {
+        console.error('Error fetching non-nominatif data:', error);
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi('Gagal memuat data non-nominatif', 'error');
+        }
+        navigate('/non-nominatif');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchNonNominatifData();
+    }
+  }, [id, navigate]);
 
   // Fetch RKA list for dropdown
   useEffect(() => {
@@ -82,6 +128,15 @@ const NonNominatifCreate = () => {
     }));
   };
 
+  // Handle dana anggaran input without double formatting
+  const handleDanaAnggaranChange = (e) => {
+    const numericValue = formatCurrencyInput(e.target.value);
+    setFormData(prev => ({
+      ...prev,
+      danaAnggaran: numericValue
+    }));
+  };
+
   // Format currency input
   const formatCurrencyInput = (value) => {
     // Remove non-numeric characters
@@ -111,11 +166,11 @@ const NonNominatifCreate = () => {
         status: 'draft'
       };
 
-      const response = await nonNominatifService.create(payload);
+      const response = await nonNominatifService.update(id, payload);
 
       // Show success notification popup
       if (window.tampilkanNotifikasi) {
-        window.tampilkanNotifikasi('Non-nominatif berhasil disimpan sebagai draft', 'success');
+        window.tampilkanNotifikasi('Non-nominatif berhasil diperbarui', 'success');
 
         // Show second notification with details
         setTimeout(() => {
@@ -168,11 +223,11 @@ const NonNominatifCreate = () => {
         status: 'submitted'
       };
 
-      const response = await nonNominatifService.create(payload);
+      const response = await nonNominatifService.update(id, payload);
 
       // Show success notification popup
       if (window.tampilkanNotifikasi) {
-        window.tampilkanNotifikasi('Non-nominatif berhasil dikirim', 'success');
+        window.tampilkanNotifikasi('Non-nominatif berhasil diperbarui dan dikirim', 'success');
 
         // Show second notification with details
         setTimeout(() => {
@@ -234,6 +289,21 @@ const NonNominatifCreate = () => {
     return new Intl.NumberFormat('id-ID').format(numValue);
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <>
+        <Notifikasi />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Memuat data non-nominatif...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {/* Notifikasi Component */}
@@ -252,13 +322,13 @@ const NonNominatifCreate = () => {
               Kembali
             </button>
             <div className="flex items-center">
-              <FileText className="w-6 h-6 text-blue-600 mr-3" />
+              <Edit className="w-6 h-6 text-blue-600 mr-3" />
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  Buat Non-Nominatif Baru
+                  Edit Non-Nominatif
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Lengkapi data kegiatan dan pilih Code RKA
+                  Perbarui data kegiatan non-nominatif
                 </p>
               </div>
             </div>
@@ -319,7 +389,7 @@ const NonNominatifCreate = () => {
                       type="text"
                       id="total-anggaran"
                       value={formatDisplayCurrency(formData.danaAnggaran)}
-                      onChange={(e) => handleInputChange('danaAnggaran', formatCurrencyInput(e.target.value))}
+                      onChange={handleDanaAnggaranChange}
                       placeholder="0"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -542,7 +612,7 @@ const NonNominatifCreate = () => {
                 className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                Simpan Draft
+                Perbarui
               </button>
 
               <button
@@ -551,7 +621,7 @@ const NonNominatifCreate = () => {
                 className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
-                Kirim
+                Perbarui dan Kirim
               </button>
             </div>
           </div>
@@ -562,4 +632,4 @@ const NonNominatifCreate = () => {
   );
 };
 
-export default NonNominatifCreate;
+export default NonNominatifEdit;
