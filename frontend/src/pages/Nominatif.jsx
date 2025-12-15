@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock } from 'lucide-react';
 import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
+import { consoleError } from '../utils/logger';
 
 const Nominatif = () => {
   const navigate = useNavigate();
@@ -11,8 +12,14 @@ const Nominatif = () => {
   const [loading, setLoading] = useState(true);
   const [dialogKonfirmasi, setDialogKonfirmasi] = useState({
     isOpen: false,
-    nominatifId: null
+    nominatifId: null,
+    deskripsi: '',
+    type: 'delete' // 'delete' or 'submit'
   });
+
+  // Add deleting and submitting state for visual feedback
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch nominatif list
   useEffect(() => {
@@ -23,7 +30,7 @@ const Nominatif = () => {
         const token = user?.token || localStorage.getItem('token');
 
         if (!token) {
-          console.error('No token found');
+          consoleError('No token found');
           setNominatifs([]);
           setLoading(false);
           return;
@@ -38,7 +45,6 @@ const Nominatif = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('API Response:', data); // Debug log
 
           // Handle different response structures
           let nominatifArray = [];
@@ -69,19 +75,16 @@ const Nominatif = () => {
           if (Array.isArray(nominatifArray)) {
             setNominatifs(nominatifArray);
             setIsDataLoaded(true);
-            console.log('Successfully loaded', nominatifArray.length, 'nominatifs');
-          } else {
-            console.warn('Unexpected data structure:', data);
-            console.log('Available keys:', Object.keys(data));
-            setNominatifs([]);
+            } else {
+              setNominatifs([]);
             setIsDataLoaded(true);
           }
         } else {
-          console.error('API Error:', response.status, response.statusText);
+          consoleError('API Error:', response.status, response.statusText);
           setNominatifs([]);
         }
       } catch (error) {
-        console.error('Error fetching nominatifs:', error);
+        consoleError('Error fetching nominatifs:', error);
         setNominatifs([]);
         setIsDataLoaded(true);
       } finally {
@@ -138,16 +141,32 @@ const Nominatif = () => {
       // Kirim ID nominatif spesifik via query param untuk memastikan yang diedit benar
       navigate(`/nominatif/${routeId}?id=${nominatif.id}`);
     } else {
-      console.error("Data nominatif tidak lengkap untuk navigasi:", nominatif);
+      consoleError("Data nominatif tidak lengkap untuk navigasi:", nominatif);
       alert("Data RKA tidak ditemukan pada nominatif ini.");
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id, deskripsi) => {
+    setDialogKonfirmasi({
+      isOpen: true,
+      nominatifId: id,
+      deskripsi: deskripsi,
+      type: 'delete'
+    });
+  };
+
+  const handleConfirmDelete = async () => {
     try {
       const token = localStorage.getItem('token');
+      const deleteId = dialogKonfirmasi.nominatifId;
 
-      const response = await fetch(`http://localhost/api/nominatifs-new/${id}`, {
+      // Set loading state immediately for UI feedback
+      setIsDeleting(true);
+
+      // Close dialog immediately for better UX
+      handleCloseDialog();
+
+      const response = await fetch(`http://localhost/api/nominatifs-new/${deleteId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -156,12 +175,22 @@ const Nominatif = () => {
       });
 
       if (response.ok) {
+        // Optimized state update - find and remove specific item
+        setNominatifs(prevNominatifs => {
+          const index = prevNominatifs.findIndex(nom => nom.id === deleteId);
+          if (index > -1) {
+            // Create new array without the deleted item for better performance
+            const newNominatifs = [...prevNominatifs];
+            newNominatifs.splice(index, 1);
+            return newNominatifs;
+          }
+          return prevNominatifs;
+        });
+
         // Tampilkan notifikasi sukses
         if (window.tampilkanNotifikasi) {
-          window.tampilkanNotifikasi('Nominatif berhasil dihapus', 'success');
+          window.tampilkanNotifikasi('Data berhasil dihapus', 'success');
         }
-
-        setNominatifs(nominatifs.filter(nom => nom.id !== id));
       } else {
         // Tampilkan notifikasi error
         if (window.tampilkanNotifikasi) {
@@ -169,24 +198,42 @@ const Nominatif = () => {
         }
       }
     } catch (error) {
-      console.error('Error deleting nominatif:', error);
+      consoleError('Error deleting nominatif:', error);
       // Tampilkan notifikasi error jaringan
       if (window.tampilkanNotifikasi) {
         window.tampilkanNotifikasi('Terjadi kesalahan jaringan', 'error');
       }
+    } finally {
+      // Always reset loading state
+      setIsDeleting(false);
     }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogKonfirmasi({
+      isOpen: false,
+      nominatifId: null,
+      deskripsi: '',
+      type: 'delete'
+    });
   };
 
   const handleSubmit = (id) => {
     // Buka dialog konfirmasi
+    const nominatif = nominatifs.find(n => n.id === id);
     setDialogKonfirmasi({
       isOpen: true,
-      nominatifId: id
+      nominatifId: id,
+      deskripsi: nominatif?.deskripsi_perjalanan_dinas || '',
+      type: 'submit'
     });
   };
 
   const handleConfirmSubmit = async () => {
     const { nominatifId } = dialogKonfirmasi;
+
+    // Set loading state immediately
+    setIsSubmitting(true);
 
     try {
       const token = localStorage.getItem('token');
@@ -220,19 +267,22 @@ const Nominatif = () => {
         }
       }
     } catch (error) {
-      console.error('Error submitting nominatif:', error);
+      consoleError('Error submitting nominatif:', error);
       // Tampilkan notifikasi error jaringan
       if (window.tampilkanNotifikasi) {
         window.tampilkanNotifikasi('Terjadi kesalahan jaringan', 'error');
       }
+    } finally {
+      // Always reset loading state
+      setIsSubmitting(false);
+      // Tutup dialog
+      setDialogKonfirmasi({
+        isOpen: false,
+        nominatifId: null,
+        deskripsi: '',
+        type: 'delete'
+      });
     }
-
-    // Tutup dialog
-    setDialogKonfirmasi({ isOpen: false, nominatifId: null });
-  };
-
-  const handleCloseDialog = () => {
-    setDialogKonfirmasi({ isOpen: false, nominatifId: null });
   };
 
   return (
@@ -244,13 +294,17 @@ const Nominatif = () => {
       <KonfirmasiDialog
         isOpen={dialogKonfirmasi.isOpen}
         onClose={handleCloseDialog}
-        onConfirm={handleConfirmSubmit}
-        title="Konfirmasi Pengiriman Nominatif"
-        message="Setelah nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n\nPastikan semua data sudah benar sebelum melanjutkan."
-        confirmText="Ya, Kirim"
+        onConfirm={dialogKonfirmasi.type === 'delete' ? handleConfirmDelete : handleConfirmSubmit}
+        title={dialogKonfirmasi.type === 'delete' ? 'Konfirmasi Hapus Data' : 'Konfirmasi Pengiriman Nominatif'}
+        message={dialogKonfirmasi.type === 'delete'
+          ? `Apakah Anda yakin ingin menghapus data nominatif ini?\n\nDeskripsi: ${dialogKonfirmasi.deskripsi}\n\nData yang sudah dihapus tidak dapat dikembalikan.`
+          : `Apakah Anda yakin ingin mengirim data nominatif ini?\n\nDeskripsi: ${dialogKonfirmasi.deskripsi}\n\nSetelah nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n\nPastikan semua data sudah benar sebelum melanjutkan.`
+        }
+        confirmText={dialogKonfirmasi.type === 'delete' ? 'Ya, Hapus' : 'Ya, Kirim'}
         cancelText="Batal"
-        type="success"
+        type={dialogKonfirmasi.type === 'delete' ? 'danger' : 'success'}
         iconType="warning"
+        isLoading={dialogKonfirmasi.type === 'submit' ? isSubmitting : false}
       />
 
       <div className="min-h-screen bg-gray-50">
@@ -426,11 +480,12 @@ const Nominatif = () => {
                           )}
                           {(nominatif.status === 'draft' || nominatif.status === 'rejected') && (
                             <button
-                              onClick={() => handleDelete(nominatif.id)}
-                              className="p-1 text-red-600 hover:text-red-800"
-                              title="Hapus"
+                              onClick={() => handleDeleteClick(nominatif.id, nominatif.deskripsi_perjalanan_dinas)}
+                              disabled={isDeleting}
+                              className={`p-1 ${isDeleting ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
+                              title={isDeleting ? 'Menghapus...' : 'Hapus'}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className={`w-4 h-4 ${isDeleting ? 'animate-pulse' : ''}`} />
                             </button>
                           )}
                           {(nominatif.status === 'draft' || nominatif.status === 'rejected') && (

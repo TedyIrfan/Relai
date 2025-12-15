@@ -455,9 +455,9 @@ const NominatifDetailPage = () => {
               {/* Save Button (Draft) */}
               <button
                 onClick={handleSaveDraft}
-                disabled={saving || submitting || !tableData.length}
+                disabled={saving || !tableData.length}
                 className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                  saving || submitting || !tableData.length
+                  saving || !tableData.length
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
                 }`}
@@ -468,9 +468,9 @@ const NominatifDetailPage = () => {
               {/* Submit Button (Final) */}
               <button
                 onClick={handleSubmit}
-                disabled={saving || submitting || !tableData.length}
+                disabled={saving || !tableData.length}
                 className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                  saving || submitting || !tableData.length
+                  saving || !tableData.length
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-green-600 text-white hover:bg-green-700 active:bg-green-800'
                 }`}

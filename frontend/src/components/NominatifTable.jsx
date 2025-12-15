@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import NumberInput from './NumberInput';
 import { calculateNominatifBiayaRow, getBudgetStatus, formatCurrency } from '../utils/calculations';
+import { consoleError } from '../utils/logger';
 
 /**
  * Excel-like Nominatif Biaya Table
@@ -36,7 +37,7 @@ const NominatifTable = ({ data, onDataChange, onSave, loading = false }) => {
       setHasChanges(true);
       onDataChange?.(newData);
     } catch (error) {
-      console.error('Calculation error:', error);
+      consoleError('Calculation error:', error);
     } finally {
       setTimeout(() => setCalculating(false), 100); // Debounce calculations
     }

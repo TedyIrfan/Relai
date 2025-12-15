@@ -9,7 +9,8 @@ const KonfirmasiDialog = ({
   confirmText = 'Ya, Lanjutkan',
   cancelText = 'Batal',
   type = 'warning',
-  iconType = 'warning'
+  iconType = 'warning',
+  isLoading = false
 }) => {
   if (!isOpen) return null;
 
@@ -91,10 +92,18 @@ const KonfirmasiDialog = ({
             </button>
             <button
               type="button"
-              className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${warnaButton[type]}`}
+              className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${warnaButton[type]} ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
               onClick={onConfirm}
+              disabled={isLoading}
             >
-              {confirmText}
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Mengirim...</span>
+                </div>
+              ) : (
+                confirmText
+              )}
             </button>
           </div>
         </div>

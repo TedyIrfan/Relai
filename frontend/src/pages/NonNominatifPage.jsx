@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Save, Send, FileText, AlertCircle, Plus, X, Link2 } from 'lucide-react';
 import useNotification from '../hooks/useNotification';
+import { consoleLog, consoleError, consoleWarn } from '../utils/logger';
 
 const NonNominatifPage = () => {
   const { rkaId } = useParams();
@@ -39,10 +40,10 @@ const NonNominatifPage = () => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user?.token || localStorage.getItem('token');
-      console.log('Token found:', token ? 'YES' : 'NO');
+      consoleLog('Token found:', token ? 'YES' : 'NO');
       return token;
     } catch (error) {
-      console.error('Error getting token:', error);
+      consoleError('Error getting token:', error);
       return localStorage.getItem('token');
     }
   };
@@ -58,7 +59,7 @@ const NonNominatifPage = () => {
           return;
         }
 
-        console.log('Fetching RKA list to find ID:', rkaId);
+        consoleLog('Fetching RKA list to find ID:', rkaId);
         const response = await fetch('http://localhost/api/rka-details', {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -68,7 +69,7 @@ const NonNominatifPage = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('RKA List Response:', data);
+          consoleLog('RKA List Response:', data);
 
           // Handle different response structures
           let rkaArray = [];
@@ -84,11 +85,11 @@ const NonNominatifPage = () => {
           const rkaDetail = rkaArray.find(rka => rka.id == rkaId);
 
           if (rkaDetail) {
-            console.log('Found RKA:', rkaDetail);
+            consoleLog('Found RKA:', rkaDetail);
             setRkaDetail(rkaDetail);
           } else {
-            console.error('RKA not found with ID:', rkaId);
-            console.log('Available RKA IDs:', rkaArray.map(r => r.id));
+            consoleError('RKA not found with ID:', rkaId);
+            consoleLog('Available RKA IDs:', rkaArray.map(r => r.id));
             setError('RKA tidak ditemukan');
           }
         } else {
@@ -96,7 +97,7 @@ const NonNominatifPage = () => {
         }
       } catch (error) {
         setError('Terjadi kesalahan saat memuat data');
-        console.error('Error fetching RKA:', error);
+        consoleError('Error fetching RKA:', error);
       } finally {
         setLoading(false);
       }
@@ -113,11 +114,11 @@ const NonNominatifPage = () => {
     if (savedDraft) {
       const draft = JSON.parse(savedDraft);
       setDraftData(draft);
-      console.log('📝 Loaded draft data:', draft);
+      consoleLog('📝 Loaded draft data:', draft);
 
       // If rkaId matches, populate form
       if (draft.rkaId == rkaId) {
-        console.log('✅ RKA ID matches draft:', draft.rkaId);
+        consoleLog('✅ RKA ID matches draft:', draft.rkaId);
         setFormData({
           deskripsi_kegiatan: draft.deskripsi || '',
           tanggal_kegiatan: draft.tanggal || '',
@@ -125,7 +126,7 @@ const NonNominatifPage = () => {
         });
         setSuccess('Draft berhasil dimuat');
       } else {
-        console.log('❌ RKA ID does not match. Expected:', rkaId, 'Got:', draft.rkaId);
+        consoleLog('❌ RKA ID does not match. Expected:', rkaId, 'Got:', draft.rkaId);
       }
     }
   }, [rkaId]);
@@ -133,11 +134,11 @@ const NonNominatifPage = () => {
   // Fetch existing non-nominatif if in edit mode
   useEffect(() => {
     if (specificNominatifId) {
-      console.log('🔍 EDIT MODE: Fetching specific non-nominatif ID:', specificNominatifId);
+      consoleLog('🔍 EDIT MODE: Fetching specific non-nominatif ID:', specificNominatifId);
       setIsEditMode(true);
       fetchNonNominatif(specificNominatifId);
     } else {
-      console.log('🚀 CREATE MODE: Initializing new non-nominatif for RKA ID:', rkaId);
+      consoleLog('🚀 CREATE MODE: Initializing new non-nominatif for RKA ID:', rkaId);
       setIsEditMode(false);
       // Load draft data if exists
       if (draftData) {
@@ -169,7 +170,7 @@ const NonNominatifPage = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Data loaded successfully:', data);
+        consoleLog('✅ Data loaded successfully:', data);
         setNonNominatif(data);
 
         // Populate form with existing data
@@ -182,11 +183,11 @@ const NonNominatifPage = () => {
         // TODO: Load evidence list when backend is ready
         // setEvidenceList(data.evidences || []);
       } else {
-        console.error('Failed to fetch non-nominatif:', response.status);
+        consoleError('Failed to fetch non-nominatif:', response.status);
         setError('Gagal memuat data non-nominatif');
       }
     } catch (error) {
-      console.error('Error fetching non-nominatif:', error);
+      consoleError('Error fetching non-nominatif:', error);
       setError('Terjadi kesalahan saat memuat data');
     }
   };
@@ -287,7 +288,7 @@ const NonNominatifPage = () => {
         showError(errorData.message || 'Gagal menyimpan draft');
       }
     } catch (error) {
-      console.error('Error saving draft:', error);
+      consoleError('Error saving draft:', error);
       showError('Terjadi kesalahan saat menyimpan');
     } finally {
       setSaving(false);
@@ -351,7 +352,7 @@ const NonNominatifPage = () => {
         showError(errorData.message || 'Gagal mengirim non-nominatif');
       }
     } catch (error) {
-      console.error('Error submitting:', error);
+      consoleError('Error submitting:', error);
       showError('Terjadi kesalahan saat mengirim');
     } finally {
       setSubmitting(false);

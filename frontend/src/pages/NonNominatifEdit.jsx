@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, DollarSign, Calendar, Save, Send, Link, Edit } from 'lucide-react';
 import nonNominatifService from '../services/nonNominatifService';
 import Notifikasi from '../components/Notifikasi';
+import { consoleLog, consoleError } from '../utils/logger';
 
 const NonNominatifEdit = () => {
   const navigate = useNavigate();
@@ -10,6 +11,8 @@ const NonNominatifEdit = () => {
   const [rkaList, setRkaList] = useState([]);
   const [selectedRKA, setSelectedRKA] = useState('');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -38,11 +41,11 @@ const NonNominatifEdit = () => {
       try {
         setIsLoading(true);
         const response = await nonNominatifService.getById(id);
-        console.log('Full response:', response);
+        consoleLog('Full response:', response);
 
         // Extract actual data from response
         const data = response.data || response;
-        console.log('Non Nominatif data extracted:', data);
+        consoleLog('Non Nominatif data extracted:', data);
 
         // Set form data
         const formDataToSet = {
@@ -52,16 +55,16 @@ const NonNominatifEdit = () => {
           evidenceLink: data.evidence_link || ''
         };
 
-        console.log('Form data to set:', formDataToSet);
+        consoleLog('Form data to set:', formDataToSet);
         setFormData(formDataToSet);
 
         // Set selected RKA
         if (data.rka_detail_id) {
-          console.log('Setting selected RKA to:', data.rka_detail_id);
+          consoleLog('Setting selected RKA to:', data.rka_detail_id);
           setSelectedRKA(data.rka_detail_id.toString());
         }
       } catch (error) {
-        console.error('Error fetching non-nominatif data:', error);
+        consoleError('Error fetching non-nominatif data:', error);
         if (window.tampilkanNotifikasi) {
           window.tampilkanNotifikasi('Gagal memuat data non-nominatif', 'error');
         }
@@ -156,6 +159,9 @@ const NonNominatifEdit = () => {
       return;
     }
 
+    // Set loading state
+    setSaving(true);
+
     try {
       const payload = {
         rka_detail_id: selectedRKA,
@@ -185,13 +191,16 @@ const NonNominatifEdit = () => {
         navigate('/non-nominatif');
       }, 2000);
     } catch (error) {
-      console.error('Error saving draft:', error);
+      consoleError('Error saving draft:', error);
       // Show error notification
       if (window.tampilkanNotifikasi) {
         window.tampilkanNotifikasi(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan draft', 'error');
       } else {
         alert(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan draft');
       }
+    } finally {
+      // Always reset loading state
+      setSaving(false);
     }
   };
 
@@ -212,6 +221,9 @@ const NonNominatifEdit = () => {
     );
 
     if (!confirmed) return;
+
+    // Set loading state
+    setSubmitting(true);
 
     try {
       const payload = {
@@ -242,13 +254,16 @@ const NonNominatifEdit = () => {
         navigate('/non-nominatif');
       }, 2500);
     } catch (error) {
-      console.error('Error submitting:', error);
+      consoleError('Error submitting:', error);
       // Show error notification
       if (window.tampilkanNotifikasi) {
         window.tampilkanNotifikasi(error.response?.data?.message || 'Terjadi kesalahan saat mengirim non-nominatif', 'error');
       } else {
         alert(error.response?.data?.message || 'Terjadi kesalahan saat mengirim non-nominatif');
       }
+    } finally {
+      // Always reset loading state
+      setSubmitting(false);
     }
   };
 
@@ -402,149 +417,17 @@ const NonNominatifEdit = () => {
                   <label htmlFor="rka-select" className="block text-sm font-medium text-gray-700 mb-2">
                     Pilih Code RKA <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setDropdownOpen(!dropdownOpen)}
-                      className="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between"
+                  <div
+                      className="w-full px-4 py-3 text-left bg-gray-100 border border-gray-300 rounded-lg shadow-sm overflow-hidden"
                     >
-                      <span className={`truncate ${selectedRKA ? 'text-gray-900' : 'text-gray-500'}`}>
+                      <span className={`block truncate ${selectedRKA ? 'text-gray-700' : 'text-gray-500'}`}>
                         {selectedRKA
                           ? formatRKADisplay(getSelectedRKAData())
                           : 'Pilih Code RKA...'
                         }
                       </span>
-                      <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ${dropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {dropdownOpen && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-hidden">
-                        {/* Search Box */}
-                        <div className="p-3 border-b border-gray-200">
-                          <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <input
-                              type="text"
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                              placeholder="Cari kode atau arti kode..."
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Category Filter */}
-                        <div className="px-3 py-2 border-b border-gray-200 bg-gray-50">
-                          <div className="flex gap-2 flex-wrap">
-                            <button
-                              onClick={() => setKategoriFilter('')}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                !kategoriFilter
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              Semua
-                            </button>
-                            <button
-                              onClick={() => setKategoriFilter('A')}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                kategoriFilter === 'A'
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              A - Dinas Pimpinan
-                            </button>
-                            <button
-                              onClick={() => setKategoriFilter('B')}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                kategoriFilter === 'B'
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              B - Tata Usaha
-                            </button>
-                            <button
-                              onClick={() => setKategoriFilter('C')}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                kategoriFilter === 'C'
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              C - Konferensi
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Dropdown Items */}
-                        <div className="max-h-60 overflow-auto">
-                          {loading ? (
-                            <div className="px-4 py-3 text-center text-gray-500">
-                              <div className="inline-flex items-center">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
-                                Memuat...
-                              </div>
-                            </div>
-                          ) : filteredRKA.length > 0 ? (
-                            filteredRKA.map((rka) => {
-                              const tersisa = calculateTersisa(rka);
-
-                              return (
-                                <button
-                                  key={rka.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedRKA(rka.id);
-                                    setDropdownOpen(false);
-                                    setSearchTerm('');
-                                  }}
-                                  className="w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
-                                >
-                                  <div className="space-y-1">
-                                    <div className="font-mono text-xs text-gray-900 truncate">
-                                      {formatRKADisplay(rka)}
-                                    </div>
-                                    <div className="text-xs text-gray-600 truncate">
-                                      {rka.layanan}
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                      <div className="text-xs text-gray-500">
-                                        {rka.kategoriAnggaran} • {rka.wilayah}
-                                      </div>
-                                      <div className="text-right">
-                                        <div className="text-xs font-medium text-blue-600">
-                                          Rp {tersisa.toLocaleString('id-ID')}
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                          Tersisa
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </button>
-                              );
-                            })
-                          ) : (
-                            <div className="px-4 py-3 text-center text-gray-500 text-sm">
-                              {searchTerm
-                                ? 'Tidak ada hasil pencarian'
-                                : kategoriFilter
-                                  ? `Tidak ada RKA tersedia untuk kategori ${kategoriFilter}`
-                                  : 'Tidak ada RKA tersedia'
-                              }
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
               </div>
-            </div>
 
             {/* Selected RKA Info */}
             {selectedRKA && (
@@ -608,24 +491,44 @@ const NonNominatifEdit = () => {
 
               <button
                 onClick={handleSaveDraft}
-                disabled={!selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
+                disabled={saving || submitting || !selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
                 className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
-                <Save className="w-4 h-4" />
-                Perbarui
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Menyimpan...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Perbarui
+                  </>
+                )}
               </button>
 
               <button
                 onClick={handleSubmit}
-                disabled={!selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
+                disabled={submitting || saving || !selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
                 className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
-                <Send className="w-4 h-4" />
-                Perbarui dan Kirim
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Mengirim...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Perbarui dan Kirim
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
+      </div>
+    </div>
       </div>
     </div>
     </>

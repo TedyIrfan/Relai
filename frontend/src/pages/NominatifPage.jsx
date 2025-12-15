@@ -4,6 +4,7 @@ import { ArrowLeft, Save, Send, FileText, AlertCircle } from 'lucide-react';
 import NominatifExcelTable from '../components/tables/NominatifExcelTable';
 import { nominatifService } from '../services/nominatifService';
 import useNotification from '../hooks/useNotification';
+import { consoleLog, consoleError, consoleWarn } from '../utils/logger';
 
 const NominatifPage = () => {
   const { rkaId } = useParams();
@@ -33,12 +34,22 @@ const NominatifPage = () => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const token = user?.token || localStorage.getItem('token');
-      console.log('Token found:', token ? 'YES' : 'NO');
+      consoleLog('Token found:', token ? 'YES' : 'NO');
       return token;
     } catch (error) {
-      console.error('Error getting token:', error);
+      consoleError('Error getting token:', error);
       return localStorage.getItem('token');
     }
+  };
+
+  // Format currency helper
+  const formatRupiah = (amount) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount || 0);
   };
 
   // Fetch RKA detail from list
@@ -52,7 +63,7 @@ const NominatifPage = () => {
           return;
         }
 
-        console.log('Fetching RKA list to find ID:', rkaId);
+        consoleLog('Fetching RKA list to find ID:', rkaId);
         const response = await fetch('http://localhost/api/rka-details', {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -62,7 +73,7 @@ const NominatifPage = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('RKA List Response:', data);
+          consoleLog('RKA List Response:', data);
 
           // Handle different response structures
           let rkaArray = [];
@@ -78,11 +89,11 @@ const NominatifPage = () => {
           const rkaDetail = rkaArray.find(rka => rka.id == rkaId);
 
           if (rkaDetail) {
-            console.log('Found RKA:', rkaDetail);
+            consoleLog('Found RKA:', rkaDetail);
             setRkaDetail(rkaDetail);
           } else {
-            console.error('RKA not found with ID:', rkaId);
-            console.log('Available RKA IDs:', rkaArray.map(r => r.id));
+            consoleError('RKA not found with ID:', rkaId);
+            consoleLog('Available RKA IDs:', rkaArray.map(r => r.id));
             setError('RKA tidak ditemukan');
           }
         } else {
@@ -90,7 +101,7 @@ const NominatifPage = () => {
         }
       } catch (error) {
         setError('Terjadi kesalahan saat memuat data');
-        console.error('Error fetching RKA:', error);
+        consoleError('Error fetching RKA:', error);
       } finally {
         setLoading(false);
       }
@@ -107,21 +118,21 @@ const NominatifPage = () => {
       const savedDraft = localStorage.getItem('nominatifDraft');
       if (savedDraft) {
         const draft = JSON.parse(savedDraft);
-        console.log('Loaded draft data:', draft);
+        consoleLog('Loaded draft data:', draft);
         setDraftData(draft);
 
         // Clear draft from localStorage after loading
         localStorage.removeItem('nominatifDraft');
       }
     } catch (error) {
-      console.error('Error loading draft data:', error);
+      consoleError('Error loading draft data:', error);
     }
   }, []);
 
   // Detect edit mode and load existing nominatif - STRICT MODE
   useEffect(() => {
     const initializePage = async () => {
-      console.log('🚀 Initializing page with:', {
+      consoleLog('🚀 Initializing page with:', {
         rkaId,
         specificNominatifId,
         url: location.search
@@ -139,7 +150,7 @@ const NominatifPage = () => {
 
       // SKENARIO 1: EDIT MODE (Ada ID spesifik di URL)
       if (specificNominatifId && specificNominatifId !== 'undefined') {
-        console.log(`🔍 EDIT MODE: Fetching specific nominatif ID: ${specificNominatifId}`);
+        consoleLog(`🔍 EDIT MODE: Fetching specific nominatif ID: ${specificNominatifId}`);
         try {
           const response = await fetch(`http://localhost/api/nominatifs-new/${specificNominatifId}`, {
             headers: {
@@ -154,7 +165,7 @@ const NominatifPage = () => {
             const data = result.data?.nominatif || result.data;
             
             if (data && data.id) {
-              console.log('✅ Data loaded successfully:', data);
+              consoleLog('✅ Data loaded successfully:', data);
               setNominatif(data);
               setIsEditMode(true);
               await loadNominatifDetailRows(data.id);
@@ -166,14 +177,14 @@ const NominatifPage = () => {
             throw new Error(`Gagal memuat data nominatif (Status: ${response.status})`);
           }
         } catch (err) {
-          console.error('❌ Fatal Error loading nominatif:', err);
+          consoleError('❌ Fatal Error loading nominatif:', err);
           setError(`Data tidak ditemukan: ${err.message}. Silakan kembali ke daftar.`);
           setIsEditMode(false); // Fail safe
         }
       } 
       // SKENARIO 2: CREATE MODE (Tidak ada ID di URL)
       else {
-        console.log('🆕 CREATE MODE: No specific ID found, initializing new form');
+        consoleLog('🆕 CREATE MODE: No specific ID found, initializing new form');
         setIsEditMode(false);
         setNominatif(null);
       }
@@ -201,9 +212,9 @@ const NominatifPage = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('API Response Structure:', data);
-          console.log('Data type:', typeof data);
-          console.log('Data keys:', Object.keys(data));
+          consoleLog('API Response Structure:', data);
+          consoleLog('Data type:', typeof data);
+          consoleLog('Data keys:', Object.keys(data));
 
           // Handle different response structures
           let dataArray = [];
@@ -216,30 +227,30 @@ const NominatifPage = () => {
           } else if (data && Array.isArray(data.results)) {
             dataArray = data.results;
           } else {
-            console.error('Unexpected data structure:', data);
-            console.log('Setting empty array as fallback');
+            consoleError('Unexpected data structure:', data);
+            consoleLog('Setting empty array as fallback');
             setNominatifData([]);
             return;
           }
 
-          console.log('Processed dataArray length:', dataArray.length);
-          console.log('Sample data item:', dataArray[0]);
+          consoleLog('Processed dataArray length:', dataArray.length);
+          consoleLog('Sample data item:', dataArray[0]);
 
           // Filter by RKA ID and transform to table format
           const filteredData = dataArray
             .filter(item => {
-              console.log('Checking item.rka_detail_id:', item.rka_detail_id, 'vs rkaId:', rkaId);
+              consoleLog('Checking item.rka_detail_id:', item.rka_detail_id, 'vs rkaId:', rkaId);
               return item.rka_detail_id == rkaId;
             })
             .flatMap(item => {
-              console.log('Processing item detail_rows:', item.detail_rows);
+              consoleLog('Processing item detail_rows:', item.detail_rows);
               if (!item.detail_rows || !Array.isArray(item.detail_rows)) {
-                console.warn('No detail_rows found for item:', item);
+                consoleWarn('No detail_rows found for item:', item);
                 return [];
               }
 
               return item.detail_rows.map(row => {
-                console.log('Processing row:', row);
+                consoleLog('Processing row:', row);
                 return {
                   id: row.id,
                   nama_lengkap: row.nama || row.person_name || '',
@@ -273,11 +284,11 @@ const NominatifPage = () => {
               });
             });
 
-          console.log('Final filtered data:', filteredData);
+          consoleLog('Final filtered data:', filteredData);
           setNominatifData(filteredData);
         }
       } catch (error) {
-        console.error('Error fetching nominatif data:', error);
+        consoleError('Error fetching nominatif data:', error);
       }
     };
 
@@ -301,11 +312,11 @@ const NominatifPage = () => {
 
       if (response.ok) {
         const detailsData = await response.json();
-        console.log('📋 Raw API response details:', detailsData);
+        consoleLog('📋 Raw API response details:', detailsData);
 
         if (detailsData.data && detailsData.data.length > 0) {
-          console.log('📋 Sample detail data structure:', detailsData.data[0]);
-          console.log('📋 Tanggal fields in first row:', {
+          consoleLog('📋 Sample detail data structure:', detailsData.data[0]);
+          consoleLog('📋 Tanggal fields in first row:', {
             id: detailsData.data[0].id,
             tanggal_pergi: detailsData.data[0].tanggal_pergi,
             tanggal_sampai: detailsData.data[0].tanggal_sampai
@@ -326,17 +337,17 @@ const NominatifPage = () => {
             let biayaData = {};
             if (biayaResponse.ok) {
               const biayaResult = await biayaResponse.json();
-              console.log(`🔍 DEBUG: Biaya data for detail ${detail.id}:`, biayaResult);
+              consoleLog(`🔍 DEBUG: Biaya data for detail ${detail.id}:`, biayaResult);
               biayaData = biayaResult.data || {};
-              console.log(`🔍 DEBUG: Extracted biayaData:`, biayaData);
-              console.log(`🔍 DEBUG: Transport fields:`, {
+              consoleLog(`🔍 DEBUG: Extracted biayaData:`, biayaData);
+              consoleLog(`🔍 DEBUG: Transport fields:`, {
                 pesawat_non_pp_pagu: biayaData.transport_pesawat_non_pp_pagu,
                 taksi_pagu: biayaData.transport_taksi_pagu,
                 pesawat_non_pp_aktual: biayaData.transport_pesawat_non_pp_aktual,
                 taksi_aktual: biayaData.transport_taksi_aktual
               });
             } else {
-              console.error(`❌ DEBUG: Failed to load biaya for detail ${detail.id}:`, biayaResponse.status);
+              consoleError(`❌ DEBUG: Failed to load biaya for detail ${detail.id}:`, biayaResponse.status);
             }
 
             // Get evidence data for this detail
@@ -397,7 +408,7 @@ const NominatifPage = () => {
               evidence_files: evidenceData,
             };
 
-            console.log(`🔍 DEBUG: Final table data for detail ${detail.id}:`, {
+            consoleLog(`🔍 DEBUG: Final table data for detail ${detail.id}:`, {
               id: detail.id,
               nama_lengkap: detail.person_name,
               transport_pesawat_non_pp_pagu: biayaData.transport_pesawat_non_pp_pagu,
@@ -413,12 +424,12 @@ const NominatifPage = () => {
           tanggal_sampai: row.tanggal_sampai,
           evidence_count: row.evidence_files?.length || 0
         }));
-        console.log('🔄 Transformed table data:', debugTableData);
+        consoleLog('🔄 Transformed table data:', debugTableData);
 
         // Debug evidence data specifically
         const rowsWithEvidence = tableData.filter(row => row.evidence_files && row.evidence_files.length > 0);
         if (rowsWithEvidence.length > 0) {
-          console.log('🔍 Evidence data loaded:', rowsWithEvidence.map(row => ({
+          consoleLog('🔍 Evidence data loaded:', rowsWithEvidence.map(row => ({
             id: row.id,
             evidence_count: row.evidence_files.length,
             first_evidence: row.evidence_files[0]
@@ -428,13 +439,13 @@ const NominatifPage = () => {
         // Check if any tanggal_sampai are empty
         const emptyTanggalSampai = debugTableData.filter(row => !row.tanggal_sampai);
         if (emptyTanggalSampai.length > 0) {
-          console.warn('⚠️ Rows with empty tanggal_sampai:', emptyTanggalSampai);
+          consoleWarn('⚠️ Rows with empty tanggal_sampai:', emptyTanggalSampai);
         }
 
         setNominatifData(tableData);
       }
     } catch (error) {
-      console.error('Error loading detail rows:', error);
+      consoleError('Error loading detail rows:', error);
     }
   };
 
@@ -458,7 +469,7 @@ const NominatifPage = () => {
       // Tentukan mode berdasarkan keberadaan ID yang valid
       const isRealEditMode = !!activeNominatifId;
 
-      console.log('🔒 SAFETY CHECK:', {
+      consoleLog('🔒 SAFETY CHECK:', {
         rkaId,
         specificNominatifId,
         stateId: nominatif?.id,
@@ -487,19 +498,19 @@ const NominatifPage = () => {
 
       // CRITICAL FIX: Prevent "undefined" in URL
       if (apiUrl.includes('undefined')) {
-        console.error('🚨 CRITICAL: Attempted to send request to undefined URL:', apiUrl);
-        console.log('Dump state:', { isEditMode, nominatif, activeNominatifId });
+        consoleError('🚨 CRITICAL: Attempted to send request to undefined URL:', apiUrl);
+        consoleLog('Dump state:', { isEditMode, nominatif, activeNominatifId });
         
         if (isRealEditMode && activeNominatifId) {
              // Force fix URL if ID exists
              apiUrl = `http://localhost/api/nominatifs-new/${activeNominatifId}`;
-             console.log('✅ URL fixed manually:', apiUrl);
+             consoleLog('✅ URL fixed manually:', apiUrl);
         } else {
              throw new Error('Terjadi kesalahan sistem: ID Nominatif hilang. Silakan refresh halaman.');
         }
       }
 
-      console.log(`📡 API ${apiMethod} to: ${apiUrl}`);
+      consoleLog(`📡 API ${apiMethod} to: ${apiUrl}`);
 
       // Validate ID before PUT
       if (apiMethod === 'PUT' && !activeNominatifId) {
@@ -517,7 +528,7 @@ const NominatifPage = () => {
 
       if (!nominatifResponse.ok) {
         const errorText = await nominatifResponse.text();
-        console.error(`Nominatif ${apiMethod} failed:`, errorText);
+        consoleError(`Nominatif ${apiMethod} failed:`, errorText);
         throw new Error(`Gagal ${isEditMode ? 'update' : 'membuat'} nominatif: ${nominatifResponse.status} - ${errorText}`);
       }
 
@@ -534,7 +545,7 @@ const NominatifPage = () => {
         return nameA.localeCompare(nameB);
       });
 
-      console.log('🔄 Frontend Auto-Sort Results:', {
+      consoleLog('🔄 Frontend Auto-Sort Results:', {
         originalOrder: data.map(row => row.nama_lengkap || row.nama || 'Unnamed'),
         sortedOrder: sortedData.map(row => row.nama_lengkap || row.nama || 'Unnamed'),
         withEvidence: dataWithEvidence.map(row => ({
@@ -557,14 +568,14 @@ const NominatifPage = () => {
         row_order: index + 1
       }));
 
-      console.log('📦 Preparing bulk detail rows (sorted):', detailRowsData.length);
+      consoleLog('📦 Preparing bulk detail rows (sorted):', detailRowsData.length);
 
       // FIX: Separate CREATE vs EDIT mode logic for detail rows
       let createdDetailRows = [];
 
       if (specificNominatifId && isEditMode) {
         // EDIT MODE: Update existing detail rows with auto-sort
-        console.log('EDIT MODE: Updating existing detail rows with auto-sort');
+        consoleLog('EDIT MODE: Updating existing detail rows with auto-sort');
 
         // 🔥 FRONTEND AUTO-SORT: Update existing detail rows with their IDs using sorted data
         const updatedDetailRowsData = sortedData.map((row, index) => ({
@@ -582,7 +593,7 @@ const NominatifPage = () => {
         }));
 
         // Debug: Log data yang akan dikirim ke bulk update API
-        console.log('📦 Preparing bulk update data:', {
+        consoleLog('📦 Preparing bulk update data:', {
           nominatifId: nominatifId,
           rowsCount: updatedDetailRowsData.length,
           rowsData: updatedDetailRowsData
@@ -600,28 +611,28 @@ const NominatifPage = () => {
 
         if (!bulkUpdateResponse.ok) {
           const errorText = await bulkUpdateResponse.text();
-          console.error('❌ Bulk detail update FAILED:', {
+          consoleError('❌ Bulk detail update FAILED:', {
             status: bulkUpdateResponse.status,
             statusText: bulkUpdateResponse.statusText,
             errorText: errorText
           });
           throw new Error(`Gagal update detail rows: ${bulkUpdateResponse.status} - ${errorText}`);
         } else {
-          console.log('✅ Bulk update response OK, parsing result...');
+          consoleLog('✅ Bulk update response OK, parsing result...');
           const updateResult = await bulkUpdateResponse.json();
-          console.log('📦 Update result data:', updateResult);
+          consoleLog('📦 Update result data:', updateResult);
 
           if (!updateResult.success) {
-            console.error('❌ Backend returned failure:', updateResult);
+            consoleError('❌ Backend returned failure:', updateResult);
             throw new Error(`Backend error: ${updateResult.message || 'Unknown error'}`);
           }
 
           createdDetailRows = updateResult.data;
-          console.log('✅ Updated rows from backend:', createdDetailRows);
+          consoleLog('✅ Updated rows from backend:', createdDetailRows);
         }
       } else {
         // CREATE MODE: Create new detail rows
-        console.log('CREATE MODE: Creating new detail rows');
+        consoleLog('CREATE MODE: Creating new detail rows');
 
         const bulkDetailResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/bulk`, {
           method: 'POST',
@@ -634,7 +645,7 @@ const NominatifPage = () => {
 
         if (!bulkDetailResponse.ok) {
           const errorText = await bulkDetailResponse.text();
-          console.error('Bulk detail creation failed:', errorText);
+          consoleError('Bulk detail creation failed:', errorText);
           throw new Error(`Gagal membuat detail rows: ${bulkDetailResponse.status} - ${errorText}`);
         }
 
@@ -649,15 +660,15 @@ const NominatifPage = () => {
         if (specificNominatifId && row.id) {
           // EDIT MODE: Use existing detail row ID
           detailId = row.id;
-          console.log(`✅ EDIT MODE: Using existing detail ID ${detailId} for row ${index}`);
+          consoleLog(`✅ EDIT MODE: Using existing detail ID ${detailId} for row ${index}`);
         } else {
           // CREATE MODE: Use newly created detail row ID with validation
           if (!createdDetailRows[index] || !createdDetailRows[index].id) {
-            console.error(`❌ CREATE MODE ERROR: No valid detail row ID found for row ${index}`);
+            consoleError(`❌ CREATE MODE ERROR: No valid detail row ID found for row ${index}`);
             throw new Error(`Gagal membuat detail row untuk baris ke-${index + 1}. ID tidak valid.`);
           }
           detailId = createdDetailRows[index].id;
-          console.log(`✅ CREATE MODE: Using new detail ID ${detailId} for row ${index}`);
+          consoleLog(`✅ CREATE MODE: Using new detail ID ${detailId} for row ${index}`);
         }
 
         // Sesuai dengan database fields yang ada
@@ -709,7 +720,7 @@ const NominatifPage = () => {
         const biayaResult = await nominatifService.saveBiayaRow(detailId, biayaPayload);
 
         if (!biayaResult.success) {
-          console.error(`Biaya creation failed for detail ${detailId}:`, biayaResult);
+          consoleError(`Biaya creation failed for detail ${detailId}:`, biayaResult);
           throw new Error(`Gagal membuat biaya row: ${biayaResult.message}`);
         }
 
@@ -723,7 +734,7 @@ const NominatifPage = () => {
       const evidencePromises = data.map(async (row, index) => {
         // Check if there are evidence files to upload
         if (row.evidence_files && Array.isArray(row.evidence_files) && row.evidence_files.length > 0) {
-          console.log(`📤 Uploading ${row.evidence_files.length} evidence files for row ${index}`);
+          consoleLog(`📤 Uploading ${row.evidence_files.length} evidence files for row ${index}`);
 
           try {
             // Get detail row ID for evidence association
@@ -731,21 +742,21 @@ const NominatifPage = () => {
             if (specificNominatifId && row.id) {
               // EDIT MODE: Use existing detail row ID
               detailRowId = row.id;
-              console.log(`📤 EDIT MODE: Using detail row ID ${detailRowId} for evidence upload`);
+              consoleLog(`📤 EDIT MODE: Using detail row ID ${detailRowId} for evidence upload`);
             } else {
               // CREATE MODE: Use newly created detail row ID
               detailRowId = createdDetailRows[index]?.id;
-              console.log(`📤 CREATE MODE: Using new detail row ID ${detailRowId} for evidence upload`);
+              consoleLog(`📤 CREATE MODE: Using new detail row ID ${detailRowId} for evidence upload`);
             }
 
             if (!detailRowId) {
-              console.error(`❌ No detail row ID found for row ${index}, skipping evidence upload`);
+              consoleError(`❌ No detail row ID found for row ${index}, skipping evidence upload`);
               return [];
             }
 
             // 🔥 REMOVED: Manual evidence clear tidak diperlukan
             // Backend storeWithDetailRow sudah handle create/update evidence secara otomatis
-            console.log(`🔧 Processing evidence for detail row ${detailRowId}`);
+            consoleLog(`🔧 Processing evidence for detail row ${detailRowId}`);
 
             // Save each evidence (Google Drive links)
             const uploadPromises = row.evidence_files.map(async (evidence, fileIndex) => {
@@ -769,22 +780,22 @@ const NominatifPage = () => {
 
                 if (!evidenceResponse.ok) {
                   const errorText = await evidenceResponse.text();
-                  console.error(`Evidence save failed for row ${index}, evidence ${fileIndex + 1}:`, errorText);
+                  consoleError(`Evidence save failed for row ${index}, evidence ${fileIndex + 1}:`, errorText);
                   return null;
                 }
 
                 const result = await evidenceResponse.json();
-                console.log(`✅ Evidence ${fileIndex + 1} saved successfully for row ${index}:`, result);
+                consoleLog(`✅ Evidence ${fileIndex + 1} saved successfully for row ${index}:`, result);
                 return result;
               }
               return null;
             });
 
             const saveResults = await Promise.all(uploadPromises);
-            console.log(`📊 All evidence saves completed for row ${index}:`, saveResults);
+            consoleLog(`📊 All evidence saves completed for row ${index}:`, saveResults);
             return saveResults.filter(result => result !== null);
           } catch (error) {
-            console.error(`Evidence upload error for row ${index}:`, error);
+            consoleError(`Evidence upload error for row ${index}:`, error);
             return [];
           }
         }
@@ -807,7 +818,7 @@ const NominatifPage = () => {
 
     } catch (error) {
       setError(error.message || 'Gagal menyimpan data');
-      console.error('Save error:', error);
+      consoleError('Save error:', error);
     } finally {
       setSaving(false);
     }
@@ -821,7 +832,7 @@ const NominatifPage = () => {
 
     try {
       // First save the data (this will handle both create and update)
-      console.log('🔄 Submit: Saving data first...');
+      consoleLog('🔄 Submit: Saving data first...');
       await handleSave(data);
 
       // Use the existing nominatif ID from state (for edit) or get the latest (for create)
@@ -831,7 +842,7 @@ const NominatifPage = () => {
       if (isEditMode && nominatif) {
         // Edit mode: use existing ID
         currentNominatifId = nominatif.id;
-        console.log('📤 Submitting existing nominatif ID:', currentNominatifId);
+        consoleLog('📤 Submitting existing nominatif ID:', currentNominatifId);
       } else {
         // Create mode: get the latest nominatif with current RKA ID
         const nominatifListResponse = await fetch('http://localhost/api/nominatifs-new', {
@@ -856,7 +867,7 @@ const NominatifPage = () => {
         }
 
         currentNominatifId = currentNominatif.id;
-        console.log('📤 Submitting newly created nominatif ID:', currentNominatifId);
+        consoleLog('📤 Submitting newly created nominatif ID:', currentNominatifId);
       }
 
       // Then submit
@@ -900,7 +911,7 @@ const NominatifPage = () => {
       }
     } catch (error) {
       setError(error.message || 'Gagal mengirim data');
-      console.error('❌ Submit error:', error);
+      consoleError('❌ Submit error:', error);
 
       // Show error notification
       showError(error.message || 'Gagal mengirim data', {

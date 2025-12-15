@@ -4,6 +4,7 @@ import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock } from 'luci
 import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
 import nonNominatifService from '../services/nonNominatifService';
+import { consoleLog, consoleError, consoleWarn } from '../utils/logger';
 
 const NonNominatif = () => {
   const navigate = useNavigate();
@@ -12,8 +13,14 @@ const NonNominatif = () => {
   const [loading, setLoading] = useState(true);
   const [dialogKonfirmasi, setDialogKonfirmasi] = useState({
     isOpen: false,
-    nonNominatifId: null
+    nonNominatifId: null,
+    deskripsi: '',
+    type: 'delete' // 'delete' or 'submit'
   });
+
+  // Add deleting and submitting state for visual feedback
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch non-nominatif list
   useEffect(() => {
@@ -22,8 +29,7 @@ const NonNominatif = () => {
         setLoading(true);
         const data = await nonNominatifService.getAll();
 
-        console.log('API Response:', data);
-
+  
         // Handle different response structures
         let nonNominatifArray = [];
 
@@ -53,15 +59,12 @@ const NonNominatif = () => {
         if (Array.isArray(nonNominatifArray)) {
           setNonNominatifs(nonNominatifArray);
           setIsDataLoaded(true);
-          console.log('Successfully loaded', nonNominatifArray.length, 'non-nominatifs');
-        } else {
-          console.warn('Unexpected data structure:', data);
-          console.log('Available keys:', Object.keys(data));
-          setNonNominatifs([]);
+            } else {
+            setNonNominatifs([]);
           setIsDataLoaded(true);
         }
       } catch (error) {
-        console.error('Error fetching non-nominatifs:', error);
+        consoleError('Error fetching non-nominatifs:', error);
         setNonNominatifs([]);
         setIsDataLoaded(true);
       } finally {
@@ -111,12 +114,27 @@ const NonNominatif = () => {
     navigate(`/non-nominatif/${nonNominatif.id}/edit`);
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id, deskripsi) => {
+    setDialogKonfirmasi({
+      isOpen: true,
+      nonNominatifId: id,
+      deskripsi: deskripsi,
+      type: 'delete'
+    });
+  };
+
+  const handleConfirmDelete = async () => {
     try {
       const token = localStorage.getItem('token');
+      const deleteId = dialogKonfirmasi.nonNominatifId;
 
-      // TODO: Ganti API endpoint ketika backend sudah ada
-      const response = await fetch(`http://localhost/api/non-nominatifs/${id}`, {
+      // Set loading state immediately for UI feedback
+      setIsDeleting(true);
+
+      // Close dialog immediately for better UX
+      handleCloseDialog();
+
+      const response = await fetch(`http://localhost/api/non-nominatifs/${deleteId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -125,12 +143,22 @@ const NonNominatif = () => {
       });
 
       if (response.ok) {
+        // Optimized state update - find and remove specific item
+        setNonNominatifs(prevNonNominatifs => {
+          const index = prevNonNominatifs.findIndex(nom => nom.id === deleteId);
+          if (index > -1) {
+            // Create new array without the deleted item for better performance
+            const newNonNominatifs = [...prevNonNominatifs];
+            newNonNominatifs.splice(index, 1);
+            return newNonNominatifs;
+          }
+          return prevNonNominatifs;
+        });
+
         // Tampilkan notifikasi sukses
         if (window.tampilkanNotifikasi) {
-          window.tampilkanNotifikasi('Non-Nominatif berhasil dihapus', 'success');
+          window.tampilkanNotifikasi('Data berhasil dihapus', 'success');
         }
-
-        setNonNominatifs(nonNominatifs.filter(nom => nom.id !== id));
       } else {
         // Tampilkan notifikasi error
         if (window.tampilkanNotifikasi) {
@@ -138,24 +166,41 @@ const NonNominatif = () => {
         }
       }
     } catch (error) {
-      console.error('Error deleting non-nominatif:', error);
+      consoleError('Error deleting non-nominatif:', error);
       // Tampilkan notifikasi error jaringan
       if (window.tampilkanNotifikasi) {
         window.tampilkanNotifikasi('Terjadi kesalahan jaringan', 'error');
       }
+    } finally {
+      // Always reset loading state
+      setIsDeleting(false);
     }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogKonfirmasi({
+      isOpen: false,
+      nonNominatifId: null,
+      deskripsi: '',
+      type: 'delete'
+    });
   };
 
   const handleSubmit = (id) => {
     // Buka dialog konfirmasi
+    const nonNominatif = nonNominatifs.find(n => n.id === id);
     setDialogKonfirmasi({
       isOpen: true,
-      nonNominatifId: id
+      nonNominatifId: id,
+      deskripsi: nonNominatif?.deskripsi_kegiatan || '',
+      type: 'submit'
     });
   };
 
   const handleConfirmSubmit = async () => {
-    const { nonNominatifId } = dialogKonfirmasi;
+n    // Set loading state immediately
+    setIsSubmitting(true);
+    setIsSubmitting(true);
     const nonNominatif = nonNominatifs.find(n => n.id === nonNominatifId);
 
     try {
@@ -188,21 +233,19 @@ const NonNominatif = () => {
         }, 2000);
       }
     } catch (error) {
-      console.error('Error submitting non-nominatif:', error);
+      consoleError('Error submitting non-nominatif:', error);
       // Show error popup notification
       if (window.tampilkanNotifikasi) {
         window.tampilkanNotifikasi('Gagal mengirim non-nominatif', 'error');
       } else {
         alert('Gagal mengirim non-nominatif');
       }
+    } finally {
+      // Always reset loading state
+      setIsSubmitting(false);
+      // Tutup dialog
+      setDialogKonfirmasi({ isOpen: false, nonNominatifId: null });
     }
-
-    // Tutup dialog
-    setDialogKonfirmasi({ isOpen: false, nonNominatifId: null });
-  };
-
-  const handleCloseDialog = () => {
-    setDialogKonfirmasi({ isOpen: false, nonNominatifId: null });
   };
 
   return (
@@ -214,13 +257,17 @@ const NonNominatif = () => {
       <KonfirmasiDialog
         isOpen={dialogKonfirmasi.isOpen}
         onClose={handleCloseDialog}
-        onConfirm={handleConfirmSubmit}
-        title="Konfirmasi Pengiriman Non-Nominatif"
-        message="Setelah non-nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n\nPastikan semua data sudah benar sebelum melanjutkan."
-        confirmText="Ya, Kirim"
+        onConfirm={dialogKonfirmasi.type === 'delete' ? handleConfirmDelete : handleConfirmSubmit}
+        title={dialogKonfirmasi.type === 'delete' ? 'Konfirmasi Hapus Data' : 'Konfirmasi Pengiriman Non-Nominatif'}
+        message={dialogKonfirmasi.type === 'delete'
+          ? `Apakah Anda yakin ingin menghapus data non-nominatif ini?\n\nDeskripsi: ${dialogKonfirmasi.deskripsi}\n\nData yang sudah dihapus tidak dapat dikembalikan.`
+          : `Apakah Anda yakin ingin mengirim data non-nominatif ini?\n\nDeskripsi: ${dialogKonfirmasi.deskripsi}\n\nSetelah non-nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n\nPastikan semua data sudah benar sebelum melanjutkan.`
+        }
+        confirmText={dialogKonfirmasi.type === 'delete' ? 'Ya, Hapus' : 'Ya, Kirim'}
         cancelText="Batal"
-        type="success"
+        type={dialogKonfirmasi.type === 'delete' ? 'danger' : 'success'}
         iconType="warning"
+        isLoading={dialogKonfirmasi.type === 'submit' ? isSubmitting : false}
       />
 
       <div className="min-h-screen bg-gray-50">
@@ -380,11 +427,12 @@ const NonNominatif = () => {
                           )}
                           {(nonNominatif.status === 'draft' || nonNominatif.status === 'rejected') && (
                             <button
-                              onClick={() => handleDelete(nonNominatif.id)}
-                              className="p-1 text-red-600 hover:text-red-800"
-                              title="Hapus"
+                              onClick={() => handleDeleteClick(nonNominatif.id, nonNominatif.deskripsi_kegiatan)}
+                              disabled={isDeleting}
+                              className={`p-1 ${isDeleting ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
+                              title={isDeleting ? 'Menghapus...' : 'Hapus'}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className={`w-4 h-4 ${isDeleting ? 'animate-pulse' : ''}`} />
                             </button>
                           )}
                           {(nonNominatif.status === 'draft' || nonNominatif.status === 'rejected') && (

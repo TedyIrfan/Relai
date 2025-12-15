@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, DollarSign, Calendar, Save, Send, Link } from 'lucide-react';
 import nonNominatifService from '../services/nonNominatifService';
 import Notifikasi from '../components/Notifikasi';
+import { consoleError, consoleWarn } from '../utils/logger';
 
 const NonNominatifCreate = () => {
   const navigate = useNavigate();
@@ -130,7 +131,7 @@ const NonNominatifCreate = () => {
         navigate('/non-nominatif');
       }, 2000);
     } catch (error) {
-      console.error('Error saving draft:', error);
+      consoleError('Error saving draft:', error);
       // Show error notification
       if (window.tampilkanNotifikasi) {
         window.tampilkanNotifikasi(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan draft', 'error');
@@ -187,7 +188,7 @@ const NonNominatifCreate = () => {
         navigate('/non-nominatif');
       }, 2500);
     } catch (error) {
-      console.error('Error submitting:', error);
+      consoleError('Error submitting:', error);
       // Show error notification
       if (window.tampilkanNotifikasi) {
         window.tampilkanNotifikasi(error.response?.data?.message || 'Terjadi kesalahan saat mengirim non-nominatif', 'error');
