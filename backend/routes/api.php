@@ -41,11 +41,13 @@ Route::prefix('nominatifs-new')->group(function () {
 Route::prefix('nominatifs/{nominatifId}/details')->group(function () {
     Route::get('/', [NominatifDetailRowController::class, 'index']);
     Route::post('/', [NominatifDetailRowController::class, 'store']);
+    Route::post('/validate', [NominatifDetailRowController::class, 'validateDraftData']);
+    Route::post('/execute', [NominatifDetailRowController::class, 'executeDraft']);
+    Route::post('/bulk', [NominatifDetailRowController::class, 'bulkStore']);
+    Route::put('/bulk', [NominatifDetailRowController::class, 'bulkUpdate']); // Keep for backward compatibility
     Route::get('/{rowId}', [NominatifDetailRowController::class, 'show']);
     Route::put('/{rowId}', [NominatifDetailRowController::class, 'update']);
     Route::delete('/{rowId}', [NominatifDetailRowController::class, 'destroy']);
-    Route::post('/bulk', [NominatifDetailRowController::class, 'bulkStore']);
-    Route::put('/bulk', [NominatifDetailRowController::class, 'bulkUpdate']);
 });
 
 // Biaya Rows (Financial Data) - Manual Token Validation

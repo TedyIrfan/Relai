@@ -394,14 +394,21 @@ export const nominatifService = {
     };
 
     try {
-      // STRATEGI 1: Cek apakah biaya row sudah ada
-      console.log('🔍 Checking existing biaya rows for detailRowId:', detailRowId);
-      const existingBiaya = await nominatifService.getBiayaRows(detailRowId);
+      // 🔥 FIXED: Handle temp_id - skip checking existing biaya for temporary rows
+      let response;
+
+      if (detailRowId.toString().startsWith('temp_')) {
+        console.log('🆕 Temporary detail row detected, creating new biaya row for temp_id:', detailRowId);
+        // For temporary rows, always create new biaya (no existing record to check)
+        response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, validatedBiayaData);
+        console.log('✅ Create successful for temporary row:', response.data);
+      } else {
+        // STRATEGI 1: Cek apakah biaya row sudah ada (only for real database IDs)
+        console.log('🔍 Checking existing biaya rows for detailRowId:', detailRowId);
+        const existingBiaya = await nominatifService.getBiayaRows(detailRowId);
 
       // Debug logging detail
       console.log('📊 Full existingBiaya response:', JSON.stringify(existingBiaya, null, 2));
-
-      let response;
 
       // Fix double nested response structure
       const biayaRow = existingBiaya.data?.data || null;
@@ -416,6 +423,7 @@ export const nominatifService = {
         console.log('🆕 No existing biaya, creating new...');
         response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, validatedBiayaData);
         console.log('✅ Create successful:', response.data);
+      }
       }
 
       return { success: true, data: response.data };

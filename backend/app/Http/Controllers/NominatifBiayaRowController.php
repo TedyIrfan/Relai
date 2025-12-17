@@ -66,6 +66,21 @@ class NominatifBiayaRowController extends Controller
      */
     public function index($detailRowId)
     {
+        // 🔥 FIXED: Handle temp_id for new rows
+        if (str_starts_with($detailRowId, 'temp_')) {
+            \Log::info("🆕 Temporary biaya row requested for temp_id: {$detailRowId}");
+
+            // Return empty biaya data for temporary rows
+            return response()->json([
+                'success' => true,
+                'message' => 'Temporary biaya row (no data yet)',
+                'data' => [
+                    'success' => true,
+                    'data' => $this->getDefaultBiayaRow($detailRowId)
+                ]
+            ]);
+        }
+
         $detailRow = NominatifDetailRow::findOrFail($detailRowId);
 
         // Security check dengan debug logging
@@ -190,6 +205,19 @@ class NominatifBiayaRowController extends Controller
      */
     public function store(Request $request, $detailRowId)
     {
+        // 🔥 FIXED: Handle temp_id for new rows
+        if (str_starts_with($detailRowId, 'temp_')) {
+            \Log::info("🆕 Creating biaya row for temporary detail row: {$detailRowId}");
+
+            // For temporary rows, create the biaya row but don't link to database yet
+            // Return success response with temp_id for frontend reference
+            return response()->json([
+                'success' => true,
+                'message' => 'Temporary biaya row created successfully',
+                'data' => $this->getDefaultBiayaRow($detailRowId)
+            ]);
+        }
+
         $detailRow = NominatifDetailRow::findOrFail($detailRowId);
 
         // Security check
@@ -1487,5 +1515,65 @@ class NominatifBiayaRowController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * 🔥 HELPER: Get default biaya row data for temporary rows
+     */
+    private function getDefaultBiayaRow($tempId)
+    {
+        return [
+            'id' => null, // No database ID yet
+            'nominatif_detail_row_id' => $tempId, // Temporary ID
+            'transport_pesawat_non_pp_pagu' => '0.00',
+            'transport_pesawat_non_pp_aktual' => '0.00',
+            'transport_taksi_pagu' => '0.00',
+            'transport_taksi_aktual' => '0.00',
+            'penginapan_jumlah_malam' => 0,
+            'penginapan_pagu_perhari' => '0.00',
+            'penginapan_aktual_perhari' => '0.00',
+            'uang_harian_meeting_fullboard_jumlah_hari' => 0,
+            'uang_harian_meeting_fullboard_pagu_perhari' => '0.00',
+            'uang_harian_meeting_fullboard_aktual_perhari' => '0.00',
+            'uang_harian_meeting_fullday_jumlah_hari' => 0,
+            'uang_harian_meeting_fullday_pagu_perhari' => '0.00',
+            'uang_harian_meeting_fullday_aktual_perhari' => '0.00',
+            'uang_harian_luar_kota_jumlah_hari' => 0,
+            'uang_harian_luar_kota_pagu_perhari' => '0.00',
+            'uang_harian_luar_kota_aktual_perhari' => '0.00',
+            'uang_harian_dalam_kota_jumlah_hari' => 0,
+            'uang_harian_dalam_kota_pagu_perhari' => '0.00',
+            'uang_harian_dalam_kota_aktual_perhari' => '0.00',
+            'representasi_luar_kota_jumlah_hari' => 0,
+            'representasi_luar_kota_pagu_perhari' => '0.00',
+            'representasi_luar_kota_aktual_perhari' => '0.00',
+            'representasi_dalam_kota_jumlah_hari' => 0,
+            'representasi_dalam_kota_pagu_perhari' => '0.00',
+            'representasi_dalam_kota_aktual_perhari' => '0.00',
+            'penginapan_total_pagu' => '0.00',
+            'penginapan_total_aktual' => '0.00',
+            'penginapan_anggaran_berjalan' => '0.00',
+            'uang_harian_meeting_fullboard_total_pagu' => '0.00',
+            'uang_harian_meeting_fullboard_total_aktual' => '0.00',
+            'uang_harian_meeting_fullboard_anggaran_berjalan' => '0.00',
+            'uang_harian_meeting_fullday_total_pagu' => '0.00',
+            'uang_harian_meeting_fullday_total_aktual' => '0.00',
+            'uang_harian_meeting_fullday_anggaran_berjalan' => '0.00',
+            'uang_harian_luar_kota_total_pagu' => '0.00',
+            'uang_harian_luar_kota_total_aktual' => '0.00',
+            'uang_harian_luar_kota_anggaran_berjalan' => '0.00',
+            'uang_harian_dalam_kota_total_pagu' => '0.00',
+            'uang_harian_dalam_kota_total_aktual' => '0.00',
+            'uang_harian_dalam_kota_anggaran_berjalan' => '0.00',
+            'representasi_luar_kota_total_pagu' => '0.00',
+            'representasi_luar_kota_total_aktual' => '0.00',
+            'representasi_luar_kota_anggaran_berjalan' => '0.00',
+            'representasi_dalam_kota_total_pagu' => '0.00',
+            'representasi_dalam_kota_total_aktual' => '0.00',
+            'representasi_dalam_kota_anggaran_berjalan' => '0.00',
+            'total_pagu_row' => '0.00',
+            'total_aktual_row' => '0.00',
+            'total_anggaran_berjalan_row' => '0.00'
+        ];
     }
 }

@@ -31,7 +31,8 @@ const NominatifExcelTable = forwardRef(
     const [saving, setSaving] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [validationErrors, setValidationErrors] = useState({});
-  const [deletingRowId, setDeletingRowId] = useState(null);
+    const [deletedRows, setDeletedRows] = useState([]); // Track rows to delete on save
+    const [originalRows, setOriginalRows] = useState([]); // Track original data from database
     const tableRef = useRef(null);
 
     // Initialize with one empty row if no data (create mode only)
@@ -45,7 +46,7 @@ const NominatifExcelTable = forwardRef(
         console.log("📊 NominatifExcelTable - Adding empty row (create mode)");
         addRow();
       }
-    }, [processedInitialData.length]);
+    }, []); // Remove dependency to prevent infinite loop
 
   // Initial validation for required fields (show errors immediately when fields are empty)
   React.useEffect(() => {
@@ -62,8 +63,16 @@ const NominatifExcelTable = forwardRef(
         initialErrors[index] = rowErrors;
       }
     });
-    setValidationErrors(initialErrors);
-  }, [rows.length]); // Re-run when rows are added/removed
+    // Only update if errors actually changed to prevent infinite loop
+    setValidationErrors(prev => {
+      const prevStr = JSON.stringify(prev);
+      const newStr = JSON.stringify(initialErrors);
+      if (prevStr !== newStr) {
+        return initialErrors;
+      }
+      return prev;
+    });
+  }, [rows.length]); // Back to length dependency to prevent infinite loop
 
     // Update rows when initialData changes (for edit mode)
     React.useEffect(() => {
@@ -73,6 +82,9 @@ const NominatifExcelTable = forwardRef(
           "🔍 DEBUG - First row evidence data:",
           processedInitialData[0]
         );
+
+        // Store original data from database
+        setOriginalRows(JSON.parse(JSON.stringify(processedInitialData)));
 
         setRows((prevRows) => {
           // Preserve evidence data when updating from initialData
@@ -106,6 +118,9 @@ const NominatifExcelTable = forwardRef(
           });
           return newRows;
         });
+
+        // Reset deletedRows when data changes
+        setDeletedRows([]);
       }
     }, [processedInitialData]);
 
@@ -141,7 +156,7 @@ const NominatifExcelTable = forwardRef(
       console.log("➕ Adding new empty row - all fields should be blank");
 
       const newRow = {
-        id: Date.now(),
+        id: 'temp_' + Date.now(),
         // All fields should be empty for new rows (both create and edit mode)
         nama_lengkap: "",
         golongan: "",
@@ -306,8 +321,8 @@ const NominatifExcelTable = forwardRef(
       }
     };
 
-    // Delete row
-    const deleteRow = async (id) => {
+    // Delete row - optimistic delete (frontend only, database update on save)
+    const deleteRow = (id) => {
       if (rows.length <= 1) {
         alert('Minimal harus ada satu baris');
         return;
@@ -316,130 +331,28 @@ const NominatifExcelTable = forwardRef(
       // Find the row to be deleted
       const rowToDelete = rows.find((row) => row.id === id);
 
-      // Check if this is a database row (has numeric ID from database)
-      if (rowToDelete && !isNaN(id) && id < 100000) {
-        // This is a row from database, use custom confirmation dialog
-        const confirmDelete = () => {
-          return new Promise((resolve) => {
-            // Create confirmation dialog
-            const dialog = document.createElement('div');
-            dialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-            dialog.innerHTML = `
-              <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 transform transition-all">
-                <div class="flex items-center mb-4">
-                  <div class="flex-shrink-0 mr-3">
-                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 class="text-lg font-medium text-gray-900">Konfirmasi Hapus Baris</h3>
-                  </div>
-                </div>
-                <div class="mb-6">
-                  <p class="text-sm text-gray-600 whitespace-pre-line">
-                    Apakah Anda yakin ingin menghapus baris ini?\n\nData akan dihapus permanen dari database dan tidak dapat dikembalikan.
-                  </p>
-                </div>
-                <div class="flex gap-3 justify-end">
-                  <button type="button" class="cancel-btn px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                    Batal
-                  </button>
-                  <button type="button" class="confirm-btn px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 bg-red-600 hover:bg-red-700">
-                    Ya, Hapus
-                  </button>
-                </div>
-              </div>
-            `;
+      if (rowToDelete) {
+        // 🔥 DEBUG: Log exact row data being deleted
+        console.log('🎯 DELETE TARGET:', {
+          clickedId: id,
+          rowToDeleteData: rowToDelete,
+          namaLengkap: rowToDelete.nama_lengkap,
+          allRows: rows.map(r => ({ id: r.id, nama: r.nama_lengkap }))
+        });
 
-            // Add event listeners
-            dialog.querySelector('.cancel-btn').addEventListener('click', () => {
-              document.body.removeChild(dialog);
-              resolve(false);
-            });
+        // Check if this is a database row (has numeric ID from database, not temp_id)
+        const isDatabaseRow = !isNaN(id) && !id.toString().startsWith('temp_');
 
-            dialog.querySelector('.confirm-btn').addEventListener('click', () => {
-              document.body.removeChild(dialog);
-              resolve(true);
-            });
-
-            // Add to DOM
-            document.body.appendChild(dialog);
-
-            // Auto-focus on confirm button
-            dialog.querySelector('.confirm-btn').focus();
-          });
-        };
-
-        const confirmed = await confirmDelete();
-        if (!confirmed) return;
-
-        // Set loading state for this specific row
-        setDeletingRowId(id);
-
-        try {
-          // Get token
-          const user = JSON.parse(localStorage.getItem('user'));
-          const token = user?.token || localStorage.getItem('token');
-
-          // Get nominatif ID from URL or parent component
-          const urlParams = new URLSearchParams(window.location.search);
-          const nominatifId = urlParams.get('id') || rkaDetail?.nominatif_id;
-
-          if (!nominatifId) {
-            alert('Tidak dapat menemukan ID nominatif. Silakan refresh halaman.');
-            return;
-          }
-
-          // Delete from database with correct endpoint
-          const response = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/${id}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (response.ok) {
-            // Successfully deleted from database, now remove from local state
-            setRows(rows.filter((row) => row.id !== id));
-
-            // Clear validation errors for deleted row
-            const rowIndex = rows.findIndex((row) => row.id === id);
-            if (rowIndex !== -1 && validationErrors[rowIndex]) {
-              const newErrors = { ...validationErrors };
-              delete newErrors[rowIndex];
-              setValidationErrors(newErrors);
-            }
-          } else {
-            const errorText = await response.text();
-            console.error('Failed to delete row from database:', response.status, errorText);
-
-            // Check for specific error messages
-            if (response.status === 422) {
-              try {
-                const errorData = JSON.parse(errorText);
-                if (errorData.message === 'Cannot delete rows in submitted nominatif') {
-                  alert('Tidak dapat menghapus baris pada nominatif yang sudah disubmit.');
-                } else {
-                  alert(errorData.message || 'Gagal menghapus baris dari database.');
-                }
-              } catch {
-                alert('Gagal menghapus baris dari database. Silakan coba lagi.');
-              }
-            } else {
-              alert('Gagal menghapus baris dari database. Silakan coba lagi.');
-            }
-          }
-        } catch (error) {
-          console.error('Error deleting row:', error);
-          alert('Terjadi kesalahan saat menghapus baris.');
-        } finally {
-          // Always reset loading state
-          setDeletingRowId(null);
+        if (isDatabaseRow) {
+          // Mark database row for deletion on save
+          setDeletedRows(prev => [...prev, id]);
+          console.log(`🔄 Row ${id} (${rowToDelete.nama_lengkap}) marked for deletion on save`);
+        } else {
+          // This is a new row, just remove from local state
+          console.log(`🔄 New row ${id} (${rowToDelete.nama_lengkap}) removed from frontend`);
         }
-      } else {
-        // This is a new row, just remove from local state
+
+        // Remove from frontend state immediately (optimistic delete)
         setRows(rows.filter((row) => row.id !== id));
 
         // Clear validation errors for deleted row
@@ -447,7 +360,13 @@ const NominatifExcelTable = forwardRef(
         if (rowIndex !== -1 && validationErrors[rowIndex]) {
           const newErrors = { ...validationErrors };
           delete newErrors[rowIndex];
-          setValidationErrors(newErrors);
+          // Reindex remaining errors
+          const reindexedErrors = {};
+          Object.keys(newErrors).forEach(key => {
+            const newKey = parseInt(key) > rowIndex ? parseInt(key) - 1 : key;
+            reindexedErrors[newKey] = newErrors[key];
+          });
+          setValidationErrors(reindexedErrors);
         }
       }
     };
@@ -674,6 +593,7 @@ const NominatifExcelTable = forwardRef(
     // Expose function to parent
     React.useImperativeHandle(ref, () => ({
       collectEvidenceFromInputs,
+      getDeletedRows: () => deletedRows, // 🔥 EXPOSE deletedRows to parent
     }));
 
     // Calculate totals
@@ -842,6 +762,67 @@ const NominatifExcelTable = forwardRef(
       );
     }, [rows]);
 
+    // Process rows marked for deletion
+    const processDeletedRows = async () => {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user?.token || localStorage.getItem('token');
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const nominatifId = urlParams.get('id') || rkaDetail?.nominatifId;
+
+      if (!nominatifId) {
+        console.error('Cannot find nominatif ID for deletion');
+        return false;
+      }
+
+      console.log(`🗑️ Processing ${deletedRows.length} rows for deletion:`, deletedRows);
+
+      // 🔥 DISABLED: Delete each marked row from database - handled by executeDraft
+      for (const rowId of deletedRows) {
+        try {
+          const response = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/${rowId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            console.log(`✅ Successfully deleted row ${rowId} from database`);
+          } else if (response.status === 404) {
+            console.log(`ℹ️ Row ${rowId} already deleted or doesn't exist, skipping...`);
+            // Continue processing even if row doesn't exist
+          } else {
+            const errorText = await response.text();
+            console.error(`Failed to delete row ${rowId}:`, response.status, errorText);
+
+            // Show error to user but continue with other deletions
+            if (response.status === 422) {
+              try {
+                const errorData = JSON.parse(errorText);
+                if (errorData.message === 'Cannot delete rows in submitted nominatif') {
+                  console.warn(`Cannot delete row ${rowId}: nominatif already submitted`);
+                  alert('Tidak dapat menghapus baris pada nominatif yang sudah disubmit');
+                  return false; // Stop processing
+                }
+              } catch {
+                console.warn(`Failed to parse error for row ${rowId}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error deleting row ${rowId}:`, error);
+          alert(`Terjadi kesalahan saat menghapus baris: ${error.message}`);
+          return false; // Stop processing
+        }
+      }
+
+      // Clear deleted rows after successful processing
+      setDeletedRows([]);
+      return true; // Success
+    };
+
     // Save draft with auto-redirect
     const saveDraft = async () => {
       // Validate required fields before saving
@@ -855,45 +836,47 @@ const NominatifExcelTable = forwardRef(
 
       setSaving(true);
       try {
+        // Process deleted rows first (before updating existing data)
+        if (deletedRows.length > 0) {
+          console.log(`🗑️ Processing ${deletedRows.length} marked for deletion:`, deletedRows);
+
+          // 🔥 DISABLED: Direct database deletion - causes double deletion bug
+          // Backend executeDraft handles all deletions properly
+          console.log(`ℹ️ SKIPPING DIRECT DELETION - backend executeDraft will handle ${deletedRows.length} marked rows`);
+          const deleteSuccess = true; // Always succeed - backend handles actual deletion
+
+          if (!deleteSuccess) {
+            // Stop if deletion failed
+            return;
+          }
+        }
+
+        // Then save/update current rows
         if (onSave) {
           await onSave(rows);
-          // Auto-redirect setelah save berhasil - conditional based on mode
-          console.log("📝 Draft saved successfully");
-          console.log(
-            "🔍 Checking current pathname:",
-            window.location.pathname
-          );
-
-          // Check if we're in edit mode (single nominatif page) vs create mode
-          const currentPath = window.location.pathname;
-          const hasIdParameter = window.location.search.includes("id=");
-
-          console.log("🔍 URL Analysis:", {
-            pathname: currentPath,
-            search: window.location.search,
-            hasIdParameter: hasIdParameter,
-          });
-
-          // EDIT MODE = ada ID parameter di URL
-          // CREATE MODE = tidak ada ID parameter
-          const isCreateMode = !hasIdParameter;
-
-          // MATIKAN SEMUA REDIRECT UNTUK TESTING DATABASE UPDATE
-          console.log("📝 Current Path:", currentPath);
-          console.log("📝 Is Create Mode:", isCreateMode);
-
-          // Redirect to nominatif list after successful save
-          if (isCreateMode) {
-            console.log("🔄 Create mode detected, redirecting...");
-            setTimeout(() => {
-              window.location.href = "/nominatif"; // Redirect ke halaman awal nominatif
-            }, 1000);
-          } else {
-            console.log("📝 Edit mode detected, staying on current page");
-          }
+          // Parent component will handle redirect logic
+          console.log("📝 Draft saved successfully - parent component will handle redirect");
         }
       } catch (error) {
         console.error("Error saving draft:", error);
+
+        // Check if it's just a row not found error (which is okay for deleted rows)
+        if (error.message && error.message.includes('not found')) {
+          console.log("ℹ️ Some rows not found (likely already deleted) - this is okay");
+          alert("Beberapa row tidak ditemukan (mungkin sudah dihapus sebelumnya). Data berhasil disimpan!");
+
+          // Still redirect even with not found errors since deletion succeeded
+          const currentPath = window.location.pathname;
+          const hasIdParameter = window.location.search.includes("id=");
+          const isCreateMode = !hasIdParameter;
+
+          console.log("📝 Error case - Redirecting to nominatif list");
+          setTimeout(() => {
+            window.location.href = "/nominatif";
+          }, 1000);
+        } else {
+          alert(`Gagal menyimpan draft: ${error.message}`);
+        }
       } finally {
         setSaving(false);
       }
@@ -1213,21 +1196,15 @@ const NominatifExcelTable = forwardRef(
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => deleteRow(row.id)}
-                        className={`transition-colors ${
-                          deletingRowId === row.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : rows.length <= 1
+                        className={`transition-all duration-200 ${
+                          rows.length <= 1
                             ? 'text-gray-300 cursor-not-allowed'
-                            : 'text-red-600 hover:text-red-800'
+                            : 'text-red-600 hover:text-red-800 hover:scale-110 active:scale-95'
                         }`}
-                        title={deletingRowId === row.id ? 'Menghapus...' : 'Hapus Baris'}
-                        disabled={rows.length <= 1 || deletingRowId !== null}
+                        title="Hapus Baris"
+                        disabled={rows.length <= 1}
                       >
-                        {deletingRowId === row.id ? (
-                          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

@@ -580,7 +580,8 @@ const NominatifPage = () => {
         // 🔥 FRONTEND AUTO-SORT: Update existing detail rows with their IDs using sorted data
         const updatedDetailRowsData = sortedData.map((row, index) => ({
           id: row.id, // Include existing ID
-          person_name: row.nama_lengkap || row.nama || '', // Backend expects person_name only
+          nama_lengkap: row.nama_lengkap || row.nama || '', // For validation
+          person_name: row.nama_lengkap || row.nama || '', // Database field
           golongan: row.golongan || '',
           jabatan: row.jabatan || '',
           eselon: row.eselon || '',
@@ -599,37 +600,75 @@ const NominatifPage = () => {
           rowsData: updatedDetailRowsData
         });
 
-        // Use bulk update API for existing detail rows (if available)
-        const bulkUpdateResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/bulk`, {
-          method: 'PUT',
+        // 🔥 NEW TWO-STEP API PATTERN: First validate, then execute
+        consoleLog('🔍 VALIDATION STEP: Validating draft data...');
+
+        // Step 1: Validate draft data (no database changes)
+        const validateResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/validate`, {
+          method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ rows: updatedDetailRowsData })
+          body: JSON.stringify({
+            rows: updatedDetailRowsData,
+            deleted_rows: tableRef.current?.getDeletedRows() || [] // 🔥 SEND DELETED ROWS TO BACKEND
+          })
         });
 
-        if (!bulkUpdateResponse.ok) {
-          const errorText = await bulkUpdateResponse.text();
-          consoleError('❌ Bulk detail update FAILED:', {
-            status: bulkUpdateResponse.status,
-            statusText: bulkUpdateResponse.statusText,
+        if (!validateResponse.ok) {
+          const errorText = await validateResponse.text();
+          consoleError('❌ Validation FAILED:', {
+            status: validateResponse.status,
+            statusText: validateResponse.statusText,
             errorText: errorText
           });
-          throw new Error(`Gagal update detail rows: ${bulkUpdateResponse.status} - ${errorText}`);
-        } else {
-          consoleLog('✅ Bulk update response OK, parsing result...');
-          const updateResult = await bulkUpdateResponse.json();
-          consoleLog('📦 Update result data:', updateResult);
-
-          if (!updateResult.success) {
-            consoleError('❌ Backend returned failure:', updateResult);
-            throw new Error(`Backend error: ${updateResult.message || 'Unknown error'}`);
-          }
-
-          createdDetailRows = updateResult.data;
-          consoleLog('✅ Updated rows from backend:', createdDetailRows);
+          throw new Error(`Gagal validasi data: ${validateResponse.status} - ${errorText}`);
         }
+
+        const validationResult = await validateResponse.json();
+        consoleLog('✅ Validation result:', validationResult);
+
+        if (!validationResult.success) {
+          consoleError('❌ Backend validation failed:', validationResult);
+          consoleError('❌ Validation errors details:', JSON.stringify(validationResult.validation_errors, null, 2));
+          throw new Error(`Error validasi: ${validationResult.message || 'Data tidak valid'}`);
+        }
+
+        // Step 2: Execute draft data (actual database changes)
+        consoleLog('💾 EXECUTION STEP: Saving validated data to database...');
+        const executeResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/execute`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            rows: updatedDetailRowsData,
+            deleted_rows: tableRef.current?.getDeletedRows() || [] // 🔥 SEND DELETED ROWS TO BACKEND
+          })
+        });
+
+        if (!executeResponse.ok) {
+          const errorText = await executeResponse.text();
+          consoleError('❌ Execution FAILED:', {
+            status: executeResponse.status,
+            statusText: executeResponse.statusText,
+            errorText: errorText
+          });
+          throw new Error(`Gagal menyimpan data: ${executeResponse.status} - ${errorText}`);
+        }
+
+        const executeResult = await executeResponse.json();
+        consoleLog('✅ Execution result:', executeResult);
+
+        if (!executeResult.success) {
+          consoleError('❌ Backend execution failed:', executeResult);
+          throw new Error(`Error penyimpanan: ${executeResult.message || 'Gagal menyimpan data'}`);
+        }
+
+        createdDetailRows = executeResult.data || [];
+        consoleLog('✅ Successfully saved rows:', createdDetailRows);
       } else {
         // CREATE MODE: Create new detail rows
         consoleLog('CREATE MODE: Creating new detail rows');
