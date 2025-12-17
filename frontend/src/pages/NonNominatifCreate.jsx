@@ -10,6 +10,7 @@ const NonNominatifCreate = () => {
   const [rkaList, setRkaList] = useState([]);
   const [selectedRKA, setSelectedRKA] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -90,8 +91,12 @@ const NonNominatifCreate = () => {
     return numericValue;
   };
 
-  // Function to handle save draft
+  // Function to handle save draft with anti-spam protection
   const handleSaveDraft = async () => {
+    if (isSaving) {
+      return; // Prevent multiple clicks
+    }
+
     if (!selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink) {
       // Show error notification
       if (window.tampilkanNotifikasi) {
@@ -103,6 +108,8 @@ const NonNominatifCreate = () => {
     }
 
     try {
+      setIsSaving(true); // Start loading
+
       const payload = {
         rka_detail_id: selectedRKA,
         deskripsi_kegiatan: formData.deskripsiKegiatan,

@@ -1,31 +1,27 @@
 /**
- * Development-only logging utility
- * Console.log statements will only work in development mode
- * Production mode will have clean console output for better performance
+ * Development-only logging utility (PERFORMANCE MODE)
+ * Console.log statements disabled for better performance
+ * Change ENABLE_LOGGING to true if you need debugging
  */
+const ENABLE_LOGGING = false; // 🔥 PERFORMANCE: Disabled for speed
 
 const debugLog = (...args) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(...args);
-  }
+  // 🔥 PERFORMANCE: Completely disabled for maximum speed
+  // if (ENABLE_LOGGING && process.env.NODE_ENV === 'development') {
+  //   console.log(...args);
+  // }
 };
 
 const debugError = (...args) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.error(...args);
-  }
+  // 🔥 PERFORMANCE: Completely disabled for maximum speed
 };
 
 const debugWarn = (...args) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.warn(...args);
-  }
+  // 🔥 PERFORMANCE: Completely disabled for maximum speed
 };
 
 const debugInfo = (...args) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.info(...args);
-  }
+  // 🔥 PERFORMANCE: Completely disabled for maximum speed
 };
 
 // Export conditional logging functions

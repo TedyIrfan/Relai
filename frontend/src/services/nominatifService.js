@@ -292,7 +292,7 @@ export const nominatifService = {
   },
 
   // Method saveBiayaRow yang sudah di-fix - copy ke file utama
-  saveBiayaRow: async (detailRowId, biayaData) => {
+  saveBiayaRow: async (detailRowId, biayaData, isCreateMode = false) => {
     // Validasi input
     if (!detailRowId) {
       return { success: false, message: 'Detail row ID diperlukan' };
@@ -403,27 +403,45 @@ export const nominatifService = {
         response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, validatedBiayaData);
         console.log('✅ Create successful for temporary row:', response.data);
       } else {
-        // STRATEGI 1: Cek apakah biaya row sudah ada (only for real database IDs)
-        console.log('🔍 Checking existing biaya rows for detailRowId:', detailRowId);
-        const existingBiaya = await nominatifService.getBiayaRows(detailRowId);
+        // 🔥 CREATE MODE: Backend sudah bikin biaya row, jadi langsung update saja
+        if (isCreateMode) {
+          console.log('🆕 CREATE MODE: Backend created biaya row, updating for detailRowId:', detailRowId);
+          // Di create mode, backend sudah buat biaya row dengan default values, kita tinggal update
+          const existingBiaya = await nominatifService.getBiayaRows(detailRowId);
+          const biayaRow = existingBiaya.data?.data || null;
 
-      // Debug logging detail
-      console.log('📊 Full existingBiaya response:', JSON.stringify(existingBiaya, null, 2));
+          if (biayaRow && biayaRow.id) {
+            console.log('✅ Backend-created biaya found, updating ID:', biayaRow.id);
+            response = await api.put(`/nominatifs/details/${detailRowId}/biaya/${biayaRow.id}/simplified`, validatedBiayaData);
+            console.log('✅ Update successful:', response.data);
+          } else {
+            console.log('⚠️ No backend biaya row found, creating new as fallback...');
+            response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, validatedBiayaData);
+            console.log('✅ Create successful:', response.data);
+          }
+        } else {
+          // EDIT MODE: Cek apakah biaya row sudah ada
+          console.log('🔍 EDIT MODE: Checking existing biaya rows for detailRowId:', detailRowId);
+          const existingBiaya = await nominatifService.getBiayaRows(detailRowId);
 
-      // Fix double nested response structure
-      const biayaRow = existingBiaya.data?.data || null;
+        // Debug logging detail
+        console.log('📊 Full existingBiaya response:', JSON.stringify(existingBiaya, null, 2));
 
-      // Jika biaya row sudah ada, lakukan update
-      if (existingBiaya.success && biayaRow && biayaRow.id) {
-        console.log('✅ Existing biaya found, updating ID:', biayaRow.id);
-        // 🔥 FIX: Gunakan simplified update endpoint yang allow ALL nullable fields
-        response = await api.put(`/nominatifs/details/${detailRowId}/biaya/${biayaRow.id}/simplified`, validatedBiayaData);
-        console.log('✅ Simplified update successful:', response.data);
-      } else {
-        console.log('🆕 No existing biaya, creating new...');
-        response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, validatedBiayaData);
-        console.log('✅ Create successful:', response.data);
-      }
+        // Fix double nested response structure
+        const biayaRow = existingBiaya.data?.data || null;
+
+        // Jika biaya row sudah ada, lakukan update
+        if (existingBiaya.success && biayaRow && biayaRow.id) {
+          console.log('✅ Existing biaya found, updating ID:', biayaRow.id);
+          // 🔥 FIX: Gunakan simplified update endpoint yang allow ALL nullable fields
+          response = await api.put(`/nominatifs/details/${detailRowId}/biaya/${biayaRow.id}/simplified`, validatedBiayaData);
+          console.log('✅ Simplified update successful:', response.data);
+        } else {
+          console.log('🆕 No existing biaya, creating new...');
+          response = await api.post(`/nominatifs/details/${detailRowId}/biaya`, validatedBiayaData);
+          console.log('✅ Create successful:', response.data);
+        }
+        }
       }
 
       return { success: true, data: response.data };

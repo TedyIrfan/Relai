@@ -74,10 +74,7 @@ class NominatifBiayaRowController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Temporary biaya row (no data yet)',
-                'data' => [
-                    'success' => true,
-                    'data' => $this->getDefaultBiayaRow($detailRowId)
-                ]
+                'data' => null // Explicit null to indicate no existing data
             ]);
         }
 
