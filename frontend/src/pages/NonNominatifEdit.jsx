@@ -232,17 +232,20 @@ const NonNominatifEdit = () => {
     setSubmitting(true);
 
     try {
-      // Try to update and submit in parallel for better performance
+      // First update the data (keep as draft)
       const updatePayload = {
         rka_detail_id: selectedRKA,
         deskripsi_kegiatan: formData.deskripsiKegiatan,
         tanggal: formData.tanggalKegiatan,
         total_anggaran_terpakai: formData.danaAnggaran,
         evidence_link: formData.evidenceLink,
-        status: 'submitted' // Try to submit directly in update
+        status: 'draft' // Keep as draft first
       };
 
-      const response = await nonNominatifService.update(id, updatePayload);
+      await nonNominatifService.update(id, updatePayload);
+
+      // Then submit it to change status to submitted
+      const response = await nonNominatifService.submit(id);
 
       // Store notification in localStorage for the list page to show
       localStorage.setItem('showSuccessNotification', JSON.stringify({

@@ -897,15 +897,26 @@ CREATE TABLE non_nominatifs (
 - `POST /api/non-nominatifs/{id}/submit` - Submit draft → SP2D
 
 #### **🎨 Frontend Features - 100% Complete**
-- **NonNominatif.jsx**: List page dengan table responsif
-- **NonNominatifCreate.jsx**: Create form dengan validation
-- **NonNominatifEdit.jsx**: Edit form dengan auto-load data
+- **NonNominatif.jsx**: List page dengan table responsif + popup konfirmasi submit
+- **NonNominatifCreate.jsx**: Create form dengan validation + popup konfirmasi modern
+- **NonNominatifEdit.jsx**: Edit form dengan auto-load data + tombol "Simpan Draft"/"Submit"
 - **NonNominatifService**: API client dengan error handling
-- **Modern Notifications**: Popup notifications auto-dismiss
+- **Modern Notifications**: Popup notifications auto-dismiss dengan localStorage trigger
 - **Currency Formatting**: Rp 1.234.567 (Indonesian format)
 - **Date Formatting**: DD Desember YYYY
 - **RKA Search**: Real-time search di dropdown
 - **Budget Validation**: Warning jika melebihi available budget
+- **Anti-Spam Protection**: Loading states dan disabled buttons untuk mencegah double-click
+- **Optimized Performance**: Single API calls dan reduced notification overhead
+- **Improved UX**: Redirect langsung ke list dengan notif muncul di halaman tujuan
+
+#### **🔧 Recent Enhancements (December 2024)**
+- **Popup Konfirmasi Modern**: Mengganti window.confirm dengan KonfirmasiDialog yang lebih bagus
+- **Tombol Konsistensi**: "Perbarui" → "Simpan Draft", "Perbarui dan Kirim" → "Submit"
+- **Loading States**: Spinner animations dan disabled states untuk semua tombol aksi
+- **Status Management Fix**: Edit mode sekarang benar-benar mengubah status dari draft → submitted
+- **Notification Flow**: Redirect ke halaman list terlebih dahulu, notif muncul di halaman tujuan
+- **Performance Optimization**: Menghilangkan double API calls dan notifikasi yang tidak perlu
 
 ### **🎉 Non-Nominatif Status: PRODUCTION READY (100%)**
 
