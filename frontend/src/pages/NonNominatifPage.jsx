@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, Send, FileText, AlertCircle, Plus, X, Link2 } from 'lucide-react';
+import { ArrowLeft, Save, Send, FileText, AlertCircle, Plus, X, Link2, Loader2 } from 'lucide-react';
 import useNotification from '../hooks/useNotification';
 import { consoleLog, consoleError, consoleWarn } from '../utils/logger';
 
@@ -295,8 +295,12 @@ const NonNominatifPage = () => {
     }
   };
 
-  // Submit non-nominatif
+  // Submit non-nominatif with anti-spam protection
   const handleSubmit = async () => {
+    if (submitting) {
+      return; // ⛔️ PREVENT SPAM
+    }
+
     if (!formData.deskripsi_kegiatan || !formData.dana_anggaran) {
       showError('Deskripsi kegiatan dan dana anggaran wajib diisi');
       return;
@@ -590,10 +594,19 @@ const NonNominatifPage = () => {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
-                <Send className="w-4 h-4" />
-                {submitting ? 'Mengirim...' : 'Kirim'}
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Mengirim...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Kirim</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, DollarSign, Calendar, Save, Send, Link, Edit } from 'lucide-react';
 import nonNominatifService from '../services/nonNominatifService';
 import Notifikasi from '../components/Notifikasi';
+import KonfirmasiDialog from '../components/KonfirmasiDialog';
 import { consoleLog, consoleError } from '../utils/logger';
 
 const NonNominatifEdit = () => {
@@ -16,6 +17,13 @@ const NonNominatifEdit = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [originalStatus, setOriginalStatus] = useState('');
+
+  // State untuk dialog konfirmasi
+  const [dialogKonfirmasi, setDialogKonfirmasi] = useState({
+    isOpen: false,
+    type: 'submit'
+  });
 
   // State untuk form data non-nominatif
   const [formData, setFormData] = useState({
@@ -57,6 +65,9 @@ const NonNominatifEdit = () => {
 
         consoleLog('Form data to set:', formDataToSet);
         setFormData(formDataToSet);
+
+        // Set original status
+        setOriginalStatus(data.status);
 
         // Set selected RKA
         if (data.rka_detail_id) {
@@ -174,22 +185,14 @@ const NonNominatifEdit = () => {
 
       const response = await nonNominatifService.update(id, payload);
 
-      // Show success notification popup
-      if (window.tampilkanNotifikasi) {
-        window.tampilkanNotifikasi('Non-nominatif berhasil diperbarui', 'success');
+      // Store notification in localStorage for the list page to show
+      localStorage.setItem('showSuccessNotification', JSON.stringify({
+        message: 'Non-nominatif berhasil diperbarui',
+        type: 'success'
+      }));
 
-        // Show second notification with details
-        setTimeout(() => {
-          if (window.tampilkanNotifikasi) {
-            window.tampilkanNotifikasi(`${formData.deskripsiKegiatan}\nRp ${parseInt(formData.danaAnggaran).toLocaleString('id-ID')}`, 'info');
-          }
-        }, 500);
-      }
-
-      // Navigate after delay to show notifications
-      setTimeout(() => {
-        navigate('/non-nominatif');
-      }, 2000);
+      // Navigate immediately to list page
+      navigate('/non-nominatif');
     } catch (error) {
       consoleError('Error saving draft:', error);
       // Show error notification
@@ -216,43 +219,39 @@ const NonNominatifEdit = () => {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Apakah Anda yakin ingin mengirim non-nominatif ini? Setelah dikirim, data tidak dapat diubah lagi.'
-    );
+    // Buka dialog konfirmasi
+    setDialogKonfirmasi({
+      isOpen: true,
+      type: 'submit'
+    });
+    return;
+  };
 
-    if (!confirmed) return;
-
+  const handleConfirmSubmit = async () => {
     // Set loading state
     setSubmitting(true);
 
     try {
-      const payload = {
+      // Try to update and submit in parallel for better performance
+      const updatePayload = {
         rka_detail_id: selectedRKA,
         deskripsi_kegiatan: formData.deskripsiKegiatan,
         tanggal: formData.tanggalKegiatan,
         total_anggaran_terpakai: formData.danaAnggaran,
         evidence_link: formData.evidenceLink,
-        status: 'submitted'
+        status: 'submitted' // Try to submit directly in update
       };
 
-      const response = await nonNominatifService.update(id, payload);
+      const response = await nonNominatifService.update(id, updatePayload);
 
-      // Show success notification popup
-      if (window.tampilkanNotifikasi) {
-        window.tampilkanNotifikasi('Non-nominatif berhasil diperbarui dan dikirim', 'success');
+      // Store notification in localStorage for the list page to show
+      localStorage.setItem('showSuccessNotification', JSON.stringify({
+        message: 'Non-nominatif berhasil diperbarui dan dikirim',
+        type: 'success'
+      }));
 
-        // Show second notification with details
-        setTimeout(() => {
-          if (window.tampilkanNotifikasi) {
-            window.tampilkanNotifikasi(`${formData.deskripsiKegiatan}\nRp ${parseInt(formData.danaAnggaran).toLocaleString('id-ID')}\n${formData.tanggalKegiatan}`, 'info');
-          }
-        }, 500);
-      }
-
-      // Navigate after delay to show notifications
-      setTimeout(() => {
-        navigate('/non-nominatif');
-      }, 2500);
+      // Navigate immediately to list page
+      navigate('/non-nominatif');
     } catch (error) {
       consoleError('Error submitting:', error);
       // Show error notification
@@ -262,8 +261,9 @@ const NonNominatifEdit = () => {
         alert(error.response?.data?.message || 'Terjadi kesalahan saat mengirim non-nominatif');
       }
     } finally {
-      // Always reset loading state
       setSubmitting(false);
+      // Tutup dialog
+      setDialogKonfirmasi({ isOpen: false, type: 'submit' });
     }
   };
 
@@ -323,6 +323,20 @@ const NonNominatifEdit = () => {
     <>
       {/* Notifikasi Component */}
       <Notifikasi />
+
+      {/* Komponen Dialog Konfirmasi */}
+      <KonfirmasiDialog
+        isOpen={dialogKonfirmasi.isOpen}
+        onClose={() => setDialogKonfirmasi({ isOpen: false, type: 'submit' })}
+        onConfirm={handleConfirmSubmit}
+        title="Konfirmasi Pengiriman Non-Nominatif"
+        message={`Apakah Anda yakin ingin mengirim data non-nominatif ini?\n\nDeskripsi: ${formData.deskripsiKegiatan}\n\nSetelah non-nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n\nPastikan semua data sudah benar sebelum melanjutkan.`}
+        confirmText="Submit"
+        cancelText="Batal"
+        type="success"
+        iconType="warning"
+        isLoading={submitting}
+      />
 
       <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -502,7 +516,7 @@ const NonNominatifEdit = () => {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Perbarui
+                    Simpan Draft
                   </>
                 )}
               </button>
@@ -520,7 +534,7 @@ const NonNominatifEdit = () => {
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    Perbarui dan Kirim
+                    Submit
                   </>
                 )}
               </button>

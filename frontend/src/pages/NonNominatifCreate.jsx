@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, DollarSign, Calendar, Save, Send, Link } from 'lucide-react';
+import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, DollarSign, Calendar, Save, Send, Link, Loader2 } from 'lucide-react';
 import nonNominatifService from '../services/nonNominatifService';
 import Notifikasi from '../components/Notifikasi';
+import KonfirmasiDialog from '../components/KonfirmasiDialog';
 import { consoleError, consoleWarn } from '../utils/logger';
 
 const NonNominatifCreate = () => {
@@ -11,8 +12,15 @@ const NonNominatifCreate = () => {
   const [selectedRKA, setSelectedRKA] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // State untuk dialog konfirmasi
+  const [dialogKonfirmasi, setDialogKonfirmasi] = useState({
+    isOpen: false,
+    type: 'submit'
+  });
 
   // State untuk form data non-nominatif
   const [formData, setFormData] = useState({
@@ -121,22 +129,14 @@ const NonNominatifCreate = () => {
 
       const response = await nonNominatifService.create(payload);
 
-      // Show success notification popup
-      if (window.tampilkanNotifikasi) {
-        window.tampilkanNotifikasi('Non-nominatif berhasil disimpan sebagai draft', 'success');
+      // Store notification in localStorage for the list page to show
+      localStorage.setItem('showSuccessNotification', JSON.stringify({
+        message: 'Non-nominatif berhasil disimpan sebagai draft',
+        type: 'success'
+      }));
 
-        // Show second notification with details
-        setTimeout(() => {
-          if (window.tampilkanNotifikasi) {
-            window.tampilkanNotifikasi(`${formData.deskripsiKegiatan}\nRp ${parseInt(formData.danaAnggaran).toLocaleString('id-ID')}`, 'info');
-          }
-        }, 500);
-      }
-
-      // Navigate after delay to show notifications
-      setTimeout(() => {
-        navigate('/non-nominatif');
-      }, 2000);
+      // Navigate immediately to list page
+      navigate('/non-nominatif');
     } catch (error) {
       consoleError('Error saving draft:', error);
       // Show error notification
@@ -145,11 +145,17 @@ const NonNominatifCreate = () => {
       } else {
         alert(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan draft');
       }
+    } finally {
+      setIsSaving(false); // End loading regardless of success/error
     }
   };
 
-  // Function to handle submit non-nominatif
-  const handleSubmit = async () => {
+  // Function to handle submit non-nominatif with anti-spam protection
+  const handleSubmit = () => {
+    if (isSubmitting) {
+      return; // Prevent multiple clicks
+    }
+
     if (!selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink) {
       // Show error notification
       if (window.tampilkanNotifikasi) {
@@ -160,11 +166,16 @@ const NonNominatifCreate = () => {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Apakah Anda yakin ingin mengirim non-nominatif ini? Setelah dikirim, data tidak dapat diubah lagi.'
-    );
+    // Buka dialog konfirmasi
+    setDialogKonfirmasi({
+      isOpen: true,
+      type: 'submit'
+    });
+  };
 
-    if (!confirmed) return;
+  const handleConfirmSubmit = async () => {
+    // Set loading state immediately
+    setIsSubmitting(true);
 
     try {
       const payload = {
@@ -178,22 +189,14 @@ const NonNominatifCreate = () => {
 
       const response = await nonNominatifService.create(payload);
 
-      // Show success notification popup
-      if (window.tampilkanNotifikasi) {
-        window.tampilkanNotifikasi('Non-nominatif berhasil dikirim', 'success');
+      // Store notification in localStorage for the list page to show
+      localStorage.setItem('showSuccessNotification', JSON.stringify({
+        message: 'Non-nominatif berhasil dikirim',
+        type: 'success'
+      }));
 
-        // Show second notification with details
-        setTimeout(() => {
-          if (window.tampilkanNotifikasi) {
-            window.tampilkanNotifikasi(`${formData.deskripsiKegiatan}\nRp ${parseInt(formData.danaAnggaran).toLocaleString('id-ID')}\n${formData.tanggalKegiatan}`, 'info');
-          }
-        }, 500);
-      }
-
-      // Navigate after delay to show notifications
-      setTimeout(() => {
-        navigate('/non-nominatif');
-      }, 2500);
+      // Navigate immediately to list page
+      navigate('/non-nominatif');
     } catch (error) {
       consoleError('Error submitting:', error);
       // Show error notification
@@ -202,6 +205,10 @@ const NonNominatifCreate = () => {
       } else {
         alert(error.response?.data?.message || 'Terjadi kesalahan saat mengirim non-nominatif');
       }
+    } finally {
+      setIsSubmitting(false); // End loading regardless of success/error
+      // Tutup dialog
+      setDialogKonfirmasi({ isOpen: false, type: 'submit' });
     }
   };
 
@@ -246,6 +253,20 @@ const NonNominatifCreate = () => {
     <>
       {/* Notifikasi Component */}
       <Notifikasi />
+
+      {/* Komponen Dialog Konfirmasi */}
+      <KonfirmasiDialog
+        isOpen={dialogKonfirmasi.isOpen}
+        onClose={() => setDialogKonfirmasi({ isOpen: false, type: 'submit' })}
+        onConfirm={handleConfirmSubmit}
+        title="Konfirmasi Pengiriman Non-Nominatif"
+        message={`Apakah Anda yakin ingin mengirim data non-nominatif ini?\n\nSetelah non-nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n\nPastikan semua data sudah benar sebelum melanjutkan.`}
+        confirmText="Submit"
+        cancelText="Batal"
+        type="success"
+        iconType="warning"
+        isLoading={isSubmitting}
+      />
 
       <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -546,20 +567,38 @@ const NonNominatifCreate = () => {
 
               <button
                 onClick={handleSaveDraft}
-                disabled={!selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
-                className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                disabled={!selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink || isSaving}
+                className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
-                <Save className="w-4 h-4" />
-                Simpan Draft
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Simpan Draft</span>
+                  </>
+                )}
               </button>
 
               <button
                 onClick={handleSubmit}
-                disabled={!selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
-                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                disabled={!selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink || isSubmitting}
+                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
-                <Send className="w-4 h-4" />
-                Kirim
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Submit</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

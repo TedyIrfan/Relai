@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
 import nonNominatifService from '../services/nonNominatifService';
@@ -73,6 +73,25 @@ const NonNominatif = () => {
     };
 
     fetchNonNominatifs();
+  }, []);
+
+  // Check for stored notifications from other pages
+  useEffect(() => {
+    const storedNotification = localStorage.getItem('showSuccessNotification');
+    if (storedNotification) {
+      try {
+        const notification = JSON.parse(storedNotification);
+        // Show the notification
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi(notification.message, notification.type);
+        }
+        // Clear the stored notification
+        localStorage.removeItem('showSuccessNotification');
+      } catch (error) {
+        // Clear invalid stored notification
+        localStorage.removeItem('showSuccessNotification');
+      }
+    }
   }, []);
 
   // Get status badge color
@@ -198,13 +217,12 @@ const NonNominatif = () => {
   };
 
   const handleConfirmSubmit = async () => {
-n    // Set loading state immediately
+    // Set loading state immediately
     setIsSubmitting(true);
-    setIsSubmitting(true);
-    const nonNominatif = nonNominatifs.find(n => n.id === nonNominatifId);
+    const nonNominatif = nonNominatifs.find(n => n.id === dialogKonfirmasi.nonNominatifId);
 
     try {
-      const response = await nonNominatifService.submit(nonNominatifId);
+      const response = await nonNominatifService.submit(dialogKonfirmasi.nonNominatifId);
 
       if (response) {
         // Show success popup notification
@@ -224,7 +242,7 @@ n    // Set loading state immediately
 
         // Update status non-nominatif di local state
         setNonNominatifs(nonNominatifs.map(nom =>
-          nom.id === nonNominatifId ? { ...nom, status: 'submitted' } : nom
+          nom.id === dialogKonfirmasi.nonNominatifId ? { ...nom, status: 'submitted' } : nom
         ));
 
         // Refresh data after delay to show notifications
@@ -248,6 +266,7 @@ n    // Set loading state immediately
     }
   };
 
+
   return (
       <>
       {/* Komponen Notifikasi - di luar container utama */}
@@ -263,7 +282,7 @@ n    // Set loading state immediately
           ? `Apakah Anda yakin ingin menghapus data non-nominatif ini?\n\nDeskripsi: ${dialogKonfirmasi.deskripsi}\n\nData yang sudah dihapus tidak dapat dikembalikan.`
           : `Apakah Anda yakin ingin mengirim data non-nominatif ini?\n\nDeskripsi: ${dialogKonfirmasi.deskripsi}\n\nSetelah non-nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n\nPastikan semua data sudah benar sebelum melanjutkan.`
         }
-        confirmText={dialogKonfirmasi.type === 'delete' ? 'Ya, Hapus' : 'Ya, Kirim'}
+        confirmText={dialogKonfirmasi.type === 'delete' ? 'Ya, Hapus' : 'Submit'}
         cancelText="Batal"
         type={dialogKonfirmasi.type === 'delete' ? 'danger' : 'success'}
         iconType="warning"
