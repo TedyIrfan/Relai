@@ -744,3 +744,6 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 ---
 
 **Catatan:** Dokumen ini merupakan referensi struktur data Standar Biaya Masukan (SBM) untuk keperluan perencanaan anggaran dan pelaporan keuangan negara.
+
+**catatan lagi**
+Honorarium 29, Honorarium 32,Honorarium 33, Pemeliharaan, Pengadaan Inventaris Kantor, Pakaian Sopir/Satpam, Sewa Kendaraan, dan Konsumsi Rapat., SATUAN BIAYA PENYELENGGARAAN PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI., SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP). pakai mata uang dollar, sisanya Rupiah
