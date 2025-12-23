@@ -1003,7 +1003,7 @@ const NominatifPage = () => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <button
-                onClick={() => navigate('/nominatif')}
+                onClick={() => specificNominatifId ? navigate(`/nominatif/edit/${specificNominatifId}`) : navigate('/nominatif')}
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mr-4"
               >
                 <ArrowLeft className="w-5 h-5" />

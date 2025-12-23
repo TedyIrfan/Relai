@@ -134,16 +134,8 @@ const Nominatif = () => {
 
   
   const handleEdit = (nominatif) => {
-    // Jika nominatif punya rka_detail_id, gunakan itu. Jika tidak, fallback ke id (meski mungkin salah konteks)
-    const routeId = nominatif.rka_detail_id || nominatif.rka_detail?.id;
-    
-    if (routeId) {
-      // Kirim ID nominatif spesifik via query param untuk memastikan yang diedit benar
-      navigate(`/nominatif/${routeId}?id=${nominatif.id}`);
-    } else {
-      consoleError("Data nominatif tidak lengkap untuk navigasi:", nominatif);
-      alert("Data RKA tidak ditemukan pada nominatif ini.");
-    }
+    // Langsung ke form edit dulu
+    navigate(`/nominatif/edit/${nominatif.id}`);
   };
 
   const handleDeleteClick = (id, deskripsi) => {

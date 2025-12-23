@@ -926,5 +926,63 @@ CREATE TABLE non_nominatifs (
 - Username: `eselon1` / Password: `eselon1`
 - Access: Menu → Non Nominatif
 
-_Last Updated: December 14, 2024_
+---
+
+## 🆕 **NOMINATIF EDIT SYSTEM - DECEMBER 2025**
+
+### **📝 Nominatif Edit Form - 100% COMPLETE**
+
+**Overview:**
+- Edit flow terpisah dari create mode untuk UX yang lebih baik
+- Form awal menampilkan deskripsi, tanggal, dan RKA (locked)
+- Tombol navigasi ke halaman detail/table untuk edit rows
+
+**Key Features:**
+
+**✅ Two-Step Edit Flow**
+- **Step 1**: Edit Form (deskripsi, tanggal, RKA yang sudah terpilih/locked)
+- **Step 2**: NominatifPage untuk edit detail rows dengan context preserved
+
+**✅ Locked RKA Selection**
+- RKA dropdown dalam mode edit bersifat **locked** (tidak bisa diubah)
+- Static display dengan background `bg-gray-100`
+- Menampilkan RKA yang sudah dipilih sebelumnya
+
+**✅ Status Display in Header**
+- Status badge ditampilkan di header dengan icon FileText
+- Format: **Edit Nominatif** | 📄 Status: draft/submitted
+- Warna status sama persis dengan table Nominatif:
+  - draft: `bg-gray-100 text-gray-800`
+  - submitted: `bg-yellow-100 text-yellow-800`
+
+**✅ Action Buttons with Icons**
+- **Batal**: Navigate ke `/nominatif` (list page)
+- **Simpan Draft**: Blue button dengan icon `Save`, loading spinner
+- **Submit**: Green button dengan icon `Send`, popup konfirmasi + loading spinner
+- Button style sama persis dengan NonNominatifEdit
+
+**✅ Smart Navigation (Kembali Button)**
+- Di NominatifPage, tombol "Kembali" sekarang cek query parameter `?id=`
+  - Jika ada `?id=1` → kembali ke `/nominatif/edit/1` (edit form)
+  - Jika tidak ada `?id` → kembali ke `/nominatif` (list page)
+
+**Files Created/Modified:**
+- `frontend/src/pages/NominatifEditForm.jsx` - Edit form page
+- `frontend/src/pages/NominatifEditTable.jsx` - **DELETED** (tidak dipakai)
+- `frontend/src/pages/NominatifPage.jsx` - Updated tombol Kembali logic
+- `frontend/src/App.jsx` - Route cleanup
+
+**URL Routes:**
+- `/nominatif/edit/:id` → NominatifEditForm
+- `/nominatif/:rkaId?id=:nominatifId` → NominatifPage (edit mode with context)
+
+**User Flow:**
+```
+Nominatif List → Click Edit → NominatifEditForm
+   → (Optional) Click "Ke Detail Nominatif" → NominatifPage
+   → Click "Kembali" → Kembali ke NominatifEditForm
+   → Click "Simpan Draft"/"Submit" → Kembali ke Nominatif List
+```
+
+_Last Updated: December 23, 2025_
 _Status: **PRODUCTION READY (100%)**_

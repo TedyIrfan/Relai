@@ -10,6 +10,7 @@ import MasterRKA from './pages/MasterRKA';
 import Nominatif from './pages/Nominatif';
 import NominatifPage from './pages/NominatifPage';
 import NominatifCreate from './pages/NominatifCreate';
+import NominatifEditForm from './pages/NominatifEditForm';
 import NonNominatif from './pages/NonNominatif';
 import NonNominatifCreate from './pages/NonNominatifCreate';
 import NonNominatifEdit from './pages/NonNominatifEdit';
@@ -45,6 +46,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Nominatif />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/nominatif/edit/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <NominatifEditForm />
               </Layout>
             </ProtectedRoute>
           } />
