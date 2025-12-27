@@ -2,42 +2,41 @@
 
 ## Daftar Isi
 
-- [Honorarium 28. Uang Harian dan Uang Representasi Perjalanan Dinas Dalam Negeri](#honorarium-28-uang-harian-dan-uang-representasi-perjalanan-dinas-dalam-negeri)
-- [Honorarium 29. Uang Harian Perjalanan Dinas Luar Negeri](#honorarium-29-uang-harian-perjalanan-dinas-luar-negeri)
-- [Honorarium 30. Penginapan Perjalanan Dinas Dalam Negeri](#honorarium-30-penginapan-perjalanan-dinas-dalam-negeri)
-- [Honorarium 31. Rapat/Pertemuan di Luar Kantor](#honorarium-31-rapatpertemuan-di-luar-kantor)
-- [Honorarium 32. Tiket Perjalanan Dinas Pindah Luar Negeri](#honorarium-32-tiket-perjalanan-dinas-pindah-luar-negeri)
-- [Honorarium 33. Operasional Khusus Kepala Perwakilan RI](#honorarium-33-operasional-khusus-kepala-perwakilan-ri)
-- [Honorarium 34. Makanan Penambah Daya Tahan Tubuh](#honorarium-34-makanan-penambah-daya-tahan-tubuh)
-- [Honorarium 35. Sewa Kendaraan](#honorarium-35-sewa-kendaraan)
-- [Honorarium 36. Pengadaan Kendaraan Dinas](#honorarium-36-pengadaan-kendaraan-dinas)
-- [Honorarium 37. Pengadaan Pakaian Dinas](#honorarium-37-pengadaan-pakaian-dinas)
-- [Honorarium 38. Konsumsi Rapat/Pertemuan](#honorarium-38-konsumsi-rapatpertemuan)
-- [Honorarium 39. Konsumsi Kegiatan Diklat](#honorarium-39-konsumsi-kegiatan-diklat)
-- [Toleransi Pengusulan](#toleransi-pengusulan)
-- [1. Transportasi Darat dari Ibukota Provinsi ke Kabupaten/Kota](#1-transportasi-darat-dari-ibukota-provinsi-ke-kabupatenkota)
-- [2. Transportasi dari DKI Jakarta ke Kabupaten/Kota Sekitar](#2-transportasi-dari-dki-jakarta-ke-kabupatenkota-sekitar)
-- [3. Transpor Kegiatan dalam Kabupaten/Kota](#3-transpor-kegiatan-dalam-kabupatenkota)
-- [4. Pemeliharaan Sarana Kantor](#4-pemeliharaan-sarana-kantor)
-- [5. Penerjemahan dan Pengetikan](#5-penerjemahan-dan-pengetikan)
-- [6. Bantuan Beasiswa Program Gelar/Nongelar](#6-bantuan-beasiswa-program-gelarnongelar)
-- [7. Sewa Mesin Fotokopi](#7-sewa-mesin-fotokopi)
-- [8. Honorarium Narasumber/Pakar/Praktisi/Profesional](#8-honorarium-narasumberpakarpraktisiprofesional)
-- [9. Pengadaan Bahan Makanan](#9-pengadaan-bahan-makanan)
-- [10. Konsumsi Tahanan/Deteni/ABK Nonjustisia](#10-konsumsi-tahanandeteniabk-nonjustisia)
-- [11. Keperluan Sehari-hari Perkantoran](#11-keperluan-sehari-hari-perkantoran)
-- [12. Penggantian Inventaris](#12-penggantian-inventaris)
-- [13. Pemeliharaan dan Operasional Kendaraan Dinas](#13-pemeliharaan-dan-operasional-kendaraan-dinas)
-- [14. Pemeliharaan Gedung/Bangunan](#14-pemeliharaan-gedungbangunan)
-- [15. Sewa Gedung Pertemuan](#15-sewa-gedung-pertemuan)
-- [16. Transportasi Terminal/Stasiun/Bandara/Pelabuhan](#16-transportasi-terminalstasiunbandarapelabuhan)
-- [17. Tiket Pesawat Perjalanan Dinas Dalam Negeri](#17-tiket-pesawat-perjalanan-dinas-dalam-negeri)
-- [18. Tiket Pesawat Perjalanan Dinas Luar Negeri](#18-tiket-pesawat-perjalanan-dinas-luar-negeri)
-- [19. Penyelenggaraan Perwakilan RI di Luar Negeri](#19-penyelenggaraan-perwakilan-ri-di-luar-negeri)
+- [Honorarium 28 SATUAN BIAYA UANG HARIAN DAN UANG REPRESENTASI PERJALANAN DINAS DALAM NEGERI](#honorarium-28-satuan-biaya-uang-harian-dan-uang-representasi-perjalanan-dinas-dalam-negeri)
+- [Honorarium 29 SATUAN BIAYA UANG HARIAN PERJALANAN DINAS LUAR NEGERI](#honorarium-29-satuan-biaya-uang-harian-perjalanan-dinas-luar-negeri)
+- [Honorarium 30 SATUAN BIAYA PENGINAPAN PERJALANAN DINAS DALAM NEGERI](#honorarium-30-satuan-biaya-penginapan-perjalanan-dinas-dalam-negeri)
+- [Honorarium 31 SATUAN BIAYA RAPAT/PERTEMUAN DI LUAR KANTOR](#honorarium-31-satuan-biaya-rapatpertemuan-di-luar-kantor)
+- [Honorarium 32 SATUAN BIAYA TIKET PERJALANAN DINAS PINDAH LUAR NEGERI (ONE WAY)](#honorarium-32-satuan-biaya-tiket-perjalanan-dinas-pindah-luar-negeri-one-way)
+- [Honorarium 33 SATUAN BIAYA OPERASIONAL KHUSUS KEPALA PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI](#honorarium-33-satuan-biaya-operasional-khusus-kepala-perwakilan-republik-indonesia-di-luar-negeri)
+- [Honorarium 34 SATUAN BIAYA MAKANAN PENAMBAH DAYA TAHAN TUBUH](#honorarium-34-satuan-biaya-makanan-penambah-daya-tahan-tubuh)
+- [Honorarium 35 SATUAN BIAYA SEWA KENDARAAN](#honorarium-35-satuan-biaya-sewa-kendaraan)
+- [Honorarium 36 SATUAN BIAYA PENGADAAN KENDARAAN DINAS](#honorarium-36-satuan-biaya-pengadaan-kendaraan-dinas)
+- [Honorarium 37 SATUAN BIAYA PENGADAAN PAKAIAN DINAS](#honorarium-37-satuan-biaya-pengadaan-pakaian-dinas)
+- [Honorarium 38 SATUAN BIAYA KONSUMSI RAPAT/PERTEMUAN](#honorarium-38-satuan-biaya-konsumsi-rapatpertemuan)
+- [Honorarium 39 SATUAN BIAYA KONSUMSI KEGIATAN PENDIDIKAN DAN PELATIHAN (DIKLAT)](#honorarium-39-satuan-biaya-konsumsi-kegiatan-pendidikan-dan-pelatihan-diklat)
+- [1. SATUAN BIAYA TRANSPORTASI DARAT DARI IBUKOTA PROVINSI KE KABUPATEN/KOTA DALAM PROVINSI YANG SAMA (ONE WAY)](#1-satuan-biaya-transportasi-darat-dari-ibukota-provinsi-ke-kabupatenkota-dalam-provinsi-yang-sama-one-way)
+- [2. SATUAN BIAYA TRANSPORTASI DARI DKI JAKARTA KE KABUPATEN/KOTA SEKITAR (ONE WAY)](#2-satuan-biaya-transportasi-dari-dki-jakarta-ke-kabupatenkota-sekitar-one-way)
+- [3. SATUAN BIAYA TRANSPOR KEGIATAN DALAM KABUPATEN/KOTA PERGI PULANG (PP)](#3-satuan-biaya-transpor-kegiatan-dalam-kabupatenkota-pergi-pulang-pp)
+- [4. SATUAN BIAYA PEMELIHARAAN SARANA KANTOR](#4-satuan-biaya-pemeliharaan-sarana-kantor)
+- [5. SATUAN BIAYA PENERJEMAHAN DAN PENGETIKAN](#5-satuan-biaya-penerjemahan-dan-pengetikan)
+- [6. SATUAN BIAYA BANTUAN BEASISWA PROGRAM GELAR/NONGELAR DALAM NEGERI](#6-satuan-biaya-bantuan-beasiswa-program-gelarnongelar-dalam-negeri)
+- [7. SATUAN BIAYA SEWA MESIN FOTOKOPI](#7-satuan-biaya-sewa-mesin-fotokopi)
+- [8. HONORARIUM NARASUMBER/PAKAR/PRAKTISI/PROFESIONAL](#8-honorarium-narasumberpakarpraktisiprofesional)
+- [9. SATUAN BIAYA PENGADAAN BAHAN MAKANAN](#9-satuan-biaya-pengadaan-bahan-makanan)
+- [10. SATUAN BIAYA KONSUMSI TAHANAN/DETENI/ABK NONJUSTISIA](#10-satuan-biaya-konsumsi-tahanandeteniabk-nonjustisia)
+- [11. SATUAN BIAYA KEPERLUAN SEHARI-HARI PERKANTORAN DI DALAM NEGERI](#11-satuan-biaya-keperluan-sehari-hari-perkantoran-di-dalam-negeri)
+- [12. SATUAN BIAYA PENGGANTIAN INVENTARIS LAMA DAN/ATAU PEMBELIAN INVENTARIS UNTUK PEGAWAI BARU](#12-satuan-biaya-penggantian-inventaris-lama-danatau-pembelian-inventaris-untuk-pegawai-baru)
+- [13. SATUAN BIAYA PEMELIHARAAN DAN OPERASIONAL KENDARAAN DINAS](#13-satuan-biaya-pemeliharaan-dan-operasional-kendaraan-dinas)
+- [14. SATUAN BIAYA PEMELIHARAAN GEDUNG/BANGUNAN DALAM NEGERI](#14-satuan-biaya-pemeliharaan-gedungbangunan-dalam-negeri)
+- [15. SATUAN BIAYA SEWA GEDUNG PERTEMUAN](#15-satuan-biaya-sewa-gedung-pertemuan)
+- [16. SATUAN BIAYA TRANSPORTASI DARI DAN/ATAU KE TERMINAL BUS/STASIUN/BANDARA/PELABUHAN DALAM RANGKA PERJALANAN DINAS DALAM NEGERI](#16-satuan-biaya-transportasi-dari-danatau-ke-terminal-busstasiunbandarapelabuhan-dalam-rangka-perjalanan-dinas-dalam-negeri)
+- [17. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS DALAM NEGERI PERGI PULANG (PP)](#17-satuan-biaya-tiket-pesawat-perjalanan-dinas-dalam-negeri-pergi-pulang-pp)
+- [18. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP)](#18-satuan-biaya-tiket-pesawat-perjalanan-dinas-luar-negeri-pergi-pulang-pp)
+- [19. SATUAN BIAYA PENYELENGGARAAN PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI](#19-satuan-biaya-penyelenggaraan-perwakilan-republik-indonesia-di-luar-negeri)
 
 ---
 
-## Honorarium 28. Uang Harian dan Uang Representasi Perjalanan Dinas Dalam Negeri
+## Honorarium 28 SATUAN BIAYA UANG HARIAN DAN UANG REPRESENTASI PERJALANAN DINAS DALAM NEGERI
 
 ### Honorarium 28.1 Uang Harian Perjalanan Dinas Dalam Negeri
 
@@ -62,7 +61,7 @@
 
 ---
 
-## Honorarium 29. Uang Harian Perjalanan Dinas Luar Negeri
+## Honorarium 29 SATUAN BIAYA UANG HARIAN PERJALANAN DINAS LUAR NEGERI
 
 **Kolom:**
 
@@ -76,7 +75,7 @@
 
 ---
 
-## Honorarium 30. Penginapan Perjalanan Dinas Dalam Negeri
+## Honorarium 30 SATUAN BIAYA PENGINAPAN PERJALANAN DINAS DALAM NEGERI
 
 **Kolom:**
 
@@ -90,12 +89,11 @@
 
 ---
 
-## Honorarium 31. Rapat/Pertemuan di Luar Kantor
+## Honorarium 31 SATUAN BIAYA RAPAT/PERTEMUAN DI LUAR KANTOR
 
 ### Honorarium 31.1 Paket Kegiatan Rapat/Pertemuan di Luar Kantor
 
-#### (A) Menteri dan Setingkat Menteri
-
+**(A) Menteri dan Setingkat Menteri**
 **Kolom:**
 
 - NO
@@ -105,8 +103,7 @@
 - FULLDAY
 - FULLBOARD
 
-#### (B) Pejabat Eselon I dan II
-
+**(B) Pejabat Eselon I dan II**
 **Kolom:**
 
 - NO
@@ -116,8 +113,7 @@
 - FULLDAY
 - FULLBOARD
 
-#### (C) Pejabat Eselon III ke Bawah
-
+**(C) Pejabat Eselon III Ke Bawah**
 **Kolom:**
 
 - NO
@@ -138,27 +134,23 @@
 
 ---
 
-## Honorarium 32. Tiket Perjalanan Dinas Pindah Luar Negeri
-
-**Satuan Biaya Tiket Perjalanan Dinas Pindah Luar Negeri (One Way)**
+## Honorarium 32 SATUAN BIAYA TIKET PERJALANAN DINAS PINDAH LUAR NEGERI (ONE WAY)
 
 **Kolom:**
 
 - NO
 - PERWAKILAN
 - SATUAN
-- JAKARTA - PERWAKILAN (Published)
-- JAKARTA - PERWAKILAN (Business)
-- JAKARTA - PERWAKILAN (First)
-- PERWAKILAN - JAKARTA (Published)
-- PERWAKILAN - JAKARTA (Business)
-- PERWAKILAN - JAKARTA (First)
+- JAKARTA - PERWAKILAN Published
+- JAKARTA - PERWAKILAN Business
+- JAKARTA - PERWAKILAN First
+- PERWAKILAN - JAKARTA Published
+- PERWAKILAN - JAKARTA Business
+- PERWAKILAN - JAKARTA First
 
 ---
 
-## Honorarium 33. Operasional Khusus Kepala Perwakilan RI
-
-**Satuan Biaya Operasional Khusus Kepala Perwakilan Republik Indonesia di Luar Negeri**
+## Honorarium 33 SATUAN BIAYA OPERASIONAL KHUSUS KEPALA PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI
 
 **Kolom:**
 
@@ -169,9 +161,7 @@
 
 ---
 
-## Honorarium 34. Makanan Penambah Daya Tahan Tubuh
-
-**Satuan Biaya Makanan Penambah Daya Tahan Tubuh**
+## Honorarium 34 SATUAN BIAYA MAKANAN PENAMBAH DAYA TAHAN TUBUH
 
 **Kolom:**
 
@@ -182,7 +172,7 @@
 
 ---
 
-## Honorarium 35. Sewa Kendaraan
+## Honorarium 35 SATUAN BIAYA SEWA KENDARAAN
 
 ### Honorarium 35.1 Sewa Kendaraan Pelaksanaan Kegiatan Insidentil
 
@@ -217,7 +207,7 @@
 
 ---
 
-## Honorarium 36. Pengadaan Kendaraan Dinas
+## Honorarium 36 SATUAN BIAYA PENGADAAN KENDARAAN DINAS
 
 ### Honorarium 36.1 Kendaraan Dinas Pejabat
 
@@ -269,9 +259,7 @@
 
 ---
 
-## Honorarium 37. Pengadaan Pakaian Dinas
-
-**Satuan Biaya Pengadaan Pakaian Dinas**
+## Honorarium 37 SATUAN BIAYA PENGADAAN PAKAIAN DINAS
 
 **Kolom:**
 
@@ -286,19 +274,9 @@
 
 ---
 
-## Honorarium 38. Konsumsi Rapat/Pertemuan
+## Honorarium 38 SATUAN BIAYA KONSUMSI RAPAT/PERTEMUAN
 
-### Honorarium 38.1 Rapat Koordinasi Tingkat Menteri/Eselon I/Setara
-
-**Kolom:**
-
-- NO
-- PROVINSI
-- SATUAN
-- MAKAN
-- KUDAPAN (SNACK)
-
-### Honorarium 38.2 Rapat Biasa
+### Honorarium 38.1 RAPAT KOORDINASI TINGKAT MENTERI/ ESELON I/SETARA
 
 **Kolom:**
 
@@ -308,11 +286,7 @@
 - MAKAN
 - KUDAPAN (SNACK)
 
----
-
-## Honorarium 39. Konsumsi Kegiatan Diklat
-
-**Satuan Biaya Konsumsi Kegiatan Pendidikan dan Pelatihan (Diklat)**
+### Honorarium 38.2 RAPAT BIASA
 
 **Kolom:**
 
@@ -324,22 +298,19 @@
 
 ---
 
-## Toleransi Pengusulan
-
-Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberikan toleransi pengusulan satuan biaya melebihi ketentuan yang tercantum dalam Peraturan Menteri ini.
+## Honorarium 39 SATUAN BIAYA KONSUMSI KEGIATAN PENDIDIKAN DAN PELATIHAN (DIKLAT)
 
 **Kolom:**
 
 - NO
 - PROVINSI
-- KABUPATEN
-- TOLERANSI
+- SATUAN
+- MAKAN
+- KUDAPAN (SNACK)
 
 ---
 
-## 1. Transportasi Darat dari Ibukota Provinsi ke Kabupaten/Kota
-
-**Satuan Biaya Transportasi Darat dari Ibukota Provinsi ke Kabupaten/Kota dalam Provinsi yang Sama (One Way)**
+## 1. SATUAN BIAYA TRANSPORTASI DARAT DARI IBUKOTA PROVINSI KE KABUPATEN/KOTA DALAM PROVINSI YANG SAMA (ONE WAY)
 
 **Kolom:**
 
@@ -351,9 +322,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 2. Transportasi dari DKI Jakarta ke Kabupaten/Kota Sekitar
-
-**Satuan Biaya Transportasi dari DKI Jakarta ke Kabupaten/Kota Sekitar (One Way)**
+## 2. SATUAN BIAYA TRANSPORTASI DARI DKI JAKARTA KE KABUPATEN/KOTA SEKITAR (ONE WAY)
 
 **Kolom:**
 
@@ -365,9 +334,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 3. Transpor Kegiatan dalam Kabupaten/Kota
-
-**Satuan Biaya Transpor Kegiatan dalam Kabupaten/Kota Pergi Pulang (PP)**
+## 3. SATUAN BIAYA TRANSPOR KEGIATAN DALAM KABUPATEN/KOTA PERGI PULANG (PP)
 
 **Kolom:**
 
@@ -378,9 +345,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 4. Pemeliharaan Sarana Kantor
-
-**Satuan Biaya Pemeliharaan Sarana Kantor**
+## 4. SATUAN BIAYA PEMELIHARAAN SARANA KANTOR
 
 **Kolom:**
 
@@ -391,9 +356,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 5. Penerjemahan dan Pengetikan
-
-**Satuan Biaya Penerjemahan dan Pengetikan**
+## 5. SATUAN BIAYA PENERJEMAHAN DAN PENGETIKAN
 
 **Kolom:**
 
@@ -404,9 +367,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 6. Bantuan Beasiswa Program Gelar/Nongelar
-
-**Satuan Biaya Bantuan Beasiswa Program Gelar/Nongelar Dalam Negeri**
+## 6. SATUAN BIAYA BANTUAN BEASISWA PROGRAM GELAR/NONGELAR DALAM NEGERI
 
 **Kolom:**
 
@@ -417,9 +378,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 7. Sewa Mesin Fotokopi
-
-**Satuan Biaya Sewa Mesin Fotokopi**
+## 7. SATUAN BIAYA SEWA MESIN FOTOKOPI
 
 **Kolom:**
 
@@ -430,7 +389,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 8. Honorarium Narasumber/Pakar/Praktisi/Profesional
+## 8. HONORARIUM NARASUMBER/PAKAR/PRAKTISI/PROFESIONAL
 
 **Kolom:**
 
@@ -441,11 +400,9 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 9. Pengadaan Bahan Makanan
+## 9. SATUAN BIAYA PENGADAAN BAHAN MAKANAN
 
-### 9.1 Narapidana/Tahanan dan Anak di Lapas/Rutan
-
-**Pengadaan Bahan Makanan untuk Narapidana/Tahanan dan Anak di Lapas/Rutan Kementerian Hukum dan Hak Asasi Manusia**
+### 9.1 Pengadaan Bahan Makanan untuk Narapidana/Tahanan dan Anak di Lapas/Rutan Kementerian Hukum dan Hak Asasi Manusia
 
 **Kolom:**
 
@@ -454,16 +411,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 - SATUAN
 - BESARAN
 
-### 9.2 Operasi Pasukan/Latihan/Diklat Polri/TNI
-
-**Pengadaan Bahan Makanan untuk:**
-
-- Operasi Pasukan/Latihan Pratugas/Latihan Pasukan Lainnya Bagi Anggota Polri/TNI
-- Dikma/Taruna/Karbol/Kadet Bagi Anggota Polri/TNI
-- Diklat Lainnya Bagi Kementerian Pertahanan (Kemhan)/Anggota Polri/TNI
-- Anggota yang Sakit Bagi Kemhan/Anggota Polri/TNI
-- Tahanan Anggota Polri/TNI
-- Jaga Kawal Bagi Kemhan/Anggota Polri/TNI
+### 9.2 Pengadaan Bahan Makanan untuk Operasi Pasukan/Latihan Pratugas/Latihan Pasukan Lainnya Bagi Anggota Polri/TNI, Dikma/Taruna/Karbol/Kadet Bagi Anggota Polri/TNI, Diklat Lainnya Bagi Kementerian Pertahanan (Kemhan)/Anggota Polri/TNI, Anggota yang Sakit Bagi Kemhan/Anggota Polri/TNI, Tahanan Anggota Polri/TNI, dan Jaga Kawal Bagi Kemhan/Anggota Polri/TNI
 
 **Kolom:**
 
@@ -477,9 +425,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 - TAHANAN ANGGOTA POLRI/TNI
 - JAGA KAWAL BAGI KEMHAN/ANGGOTA POLRI/TNI
 
-### 9.3 Pasien Rumah Sakit dan PMKS
-
-**Pengadaan Bahan Makanan untuk Pasien Rumah Sakit dan Penyandang Masalah Kesejahteraan Sosial (PMKS)**
+### 9.3 Pengadaan Bahan Makanan untuk Pasien Rumah Sakit dan Penyandang Masalah Kesejahteraan Sosial (PMKS)
 
 **Kolom:**
 
@@ -487,37 +433,22 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 - PROVINSI
 - SATUAN
 - PASIEN RUMAH SAKIT
-- PMKS (Penyandang Masalah Kesejahteraan Sosial)
+- PMKS
 
-### 9.4 Keluarga PMS, Petugas Pengamatan Laut, ABK
-
-**Pengadaan Bahan Makanan untuk:**
-
-- Keluarga Penjaga Menara Suar (PMS)
-- Petugas Pengamatan Laut
-- Anak Buah Kapal (ABK) Cadangan pada Kapal Negara
-- ABK Aktif pada Kapal Negara
-- Petugas Stasiun Radio Pantai (SROP) dan Vessel Traffic Information Service (VTIS)
+### 9.4 Pengadaan Bahan Makanan untuk Keluarga Penjaga Menara Suar (PMS), Petugas Pengamatan Laut, Anak Buah Kapal (ABK) Cadangan pada Kapal Negara, ABK Aktif pada Kapal Negara, dan Petugas Stasiun Radio Pantai (SROP) dan Vessel Traffic Information Service (VTIS)
 
 **Kolom:**
 
 - NO
 - PROVINSI
 - SATUAN
-- KELUARGA PENJAGA MENARA SUAR (PMS)
+- KELUARGA PMS
 - PETUGAS PENGAMATAN LAUT
 - ABK CADANGAN PADA KAPAL NEGARA
 - ABK AKTIF PADA KAPAL NEGARA
 - PETUGAS SROP DAN VTIS
 
-### 9.5 Petugas Bengkel dan Galangan Kapal Kenavigasian
-
-**Pengadaan Bahan Makanan untuk:**
-
-- Petugas Bengkel dan Galangan Kapal Kenavigasian
-- Petugas Pabrik Gas Aga untuk Lampu Suar
-- PMS
-- Kelompok Tenaga Kesehatan Kerja Pelayaran
+### 9.5 Pengadaan Bahan Makanan untuk Petugas Bengkel dan Galangan Kapal Kenavigasian, Petugas Pabrik Gas Aga untuk Lampu Suar, PMS, dan Kelompok Tenaga Kesehatan Kerja Pelayaran
 
 **Kolom:**
 
@@ -529,9 +460,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 - PMS
 - KELOMPOK TENAGA KESEHATAN KERJA PELAYARAN
 
-### 9.6 Mahasiswa/Siswa di Sekolah Kedinasan
-
-**Pengadaan Bahan Makanan untuk Mahasiswa/Siswa Sipil dan Mahasiswa Militer/Semi Militer di Lingkup Sekolah Kedinasan**
+### 9.6 Pengadaan Bahan Makanan untuk Mahasiswa/Siswa Sipil dan Mahasiswa Militer/Semi Militer di Lingkup Sekolah Kedinasan
 
 **Kolom:**
 
@@ -541,9 +470,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 - MAHASISWA/SISWA SIPIL DI LINGKUP SEKOLAH KEDINASAN
 - MAHASISWA MILITER/SEMI MILITER DI LINGKUP SEKOLAH KEDINASAN
 
-### 9.7 Rescue Team
-
-**Pengadaan Bahan Makanan untuk Rescue Team**
+### 9.7 Pengadaan Bahan Makanan untuk Rescue Team
 
 **Kolom:**
 
@@ -554,9 +481,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 10. Konsumsi Tahanan/Deteni/ABK Nonjustisia
-
-**Satuan Biaya Konsumsi Tahanan/Deteni/ABK Nonjustisia**
+## 10. SATUAN BIAYA KONSUMSI TAHANAN/DETENI/ABK NONJUSTISIA
 
 **Kolom:**
 
@@ -567,9 +492,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 11. Keperluan Sehari-hari Perkantoran
-
-**Satuan Biaya Keperluan Sehari-hari Perkantoran di Dalam Negeri**
+## 11. SATUAN BIAYA KEPERLUAN SEHARI-HARI PERKANTORAN DI DALAM NEGERI
 
 **Kolom:**
 
@@ -582,9 +505,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 12. Penggantian Inventaris
-
-**Satuan Biaya Penggantian Inventaris Lama dan/atau Pembelian Inventaris untuk Pegawai Baru**
+## 12. SATUAN BIAYA PENGGANTIAN INVENTARIS LAMA DAN/ATAU PEMBELIAN INVENTARIS UNTUK PEGAWAI BARU
 
 **Kolom:**
 
@@ -595,7 +516,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 13. Pemeliharaan dan Operasional Kendaraan Dinas
+## 13. SATUAN BIAYA PEMELIHARAAN DAN OPERASIONAL KENDARAAN DINAS
 
 ### 13.1 Kendaraan Dinas Pejabat
 
@@ -617,9 +538,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 - DOUBLE GARDAN
 - RODA DUA
 
-### 13.3 Operasional dalam Lingkungan Kantor, Roda 6, Speed Boat
-
-**Operasional dalam Lingkungan Kantor, Roda 6, Roda 6 Khusus Tahanan Kejaksaan, dan Speed Boat**
+### 13.3 Operasional dalam Lingkungan Kantor, Roda 6, Roda 6 Khusus Tahanan Kejaksaan, dan Speed Boat
 
 **Kolom:**
 
@@ -636,14 +555,12 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 - PROVINSI
 - SATUAN
 - PJR RODA EMPAT
-- PJR RODA DUA (≤250 CC)
-- PJR RODA DUA (≥750 CC)
+- PJR RODA DUA (≤ 250 CC)
+- PJR RODA DUA (≥ 750 CC)
 
 ---
 
-## 14. Pemeliharaan Gedung/Bangunan
-
-**Satuan Biaya Pemeliharaan Gedung/Bangunan Dalam Negeri**
+## 14. SATUAN BIAYA PEMELIHARAAN GEDUNG/BANGUNAN DALAM NEGERI
 
 **Kolom:**
 
@@ -656,9 +573,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 15. Sewa Gedung Pertemuan
-
-**Satuan Biaya Sewa Gedung Pertemuan**
+## 15. SATUAN BIAYA SEWA GEDUNG PERTEMUAN
 
 **Kolom:**
 
@@ -669,9 +584,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 16. Transportasi Terminal/Stasiun/Bandara/Pelabuhan
-
-**Satuan Biaya Transportasi dari dan/atau ke Terminal Bus/Stasiun/Bandara/Pelabuhan dalam Rangka Perjalanan Dinas Dalam Negeri**
+## 16. SATUAN BIAYA TRANSPORTASI DARI DAN/ATAU KE TERMINAL BUS/STASIUN/BANDARA/PELABUHAN DALAM RANGKA PERJALANAN DINAS DALAM NEGERI
 
 **Kolom:**
 
@@ -682,9 +595,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 17. Tiket Pesawat Perjalanan Dinas Dalam Negeri
-
-**Satuan Biaya Tiket Pesawat Perjalanan Dinas Dalam Negeri Pergi Pulang (PP)**
+## 17. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS DALAM NEGERI PERGI PULANG (PP)
 
 **Kolom:**
 
@@ -696,9 +607,7 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 18. Tiket Pesawat Perjalanan Dinas Luar Negeri
-
-**Satuan Biaya Tiket Pesawat Perjalanan Dinas Luar Negeri Pergi Pulang (PP)**
+## 18. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP)
 
 **Kolom:**
 
@@ -710,40 +619,45 @@ Untuk pengadaan pakaian dinas dan konsumsi rapat pada beberapa kabupaten diberik
 
 ---
 
-## 19. Penyelenggaraan Perwakilan RI di Luar Negeri
+## 19. SATUAN BIAYA PENYELENGGARAAN PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI
 
-### 19.1 ATK, Langganan Koran/Majalah, Lampu, Pengamanan, Kantong Diplomatik, dan Jamuan
+### 19.1 ATK, Langganan Koran/Majalah, Lampu, Pengamanan Sendiri, Kantong Diplomatik, dan Jamuan
 
 **Kolom:**
 
 - NO
 - KOTA
 - ATK (OT)
-- LANGGANAN KORAN/MAJALAH (Eksemplar/Bulan)
-- LAMPU (Buah)
-- PENGAMANAN SENDIRI (OB)
-- KANTONG DIPLOMATIK (kg)
-- JAMUAN (OH)
+- Langganan Koran/Majalah (Eksemplar/Bulan)
+- Lampu (Buah)
+- Pengamanan Sendiri (OB)
+- Kantong Diplomatik (kg)
+- Jamuan (OH)
 
-### 19.2 Pemeliharaan, Pengadaan Inventaris, Pakaian, Sewa Kendaraan, dan Konsumsi
+### 19.2 Pemeliharaan, Pengadaan Inventaris Kantor, Pakaian Sopir/Satpam, Sewa Kendaraan, dan Konsumsi Rapat
 
 **Kolom:**
 
 - NO
 - KOTA
-- PEMELIHARAAN KENDARAAN DINAS (Unit/Tahun)
-- PEMELIHARAAN GEDUNG (m²/Tahun)
-- PEMELIHARAAN HALAMAN (m²/Tahun)
-- PENGADAAN INVENTARIS KANTOR (OT)
-- PAKAIAN SOPIR/SATPAM (Stel)
-- SEWA KENDARAAN SEDAN (hari)
-- SEWA KENDARAAN BUS (hari)
-- SEWA KENDARAAN MOBIL BOX (hari)
-- KONSUMSI RAPAT (OK)
-
----
+- Pemeliharaan Kendaraan Dinas (Unit/Tahun)
+- Pemeliharaan Gedung (m2/Tahun)
+- Pemeliharaan Halaman (m2/Tahun)
+- Pengadaan Inventaris Kantor (OT)
+- Pakaian Sopir/Satpam (Stel)
+- Sewa Kendaraan Sedan (hari)
+- Sewa Kendaraan Bus (hari)
+- Sewa Kendaraan Mobil Box (hari)
+- Konsumsi Rapat (OK)
 
 **Catatan:** Dokumen ini merupakan referensi struktur data Standar Biaya Masukan (SBM) untuk keperluan perencanaan anggaran dan pelaporan keuangan negara.
 
 **catatan lagi**
-Honorarium 29, Honorarium 32,Honorarium 33, Pemeliharaan, Pengadaan Inventaris Kantor, Pakaian Sopir/Satpam, Sewa Kendaraan, dan Konsumsi Rapat., SATUAN BIAYA PENYELENGGARAAN PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI., SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP). pakai mata uang dollar, sisanya Rupiah
+
+1. Honorarium 29
+2. Honorarium 32
+3. Honorarium 33
+4. 19.2 Pemeliharaan, Pengadaan Inventaris Kantor, Pakaian Sopir/Satpam, Sewa Kendaraan, dan Konsumsi Rapat.
+5. 19.1 ATK, Langganan Koran Majalah, Lampu, Pengamanan Sendiri, Kantong Diplomatik, dan Jamuan
+6. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP).
+   semuanya pakai mata uang dollar, sisanya Rupiah
