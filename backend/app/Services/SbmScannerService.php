@@ -11,12 +11,15 @@ class SbmScannerService
 {
     private string $basePath;
     private array $fileMapping;
+    private array $sbmNumberMap;
     private array $scanResult = [];
+    private $mappingService;
 
     public function __construct()
     {
         $this->basePath = __DIR__ . '/../../storage/imports/Master_SBM/';
         $this->initFileMapping();
+        $this->mappingService = new SbmMappingService();
     }
 
     /**
@@ -59,6 +62,41 @@ class SbmScannerService
             'tiket_pesawat_dalam_negeri' => '17. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS DALAM NEGERI PERGI PULANG  (PP).xlsx',
             'tiket_pesawat_luar_negeri' => '18. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP).xlsx',
             'perwakilan_ri' => '19. SATUAN BIAYA PENYELENGGARAAN PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI.xlsx',
+        ];
+
+        // Initialize SBM number mapping (1-31, 28-39)
+        $this->sbmNumberMap = [
+            'transportasi_provinsi' => 1,
+            'transportasi_dki' => 2,
+            'transportasi_kabupaten' => 3,
+            'pemeliharaan_sarana_kantor' => 4,
+            'penerjemahan_pengetikan' => 5,
+            'beasiswa' => 6,
+            'sewa_fotokopi' => 7,
+            'honorarium_narasumber' => 8,
+            'bahan_makanan' => 9,
+            'konsumsi_tahanan' => 10,
+            'keperluan_perkantoran' => 11,
+            'penggantian_inventaris' => 12,
+            'pemeliharaan_kendaraan' => 13,
+            'pemeliharaan_gedung' => 14,
+            'sewa_gedung' => 15,
+            'transportasi_terminal' => 16,
+            'tiket_pesawat_dalam_negeri' => 17,
+            'tiket_pesawat_luar_negeri' => 18,
+            'perwakilan_ri' => 19,
+            'honorarium_28' => 28,
+            'honorarium_29' => 29,
+            'honorarium_30' => 30,
+            'honorarium_31' => 31,
+            'honorarium_32' => 32,
+            'honorarium_33' => 33,
+            'honorarium_34' => 34,
+            'honorarium_35' => 35,
+            'honorarium_36' => 36,
+            'honorarium_37' => 37,
+            'honorarium_38' => 38,
+            'honorarium_39' => 39,
         ];
     }
 
@@ -109,9 +147,14 @@ class SbmScannerService
     {
         $filepath = $this->basePath . $filename;
 
+        $sbmNumber = $this->sbmNumberMap[$category] ?? null;
+
         $result = [
             'filename' => $filename,
             'category' => $category,
+            'sbm_number' => $sbmNumber,
+            'display_order' => $sbmNumber,
+            'source_file' => $filename,
             'status' => 'not_found',
             'error' => null,
             'sheets' => [],
@@ -138,7 +181,7 @@ class SbmScannerService
             // Scan each sheet
             foreach ($spreadsheet->getSheetNames() as $index => $sheetName) {
                 $sheet = $spreadsheet->getSheet($index);
-                $sheetData = $this->scanSheet($sheet, $sheetName);
+                $sheetData = $this->scanSheet($sheet, $sheetName, $category);
                 $sheetData['name'] = $sheetName;
                 $result['sheets'][] = $sheetData;
 
@@ -186,7 +229,7 @@ class SbmScannerService
     /**
      * Scan a sheet and detect structure (supports multiple sections/headers)
      */
-    public function scanSheet($sheet, string $sheetName): array
+    public function scanSheet($sheet, string $sheetName, ?string $category = null): array
     {
         $result = [
             'name' => $sheetName,
@@ -226,6 +269,24 @@ class SbmScannerService
         // Detect ALL header rows (multiple headers in one sheet)
         $headerRows = $this->detectAllHeaderRows($rows);
 
+        // NEW: Also detect section label rows (like "6.2 | Uang Buku dan Referensi")
+        // These rows have pattern: X.Y (section number) + section name
+        $sectionLabelRows = $this->detectSectionLabelRows($rows);
+
+        // Build a map: headerRow => sectionLabel (if section label exists immediately before header)
+        $sectionLabelMap = [];
+        foreach ($sectionLabelRows as $sectionRow) {
+            // Check if next row is a header row
+            if (in_array($sectionRow + 1, $headerRows)) {
+                // Section label at row $sectionRow applies to header at row $sectionRow + 1
+                $headerRow = $sectionRow + 1;
+                // Get the label text (second column of the section label row)
+                // IMPORTANT: Normalize spaces to match parser's mapping
+                $label = trim((string)($rows[$sectionRow][1] ?? ''));
+                $sectionLabelMap[$headerRow] = preg_replace('/\s+/', ' ', $label);
+            }
+        }
+
         if (empty($headerRows)) {
             return $result;
         }
@@ -238,28 +299,77 @@ class SbmScannerService
         // Check for multiple sections (multiple headers)
         if (count($headerRows) > 1) {
             $result['has_sections'] = true;
-            $result['sections'] = $this->detectSectionLabels($rows, $headerRows);
 
             // Create sub-sections for each header
             foreach ($headerRows as $index => $headerRow) {
                 $nextHeaderRow = $headerRows[$index + 1] ?? ($totalRows + 1);
-                $sectionLabel = $result['sections'][$index] ?? "Section " . ($index + 1);
+
+                // Check if there's a section label for this header
+                $sectionLabel = $sectionLabelMap[$headerRow] ?? null;
+
+                // If no section label, use the old method to detect section label
+                if ($sectionLabel === null) {
+                    $sectionLabel = $this->detectSectionLabelForHeader($rows, $headerRow);
+                    if ($sectionLabel === null) {
+                        $sectionLabel = "Section " . ($index + 1);
+                    }
+                }
+
+                // IMPORTANT: Normalize section label to remove extra spaces
+                // This ensures matching with parser's getSubCategoryFromSectionLabel mapping
+                $sectionLabel = preg_replace('/\s+/', ' ', trim($sectionLabel));
+
+                // Normalize column names
+                $normalizedColumns = [];
+                foreach ($rows[$headerRow] as $col) {
+                    $normalizedColumns[] = $this->normalizeColumnName($col);
+                }
 
                 $subSection = [
                     'label' => $sectionLabel,
                     'header_row' => $headerRow,
-                    'columns' => $rows[$headerRow],
-                    'data_start_row' => $headerRow + 1,
+                    'columns' => $normalizedColumns,
+                    'data_start_row' => $headerRow + 1,  // Default: start from row after header
                     'data_end_row' => $nextHeaderRow - 1,
-                    'column_count' => count($rows[$headerRow]),
+                    'column_count' => count($normalizedColumns),
                 ];
 
-                // Find actual data start (skip non-data rows)
-                $dataFound = false;
-                for ($r = $headerRow + 1; $r <= min($headerRow + 5, $nextHeaderRow - 1); $r++) {
-                    if (isset($rows[$r]) && $this->isDataRow($rows[$r], $rows[$headerRow])) {
-                        $subSection['data_start_row'] = $r;
-                        $dataFound = true;
+                // Apply section configuration from mapping service (custom data_start_row, exclude, etc.)
+                if ($category) {
+                    $sectionMapping = $this->mappingService->getSectionMapping($category, $sectionLabel);
+                    if ($sectionMapping) {
+                        // Apply custom data_start_row if specified
+                        if (isset($sectionMapping['data_start_row'])) {
+                            $subSection['data_start_row'] = $sectionMapping['data_start_row'];
+                        }
+                        // Mark section for exclusion if needed
+                        if (isset($sectionMapping['exclude']) && $sectionMapping['exclude']) {
+                            $subSection['exclude'] = true;
+                        }
+                    }
+                }
+
+                // NOTE: Parser will skip non-data rows (penomoran, grouping labels, section labels)
+                // So we don't need to find the "first actual data row" here - just start from headerRow + 1
+
+                // Find actual data end (scan backwards from next header, stop before golongan labels)
+                for ($r = $nextHeaderRow - 1; $r >= $subSection['data_start_row']; $r--) {
+                    if (!isset($rows[$r])) {
+                        continue;
+                    }
+
+                    // Check if this is a golongan label row (a., b., c., d.)
+                    // BUT only treat it as a label if it has FEW columns (just the label, not full data)
+                    $firstCol = trim((string)($rows[$r][0] ?? ''));
+                    if (preg_match('/^[a-d]\.?\s*$/', $firstCol) && count($rows[$r]) < count($rows[$headerRow]) * 0.5) {
+                        // This is a golongan label (has few columns), stop before it
+                        $subSection['data_end_row'] = $r - 1;
+                        break;
+                    }
+
+                    // If we find a valid data row, this is our end
+                    if ($this->isDataRow($rows[$r], $rows[$headerRow], $category)) {
+                        $subSection['data_end_row'] = $r;
                         break;
                     }
                 }
@@ -269,7 +379,7 @@ class SbmScannerService
                 $subSection['sample_data'] = [];
                 foreach ($rows as $rowNum => $rowData) {
                     if ($rowNum >= $subSection['data_start_row'] && $rowNum < $nextHeaderRow && $sampleCount < 3) {
-                        if ($this->isDataRow($rowData, $rows[$headerRow])) {
+                        if ($this->isDataRow($rowData, $rows[$headerRow], $category)) {
                             $sampleData = [];
                             foreach ($rows[$headerRow] as $colIndex => $colName) {
                                 $sampleData[$colName] = $rowData[$colIndex] ?? '';
@@ -284,6 +394,9 @@ class SbmScannerService
 
                 $result['sub_sections'][] = $subSection;
             }
+
+            // Also populate sections array (just labels, for backward compatibility)
+            $result['sections'] = array_map(fn($s) => $s['label'], $result['sub_sections']);
         } else {
             // Single section - use original logic for backward compatibility
             $sections = $this->detectSections($rows, $firstHeaderRow);
@@ -291,16 +404,31 @@ class SbmScannerService
             $result['sections'] = $sections;
 
             // Find data range
-            $dataStartRow = $firstHeaderRow + 1;
+            $dataStartRow = $firstHeaderRow + 1;  // Start from row after header (includes grouping labels, penomoran, etc.)
             $dataEndRow = $totalRows;
 
-            // Skip non-data rows after header
-            foreach ($rows as $rowNum => $rowData) {
-                if ($rowNum > $firstHeaderRow && $rowNum <= $firstHeaderRow + 5) {
-                    if ($this->isDataRow($rowData, $result['columns'])) {
-                        $dataStartRow = $rowNum;
-                        break;
-                    }
+            // NOTE: Parser will skip non-data rows (penomoran, grouping labels, section labels)
+            // So we don't need to find the "first actual data row" here
+
+            // Find actual data end (scan backwards from end, stop before golongan labels)
+            for ($r = $totalRows; $r >= $dataStartRow; $r--) {
+                if (!isset($rows[$r])) {
+                    continue;
+                }
+
+                // Check if this is a golongan label row (a., b., c., d.)
+                // BUT only treat it as a label if it has FEW columns (just the label, not full data)
+                $firstCol = trim((string)($rows[$r][0] ?? ''));
+                if (preg_match('/^[a-d]\.?\s*$/', $firstCol) && count($rows[$r]) < count($result['columns']) * 0.5) {
+                    // This is a golongan label (has few columns), stop before it
+                    $dataEndRow = $r - 1;
+                    break;
+                }
+
+                // If we find a valid data row, this is our end
+                if ($this->isDataRow($rows[$r], $result['columns'], $category)) {
+                    $dataEndRow = $r;
+                    break;
                 }
             }
 
@@ -311,7 +439,7 @@ class SbmScannerService
             $sampleCount = 0;
             foreach ($rows as $rowNum => $rowData) {
                 if ($rowNum >= $dataStartRow && $sampleCount < 3) {
-                    if ($this->isDataRow($rowData, $result['columns'])) {
+                    if ($this->isDataRow($rowData, $result['columns'], $category)) {
                         $sampleData = [];
                         foreach ($result['columns'] as $colIndex => $colName) {
                             $sampleData[$colName] = $rowData[$colIndex] ?? '';
@@ -349,6 +477,109 @@ class SbmScannerService
     }
 
     /**
+     * Detect section label rows (like "6.2 | Uang Buku dan Referensi")
+     * These rows have 2 columns: section number (X.Y) + section name
+     */
+    public function detectSectionLabelRows(array $rows): array
+    {
+        $sectionLabelRows = [];
+
+        foreach ($rows as $rowNum => $rowData) {
+            // Look for rows with exactly 2 non-empty columns
+            $nonEmptyCount = 0;
+            foreach ($rowData as $val) {
+                $trimmed = trim((string)$val);
+                if ($trimmed !== '' && $trimmed !== '-') {
+                    $nonEmptyCount++;
+                }
+            }
+
+            if ($nonEmptyCount === 2) {
+                // Check pattern: first column is X.Y (section number), second is section name
+                $firstCol = trim((string)($rowData[0] ?? ''));
+                $secondCol = trim((string)($rowData[1] ?? ''));
+
+                // First column should be like "6.1", "6.2", "8.1", "8.2"
+                if (preg_match('/^\d+\.\d+$/', $firstCol)) {
+                    // Second column should be text (section name)
+                    if (preg_match('/[A-Za-z]/', $secondCol) &&
+                        !preg_match('/^Rp/i', $secondCol) &&
+                        !preg_match('/^\$/', $secondCol)) {
+                        $sectionLabelRows[] = $rowNum;
+                    }
+                }
+            }
+        }
+
+        return $sectionLabelRows;
+    }
+
+    /**
+     * Detect section label for a single header row
+     * Looks for section label BEFORE the header row (within 5 rows)
+     */
+    public function detectSectionLabelForHeader(array $rows, int $headerRow): ?string
+    {
+        // Look for section label BEFORE this header (within 5 rows)
+        // Search from closest to header backwards
+        $bestMatch = null;
+        $bestScore = 0;
+
+        for ($r = $headerRow - 1; $r >= max(1, $headerRow - 5); $r--) {
+            if (!isset($rows[$r])) {
+                continue;
+            }
+
+            $rowText = trim(implode(' ', $rows[$r]));
+            $score = 0;
+            $label = null;
+
+            // Score each pattern (higher score = higher priority)
+            // Pattern "a.", "b.", "c." - HIGHEST PRIORITY (golongan)
+            if (preg_match('/^([a-c])\.\s+(.+)$/i', $rowText, $matches)) {
+                $score = 100;
+                $label = trim($matches[2]);
+            }
+            // Pattern "(A)", "(B)", "(C)" - golongan with parentheses
+            elseif (preg_match('/^\(([A-Z])\)\s+(.+)$/i', $rowText, $matches)) {
+                $score = 90;
+                $label = trim($matches[2]);
+            }
+            // Pattern "31.1", "19.2" - numbered subsections
+            elseif (preg_match('/^\d+\.\d+\s+(.+)$/', $rowText, $matches)) {
+                $score = 70;
+                $label = trim($matches[1]);
+            }
+            // Keywords
+            elseif (preg_match('/(ATK|Pemeliharaan|Pengadaan|Sewa Kendaraan|Konsumsi)/i', $rowText)) {
+                $score = 50;
+                $label = $rowText;
+            }
+
+            // Clean up label
+            if ($label !== null) {
+                $label = preg_replace('/^\d+\.\d+\s*/', '', $label);
+                $label = preg_replace('/^[a-c]\.\s*/i', '', $label);
+                $label = preg_replace('/^\([A-Z]\)\s*/i', '', $label);
+                $label = trim($label);
+                $label = preg_replace('/\s+/', ' ', $label); // Remove extra spaces
+            }
+
+            if ($label !== null && !empty($label) && $score > $bestScore) {
+                $bestMatch = $label;
+                $bestScore = $score;
+
+                // If we found the highest priority pattern, stop searching
+                if ($score >= 90) {
+                    break;
+                }
+            }
+        }
+
+        return $bestMatch;
+    }
+
+    /**
      * Detect section labels based on header row positions
      */
     public function detectSectionLabels(array $rows, array $headerRows): array
@@ -356,7 +587,24 @@ class SbmScannerService
         $sectionLabels = [];
 
         foreach ($headerRows as $index => $headerRow) {
-            // Look for section label BEFORE this header (within 5 rows)
+            // NEW: First check if this header row itself is a section label (X.Y + section name pattern)
+            if (isset($rows[$headerRow]) && count($rows[$headerRow]) >= 2) {
+                $firstCol = trim((string)($rows[$headerRow][0] ?? ''));
+                $secondCol = trim((string)($rows[$headerRow][1] ?? ''));
+
+                // Check pattern: X.Y (section number) + section name
+                if (preg_match('/^\d+\.\d+$/', $firstCol) &&
+                    preg_match('/[A-Za-z]/', $secondCol) &&
+                    !preg_match('/^Rp/i', $secondCol) &&
+                    !preg_match('/^\$/', $secondCol)) {
+                    // This row itself is a section label
+                    // IMPORTANT: Normalize spaces to match parser's mapping
+                    $sectionLabels[] = preg_replace('/\s+/', ' ', $secondCol);
+                    continue;
+                }
+            }
+
+            // Otherwise, look for section label BEFORE this header (within 5 rows)
             // Search from closest to header backwards
             $labelFound = false;
             $bestMatch = null;
@@ -464,8 +712,19 @@ class SbmScannerService
             // - Have fewer columns than header
             // - Are all uppercase or title case
             // - Don't contain numbers/currency
-            if (count($rowData) < 3 && $this->isSectionLabel($rowData)) {
-                $label = trim(implode(' ', $rowData));
+            // Special case: Patterns like "8.1", "8.2", "19.1", "19.2" etc. are section labels
+            $firstCol = trim((string)($rowData[0] ?? ''));
+            $isNumberDotPattern = preg_match('/^\d+\.\d+$/', $firstCol);
+
+            if ($isNumberDotPattern || (count($rowData) < 3 && $this->isSectionLabel($rowData))) {
+                // For number-dot patterns (8.1, 8.2, etc.), extract only the label part (first 2 columns)
+                // For regular section labels, use all columns
+                if ($isNumberDotPattern && count($rowData) >= 2) {
+                    $labelParts = array_slice($rowData, 0, 2); // Take only first 2 columns
+                    $label = trim(implode(' ', $labelParts));
+                } else {
+                    $label = trim(implode(' ', $rowData));
+                }
                 // Remove common prefixes
                 $label = preg_replace('/^\d+[\.\)]\s*/', '', $label);
                 if (!empty($label) && !in_array($label, $sections)) {
@@ -483,6 +742,12 @@ class SbmScannerService
      */
     private function isSectionLabel(array $rowData): bool
     {
+        // First, check if the first column is a number - if so, it's a data row, not a section label
+        $firstCol = trim((string)($rowData[0] ?? ''));
+        if (preg_match('/^\d+$/', $firstCol)) {
+            return false; // Data rows start with numbers like 1, 2, 3, etc.
+        }
+
         $text = trim(implode(' ', $rowData));
 
         // Section labels are usually:
@@ -517,11 +782,47 @@ class SbmScannerService
     /**
      * Check if a row is a data row
      */
-    private function isDataRow(array $rowData, array $headerColumns): bool
+    private function isDataRow(array $rowData, array $headerColumns, ?string $category = null): bool
     {
         // Data row should have similar number of columns as header
         if (count($rowData) < count($headerColumns) * 0.5) {
             return false;
+        }
+
+        // For categories with grouping, check if this is a grouping label row
+        // Grouping label rows should NOT be filtered out - they'll be handled by the parser
+        $hasGrouping = false;
+        if ($category) {
+            $structure = $this->mappingService->getStructure($category);
+            $hasGrouping = isset($structure['has_grouping']) && $structure['has_grouping'];
+        }
+
+        // Check if this is a grouping label row (only 1-2 non-empty values, no amount data)
+        if ($hasGrouping) {
+            $nonEmptyCount = 0;
+            $firstNonEmptyValue = '';
+            foreach ($rowData as $value) {
+                $trimmed = trim((string)$value);
+                if ($trimmed !== '' && $trimmed !== '-') {
+                    $nonEmptyCount++;
+                    if ($firstNonEmptyValue === '') {
+                        $firstNonEmptyValue = $trimmed;
+                    }
+                }
+            }
+            // Grouping label: 1-2 non-empty values, no amount/currency, text is uppercase
+            if ($nonEmptyCount <= 2) {
+                $hasCurrency = (stripos($firstNonEmptyValue, 'Rp') !== false ||
+                               stripos($firstNonEmptyValue, '$') !== false ||
+                               preg_match('/\d+[\.,]\d+/', $firstNonEmptyValue));
+                $isText = preg_match('/[A-Za-z]/', $firstNonEmptyValue);
+                $isUppercase = ($firstNonEmptyValue === strtoupper($firstNonEmptyValue));
+
+                if (!$hasCurrency && $isText && $isUppercase && strlen($firstNonEmptyValue) >= 3) {
+                    // This looks like a grouping label row - don't filter it out
+                    return true;
+                }
+            }
         }
 
         // Check if not a section label
@@ -529,14 +830,16 @@ class SbmScannerService
             return false;
         }
 
-        // Check if this is a column numbering row like (1) (2) (3) (4) or [1] [2] [3] [4]
+        // Check if this is a column numbering row like (1) (2) (3) (4), [1] [2] [3] [4], or -1 -2 -3 -4
         // These typically appear right after the header row
         $rowText = implode(' ', $rowData);
-        if (preg_match('/^[\(\[]?\d+[\)\]]?\s*[\(\[]?\d+[\)\]]?\s*[\(\[]?\d+[\)\]]?/', $rowText)) {
-            // Check if ALL values are just numbers in brackets/parentheses
+        if (preg_match('/^[-\[\(\}]?\d+[\)\]]?\s*[-\[\(\}]?\d+[\)\]]?\s*[-\[\(\}]?\d+[\)\]]?/', $rowText)) {
+            // Check if ALL values are just numbers (with optional minus, brackets, or parentheses)
             $allNumbering = true;
             foreach ($rowData as $value) {
-                if (!preg_match('/^[\(\[]?\d+[\)\]]?$/', trim($value))) {
+                $trimmed = trim($value);
+                // Match: 1, 2, 3 OR -1, -2, -3 OR (1), (2), (3) OR [1], [2], [3]
+                if (!preg_match('/^[-\[\(\}]?\d+[\)\]]?$/', $trimmed)) {
                     $allNumbering = false;
                     break;
                 }
@@ -544,6 +847,33 @@ class SbmScannerService
             if ($allNumbering) {
                 return false; // This is a column numbering row, skip it
             }
+        }
+
+        // Check if this is a sub-header row
+        // Sub-headers typically have empty first column but multiple non-empty columns
+        $firstCol = trim((string)($rowData[0] ?? ''));
+        $nonEmptyCount = count(array_filter($rowData, function($v) { return !empty(trim($v)) && trim($v) !== '-'; }));
+        if (empty($firstCol) && $nonEmptyCount > 1) {
+            return false; // Sub-header rows have empty first column
+        }
+
+        // Check if this is a sub-header row (explanatory text without numeric data)
+        // Sub-headers typically don't contain numbers/currency values and are mostly text
+        $hasNumericData = false;
+        foreach ($rowData as $value) {
+            $trimmed = trim($value);
+            if (empty($trimmed) || $trimmed === '-') {
+                continue;
+            }
+            // Check if value contains numeric data (currency, numbers with units, etc.)
+            if (preg_match('/\d/', $trimmed) && !preg_match('/^[a-zA-Z\s\(\)\/]+$/', $trimmed)) {
+                $hasNumericData = true;
+                break;
+            }
+        }
+        // If row has text but no numeric data, it might be a sub-header
+        if (!$hasNumericData && $nonEmptyCount > 1) {
+            return false; // Likely a sub-header row
         }
 
         return true;
@@ -673,5 +1003,22 @@ class SbmScannerService
 
         file_put_contents($storagePath . 'sbm_scan_report.json', $jsonReport);
         file_put_contents($storagePath . 'sbm_scan_report.md', $mdReport);
+    }
+
+    /**
+     * Normalize column name from Excel
+     * - Remove trailing dots (NO. → NO)
+     * - Trim and normalize spaces
+     */
+    private function normalizeColumnName(string $columnName): string
+    {
+        // Remove trailing dots
+        $columnName = rtrim($columnName, '.');
+
+        // Normalize spaces (remove extra spaces)
+        $columnName = preg_replace('/\s+/', ' ', $columnName);
+        $columnName = trim($columnName);
+
+        return $columnName;
     }
 }

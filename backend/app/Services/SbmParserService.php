@@ -164,12 +164,26 @@ class SbmParserService
         if (!empty($sheetInfo['sub_sections'])) {
             // Parse each sub-section separately
             foreach ($sheetInfo['sub_sections'] as $subSection) {
+                // Skip excluded sections
+                if (isset($subSection['exclude']) && $subSection['exclude']) {
+                    $totalSkipped++;
+                    continue;
+                }
                 $parsed = $this->parseSubSection($sheet, $subSection, $category, $sheetInfo);
                 $result = array_merge($result, $parsed['data']);
                 $totalSkipped += $parsed['skipped'];
                 $allSkippedRows = array_merge($allSkippedRows, $parsed['skipped_rows']);
             }
         } else {
+            // Check if entire sheet is excluded
+            if (isset($sheetInfo['exclude']) && $sheetInfo['exclude']) {
+                return [
+                    'data' => [],
+                    'skipped' => 1,
+                    'skipped_rows' => [],
+                    'category' => $category,
+                ];
+            }
             // Parse as single section
             $parsed = $this->parseSingleSection($sheet, $sheetInfo, $category);
             $result = array_merge($result, $parsed['data']);
@@ -204,6 +218,17 @@ class SbmParserService
         $subCategory = $categoryInfo['sub_category'] ?? null;
         $parentSection = $categoryInfo['parent_section'] ?? null;
 
+        // Get section mapping configuration (force_null_grouping, sub_category override)
+        $sectionMapping = $this->mapping->getSectionMapping($category, $sectionLabel);
+        $forceNullGrouping = false;
+        if ($sectionMapping && isset($sectionMapping['force_null_grouping']) && $sectionMapping['force_null_grouping']) {
+            $forceNullGrouping = true;
+        }
+        // Apply sub_category override from mapping if explicitly set
+        if ($sectionMapping && array_key_exists('sub_category', $sectionMapping)) {
+            $subCategory = $sectionMapping['sub_category'];
+        }
+
         $currency = $this->mapping->getCurrency($category, $subCategory);
         $columns = $this->getColumnsForSubSection($category, $subCategory, $subSectionInfo);
 
@@ -233,13 +258,22 @@ class SbmParserService
             }
 
             if ($this->isValidDataRow($rowData)) {
+                // Use detected currency from raw values if available, otherwise detect from cleaned data
+                $rowCurrency = $rowData['_detected_currency'] ?? $this->detectCurrencyFromRow($rowData, $currency);
+
+                // Apply grouping_label (force null if configured)
+                $groupingLabel = $forceNullGrouping ? null : ($this->currentGroupingLabel ?: null);
+
                 $result[] = [
                     'category' => $category,
                     'sub_category' => $subCategory,
                     'parent_section' => $parentSection,
-                    'grouping_label' => $this->currentGroupingLabel ?: null,
+                    'grouping_label' => $groupingLabel,
+                    'sbm_number' => $this->mapping->getSbmNumber($category),
+                    'source_file' => $this->mapping->getSourceFile($category),
+                    'display_order' => $this->mapping->getDisplayOrder($category),
                     'data' => json_encode($rowData),
-                    'currency' => $currency,
+                    'currency' => $rowCurrency,
                 ];
             } else {
                 $skippedCount++;
@@ -277,6 +311,18 @@ class SbmParserService
             $subCategory = array_key_first($structure['sub_categories']);
         }
 
+        // Get section mapping configuration (for single-section files)
+        // Use category as fallback for section label
+        $sectionMapping = $this->mapping->getSectionMapping($category, $category);
+        $forceNullGrouping = false;
+        if ($sectionMapping && isset($sectionMapping['force_null_grouping']) && $sectionMapping['force_null_grouping']) {
+            $forceNullGrouping = true;
+        }
+        // Apply sub_category override from mapping if explicitly set
+        if ($sectionMapping && array_key_exists('sub_category', $sectionMapping)) {
+            $subCategory = $sectionMapping['sub_category'];
+        }
+
         $currency = $this->mapping->getCurrency($category, $subCategory);
         $columns = $sheetInfo['columns'];
 
@@ -300,7 +346,8 @@ class SbmParserService
         $skippedCount = 0;
         $skippedRows = [];
         for ($row = $dataStartRow; $row <= $dataEndRow; $row++) {
-            $rawRowData = $this->getRawRowData($sheet, $row, count($columns));
+            // Get row data with raw formatted values for currency detection
+            $rawRowData = $this->getRawRowDataWithFormatted($sheet, $row, count($columns));
 
             // Check if this is a grouping label row (for categories with grouping)
             if ($hasGrouping && $this->isGroupingLabelRowArray($rawRowData, $category)) {
@@ -336,17 +383,34 @@ class SbmParserService
                 $rowData[$key] = $rawRowData[$index] ?? null;
             }
 
+            // Preserve detected currency from raw data
+            $detectedCurrency = $rawRowData['_detected_currency'] ?? null;
+
             // Clean data values
             $rowData = $this->cleanDataRow($rowData, $category, $subCategory);
 
+            // Add detected currency back after cleaning
+            if ($detectedCurrency) {
+                $rowData['_detected_currency'] = $detectedCurrency;
+            }
+
             if ($this->isValidDataRow($rowData)) {
+                // Use detected currency from raw values if available, otherwise detect from cleaned data
+                $rowCurrency = $rowData['_detected_currency'] ?? $this->detectCurrencyFromRow($rowData, $currency);
+
+                // Apply grouping_label (force null if configured)
+                $groupingLabel = $forceNullGrouping ? null : ($this->currentGroupingLabel ?: null);
+
                 $result[] = [
                     'category' => $category,
                     'sub_category' => $subCategory,
                     'parent_section' => $parentSection,
-                    'grouping_label' => $this->currentGroupingLabel ?: null,
+                    'grouping_label' => $groupingLabel,
+                    'sbm_number' => $this->mapping->getSbmNumber($category),
+                    'source_file' => $this->mapping->getSourceFile($category),
+                    'display_order' => $this->mapping->getDisplayOrder($category),
                     'data' => json_encode($rowData),
-                    'currency' => $currency,
+                    'currency' => $rowCurrency,
                 ];
             } else {
                 $skippedCount++;
@@ -371,12 +435,30 @@ class SbmParserService
     private function getRowData($sheet, int $row, array $columns): array
     {
         $rowData = [];
+        $allFormattedValues = []; // Store all formatted values for currency detection
 
         foreach ($columns as $index => $columnName) {
             $cell = $sheet->getCell([$index + 1, $row]);
             $value = $this->getCellValue($cell);
+            $formattedValue = $cell->getFormattedValue(); // Get formatted value before cleaning
+
+            // Store all formatted values for currency detection
+            if (!empty($formattedValue) && $formattedValue !== '-') {
+                $allFormattedValues[] = $formattedValue;
+            }
+
             $key = $this->normalizeKey($columnName);
             $rowData[$key] = $this->cleanValue($value, $key);
+        }
+
+        // Detect currency from ALL formatted values and store it temporarily
+        foreach ($allFormattedValues as $formattedValue) {
+            if (strpos($formattedValue, '$') !== false) {
+                $rowData['_detected_currency'] = 'USD';
+                break;
+            } elseif (stripos($formattedValue, 'Rp') !== false) {
+                $rowData['_detected_currency'] = 'IDR';
+            }
         }
 
         return $rowData;
@@ -392,6 +474,41 @@ class SbmParserService
         for ($col = 1; $col <= $expectedCols; $col++) {
             $cell = $sheet->getCell([$col, $row]);
             $rowData[] = $this->getCellValue($cell);
+        }
+
+        return $rowData;
+    }
+
+    /**
+     * Get raw row data with formatted values for currency detection
+     * Returns indexed array with raw values + special key '_detected_currency'
+     */
+    private function getRawRowDataWithFormatted($sheet, int $row, int $expectedCols): array
+    {
+        $rowData = [];
+        $allFormattedValues = []; // Store all formatted values for currency detection
+
+        for ($col = 1; $col <= $expectedCols; $col++) {
+            $cell = $sheet->getCell([$col, $row]);
+            $value = $this->getCellValue($cell);
+            $formattedValue = $cell->getFormattedValue(); // Get formatted value before cleaning
+
+            // Store all formatted values for currency detection
+            if (!empty($formattedValue) && $formattedValue !== '-') {
+                $allFormattedValues[] = $formattedValue;
+            }
+
+            $rowData[] = $value;
+        }
+
+        // Detect currency from ALL formatted values and store as special key
+        foreach ($allFormattedValues as $formattedValue) {
+            if (strpos($formattedValue, '$') !== false) {
+                $rowData['_detected_currency'] = 'USD';
+                break;
+            } elseif (stripos($formattedValue, 'Rp') !== false) {
+                $rowData['_detected_currency'] = 'IDR';
+            }
         }
 
         return $rowData;
@@ -427,8 +544,22 @@ class SbmParserService
         $value = preg_replace('/^\$\s*/', '', $value);
         $value = preg_replace('/^USD\s*/', '', $value);
 
-        // Remove thousand separators
-        $value = str_replace(['.', ','], '', $value);
+        // Remove thousand separators more carefully
+        // Only remove dots that are thousand separators (e.g., 1.000, 10.000)
+        // Preserve dots in version numbers (e.g., 8.1, 19.2) and decimals
+        if (preg_match('/^\d+\.\d+$/', $value)) {
+            // This could be a version number like "8.1" or "19.2"
+            // Keep the dot if it looks like a version (single digit, dot, single digit)
+            if (preg_match('/^\d\.\d+$/', $value)) {
+                // This is a version number like "8.1" or "19.2", keep the dot
+            } else {
+                // This is likely a thousand separator like "1.000", remove the dot
+                $value = str_replace('.', '', $value);
+            }
+        } else {
+            // For other formats, remove both dots and commas as thousand separators
+            $value = str_replace(['.', ','], '', $value);
+        }
 
         // Clean up extra spaces
         $value = preg_replace('/\s+/', ' ', $value);
@@ -467,6 +598,20 @@ class SbmParserService
 
         $firstCell = trim($rowData[0]);
 
+        // Check for pattern like "8.1", "8.2", "19.1", "19.2"
+        // BUT ONLY SKIP if it's NOT data (no currency/amount values)
+        if (preg_match('/^\d+\.\d+$/', $firstCell)) {
+            // Check if this row has actual data (currency symbols, amount-like values)
+            $rowText = implode(' ', $rowData);
+            // If row has $ or Rp or amount-like pattern, it's DATA, not just a label
+            if (strpos($rowText, '$') !== false ||
+                stripos($rowText, 'Rp') !== false ||
+                preg_match('/\d{1,3}[.,]?\d{3}/', $rowText)) {  // Matches 1,000 or 1.000 or 1700000
+                return false; // This is data, not a label
+            }
+            return true; // This is just a section label without data
+        }
+
         // Check if first cell looks like a section label (uppercase, no numbers)
         if (preg_match('/^[A-Z\s]+$/', $firstCell) && strlen($firstCell) > 3) {
             // Also check that it doesn't look like data (no currency symbols, etc)
@@ -497,17 +642,54 @@ class SbmParserService
             return false;
         }
 
-        // Grouping label usually has only 1 non-empty field
-        $nonEmptyCount = 0;
-        foreach ($rowData as $value) {
-            if (!empty($value) && $value !== '' && $value !== '-') {
-                $nonEmptyCount++;
+        // Check if this row has amount/besaran value
+        // If it has amount, it's DATA, not a grouping label
+        foreach ($rowData as $key => $value) {
+            if ($this->isAmountValue($value, $key)) {
+                return false; // This is data, not grouping label
             }
         }
 
-        // If only 1 field is filled and it's not a penomoran, it's likely a grouping label
-        if ($nonEmptyCount === 1) {
+        // Collect all non-empty values
+        $nonEmptyValues = [];
+        foreach ($rowData as $value) {
+            $trimmed = trim($value ?? '');
+            // Skip truly empty values
+            if ($trimmed !== '' && $trimmed !== '-' && $trimmed !== null) {
+                $nonEmptyValues[] = $trimmed;
+            }
+        }
+
+        $valueCount = count($nonEmptyValues);
+
+        // Case 1: Only 1 non-empty value → grouping label
+        if ($valueCount === 1) {
             return true;
+        }
+
+        // Case 2: 2 non-empty values (could be hidden column + actual label)
+        if ($valueCount === 2) {
+            // Check for pattern: section number (X.Y) + text label
+            $hasSectionNumber = false;
+            $hasTextLabel = false;
+
+            foreach ($nonEmptyValues as $val) {
+                // Check for section number pattern (X.Y)
+                if (preg_match('/^\d+\.\d+$/', $val)) {
+                    $hasSectionNumber = true;
+                }
+                // Check for text label (contains letters, not just numbers, not currency)
+                if (preg_match('/[A-Za-z]/', $val) &&
+                    !preg_match('/^Rp/', $val) &&
+                    !preg_match('/\$/', $val)) {
+                    $hasTextLabel = true;
+                }
+            }
+
+            // If we have both patterns, it's a grouping label
+            if ($hasSectionNumber && $hasTextLabel) {
+                return true;
+            }
         }
 
         return false;
@@ -531,12 +713,24 @@ class SbmParserService
             return false;
         }
 
+        // Check if this row has amount/besaran value
+        // If it has amount, it's DATA, not a grouping label
+        foreach ($rowData as $value) {
+            if ($this->isAmountValue($value)) {
+                return false; // This is data, not grouping label
+            }
+        }
+
         // Grouping label usually has only 1 non-empty field
+        // Count truly non-empty fields (skip '', '-', null, whitespace-only)
         $nonEmptyCount = 0;
         foreach ($rowData as $value) {
-            if (!empty($value) && trim($value) !== '' && trim($value) !== '-') {
-                $nonEmptyCount++;
+            $trimmed = trim($value ?? '');
+            // Skip truly empty values
+            if ($trimmed === '' || $trimmed === '-' || $trimmed === null) {
+                continue;
             }
+            $nonEmptyCount++;
         }
 
         // If only 1 field is filled and it's not a penomoran, it's likely a grouping label
@@ -640,15 +834,15 @@ class SbmParserService
             // Honorarium 31 - WITH golongan
             'honorarium_31' => [
                 'Menteri dan Setingkat Menteri' => [
-                    'sub_category' => 'Menteri',
+                    'sub_category' => 'Menteri dan Setingkat Menteri',
                     'parent_section' => '31.1 Paket Kegiatan Rapat/Pertemuan di Luar Kantor',
                 ],
                 'Pejabat Eselon I dan II' => [
-                    'sub_category' => 'Eselon I-II',
+                    'sub_category' => 'Pejabat Eselon I dan II',
                     'parent_section' => '31.1 Paket Kegiatan Rapat/Pertemuan di Luar Kantor',
                 ],
                 'Pejabat Eselon III Ke Bawah' => [
-                    'sub_category' => 'Eselon III',
+                    'sub_category' => 'Pejabat Eselon III Ke Bawah',
                     'parent_section' => '31.1 Paket Kegiatan Rapat/Pertemuan di Luar Kantor',
                 ],
                 'Uang Harian Kegiatan Rapat/Pertemuan di Luar Kantor' => [
@@ -722,11 +916,15 @@ class SbmParserService
                     'parent_section' => null,
                 ],
             ],
-            // Honorarium 38 - No sub_sections detected, using default
+            // Honorarium 38 - Konsumsi Rapat/Pertemuan
             'honorarium_38' => [
-                'default' => [
+                'RAPAT KOORDINASI T INGKAT MENTERI/ ESELON I/SETARA' => [
                     'sub_category' => null,
-                    'parent_section' => null,
+                    'parent_section' => '38.1 RAPAT KOORDINASI TINGKAT MENTERI/ ESELON I/SETARA',
+                ],
+                'RAPAT BIASA' => [
+                    'sub_category' => null,
+                    'parent_section' => '38.2 RAPAT BIASA',
                 ],
             ],
             // Honorarium 39 - No subdivisions
@@ -753,21 +951,42 @@ class SbmParserService
             'pemeliharaan_sarana_kantor' => [
                 'default' => ['sub_category' => null, 'parent_section' => null],
             ],
-            // Penerjemahan Pengetikan - No subdivisions
+            // 5. Penerjemahan dan Pengetikan
             'penerjemahan_pengetikan' => [
-                'default' => ['sub_category' => null, 'parent_section' => null],
+                'Dari Bahasa Asing ke Bahasa Indonesia atau Sebaliknya' => [
+                    'sub_category' => null,
+                    'parent_section' => '5.1 Dari Bahasa Asing ke Bahasa Indonesia atau Sebaliknya',
+                ],
+                'Dari Bahasa Indonesia ke Bahasa Daerah/Bahasa Lokal atau Sebaliknya' => [
+                    'sub_category' => null,
+                    'parent_section' => '5.2 Dari Bahasa Indonesia ke Bahasa Daerah/Bahasa Lokal atau Sebaliknya',
+                ],
             ],
-            // Beasiswa - No subdivisions
+            // Beasiswa
             'beasiswa' => [
-                'default' => ['sub_category' => null, 'parent_section' => null],
+                'Biaya Hidup dan Biaya Operasional' => [
+                    'sub_category' => null,
+                    'parent_section' => '6.1 Biaya Hidup dan Biaya Operasional',
+                ],
+                'Uang Buku dan Referensi' => [
+                    'sub_category' => null,
+                    'parent_section' => '6.2 Uang Buku dan Referensi',
+                ],
             ],
             // Sewa Fotokopi - No subdivisions
             'sewa_fotokopi' => [
                 'default' => ['sub_category' => null, 'parent_section' => null],
             ],
-            // Honorarium Narasumber - No subdivisions
+            // 8. Honorarium Narasumber
             'honorarium_narasumber' => [
-                'default' => ['sub_category' => null, 'parent_section' => null],
+                'Kegiatan Di Dalam Negeri' => [
+                    'sub_category' => null,
+                    'parent_section' => '8.1 Kegiatan Di Dalam Negeri',
+                ],
+                'Kegiatan Di Luar Negeri' => [
+                    'sub_category' => null,
+                    'parent_section' => '8.2 Kegiatan Di Luar Negeri',
+                ],
             ],
             // Bahan Makanan (9)
             'bahan_makanan' => [
@@ -903,16 +1122,78 @@ class SbmParserService
             return false;
         }
 
-        $nonEmptyCount = 0;
+        // Check for section label rows (like "364 | Kendaraan Operasional...")
+        // These have a high number in 'no' column but no actual amount values
+        if ($this->isSectionLabelDataRow($rowData)) {
+            return false;
+        }
 
-        foreach ($rowData as $value) {
+        $nonEmptyCount = 0;
+        $hasAmountValue = false;
+
+        foreach ($rowData as $key => $value) {
             if (!empty($value) && $value !== '' && $value !== '-') {
                 $nonEmptyCount++;
+                // Check if this value looks like an amount/besaran
+                // Skip 'no' column when checking for simple numeric values
+                if ($this->isAmountValue($value, $key)) {
+                    $hasAmountValue = true;
+                }
             }
         }
 
-        // Must have at least 2 non-empty values
-        return $nonEmptyCount >= 2;
+        // Must have at least 2 non-empty values AND at least one amount/besaran value
+        // This skips section label rows like "364 | Kendaraan Operasional..." which have text but no amount
+        return $nonEmptyCount >= 2 && $hasAmountValue;
+    }
+
+    /**
+     * Check if a value looks like an amount/besaran (currency, number with thousands, etc.)
+     * This helps distinguish actual data rows from section header/label rows
+     *
+     * @param string $value The value to check
+     * @param string|null $columnKey The column key (e.g., 'no', 'besaran') - optional
+     * @return bool True if the value looks like an amount/besaran
+     */
+    private function isAmountValue(string $value, ?string $columnKey = null): bool
+    {
+        $trimmed = trim($value);
+
+        // Empty values are not amounts
+        if ($trimmed === '' || $trimmed === '-') {
+            return false;
+        }
+
+        // Check for currency symbols
+        if (stripos($trimmed, 'Rp') !== false || strpos($trimmed, '$') !== false) {
+            return true;
+        }
+
+        // Check for numeric values with thousands separators or decimals
+        // Matches: 1.000, 1000, 1.000.000, 1,000, 100.50, etc.
+        if (preg_match('/\d{1,3}[.,]\d{3}/', $trimmed)) {
+            return true;
+        }
+
+        // Check for simple numeric values (100, 1000, etc.)
+        // BUT skip 'no' column - numbers in 'no' column are not amounts
+        $lowerKey = strtolower($columnKey ?? '');
+        if (in_array($lowerKey, ['no', 'no.', 'nomor', 'nomor.', 'urutan'])) {
+            // Don't treat 'no' column values as amounts
+            return false;
+        }
+
+        if (preg_match('/^\d+$/', $trimmed) && intval($trimmed) >= 100) {
+            return true;
+        }
+
+        // Check for common SBM units (OH, Unit, Orang, etc.)
+        // These are satuan values, not besaran, but indicate valid data
+        if (in_array(strtoupper($trimmed), ['OH', 'OJ', 'OT', 'UNIT', 'ORANG', 'SETEL', 'EKSAMEPLAR', 'BUAH', 'KG', 'M2', 'M3', 'PACK'])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -931,10 +1212,96 @@ class SbmParserService
     }
 
     /**
+     * Check if row is a section label data row (like "364 | Kendaraan Operasional...")
+     * These rows have a number in 'no' column and text description, but no actual besaran value
+     * They should NOT be saved as data
+     */
+    private function isSectionLabelDataRow(array $rowData): bool
+    {
+        // Look for 'no' column
+        $noValue = null;
+        $uraianValue = null;
+        $besaranValue = null;
+        $satuanValue = null;
+
+        foreach ($rowData as $key => $value) {
+            $lowerKey = strtolower($key);
+            $trimmed = trim($value);
+
+            if ($lowerKey === 'no' || $lowerKey === 'no.') {
+                $noValue = $trimmed;
+            } elseif (in_array($lowerKey, ['uraian', 'keterangan', 'deskripsi', 'provinsi', 'kategori'])) {
+                if (!empty($trimmed) && $trimmed !== '-' && $trimmed !== '') {
+                    $uraianValue = $trimmed;
+                }
+            } elseif (in_array($lowerKey, ['besaran', 'harga', 'biaya', 'tarif', 'jumlah'])) {
+                $besaranValue = $trimmed;
+            } elseif (in_array($lowerKey, ['satuan', 'unit'])) {
+                $satuanValue = $trimmed;
+            }
+        }
+
+        // If no 'no' value, this is not a section label row
+        if ($noValue === null || $noValue === '') {
+            return false;
+        }
+
+        // If besaran has an actual value (with currency or number), this is DATA, not a label
+        if ($besaranValue !== null && $besaranValue !== '' && $besaranValue !== '-') {
+            // Check if besaran has currency or amount pattern
+            if (stripos($besaranValue, 'Rp') !== false || strpos($besaranValue, '$') !== false) {
+                return false; // This is data
+            }
+            if (preg_match('/\d{1,3}[.,]\d{3}/', $besaranValue)) {
+                return false; // This is data
+            }
+        }
+
+        // If satuan has a valid value (OH, Unit, etc.), this is DATA
+        if ($satuanValue !== null && $satuanValue !== '' && $satuanValue !== '-') {
+            $upperSatuan = strtoupper($satuanValue);
+            if (in_array($upperSatuan, ['OH', 'OJ', 'OT', 'UNIT', 'ORANG', 'SETEL', 'EKSAMEPLAR', 'BUAH', 'KG', 'M2', 'M3', 'PACK', 'PER HARI', 'PER BULAN', 'PER TAHUN'])) {
+                return false; // This is data
+            }
+        }
+
+        // If we have 'no' and 'uraian' but no valid besaran/satuan, this is likely a section label
+        // Examples: "364 | Kendaraan Operasional Kantor...", "136 | Kendaraan Bermotor Listrik..."
+        if ($noValue && $uraianValue) {
+            // Check if no value looks like a section number (usually higher than normal row numbers)
+            // Section numbers like 364, 136, etc. are typically > 100
+            if (preg_match('/^\d+$/', $noValue) && intval($noValue) > 50) {
+                return true; // This is a section label row
+            }
+
+            // Check if uraian looks like a section label (starts with section number like "13.5", "19.1", etc.)
+            if (preg_match('/^\d+\.\d+/', $uraianValue)) {
+                return true; // This is a section label row
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get reason why a row was skipped
      */
     private function getSkipReason(array $rowData): string
     {
+        // Check if this is a section label data row first
+        if ($this->isSectionLabelDataRow($rowData)) {
+            $noValue = $rowData['no'] ?? $rowData['no.'] ?? '??';
+            $uraianValue = '';
+            foreach ($rowData as $key => $value) {
+                $lowerKey = strtolower($key);
+                if (in_array($lowerKey, ['uraian', 'keterangan', 'deskripsi', 'provinsi', 'kategori']) && !empty($value) && $value !== '-' && $value !== '') {
+                    $uraianValue = trim($value);
+                    break;
+                }
+            }
+            return "Section label row: {$noValue} | {$uraianValue}";
+        }
+
         $nonEmptyCount = 0;
         $filledFields = [];
 
@@ -950,8 +1317,56 @@ class SbmParserService
         } elseif ($nonEmptyCount === 1) {
             return "Only 1 field filled: " . implode(', ', $filledFields);
         } else {
-            return "Only {$nonEmptyCount} fields filled (need at least 2): " . implode(', ', $filledFields);
+            return "Only {$nonEmptyCount} fields filled (need at least 2 with amount): " . implode(', ', $filledFields);
         }
+    }
+
+    /**
+     * Detect currency from row data (for MIXED currency categories)
+     * Checks the 'besaran' or similar value field for Rp or $ symbols
+     */
+    private function detectCurrencyFromRow(array $rowData, string $defaultCurrency): string
+    {
+        // If not MIXED, return the default
+        if ($defaultCurrency !== 'MIXED') {
+            return $defaultCurrency;
+        }
+
+        // Check all values for currency symbols (check string representation)
+        foreach ($rowData as $value) {
+            if (is_string($value) || is_numeric($value)) {
+                $strValue = (string)$value;
+                // Check for USD symbol - check BEFORE IDR
+                if (strpos($strValue, '$') !== false) {
+                    return 'USD';
+                }
+            }
+        }
+
+        // Check for IDR symbol
+        foreach ($rowData as $value) {
+            if (is_string($value)) {
+                if (stripos($value, 'Rp') !== false) {
+                    return 'IDR';
+                }
+            }
+        }
+
+        // Special case for SBM 8 honorarium_narasumber:
+        // Rows starting with a., b., c., d. (golongan letters) are USD
+        $noValue = $rowData['no'] ?? '';
+        if (is_string($noValue) && preg_match('/^[a-d]\.$/', $noValue)) {
+            return 'USD';
+        }
+
+        // Also check uraian field for "Luar Negeri" pattern
+        $uraian = $rowData['uraian'] ?? '';
+        if (is_string($uraian) && stripos($uraian, 'Luar Negeri') !== false) {
+            return 'USD';
+        }
+
+        // Default fallback
+        return 'IDR';
     }
 
     /**

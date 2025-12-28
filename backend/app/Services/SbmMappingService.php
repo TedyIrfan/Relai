@@ -7,12 +7,14 @@ class SbmMappingService
     private array $mapping;
     private array $currencyMap;
     private array $columnMappings;
+    private array $sectionConfig;
 
     public function __construct()
     {
         $this->initMapping();
         $this->initCurrencyMap();
         $this->initColumnMappings();
+        $this->initSectionConfig();
     }
 
     /**
@@ -138,6 +140,8 @@ class SbmMappingService
             'honorarium_35' => [
                 'label' => 'Honorarium 35. Sewa Kendaraan',
                 'currency' => 'IDR',
+                'has_grouping' => true,
+                'grouping_field' => 'provinsi',
                 'has_sub_categories' => true,
                 'sub_categories' => [
                     '35.1' => [
@@ -160,6 +164,8 @@ class SbmMappingService
             'honorarium_36' => [
                 'label' => 'Honorarium 36. Pengadaan Kendaraan Dinas',
                 'currency' => 'IDR',
+                'has_grouping' => true,
+                'grouping_field' => 'provinsi',
                 'has_sub_categories' => true,
                 'sub_categories' => [
                     '36.1' => [
@@ -259,7 +265,8 @@ class SbmMappingService
             ],
             'honorarium_narasumber' => [
                 'label' => '8. Honorarium Narasumber/Pakar/Praktisi/Profesional',
-                'currency' => 'IDR',
+                'currency' => 'MIXED', // Has both IDR and USD - will be detected from data
+                'has_sections' => true,
                 'columns' => ['no', 'uraian', 'satuan', 'besaran'],
             ],
             'bahan_makanan' => [
@@ -464,6 +471,124 @@ class SbmMappingService
     }
 
     /**
+     * Initialize section-level configurations for special handling
+     * Handles: data_start_row, exclude, force_null_grouping, explicit sub_category
+     */
+    private function initSectionConfig(): void
+    {
+        $this->sectionConfig = [
+            // Honorarium 35 - Section 35.2 needs custom data_start_row
+            'honorarium_35' => [
+                'Sewa Kendaraan Operasional Pejabat' => [
+                    'data_start_row' => 46, // Skip row 45 (grouping label: "35.02.01 | PEJABAT ESELON I")
+                ],
+            ],
+
+            // Honorarium 36 - Section 36.1 needs custom data_start_row, Section 36.4 should be excluded
+            'honorarium_36' => [
+                'Kendaraan Dinas Pejabat' => [
+                    'data_start_row' => 5, // Skip row 4 (grouping label: "36.01.01 | PEJABAT ESELON I")
+                ],
+                'Kendaraan Operasional Kantor dan/atau Lapangan Roda 2 (Dua)' => [
+                    'exclude' => true, // Exclude section 36.4 from import
+                ],
+            ],
+
+            // Honorarium 38 - Section 38.2 needs explicit null sub_category
+            'honorarium_38' => [
+                'RAPAT KOORDINASI T INGKAT MENTERI/ ESELON I/SETARA' => [
+                    'sub_category' => null,
+                ],
+                'RAPAT BIASA' => [
+                    'sub_category' => null, // Force null, not inherited from 38.1
+                ],
+            ],
+
+            // Satuan Biaya 5 - Section 5.2 needs force_null_grouping
+            'penerjemahan_pengetikan' => [
+                'Dari Bahasa Indonesia ke Bahasa Daerah/Bahasa Lokal atau Sebaliknya' => [
+                    'force_null_grouping' => true, // No grouping from section 5.1
+                    'sub_category' => null,
+                ],
+            ],
+
+            // Satuan Biaya 9
+            'bahan_makanan' => [
+                'Pengadaan Bahan Makanan untuk Narapidana/Tahanan dan Anak di Lapas/Rutan Kementerian Hukum dan Hak Asasi Manusia' => [
+                    'sub_category' => null,
+                ],
+                'Pengadaan Bahan Makanan untuk Pasien Rumah Sakit dan Penyandang Masalah Kesejahteraan Sosial (PMKS)' => [
+                    'sub_category' => null,
+                ],
+                'Pengadaan Bahan Makanan untuk Keluarga Penjaga Menara Suar (PMS), Petugas Pengamatan Laut, Anak Buah Kapal (ABK) Cadangan pada Kapal Negara, ABK Aktif pada Kapal Negara, dan Petugas Stasiun Radio Pantai (SROP) dan Vessel Traffic Information Service (VTIS)' => [
+                    'sub_category' => null,
+                ],
+                'Pengadaan Bahan Makanan untuk Petugas Bengkel dan Galangan Kapal Kenavigasian, Petugas Pabrik Gas Aga untuk Lampu Suar, PMS, dan Kelompok Tenaga Kesehatan Kerja Pelayaran' => [
+                    'sub_category' => null,
+                ],
+                'Pengadaan Bahan Makanan untuk Mahasiswa / Siswa Sipil dan Mahasiswa Militer / Semi Militer di Lingkup Sekolah Kedinasan' => [
+                    'sub_category' => null,
+                ],
+                'Pengadaan Bahan Makanan untuk Rescue Team' => [
+                    'sub_category' => null,
+                ],
+            ],
+
+            // Satuan Biaya 13 - Sections 13.5 and 13.6 should be excluded
+            'pemeliharaan_kendaraan' => [
+                'Kendaraan Dinas Pejabat' => [
+                    'sub_category' => null,
+                ],
+                'Kendaraan Dinas Operasional' => [
+                    'sub_category' => null,
+                ],
+                'Operasional dalam Lingkungan Kantor, Roda 6, Roda 6 Khusus Tahanan Kejaksaan, dan Speed Boat' => [
+                    'sub_category' => null,
+                ],
+                'Kendaraan Dinas Operasional Patroli Jalan Raya (PJR)' => [
+                    'sub_category' => null,
+                ],
+                'Operasional Kendaraan Dinas Untuk Pengadaan Dari Sewa' => [
+                    'exclude' => true, // Exclude section 13.5 from import
+                ],
+                'Kendaraan Bermotor Listrik Berbasis Baterai' => [
+                    'exclude' => true, // Exclude section 13.6 from import
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Get section-specific configuration
+     *
+     * @param string $category Category name (e.g., 'honorarium_35')
+     * @param string $sectionLabel Section label from scan
+     * @return array|null Configuration array or null if not found
+     */
+    public function getSectionMapping(string $category, string $sectionLabel): ?array
+    {
+        if (!isset($this->sectionConfig[$category])) {
+            return null;
+        }
+
+        $config = $this->sectionConfig[$category];
+
+        // Try exact match first
+        if (isset($config[$sectionLabel])) {
+            return $config[$sectionLabel];
+        }
+
+        // Try partial match (handles cases where section label contains extra text)
+        foreach ($config as $key => $value) {
+            if (strpos($sectionLabel, $key) !== false || strpos($key, $sectionLabel) !== false) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Check if category uses USD
      */
     public function isUsdCurrency(string $category): bool
@@ -494,5 +619,97 @@ class SbmMappingService
         $key = trim($key, '_');
 
         return $key;
+    }
+
+    /**
+     * Get SBM number for category (1-31, 28-39)
+     */
+    public function getSbmNumber(string $category): ?int
+    {
+        $map = [
+            'transportasi_provinsi' => 1,
+            'transportasi_dki' => 2,
+            'transportasi_kabupaten' => 3,
+            'pemeliharaan_sarana_kantor' => 4,
+            'penerjemahan_pengetikan' => 5,
+            'beasiswa' => 6,
+            'sewa_fotokopi' => 7,
+            'honorarium_narasumber' => 8,
+            'bahan_makanan' => 9,
+            'konsumsi_tahanan' => 10,
+            'keperluan_perkantoran' => 11,
+            'penggantian_inventaris' => 12,
+            'pemeliharaan_kendaraan' => 13,
+            'pemeliharaan_gedung' => 14,
+            'sewa_gedung' => 15,
+            'transportasi_terminal' => 16,
+            'tiket_pesawat_dalam_negeri' => 17,
+            'tiket_pesawat_luar_negeri' => 18,
+            'perwakilan_ri' => 19,
+            'honorarium_28' => 28,
+            'honorarium_29' => 29,
+            'honorarium_30' => 30,
+            'honorarium_31' => 31,
+            'honorarium_32' => 32,
+            'honorarium_33' => 33,
+            'honorarium_34' => 34,
+            'honorarium_35' => 35,
+            'honorarium_36' => 36,
+            'honorarium_37' => 37,
+            'honorarium_38' => 38,
+            'honorarium_39' => 39,
+        ];
+
+        return $map[$category] ?? null;
+    }
+
+    /**
+     * Get source file name for category
+     */
+    public function getSourceFile(string $category): ?string
+    {
+        $map = [
+            'transportasi_provinsi' => '1. SATUAN BIAYA TRANSPORTASI DARAT DARI IBUKOTA PROVINSI KE KABUPATEN atau KOTA DALAM PROVINSI YANG SAMA (ONE  WAY ).xlsx',
+            'transportasi_dki' => '2. SATUAN BIAYA TRANSPORTASI DARI DKI JAKARTA KE KABUPATEN atau KOTA SEKITAR (ONE WAY  ).xlsx',
+            'transportasi_kabupaten' => '3. SATUAN BIAYA TRANSPOR KEGIATAN DALAM KABUPATEN/KOTA PERGI PULANG (PP).xlsx',
+            'pemeliharaan_sarana_kantor' => '4. SATUAN BIAYA PEMELIHARAAN SARANA KANTOR.xlsx',
+            'penerjemahan_pengetikan' => '5. SATUAN BIAYA PENERJEMAHAN DAN PENGETIKAN.xlsx',
+            'beasiswa' => '6. SATUAN BIAYA BANTUAN BEASISWA PROGRAM GELAR/NONGELAR DALAM NEGERI.xlsx',
+            'sewa_fotokopi' => '7. SATUAN BIAYA SEWA MESIN FOTOKOPI.xlsx',
+            'honorarium_narasumber' => '8. SATUAN BIAYA HONORARARIUM NARASUMBER PAKAR PRAKTISI PROFESIONAL.xlsx',
+            'bahan_makanan' => '9. SATUAN BIAYA PENGADAAN BAHAN MAKANAN.xlsx',
+            'konsumsi_tahanan' => '10. SATUAN BIAYA KONSUMSI TAHANAN/DETENI/ABK NONJUSTISIA.xlsx',
+            'keperluan_perkantoran' => '11. SATUAN BIAYA KEPERLUAN SEHARI-HARI PERKANTORAN DI DALAM NEGERI.xlsx',
+            'penggantian_inventaris' => '12. SATUAN BIAYA PENGGANTIAN INVENTARIS LAMA DAN ATAU PEMBELIAN INVENTARIS UNTUK PEGAWAI BARU.xlsx',
+            'pemeliharaan_kendaraan' => '13. SATUAN BIAYA PEMELIHARAAN DAN OPERASIONAL KENDARAAN DINAS.xlsx',
+            'pemeliharaan_gedung' => '14. SATUAN BIAYA PEMELIHARAAN GEDUNG BANGUNAN DALAM NEGERI.xlsx',
+            'sewa_gedung' => '15. SATUAN BIAYA SEWA GEDUNG PERTEMUAN.xlsx',
+            'transportasi_terminal' => '16. SATUAN BIAYA TRANSPORTASI DARI DAN/ATAU KE TERMINAL BUS STASIUN BANDARA PELABUHAN DALAM RANGKA PERJALANAN DINAS DALAM NEGERI.xlsx',
+            'tiket_pesawat_dalam_negeri' => '17. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS DALAM NEGERI PERGI PULANG (PP).xlsx',
+            'tiket_pesawat_luar_negeri' => '18. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP).xlsx',
+            'perwakilan_ri' => '19. SATUAN BIAYA PENYELENGGARAAN PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI.xlsx',
+            'honorarium_28' => 'Honorarium 28 SATUAN BIAYA UANG HARIAN DAN UANG REPRESENTASI PERJALANAN DINAS DALAM NEGERI.xlsx',
+            'honorarium_29' => 'Honorarium 29 SATUAN BIAYA UANG HARIAN PERJALANAN DINAS LUAR NEGERI.xlsx',
+            'honorarium_30' => 'Honorarium 30 SATUAN BIAYA PENGINAPAN PERJALANAN DINAS DALAM NEGERI.xlsx',
+            'honorarium_31' => 'Honorarium 31 SATUAN BIAYA RAPAT ATAU PERTEMUAN DI LUAR KANTOR.xlsx',
+            'honorarium_32' => 'Honorarium 32 SATUAN BIAYA TIKET PERJALANAN DINAS PINDAH LUAR NEGERI.xlsx',
+            'honorarium_33' => 'Honorarium 33 SATUAN BIAYA OPERASIONAL KHUSUS KEPALA PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI.xlsx',
+            'honorarium_34' => 'Honorarium 34 SATUAN BIAYA MAKANAN PENAMBAH DAYA TAHAN TUBUH.xlsx',
+            'honorarium_35' => 'Honorarium 35 SATUAN BIAYA SEWA KENDARAAN.xlsx',
+            'honorarium_36' => 'Honorarium 36 SATUAN BIAYA PENGAADAAN KENDARAAN DINAS.xlsx',
+            'honorarium_37' => 'Honorarium 37 SATUAN BIAYA PENGAADAAN PAKAIAN DINAS.xlsx',
+            'honorarium_38' => 'Honorarium 38 SATUAN BIAYA KONSUMSI RAPAT ATAU PERTEMUAN.xlsx',
+            'honorarium_39' => 'Honorarium 39 SATUAN BIAYA KONSUMSI KEGIATAN PENDIDIKAN DAN PELATIHAN (DIKLAT).xlsx',
+        ];
+
+        return $map[$category] ?? null;
+    }
+
+    /**
+     * Get display order for category (same as SBM number)
+     */
+    public function getDisplayOrder(string $category): ?int
+    {
+        return $this->getSbmNumber($category);
     }
 }

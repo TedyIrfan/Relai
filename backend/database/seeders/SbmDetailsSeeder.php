@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Services\SbmMappingService;
 use App\Services\SbmParserService;
+use App\Services\SbmScannerService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,14 +24,19 @@ class SbmDetailsSeeder extends Seeder
 
         try {
             $mapping = app(SbmMappingService::class);
+            $scanner = app(SbmScannerService::class);
             $parser = app(SbmParserService::class);
 
-            $this->command->info('Scanning files...');
-            $stats = $parser->getStatistics();
-            $this->command->line("  ✓ Found {$stats['successful_files']} files");
+            // AUTO-SCAN: Scan semua file Excel sebelum parsing
+            $this->command->info('Step 1/3: Scanning Excel files...');
+            $scanStartTime = microtime(true);
+            $scanResult = $scanner->scanAll();
+            $scanDuration = round(microtime(true) - $scanStartTime, 2);
+            $this->command->line("  ✅ Scanned {$scanResult['summary']['success']} files ({$scanDuration}s)");
             $this->command->newLine();
 
-            $this->command->info('Parsing Excel files...');
+            // PARSE: Parse data berdasarkan scan report yang baru
+            $this->command->info('Step 2/3: Parsing Excel files...');
             $this->command->newLine();
 
             $startTime = microtime(true);
@@ -82,13 +88,13 @@ class SbmDetailsSeeder extends Seeder
             $endTime = microtime(true);
             $duration = round($endTime - $startTime, 2);
 
-            // Import
+            // IMPORT: Import data ke database
             $this->command->newLine();
-            $this->command->info('Importing to database...');
+            $this->command->info('Step 3/3: Importing to database...');
             $this->importData($allData);
 
             // Final summary
-            $this->showFinalSummary($stats, $categorySummary, $fileList, $duration);
+            $this->showFinalSummary($stats, $categorySummary, $fileList, $duration, $scanDuration ?? 0);
 
         } catch (\Exception $e) {
             $this->command->error('');
@@ -153,7 +159,7 @@ class SbmDetailsSeeder extends Seeder
     /**
      * Show final summary with simple text formatting
      */
-    private function showFinalSummary(array $stats, array $categorySummary, array $fileList, float $duration): void
+    private function showFinalSummary(array $stats, array $categorySummary, array $fileList, float $duration, float $scanDuration): void
     {
         $totalImported = $stats['imported'];
         $totalSkipped = $stats['skipped'];
@@ -165,10 +171,16 @@ class SbmDetailsSeeder extends Seeder
         $this->command->newLine();
 
         // Files Processed
+        $this->command->line('  📁 PROCESSING SUMMARY');
+        $this->command->line("    ✅ Scan: {$scanDuration}s");
+        $this->command->line("    ✅ Parse: {$duration}s");
+        $this->command->line("    ⏱️  Total: " . round($scanDuration + $duration, 2) . "s");
+        $this->command->newLine();
+
+        // Files Processed
         $this->command->line('  📁 FILES PROCESSED');
         $this->command->line("    ✅ Success: 31 files");
         $this->command->line("    ❌ Failed: 0 files");
-        $this->command->line("    ⏱️  Time: {$duration} seconds");
         $this->command->newLine();
 
         // Data Overview
@@ -180,8 +192,8 @@ class SbmDetailsSeeder extends Seeder
         // Currency Breakdown
         $this->showCurrencyBreakdown();
 
-        // Grouping Breakdown
-        $this->showGroupingBreakdown();
+        // Grouping Breakdown - DISABLED
+        // $this->showGroupingBreakdown();
 
         // Imported Files List
         $this->showFileListSummary($fileList);

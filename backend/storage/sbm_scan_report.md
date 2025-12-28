@@ -1,6 +1,6 @@
 # SBM Files Scan Report
 
-**Generated:** 2025-12-27 19:31:17
+**Generated:** 2025-12-28 18:58:56
 
 ## Summary
 
@@ -10,7 +10,7 @@
 | Success | 31 |
 | Error | 0 |
 | Multiple Sheets | 0 |
-| With Sections | 10 |
+| With Sections | 13 |
 
 ---
 
@@ -28,7 +28,7 @@
 | Header Row | 3 |
 | Data Range | Row 0 - 0 |
 | Has Sections | Yes |
-| Sections | Uang Harian Perjalanan Dinas Dalam Negeri, Uang Representasi Perjalanan Dinas Dalam Negeri |
+| Sections | Uang Harian Perjalanan Dinas Dalam Negeri, Uang  Representasi  Perjalanan  Dinas  Dalam  Negeri |
 | Columns | 6 |
 
 **Columns (6):**
@@ -47,11 +47,11 @@
 | Property | Value |
 |----------|-------|
 | Header Row | 3 |
-| Data Range | Row 5 - 43 |
+| Data Range | Row 4 - 42 |
 | Columns | 6 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `LUAR KOTA`
@@ -65,19 +65,19 @@
 | 02 | SUMATRA   UTARA | OH | Rp370,000 | Rp150,000 | Rp110,000 |
 | 03 | R  I  A  U | OH | Rp370,000 | Rp150,000 | Rp110,000 |
 
-##### 2. Uang Representasi Perjalanan Dinas Dalam Negeri
+##### 2. Uang  Representasi  Perjalanan  Dinas  Dalam  Negeri
 
 | Property | Value |
 |----------|-------|
 | Header Row | 44 |
-| Data Range | Row 46 - 48 |
+| Data Range | Row 45 - 48 |
 | Columns | 5 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `URAIAN`
 - `SATUAN`
-- `LUAR  KOTA`
+- `LUAR KOTA`
 - `DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM`
 
 **Sample Data:**
@@ -99,18 +99,29 @@
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 119 |
+| Total Rows | 118 |
 | Header Row | 3 |
-| Data Range | Row 4 - 119 |
+| Data Range | Row 4 - 118 |
 | Has Sections | No |
-| Columns | 4 |
+| Columns | 7 |
 
-**Columns (4):**
+**Columns (7):**
 
 1. `NO.`
 2. `NEGARA`
 3. `SATUAN`
-4. `GOLONGAN`
+4. `GOLONGAN A`
+5. `GOLONGAN B`
+6. `GOLONGAN C`
+7. `GOLONGAN D`
+
+**Sample Data:**
+
+| NO. | NEGARA | SATUAN | GOLONGAN A | GOLONGAN B | GOLONGAN C | GOLONGAN D |
+||---|---|---|---|---|---|---|
+| 01 | Amerika  Serikat | OH | 659 | 563 | 505 | 447 |
+| 02 | Kanada | OH | 552 | 467 | 416 | 365 |
+| 03 | Argentina | OH | 534 | 402 | 351 | 349 |
 
 ---
 
@@ -124,26 +135,29 @@
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 42 |
+| Total Rows | 41 |
 | Header Row | 2 |
-| Data Range | Row 3 - 42 |
+| Data Range | Row 3 - 41 |
 | Has Sections | No |
-| Columns | 4 |
+| Columns | 7 |
 
-**Columns (4):**
+**Columns (7):**
 
 1. `NO.`
 2. `PROVINSI`
 3. `SATUAN`
-4. `TARIF HOTEL`
+4. `TARIF HOTEL PEJABAT NEGARA / PEJABAT ESELON I`
+5. `TARIF HOTEL PEJABAT NEGARA LAINNYA / PEJABAT ESELON II`
+6. `TARIF HOTEL PEJABAT ESELON III / GOLONGAN IV`
+7. `TARIF HOTEL PEJABAT ESELON IV / GOLONGAN III  / II / I`
 
 **Sample Data:**
 
-| NO. | PROVINSI | SATUAN | TARIF HOTEL |
-||---|---|---|---|
-| PEJABAT NEGARA / PEJABAT ESELON I | PEJABAT NEGARA LAINNYA / PEJABAT ESELON II | PEJABAT ESELON III / GOLONGAN IV | PEJABAT ESELON IV / GOLONGAN III  / II / I |
-| 01 | A  C  E  H | OH | Rp4,774,000 |
-| 02 | SUMATERA UTARA | OH | Rp4,960,000 |
+| NO. | PROVINSI | SATUAN | TARIF HOTEL PEJABAT NEGARA / PEJABAT ESELON I | TARIF HOTEL PEJABAT NEGARA LAINNYA / PEJABAT ESELON II | TARIF HOTEL PEJABAT ESELON III / GOLONGAN IV | TARIF HOTEL PEJABAT ESELON IV / GOLONGAN III  / II / I |
+||---|---|---|---|---|---|---|
+| 01 | A  C  E  H | OH | Rp4,774,000 | Rp3,526,000 | Rp1,578,000 | Rp770,000 |
+| 02 | SUMATERA UTARA | OH | Rp4,960,000 | Rp2,195,000 | Rp1,188,000 | Rp699,000 |
+| 03 | R  I  A  U | OH | Rp3,820,000 | Rp3,119,000 | Rp1,650,000 | Rp852,000 |
 
 ---
 
@@ -157,11 +171,11 @@
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 133 |
+| Total Rows | 130 |
 | Header Row | 4 |
 | Data Range | Row 0 - 0 |
 | Has Sections | Yes |
-| Sections | Menteri dan Setingkat Menteri, Pejabat Eselon I dan II, Pejabat Eselon III Ke Bawah, Uang Harian Kegiatan Rapat/Pertemuan di Luar Kantor |
+| Sections | Menteri dan Setingkat Menteri, Pejabat Eselon I dan II, Pejabat Eselon III Ke Bawah, Uang  Harian  Kegiatan  Rapat/Pertemuan  di  Luar  Kantor |
 | Columns | 6 |
 
 **Columns (6):**
@@ -180,11 +194,11 @@
 | Property | Value |
 |----------|-------|
 | Header Row | 4 |
-| Data Range | Row 6 - 45 |
+| Data Range | Row 5 - 43 |
 | Columns | 6 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `HALFDAY`
@@ -202,12 +216,12 @@
 
 | Property | Value |
 |----------|-------|
-| Header Row | 46 |
-| Data Range | Row 48 - 87 |
+| Header Row | 45 |
+| Data Range | Row 46 - 84 |
 | Columns | 6 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `HALFDAY`
@@ -225,12 +239,12 @@
 
 | Property | Value |
 |----------|-------|
-| Header Row | 88 |
-| Data Range | Row 90 - 129 |
+| Header Row | 86 |
+| Data Range | Row 87 - 125 |
 | Columns | 6 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `HALFDAY`
@@ -244,16 +258,16 @@
 | 02 | SUMATRA   UTARA | OP | Rp279,000 | Rp462,000 | Rp826,000 |
 | 03 | RIAU | OP | Rp219,000 | Rp397,000 | Rp888,000 |
 
-##### 4. Uang Harian Kegiatan Rapat/Pertemuan di Luar Kantor
+##### 4. Uang  Harian  Kegiatan  Rapat/Pertemuan  di  Luar  Kantor
 
 | Property | Value |
 |----------|-------|
-| Header Row | 130 |
-| Data Range | Row 132 - 133 |
+| Header Row | 127 |
+| Data Range | Row 128 - 130 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `URAIAN`
 - `SATUAN`
 - `BESARAN`
@@ -276,27 +290,31 @@
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 137 |
+| Total Rows | 136 |
 | Header Row | 3 |
-| Data Range | Row 6 - 137 |
+| Data Range | Row 4 - 136 |
 | Has Sections | No |
-| Columns | 5 |
+| Columns | 9 |
 
-**Columns (5):**
+**Columns (9):**
 
 1. `NO.`
 2. `PERWAKILAN`
 3. `SATUAN`
-4. `JAKARTA - PERWAKILAN`
-5. `PERWAKILAN - JAKARTA`
+4. `JAKARTA - PERWAKILAN (Published)`
+5. `JAKARTA - PERWAKILAN (Business)`
+6. `JAKARTA - PERWAKILAN (First)`
+7. `PERWAKILAN - JAKARTA (Published)`
+8. `PERWAKILAN - JAKARTA (Business)`
+9. `PERWAKILAN - JAKARTA (First)`
 
 **Sample Data:**
 
-| NO. | PERWAKILAN | SATUAN | JAKARTA - PERWAKILAN | PERWAKILAN - JAKARTA |
-||---|---|---|---|---|
-| 01 | Abu Dhabi | Orang/Kali | 1,150 | 3,060 |
-| 02 | Abuja | Orang/Kali | 3,400 | 5,240 |
-| 03 | Addis Ababa | Orang/Kali | 2,221 | 3,080 |
+| NO. | PERWAKILAN | SATUAN | JAKARTA - PERWAKILAN (Published) | JAKARTA - PERWAKILAN (Business) | JAKARTA - PERWAKILAN (First) | PERWAKILAN - JAKARTA (Published) | PERWAKILAN - JAKARTA (Business) | PERWAKILAN - JAKARTA (First) |
+||---|---|---|---|---|---|---|---|---|
+| 01 | Abu Dhabi | Orang/Kali | 1,150 | 3,060 | 3,790 | 1,140 | 3,270 | 3,790 |
+| 02 | Abuja | Orang/Kali | 3,400 | 5,240 | 8,410 | 3,220 | 6,278 | 8,410 |
+| 03 | Addis Ababa | Orang/Kali | 2,221 | 3,080 | 4,950 | 1,950 | 3,350 | 4,380 |
 
 ---
 
@@ -312,7 +330,7 @@
 |----------|-------|
 | Total Rows | 145 |
 | Header Row | 3 |
-| Data Range | Row 6 - 145 |
+| Data Range | Row 4 - 145 |
 | Has Sections | Yes |
 | Sections | AMERIKA UTARA  DAN  TENGAH, AMERIKA  SELATAN  DAN  KARIBIA, EROPA  TENGAH  DAN  TIMUR, EROPA  BARAT, AFRIKA, ASIA  SELATAN  DAN  TENGAH, ASIA  TIMUR  DAN  PASIFIK, TIMUR  TENGAH |
 | Columns | 4 |
@@ -329,8 +347,8 @@
 | NO. | PERWAKILAN  RI | SATUAN | BESARAN |
 ||---|---|---|---|
 | 01 | New  York  (Konsulat  Jenderal Republik  Indonesia) | OT | 24,000 |
+| 02 | Ottawa | OT | 36,000 |
 | 03 | New  York  (Perutusan  Tetap  Republik Indonesia) | OT | 36,000 |
-| 114 | Jakarta  (Perutusan  Tetap Republik  Indonesia  ASEAN) | OT | 36,000 |
 
 ---
 
@@ -346,7 +364,7 @@
 |----------|-------|
 | Total Rows | 41 |
 | Header Row | 2 |
-| Data Range | Row 4 - 41 |
+| Data Range | Row 3 - 41 |
 | Has Sections | No |
 | Columns | 4 |
 
@@ -381,7 +399,7 @@
 | Header Row | 3 |
 | Data Range | Row 0 - 0 |
 | Has Sections | Yes |
-| Sections | Sewa Kendaraan Pelaksanaan Kegiatan Insidentil, Sewa Kendaraan Operasional Pejabat, Sewa Kendaraan Operasional Kantor dan/atau Lapangan |
+| Sections | Sewa  Kendaraan  Pelaksanaan  Kegiatan  Insidentil, Sewa   Kendaraan  Operasional  Pejabat, Sewa Kendaraan Operasional Kantor dan/atau Lapangan |
 | Columns | 6 |
 
 **Columns (6):**
@@ -395,21 +413,21 @@
 
 **Sub-Sections (3):**
 
-##### 1. Sewa Kendaraan Pelaksanaan Kegiatan Insidentil
+##### 1. Sewa  Kendaraan  Pelaksanaan  Kegiatan  Insidentil
 
 | Property | Value |
 |----------|-------|
 | Header Row | 3 |
-| Data Range | Row 5 - 43 |
+| Data Range | Row 4 - 42 |
 | Columns | 6 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
-- `RODA  4`
-- `RODA  6/ BUSSEDANG`
-- `RODA  6/ BUSBESAR`
+- `RODA 4`
+- `RODA 6/ BUSSEDANG`
+- `RODA 6/ BUSBESAR`
 
 **Sample Data:**
 | NO. | PROVINSI | SATUAN | RODA  4 | RODA  6/ BUSSEDANG | RODA  6/ BUSBESAR |
@@ -418,16 +436,16 @@
 | 02 | SUMATRA   UTARA | Per  hari | Rp1,220,000 | Rp3,062,000 | Rp3,753,000 |
 | 03 | R  I  A  U | Per  hari | Rp978,000 | Rp3,155,000 | Rp4,585,000 |
 
-##### 2. Sewa Kendaraan Operasional Pejabat
+##### 2. Sewa   Kendaraan  Operasional  Pejabat
 
 | Property | Value |
 |----------|-------|
 | Header Row | 44 |
-| Data Range | Row 46 - 86 |
+| Data Range | Row 45 - 86 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `BESARAN`
@@ -444,14 +462,14 @@
 | Property | Value |
 |----------|-------|
 | Header Row | 87 |
-| Data Range | Row 89 - 126 |
+| Data Range | Row 88 - 126 |
 | Columns | 6 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
-- `PICK  UP`
+- `PICK UP`
 - `MINIBUS`
 - `DOUBLE GARDAN`
 
@@ -478,7 +496,7 @@
 | Header Row | 3 |
 | Data Range | Row 0 - 0 |
 | Has Sections | Yes |
-| Sections | Kendaraan Dinas Pejabat, Kendaraan Pejabat Eselon III sebagai Kepala Kantor, Operasional Kantor dan/atau Lapangan Roda 4 (Empat), Kendaraan Operasional Bus, Kendaraan Operasional Kantor dan/atau Lapangan Roda 2 (Dua), Kendaraan Listrik Berbasis Baterai |
+| Sections | Kendaraan  Dinas  Pejabat, Kendaraan  Pejabat  Eselon  III  sebagai  Kepala  Kantor,  Operasional  Kantor  dan/atau  Lapangan  Roda 4  (Empat), Kendaraan  Operasional  Bus, Kendaraan  Operasional  Kantor  dan/atau  Lapangan  Roda  2  (Dua), Kendaraan  Listrik  Berbasis  Baterai |
 | Columns | 4 |
 
 **Columns (4):**
@@ -490,16 +508,16 @@
 
 **Sub-Sections (5):**
 
-##### 1. Kendaraan Dinas Pejabat
+##### 1. Kendaraan  Dinas  Pejabat
 
 | Property | Value |
 |----------|-------|
 | Header Row | 3 |
-| Data Range | Row 5 - 45 |
+| Data Range | Row 4 - 45 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `BESARAN`
@@ -511,21 +529,20 @@
 | 36.1.2.1 | ACEH | Unit | Rp641,995,000 |
 | 36.1.2.2 | SUMATRA  UTARA | Unit | Rp693,508,000 |
 
-##### 2. Kendaraan Pejabat Eselon III sebagai Kepala Kantor, Operasional Kantor dan/atau Lapangan Roda 4 (Empat)
+##### 2. Kendaraan  Pejabat  Eselon  III  sebagai  Kepala  Kantor,  Operasional  Kantor  dan/atau  Lapangan  Roda 4  (Empat)
 
 | Property | Value |
 |----------|-------|
 | Header Row | 46 |
-| Data Range | Row 48 - 86 |
+| Data Range | Row 47 - 85 |
 | Columns | 6 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
-- `PICK  UP`
-- `PEJABAT ESELON
-III/MINIBUS`
+- `PICK UP`
+- `PEJABAT ESELON III/MINIBUS`
 - `DOUBLE GARDAN`
 
 **Sample Data:**
@@ -536,16 +553,16 @@ III/MINIBUS | DOUBLE GARDAN |
 | 02 | SUMATRA  UTARA | Unit | Rp282,447,000 | Rp402,522,000 | Rp501,507,000 |
 | 03 | R  I  A  U | Unit | Rp317,452,000 | Rp431,233,000 | Rp475,248,000 |
 
-##### 3. Kendaraan Operasional Bus
+##### 3. Kendaraan  Operasional  Bus
 
 | Property | Value |
 |----------|-------|
 | Header Row | 87 |
-| Data Range | Row 89 - 92 |
+| Data Range | Row 88 - 92 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `URAIAN`
 - `SATUAN`
 - `BESARAN`
@@ -557,16 +574,16 @@ III/MINIBUS | DOUBLE GARDAN |
 | 02 | Roda  6  dan/atau  Bus  Sedang | Unit | Rp768,820,000 |
 | 03 | Roda  6  dan/atau  Bus  Besar | Unit | Rp1,268,200,000 |
 
-##### 4. Kendaraan Operasional Kantor dan/atau Lapangan Roda 2 (Dua)
+##### 4. Kendaraan  Operasional  Kantor  dan/atau  Lapangan  Roda  2  (Dua)
 
 | Property | Value |
 |----------|-------|
 | Header Row | 93 |
-| Data Range | Row 95 - 133 |
+| Data Range | Row 94 - 132 |
 | Columns | 5 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `OPERASIONAL`
@@ -579,16 +596,16 @@ III/MINIBUS | DOUBLE GARDAN |
 | 02 | SUMATRA  UTARA | Unit | Rp38,879,000 | Rp41,140,000 |
 | 03 | R  I  A  U | Unit | Rp35,688,000 | Rp40,258,000 |
 
-##### 5. Kendaraan Listrik Berbasis Baterai
+##### 5. Kendaraan  Listrik  Berbasis  Baterai
 
 | Property | Value |
 |----------|-------|
 | Header Row | 134 |
-| Data Range | Row 136 - 139 |
+| Data Range | Row 135 - 139 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `URAIAN`
 - `SATUAN`
 - `BESARAN`
@@ -614,7 +631,7 @@ III/MINIBUS | DOUBLE GARDAN |
 |----------|-------|
 | Total Rows | 41 |
 | Header Row | 2 |
-| Data Range | Row 4 - 41 |
+| Data Range | Row 3 - 41 |
 | Has Sections | No |
 | Columns | 8 |
 
@@ -649,10 +666,11 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 43 |
-| Header Row | 2 |
-| Data Range | Row 4 - 43 |
-| Has Sections | No |
+| Total Rows | 47 |
+| Header Row | 3 |
+| Data Range | Row 0 - 0 |
+| Has Sections | Yes |
+| Sections | RAPAT  KOORDINASI  T INGKAT MENTERI/  ESELON  I/SETARA, RAPAT  BIASA |
 | Columns | 5 |
 
 **Columns (5):**
@@ -663,13 +681,49 @@ III/MINIBUS | DOUBLE GARDAN |
 4. `MAKAN`
 5. `KUDAPAN (SNACK  )`
 
-**Sample Data:**
+**Sub-Sections (2):**
 
+##### 1. RAPAT  KOORDINASI  T INGKAT MENTERI/  ESELON  I/SETARA
+
+| Property | Value |
+|----------|-------|
+| Header Row | 3 |
+| Data Range | Row 4 - 5 |
+| Columns | 5 |
+
+**Columns:**
+- `NO`
+- `PROVINSI`
+- `SATUAN`
+- `MAKAN`
+- `KUDAPAN (SNACK )`
+
+**Sample Data:**
 | NO. | PROVINSI | SATUAN | MAKAN | KUDAPAN (SNACK  ) |
 ||---|---|---|---|---|
-| 38.1 | RAPAT  KOORDINASI  T INGKAT MENTERI/  ESELON  I/SETARA | Orang/Kali | Rp118,000 | Rp53,000 |
-| 38.2.1 | ACEH | Orang/Kali | Rp51,000 | Rp21,000 |
-| 38.2.2 | SUMATRA   UTARA | Orang/Kali | Rp47,000 | Rp17,000 |
+| 01 | RAPAT  KOORDINASI  TINGKAT MENTERI /  ESELON  I / SETARA | Orang/Kali | Rp118,000 | Rp53,000 |
+
+##### 2. RAPAT  BIASA
+
+| Property | Value |
+|----------|-------|
+| Header Row | 8 |
+| Data Range | Row 9 - 47 |
+| Columns | 5 |
+
+**Columns:**
+- `NO`
+- `PROVINSI`
+- `SATUAN`
+- `MAKAN`
+- `KUDAPAN (SNACK )`
+
+**Sample Data:**
+| NO. | PROVINSI | SATUAN | MAKAN | KUDAPAN (SNACK  ) |
+||---|---|---|---|---|
+| 01 | ACEH | Orang/Kali | Rp51,000 | Rp21,000 |
+| 02 | SUMATRA   UTARA | Orang/Kali | Rp47,000 | Rp17,000 |
+| 03 | R  I  A  U | Orang/Kali | Rp52,000 | Rp18,000 |
 
 ---
 
@@ -685,7 +739,7 @@ III/MINIBUS | DOUBLE GARDAN |
 |----------|-------|
 | Total Rows | 41 |
 | Header Row | 2 |
-| Data Range | Row 4 - 41 |
+| Data Range | Row 3 - 41 |
 | Has Sections | No |
 | Columns | 5 |
 
@@ -701,9 +755,9 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | NO. | PROVINSI | SATUAN | MAKAN | KUDAPAN (SNACK  ) |
 ||---|---|---|---|---|
-| 1 | ACEH | Orang/Kali | Rp41,000 | Rp17,000 |
-| 2 | SUMATRA   UTARA | Orang/Kali | Rp38,000 | Rp14,000 |
-| 3 | R  I  A  U | Orang/Kali | Rp42,000 | Rp15,000 |
+| 01 | ACEH | Orang/Kali | Rp41,000 | Rp17,000 |
+| 02 | SUMATRA   UTARA | Orang/Kali | Rp38,000 | Rp14,000 |
+| 03 | R  I  A  U | Orang/Kali | Rp42,000 | Rp15,000 |
 
 ---
 
@@ -719,7 +773,7 @@ III/MINIBUS | DOUBLE GARDAN |
 |----------|-------|
 | Total Rows | 394 |
 | Header Row | 2 |
-| Data Range | Row 4 - 394 |
+| Data Range | Row 3 - 394 |
 | Has Sections | No |
 | Columns | 5 |
 
@@ -785,9 +839,9 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 3 |
-| Header Row | 1 |
-| Data Range | Row 3 - 3 |
+| Total Rows | 4 |
+| Header Row | 2 |
+| Data Range | Row 3 - 4 |
 | Has Sections | No |
 | Columns | 4 |
 
@@ -802,7 +856,7 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | NO | URAIAN | SATUAN | BESARAN |
 ||---|---|---|---|
-| 03 | SATUAN BIAYA TRANSPOR KEGIATAN DALAM KABUPATEN/KOTA PERGI PULANG (PP) | Orang/Kali | Rp170,000 |
+| 01 | SATUAN BIAYA TRANSPOR KEGIATAN DALAM KABUPATEN/KOTA PERGI PULANG (PP) | Orang/Kali | Rp170,000 |
 
 ---
 
@@ -817,8 +871,8 @@ III/MINIBUS | DOUBLE GARDAN |
 | Property | Value |
 |----------|-------|
 | Total Rows | 20 |
-| Header Row | 1 |
-| Data Range | Row 4 - 20 |
+| Header Row | 2 |
+| Data Range | Row 3 - 20 |
 | Has Sections | No |
 | Columns | 4 |
 
@@ -833,9 +887,9 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | NO | URAIAN | SATUAN | BESARAN |
 ||---|---|---|---|
-| 4.1 | Inventaris  Kantor | Pegawai/Tahun | Rp80,000 |
-| 4.2 | Personal Computer/Notebook | Unit/Tahun | Rp730,000 |
-| 4.3 | Printer | Unit/Tahun | Rp690,000 |
+| 01 | Inventaris  Kantor | Pegawai/Tahun | Rp80,000 |
+| 02 | Personal Computer/Notebook | Unit/Tahun | Rp730,000 |
+| 03 | Printer | Unit/Tahun | Rp690,000 |
 
 ---
 
@@ -849,10 +903,11 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 12 |
-| Header Row | 1 |
-| Data Range | Row 4 - 12 |
-| Has Sections | No |
+| Total Rows | 15 |
+| Header Row | 3 |
+| Data Range | Row 0 - 0 |
+| Has Sections | Yes |
+| Sections | Dari  Bahasa  Asing  ke Bahasa  Indonesia  atau  Sebaliknya, Dari  Bahasa  Indonesia  ke  Bahasa  Daerah/Bahasa  Lokal  atau  Sebaliknya |
 | Columns | 4 |
 
 **Columns (4):**
@@ -862,13 +917,47 @@ III/MINIBUS | DOUBLE GARDAN |
 3. `SATUAN`
 4. `BESARAN`
 
-**Sample Data:**
+**Sub-Sections (2):**
 
+##### 1. Dari  Bahasa  Asing  ke Bahasa  Indonesia  atau  Sebaliknya
+
+| Property | Value |
+|----------|-------|
+| Header Row | 3 |
+| Data Range | Row 4 - 12 |
+| Columns | 4 |
+
+**Columns:**
+- `NO`
+- `URAIAN`
+- `SATUAN`
+- `BESARAN`
+
+**Sample Data:**
 | NO | URAIAN | SATUAN | BESARAN |
 ||---|---|---|---|
-| 5.1 | Dari  Bahasa  Asing  ke Bahasa  Indonesia  atau  Sebaliknya | - | - |
 | a. | Bahasa  Inggris | Halaman  Jadi | Rp250,000 |
 | b. | Bahasa  Jepang | Halaman  Jadi | Rp420,000 |
+| c. | Bahasa  Mandarin | Halaman  Jadi | Rp410,000 |
+
+##### 2. Dari  Bahasa  Indonesia  ke  Bahasa  Daerah/Bahasa  Lokal  atau  Sebaliknya
+
+| Property | Value |
+|----------|-------|
+| Header Row | 13 |
+| Data Range | Row 14 - 15 |
+| Columns | 4 |
+
+**Columns:**
+- `NO`
+- `URAIAN`
+- `SATUAN`
+- `BESARAN`
+
+**Sample Data:**
+| NO | URAIAN | SATUAN | BESARAN |
+||---|---|---|---|
+| a. | Dari  Bahasa  Indonesia  ke  Bahasa  Daerah/Bahasa  Lokal  atau  Sebaliknya | Halaman  Jadi | Rp174,000 |
 
 ---
 
@@ -882,10 +971,11 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 10 |
-| Header Row | 1 |
-| Data Range | Row 3 - 10 |
-| Has Sections | No |
+| Total Rows | 13 |
+| Header Row | 3 |
+| Data Range | Row 0 - 0 |
+| Has Sections | Yes |
+| Sections | Biaya  Hidup  dan  Biaya  Operasional, Uang  Buku  dan  Referensi |
 | Columns | 4 |
 
 **Columns (4):**
@@ -895,13 +985,47 @@ III/MINIBUS | DOUBLE GARDAN |
 3. `SATUAN`
 4. `BESARAN`
 
-**Sample Data:**
+**Sub-Sections (2):**
 
+##### 1. Biaya  Hidup  dan  Biaya  Operasional
+
+| Property | Value |
+|----------|-------|
+| Header Row | 3 |
+| Data Range | Row 4 - 5 |
+| Columns | 4 |
+
+**Columns:**
+- `NO`
+- `URAIAN`
+- `SATUAN`
+- `BESARAN`
+
+**Sample Data:**
 | NO | URAIAN | SATUAN | BESARAN |
 ||---|---|---|---|
-| 06 | SATUAN BIAYA BANTUAN BEASISWA PROGRAM GELAR/NONGELAR DALAM NEGERI | - | - |
-| 6.1 | Biaya  Hidup  dan  Biaya  Operasional | OT | Rp27,600,000 |
+| a. | Biaya  Hidup  dan  Biaya  Operasional | OT | Rp27,600,000 |
+
+##### 2. Uang  Buku  dan  Referensi
+
+| Property | Value |
+|----------|-------|
+| Header Row | 7 |
+| Data Range | Row 8 - 13 |
+| Columns | 4 |
+
+**Columns:**
+- `NO`
+- `URAIAN`
+- `SATUAN`
+- `BESARAN`
+
+**Sample Data:**
+| NO | URAIAN | SATUAN | BESARAN |
+||---|---|---|---|
 | a. | Diploma  I | OT | Rp1,662,500 |
+| b. | Diploma  III | OT | Rp1,987,500 |
+| c. | Diploma  IV  dan  Strata  1 | OT | Rp2,312,500 |
 
 ---
 
@@ -915,9 +1039,9 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 3 |
-| Header Row | 1 |
-| Data Range | Row 3 - 3 |
+| Total Rows | 4 |
+| Header Row | 2 |
+| Data Range | Row 3 - 4 |
 | Has Sections | No |
 | Columns | 4 |
 
@@ -932,7 +1056,7 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | NO | URAIAN | SATUAN | BESARAN |
 ||---|---|---|---|
-| 07 | SATUAN BIAYA SEWA MESIN FOTOKOPI | Unit/Bulan | Rp5,500,000 |
+| a. | SATUAN BIAYA SEWA MESIN FOTOKOPI | Unit/Bulan | Rp5,500,000 |
 
 ---
 
@@ -946,11 +1070,11 @@ III/MINIBUS | DOUBLE GARDAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 23 |
-| Header Row | 1 |
-| Data Range | Row 3 - 23 |
+| Total Rows | 26 |
+| Header Row | 3 |
+| Data Range | Row 0 - 0 |
 | Has Sections | Yes |
-| Sections | 2 Kegiatan  Di  Luar  Negeri |
+| Sections | Kegiatan  Di  Dalam  Negeri, Kegiatan  Di  Luar  Negeri |
 | Columns | 4 |
 
 **Columns (4):**
@@ -960,13 +1084,47 @@ III/MINIBUS | DOUBLE GARDAN |
 3. `SATUAN`
 4. `BESARAN`
 
-**Sample Data:**
+**Sub-Sections (2):**
 
+##### 1. Kegiatan  Di  Dalam  Negeri
+
+| Property | Value |
+|----------|-------|
+| Header Row | 3 |
+| Data Range | Row 4 - 5 |
+| Columns | 4 |
+
+**Columns:**
+- `NO`
+- `URAIAN`
+- `SATUAN`
+- `BESARAN`
+
+**Sample Data:**
 | NO | URAIAN | SATUAN | BESARAN |
 ||---|---|---|---|
-| 08 | HONORARARIUM NARASUMBER/PAKAR/PRAKTISI/PROFESIONAL |  |  |
-| 8.1 | Kegiatan  Di  Dalam  Negeri | OJ | Rp1,700,000 |
+| a. | Kegiatan  Di  Dalam  Negeri | OJ | Rp1,700,000 |
+
+##### 2. Kegiatan  Di  Luar  Negeri
+
+| Property | Value |
+|----------|-------|
+| Header Row | 7 |
+| Data Range | Row 8 - 11 |
+| Columns | 4 |
+
+**Columns:**
+- `NO`
+- `URAIAN`
+- `SATUAN`
+- `BESARAN`
+
+**Sample Data:**
+| NO | URAIAN | SATUAN | BESARAN |
+||---|---|---|---|
 | a. | Narasumber  Kelas  A | OH | $330 |
+| b. | Narasumber  Kelas  B | OH | $275 |
+| c. | Narasumber  Kelas  C | OH | $220 |
 
 ---
 
@@ -984,7 +1142,7 @@ III/MINIBUS | DOUBLE GARDAN |
 | Header Row | 3 |
 | Data Range | Row 0 - 0 |
 | Has Sections | Yes |
-| Sections | Pengadaan Bahan Makanan untuk Narapidana/Tahanan dan Anak di Lapas/Rutan Kementerian Hukum dan Hak Asasi Manusia, Pengadaan Bahan Makanan untuk Operasi Pasukan/Latihan Pratugas/Latihan Pasukan Lainnya Bagi Anggota Polri/TNI, Dikma/Taruna/Karbol/Kadet Bagi Anggota Polri/TNI, Diklat Lainnya Bagi Kementerian Pertahanan (Kemhan)/Anggota Polri/TNI, Anggota yang Sakit Bagi Kemhan/Anggota Polri/TNI, Tahanan Anggota Polri/TNI, dan Jaga Kawal Bagi Kemhan/Anggota Polri/TNI, Pengadaan Bahan Makanan untuk Pasien Rumah Sakit dan Penyandang Masalah Kesejahteraan Sosial (PMKS), Pengadaan Bahan Makanan untuk Keluarga Penjaga Menara Suar (PMS), Petugas Pengamatan Laut, Anak Buah Kapal (ABK) Cadangan pada Kapal Negara, ABK Aktif pada Kapal Negara, dan Petugas Stasiun Radio Pantai (SROP) dan Vessel Traffic Information Service (VTIS), Pengadaan Bahan Makanan untuk Petugas Bengkel dan Galangan Kapal Kenavigasian, Petugas Pabrik Gas Aga untuk Lampu Suar, PMS, dan Kelompok Tenaga Kesehatan Kerja Pelayaran, Pengadaan Bahan Makanan untuk Mahasiswa / Siswa Sipil dan Mahasiswa Militer / Semi Militer di Lingkup Sekolah Kedinasan, Pengadaan Bahan Makanan untuk Rescue Team |
+| Sections | Pengadaan Bahan Makanan untuk Narapidana/Tahanan dan Anak di Lapas/Rutan Kementerian Hukum dan Hak Asasi Manusia, Pengadaan Bahan Makanan untuk Operasi Pasukan/Latihan Pratugas/Latihan Pasukan Lainnya Bagi Anggota Polri/TNI, Dikma/Taruna/Karbol/Kadet Bagi Anggota Polri/TNI, Diklat Lainnya Bagi Kementerian Pertahanan  (Kemhan)/Anggota Polri/TNI, Anggota yang Sakit Bagi Kemhan/Anggota Polri/TNI, Tahanan Anggota Polri/TNI, dan Jaga Kawal Bagi Kemhan/Anggota Polri/TNI, Pengadaan Bahan Makanan untuk Pasien Rumah Sakit dan Penyandang Masalah Kesejahteraan Sosial (PMKS), Pengadaan Bahan Makanan untuk Keluarga Penjaga Menara Suar (PMS), Petugas Pengamatan Laut, Anak Buah Kapal (ABK) Cadangan pada Kapal Negara, ABK Aktif pada Kapal Negara, dan Petugas Stasiun Radio Pantai  (SROP) dan Vessel Traffic Information Service (VTIS), Pengadaan Bahan Makanan untuk Petugas Bengkel dan Galangan Kapal Kenavigasian, Petugas Pabrik Gas Aga untuk Lampu Suar, PMS, dan Kelompok Tenaga Kesehatan Kerja Pelayaran, Pengadaan Bahan Makanan untuk Mahasiswa / Siswa Sipil dan Mahasiswa Militer / Semi Militer di Lingkup Sekolah Kedinasan, Pengadaan Bahan Makanan untuk Rescue Team |
 | Columns | 4 |
 
 **Columns (4):**
@@ -1002,12 +1160,11 @@ III/MINIBUS | DOUBLE GARDAN |
 | Property | Value |
 |----------|-------|
 | Header Row | 3 |
-| Data Range | Row 5 - 43 |
+| Data Range | Row 4 - 43 |
 | Columns | 4 |
 
 **Columns:**
-- `NO
-.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `BESARAN`
@@ -1020,19 +1177,19 @@ III/MINIBUS | DOUBLE GARDAN |
 | 02 | SUMATERA   UTARA | OH | Rp22,000 |
 | 03 | R  I  A  U | OH | Rp25,000 |
 
-##### 2. Pengadaan Bahan Makanan untuk Operasi Pasukan/Latihan Pratugas/Latihan Pasukan Lainnya Bagi Anggota Polri/TNI, Dikma/Taruna/Karbol/Kadet Bagi Anggota Polri/TNI, Diklat Lainnya Bagi Kementerian Pertahanan (Kemhan)/Anggota Polri/TNI, Anggota yang Sakit Bagi Kemhan/Anggota Polri/TNI, Tahanan Anggota Polri/TNI, dan Jaga Kawal Bagi Kemhan/Anggota Polri/TNI
+##### 2. Pengadaan Bahan Makanan untuk Operasi Pasukan/Latihan Pratugas/Latihan Pasukan Lainnya Bagi Anggota Polri/TNI, Dikma/Taruna/Karbol/Kadet Bagi Anggota Polri/TNI, Diklat Lainnya Bagi Kementerian Pertahanan  (Kemhan)/Anggota Polri/TNI, Anggota yang Sakit Bagi Kemhan/Anggota Polri/TNI, Tahanan Anggota Polri/TNI, dan Jaga Kawal Bagi Kemhan/Anggota Polri/TNI
 
 | Property | Value |
 |----------|-------|
 | Header Row | 44 |
-| Data Range | Row 46 - 84 |
+| Data Range | Row 45 - 83 |
 | Columns | 9 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
-- `OPERASI PASUKAN/LATIHAN  PRA TUGAS/LATIHAN PASUKAN LAINNYA BAGI ANGGOTA POLRI/TNI`
+- `OPERASI PASUKAN/LATIHAN PRA TUGAS/LATIHAN PASUKAN LAINNYA BAGI ANGGOTA POLRI/TNI`
 - `DIKMA TARUNA/ KARBOL/ KADET BAGI ANGGOTA POLRI/TNI`
 - `DIKLAT LAINNYA BAGI KEMHAN/ ANGGOTA POLRI/TNI`
 - `ANGGOTA YANG SAKIT BAGI KEMHAN/ ANGGOTA POLRI/TNI`
@@ -1051,14 +1208,14 @@ III/MINIBUS | DOUBLE GARDAN |
 | Property | Value |
 |----------|-------|
 | Header Row | 85 |
-| Data Range | Row 87 - 125 |
+| Data Range | Row 86 - 124 |
 | Columns | 5 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
-- `PASIEN  RUMAH SAKIT`
+- `PASIEN RUMAH SAKIT`
 - `PMKS`
 
 **Sample Data:**
@@ -1068,23 +1225,23 @@ III/MINIBUS | DOUBLE GARDAN |
 | 02 | SUMATERA   UTARA | OH | Rp32,000 | Rp30,000 |
 | 03 | R  I  A  U | OH | Rp32,000 | Rp32,000 |
 
-##### 4. Pengadaan Bahan Makanan untuk Keluarga Penjaga Menara Suar (PMS), Petugas Pengamatan Laut, Anak Buah Kapal (ABK) Cadangan pada Kapal Negara, ABK Aktif pada Kapal Negara, dan Petugas Stasiun Radio Pantai (SROP) dan Vessel Traffic Information Service (VTIS)
+##### 4. Pengadaan Bahan Makanan untuk Keluarga Penjaga Menara Suar (PMS), Petugas Pengamatan Laut, Anak Buah Kapal (ABK) Cadangan pada Kapal Negara, ABK Aktif pada Kapal Negara, dan Petugas Stasiun Radio Pantai  (SROP) dan Vessel Traffic Information Service (VTIS)
 
 | Property | Value |
 |----------|-------|
 | Header Row | 126 |
-| Data Range | Row 128 - 166 |
+| Data Range | Row 127 - 165 |
 | Columns | 8 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `KELUARGA PMS`
 - `PETUGAS PENGAMATAN LAUT`
 - `ABK CADANGAN PADA KAPAL NEGARA`
-- `ABK  AKTIF PADA KAPAL NEGARA`
-- `PETUGAS SROP DAN  VTIS`
+- `ABK AKTIF PADA KAPAL NEGARA`
+- `PETUGAS SROP DAN VTIS`
 
 **Sample Data:**
 | NO. | PROVINSI | SATUAN | KELUARGA PMS | PETUGAS PENGAMATAN LAUT | ABK CADANGAN PADA KAPAL NEGARA | ABK  AKTIF PADA KAPAL NEGARA | PETUGAS SROP DAN  VTIS |
@@ -1098,28 +1255,17 @@ III/MINIBUS | DOUBLE GARDAN |
 | Property | Value |
 |----------|-------|
 | Header Row | 167 |
-| Data Range | Row 169 - 207 |
+| Data Range | Row 168 - 206 |
 | Columns | 7 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
-- `PETUGAS 
-BENGKEL DAN 
-GALANGAN 
-KAPAL 
-KENAVIGASIAN`
-- `PETUGAS 
-PABRIK GAS 
-AGA UNTUK 
-LAMPU SUAR`
+- `PETUGAS BENGKEL DAN GALANGAN KAPAL KENAVIGASIAN`
+- `PETUGAS PABRIK GAS AGA UNTUK LAMPU SUAR`
 - `PMS`
-- `KELOMPOK 
-TENAGA 
-KESEHATAN 
-KERJA 
-PELAYARAN`
+- `KELOMPOK TENAGA KESEHATAN KERJA PELAYARAN`
 
 **Sample Data:**
 | NO. | PROVINSI | SATUAN | PETUGAS 
@@ -1144,16 +1290,15 @@ PELAYARAN |
 | Property | Value |
 |----------|-------|
 | Header Row | 208 |
-| Data Range | Row 210 - 248 |
+| Data Range | Row 209 - 247 |
 | Columns | 5 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
-- `MAHASISWA/ SISWA  SIPIL  DI LINGKUP SEKOLAH KEDINASAN`
-- `MAHASISWA MILITER/SEMI MILITER  DI LINGKUP SEKOLAH
-KEDINASAN`
+- `MAHASISWA/ SISWA SIPIL DI LINGKUP SEKOLAH KEDINASAN`
+- `MAHASISWA MILITER/SEMI MILITER DI LINGKUP SEKOLAH KEDINASAN`
 
 **Sample Data:**
 | NO. | PROVINSI | SATUAN | MAHASISWA/ SISWA  SIPIL  DI LINGKUP SEKOLAH KEDINASAN | MAHASISWA MILITER/SEMI MILITER  DI LINGKUP SEKOLAH
@@ -1168,11 +1313,11 @@ KEDINASAN |
 | Property | Value |
 |----------|-------|
 | Header Row | 249 |
-| Data Range | Row 251 - 288 |
+| Data Range | Row 250 - 288 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `BESARAN`
@@ -1198,7 +1343,7 @@ KEDINASAN |
 |----------|-------|
 | Total Rows | 41 |
 | Header Row | 2 |
-| Data Range | Row 4 - 41 |
+| Data Range | Row 3 - 41 |
 | Has Sections | No |
 | Columns | 4 |
 
@@ -1229,26 +1374,28 @@ KEDINASAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 42 |
+| Total Rows | 41 |
 | Header Row | 2 |
-| Data Range | Row 5 - 42 |
+| Data Range | Row 3 - 41 |
 | Has Sections | No |
-| Columns | 4 |
+| Columns | 6 |
 
-**Columns (4):**
+**Columns (6):**
 
 1. `NO.`
 2. `PROVINSI`
-3. `MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI`
-4. `MEMILIKI  LEBIH  DARI  40 PEGAWAI`
+3. `MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (SATUAN)`
+4. `MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (BESARAN)`
+5. `MEMILIKI  LEBIH  DARI  40 PEGAWAI (SATUAN)`
+6. `MEMILIKI  LEBIH  DARI  40 PEGAWAI (BESARAN)`
 
 **Sample Data:**
 
-| NO. | PROVINSI | MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI | MEMILIKI  LEBIH  DARI  40 PEGAWAI |
-||---|---|---|---|
-| 01 | ACEH | Satker/Tahun | Rp60,870,000 |
-| 02 | SUMATRA  UTARA | Satker/Tahun | Rp60,020,000 |
-| 03 | R  I  A  U | Satker/Tahun | Rp60,020,000 |
+| NO. | PROVINSI | MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (SATUAN) | MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (BESARAN) | MEMILIKI  LEBIH  DARI  40 PEGAWAI (SATUAN) | MEMILIKI  LEBIH  DARI  40 PEGAWAI (BESARAN) |
+||---|---|---|---|---|---|
+| 01 | ACEH | Satker/Tahun | Rp60,870,000 | OT | Rp1,530,000 |
+| 02 | SUMATRA  UTARA | Satker/Tahun | Rp60,020,000 | OT | Rp1,510,000 |
+| 03 | R  I  A  U | Satker/Tahun | Rp60,020,000 | OT | Rp1,510,000 |
 
 ---
 
@@ -1264,7 +1411,7 @@ KEDINASAN |
 |----------|-------|
 | Total Rows | 41 |
 | Header Row | 2 |
-| Data Range | Row 4 - 41 |
+| Data Range | Row 3 - 41 |
 | Has Sections | No |
 | Columns | 4 |
 
@@ -1299,7 +1446,7 @@ KEDINASAN |
 | Header Row | 3 |
 | Data Range | Row 0 - 0 |
 | Has Sections | Yes |
-| Sections | Kendaraan Dinas Pejabat, Kendaraan Dinas Operasional, Operasional dalam Lingkungan Kantor, Roda 6, Roda 6 Khusus Tahanan Kejaksaan, dan Speed Boat, Kendaraan Dinas Operasional Patroli Jalan Raya (PJR), Operasional Kendaraan Dinas Untuk Pengadaan Dari Sewa, Kendaraan Bermotor Listrik Berbasis Baterai |
+| Sections | Kendaraan  Dinas  Pejabat, Kendaraan Dinas Operasional, Operasional  dalam  Lingkungan  Kantor,  Roda  6,  Roda  6  Khusus  Tahanan  Kejaksaan, dan  Speed  Boat, Kendaraan Dinas Operasional Patroli Jalan Raya (PJR), Operasional  Kendaraan  Dinas  Untuk  Pengadaan  Dari  Sewa, Kendaraan  Bermotor  Listrik  Berbasis  Baterai |
 | Columns | 4 |
 
 **Columns (4):**
@@ -1311,16 +1458,16 @@ KEDINASAN |
 
 **Sub-Sections (6):**
 
-##### 1. Kendaraan Dinas Pejabat
+##### 1. Kendaraan  Dinas  Pejabat
 
 | Property | Value |
 |----------|-------|
 | Header Row | 3 |
-| Data Range | Row 5 - 42 |
+| Data Range | Row 4 - 41 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
 - `BESARAN`
@@ -1337,16 +1484,16 @@ KEDINASAN |
 | Property | Value |
 |----------|-------|
 | Header Row | 43 |
-| Data Range | Row 45 - 79 |
+| Data Range | Row 44 - 78 |
 | Columns | 6 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
-- `RODA  EMPAT`
+- `RODA EMPAT`
 - `DOUBLE GARDAN`
-- `RODA  DUA`
+- `RODA DUA`
 
 **Sample Data:**
 | NO. | PROVINSI | SATUAN | RODA  EMPAT | DOUBLE GARDAN | RODA  DUA |
@@ -1355,16 +1502,16 @@ KEDINASAN |
 | 02 | SUMATRA   UTARA | Unit/Tahun | Rp36,820,000 | Rp39,410,000 | Rp5,020,000 |
 | 03 | R  I  A  U | Unit/Tahun | Rp36,900,000 | Rp39,550,000 | Rp4,990,000 |
 
-##### 3. Operasional dalam Lingkungan Kantor, Roda 6, Roda 6 Khusus Tahanan Kejaksaan, dan Speed Boat
+##### 3. Operasional  dalam  Lingkungan  Kantor,  Roda  6,  Roda  6  Khusus  Tahanan  Kejaksaan, dan  Speed  Boat
 
 | Property | Value |
 |----------|-------|
 | Header Row | 80 |
-| Data Range | Row 82 - 86 |
+| Data Range | Row 81 - 86 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `URAIAN`
 - `Satuan`
 - `Besaran`
@@ -1381,18 +1528,16 @@ KEDINASAN |
 | Property | Value |
 |----------|-------|
 | Header Row | 87 |
-| Data Range | Row 89 - 123 |
+| Data Range | Row 88 - 122 |
 | Columns | 6 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `PROVINSI`
 - `SATUAN`
-- `PJR  RODA EMPAT`
-- `PJR  RODA DUA
-(≤  250  CC)`
-- `PJR  RODA DUA
-(≥  750  CC)`
+- `PJR RODA EMPAT`
+- `PJR RODA DUA (≤ 250 CC)`
+- `PJR RODA DUA (≥ 750 CC)`
 
 **Sample Data:**
 | NO. | PROVINSI | SATUAN | PJR  RODA EMPAT | PJR  RODA DUA
@@ -1403,16 +1548,16 @@ KEDINASAN |
 | 02 | SUMATRA  UTARA | Unit/Tahun | Rp75,920,000 | Rp18,960,000 | Rp43,840,000 |
 | 03 | R  I  A  U | Unit/Tahun | Rp76,090,000 | Rp18,890,000 | Rp42,510,000 |
 
-##### 5. Operasional Kendaraan Dinas Untuk Pengadaan Dari Sewa
+##### 5. Operasional  Kendaraan  Dinas  Untuk  Pengadaan  Dari  Sewa
 
 | Property | Value |
 |----------|-------|
 | Header Row | 124 |
-| Data Range | Row 126 - 129 |
+| Data Range | Row 125 - 129 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `URAIAN`
 - `SATUAN`
 - `BESARAN`
@@ -1424,16 +1569,16 @@ KEDINASAN |
 | 02 | Pejabat  Eselon  II | Unit/Tahun | Rp33,800,000 |
 | 03 | Operasional  Kantor  dan/atau  Lapangan | Unit/Tahun | Rp30,000,000 |
 
-##### 6. Kendaraan Bermotor Listrik Berbasis Baterai
+##### 6. Kendaraan  Bermotor  Listrik  Berbasis  Baterai
 
 | Property | Value |
 |----------|-------|
 | Header Row | 130 |
-| Data Range | Row 132 - 136 |
+| Data Range | Row 131 - 136 |
 | Columns | 4 |
 
 **Columns:**
-- `NO.`
+- `NO`
 - `URAIAN`
 - `SATUAN`
 - `BESARAN`
@@ -1459,7 +1604,7 @@ KEDINASAN |
 |----------|-------|
 | Total Rows | 41 |
 | Header Row | 2 |
-| Data Range | Row 4 - 41 |
+| Data Range | Row 3 - 41 |
 | Has Sections | No |
 | Columns | 6 |
 
@@ -1494,7 +1639,7 @@ KEDINASAN |
 |----------|-------|
 | Total Rows | 41 |
 | Header Row | 2 |
-| Data Range | Row 4 - 41 |
+| Data Range | Row 3 - 41 |
 | Has Sections | No |
 | Columns | 4 |
 
@@ -1527,7 +1672,7 @@ KEDINASAN |
 |----------|-------|
 | Total Rows | 37 |
 | Header Row | 2 |
-| Data Range | Row 4 - 37 |
+| Data Range | Row 3 - 37 |
 | Has Sections | No |
 | Columns | 4 |
 
@@ -1558,25 +1703,27 @@ KEDINASAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 320 |
+| Total Rows | 319 |
 | Header Row | 2 |
-| Data Range | Row 5 - 320 |
+| Data Range | Row 3 - 319 |
 | Has Sections | No |
-| Columns | 3 |
+| Columns | 5 |
 
-**Columns (3):**
+**Columns (5):**
 
 1. `NO.`
-2. `KOTA`
-3. `SATUAN  BIAYA  TIKET`
+2. `KOTA ASAL`
+3. `KOTA TUJUAN`
+4. `SATUAN  BIAYA  TIKET BISNIS`
+5. `SATUAN  BIAYA  TIKET EKONOMI`
 
 **Sample Data:**
 
-| NO. | KOTA | SATUAN  BIAYA  TIKET |
-||---|---|---|
-| 01 | JAKARTA | AMBON |
-| 02 | JAKARTA | BALIKPAPAN |
-| 03 | JAKARTA | BANDA  ACEH |
+| NO. | KOTA ASAL | KOTA TUJUAN | SATUAN  BIAYA  TIKET BISNIS | SATUAN  BIAYA  TIKET EKONOMI |
+||---|---|---|---|---|
+| 01 | JAKARTA | AMBON | Rp13,285,000 | Rp7,081,000 |
+| 02 | JAKARTA | BALIKPAPAN | Rp7,412,000 | Rp3,797,000 |
+| 03 | JAKARTA | BANDA  ACEH | Rp7,519,000 | Rp4,492,000 |
 
 ---
 
@@ -1590,18 +1737,28 @@ KEDINASAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 156 |
+| Total Rows | 155 |
 | Header Row | 3 |
-| Data Range | Row 4 - 156 |
+| Data Range | Row 4 - 155 |
 | Has Sections | Yes |
 | Sections | AMERIKA  UTARA, AMERIKA  SELATAN, AMERIKA  TENGAH, EROPA  BARAT, EROPA  UTARA, EROPA  SELATAN, EROPA  TIMUR, AFRIKA  BARAT, AFRIKA  TIMUR, AFRIKA  SELATAN, AFRIKA  UTARA, ASIA  BARAT, ASIA  TENGAH, ASIA  TIMUR, ASIA  SELATAN, ASIA  TENGGARA, ASIA  PASIFIK |
-| Columns | 3 |
+| Columns | 5 |
 
-**Columns (3):**
+**Columns (5):**
 
 1. `NO.`
 2. `KOTA`
-3. `BESARAN`
+3. `BESARAN EKSEKUTIF`
+4. `BESARAN BISNIS`
+5. `BESARAN EKONOMI`
+
+**Sample Data:**
+
+| NO. | KOTA | BESARAN EKSEKUTIF | BESARAN BISNIS | BESARAN EKONOMI |
+||---|---|---|---|---|
+| 01 | Chicago | 12,733 | 6,891 | 3,662 |
+| 02 | Houston | 12,635 | 6,487 | 3,591 |
+| 03 | Los  Angeles | 11,411 | 5,925 | 3,242 |
 
 ---
 
@@ -1615,7 +1772,7 @@ KEDINASAN |
 
 | Property | Value |
 |----------|-------|
-| Total Rows | 313 |
+| Total Rows | 312 |
 | Header Row | 4 |
 | Data Range | Row 0 - 0 |
 | Has Sections | Yes |
@@ -1641,17 +1798,16 @@ KEDINASAN |
 | Property | Value |
 |----------|-------|
 | Header Row | 4 |
-| Data Range | Row 5 - 159 |
+| Data Range | Row 5 - 157 |
 | Columns | 8 |
 
 **Columns:**
-- `NO.`
-- `K  O    T    A`
+- `NO`
+- `K O T A`
 - `ATK (OT)`
 - `Langganan Koran/ Majalah (Eksemplar/ Bulan)`
 - `Lampu (Buah)`
-- `Pengamanan Sendiri
-(OB)`
+- `Pengamanan Sendiri (OB)`
 - `Kantong Diplomatik (kg)`
 - `Jamuan (OH)`
 
@@ -1659,35 +1815,40 @@ KEDINASAN |
 | NO. | K  O    T    A | ATK (OT) | Langganan Koran/ Majalah (Eksemplar/ Bulan) | Lampu (Buah) | Pengamanan Sendiri
 (OB) | Kantong Diplomatik (kg) | Jamuan (OH) |
 ||---|---|---|---|---|---|---|---|
-| 04 | New  York  (Konsulat
-Jenderal Republik Indonesia) | 1,299 | 41 | 20 | 2,308 | 101 | 96 |
-| 05 | New  York  (Perutusan  Tetap Republik  Indonesia) | 1,299 | 40 | 19 | 2,308 | 101 | 96 |
+| 01 | Chicago | 1,297 | 38 | 18 | 2,574 | 96 | 91 |
+| 02 | Houston | 1,220 | 37 | 18 | 2,521 | 94 | 89 |
+| 03 | Los  Angeles | 1,295 | 38 | 18 | 3,488 | 96 | 91 |
 
 ##### 2. Pemeliharaan, Pengadaan Inventaris Kantor, Pakaian Sopir/Satpam, Sewa Kendaraan, dan Konsumsi Rapat
 
 | Property | Value |
 |----------|-------|
 | Header Row | 160 |
-| Data Range | Row 161 - 313 |
-| Columns | 7 |
+| Data Range | Row 161 - 312 |
+| Columns | 11 |
 
 **Columns:**
-- `NO.`
-- `K  O    T    A`
-- `Pemeliharaan`
-- `Pengadaan Inventaris Kantor  (OT)`
+- `NO`
+- `K O T A`
+- `Pemeliharaan Kendaraan dinas (Unit/ Tahun)`
+- `Pemeliharaan Gedung (m2/ Tahun)`
+- `Pemeliharaan Halaman (m2/ Tahun)`
+- `Pengadaan Inventaris Kantor (OT)`
 - `Pakaian Sopir/ Satpam (Stel)`
-- `Sewa  kendaraan
-(hari)`
+- `Sewa kendaraan Sedan (hari)`
+- `Sewa kendaraan Bus (hari)`
+- `Sewa kendaraan Mobil Box (hari)`
 - `Konsumsi Rapat (OK)`
 
 **Sample Data:**
-| NO. | K  O    T    A | Pemeliharaan | Pengadaan Inventaris Kantor  (OT) | Pakaian Sopir/ Satpam (Stel) | Sewa  kendaraan
-(hari) | Konsumsi Rapat (OK) |
-||---|---|---|---|---|---|---|
-| Kendaraan dinas  (Unit/ Tahun) | Gedung (m2/ Tahun) | Halaman (m2/ Tahun) | Sedan | Bus | Mobil Box |  |
-| 06 | San  Fransisco | 9,003 | 86 | 10 | 734 | 345 |
-| 12 | Boenos  Aires | 8,500 | 80 | 15 | 1,500 | 500 |
+| NO. | K  O    T    A | Pemeliharaan Kendaraan dinas  (Unit/ Tahun) | Pemeliharaan Gedung (m2/ Tahun) | Pemeliharaan Halaman (m2/ Tahun) | Pengadaan Inventaris Kantor  (OT) | Pakaian Sopir/ Satpam (Stel) | Sewa  kendaraan
+Sedan (hari) | Sewa  kendaraan
+Bus (hari) | Sewa  kendaraan
+Mobil Box (hari) | Konsumsi Rapat (OK) |
+||---|---|---|---|---|---|---|---|---|---|---|
+| 01 | Chicago | 8,528 | 82 | 9 | 695 | 327 | 306 | 408 | 418 | 47 |
+| 02 | Houston | 8,353 | 80 | 9 | 681 | 320 | 300 | 400 | 409 | 46 |
+| 03 | Los  Angeles | 8,520 | 82 | 9 | 695 | 326 | 306 | 408 | 417 | 47 |
 
 ---
 
