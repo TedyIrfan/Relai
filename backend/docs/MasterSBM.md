@@ -703,7 +703,9 @@
 
 **Catatan:** Dokumen ini merupakan referensi struktur data Standar Biaya Masukan (SBM) untuk keperluan perencanaan anggaran dan pelaporan keuangan negara.
 
-**catatan lagi**
+---
+
+**Catatan lagi:**
 
 1. Honorarium 29
 2. Honorarium 32
@@ -712,3 +714,41 @@
 5. 19.1 ATK, Langganan Koran Majalah, Lampu, Pengamanan Sendiri, Kantong Diplomatik, dan Jamuan
 6. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP).
    semuanya pakai mata uang dollar, sisanya Rupiah
+
+---
+
+### List Category Name
+
+| No  | Category Name              | Keterangan                               |
+| --- | -------------------------- | ---------------------------------------- |
+| H28 | honorarium_28              | Honorarium 28 - Uang Harian Dalam Negeri |
+| H29 | honorarium_29              | Honorarium 29 - Uang Harian Luar Negeri  |
+| H30 | honorarium_30              | Honorarium 30 - Penginapan Dalam Negeri  |
+| H31 | honorarium_31              | Honorarium 31 - Rapat Luar Kantor        |
+| H32 | honorarium_32              | Honorarium 32 - Tiket Pindah Luar Negeri |
+| H33 | honorarium_33              | Honorarium 33 - Operasional Perwakilan   |
+| H34 | honorarium_34              | Honorarium 34 - Makanan Penambah Daya    |
+| H35 | honorarium_35              | Honorarium 35 - Sewa Kendaraan           |
+| H36 | honorarium_36              | Honorarium 36 - Pengadaan Kendaraan      |
+| H37 | honorarium_37              | Honorarium 37 - Pakaian Dinas            |
+| H38 | honorarium_38              | Honorarium 38 - Konsumsi Rapat           |
+| H39 | honorarium_39              | Honorarium 39 - Konsumsi Diklat          |
+| 1   | transportasi_provinsi      | Section 1 - Transportasi Provinsi        |
+| 2   | transportasi_dki           | Section 2 - Transportasi DKI Jakarta     |
+| 3   | transportasi_kabupaten     | Section 3 - Transportasi Kabupaten/Kota  |
+| 4   | pemeliharaan_sarana_kantor | Section 4 - Pemeliharaan Sarana Kantor   |
+| 5   | penerjemahan_pengetikan    | Section 5 - Penerjemahan & Pengetikan    |
+| 6   | beasiswa                   | Section 6 - Beasiswa                     |
+| 7   | sewa_fotokopi              | Section 7 - Sewa Fotokopi                |
+| 8   | honorarium_narasumber      | Section 8 - Honorarium Narasumber        |
+| 9   | bahan_makanan              | Section 9 - Bahan Makanan                |
+| 10  | konsumsi_tahanan           | Section 10 - Konsumsi Tahanan            |
+| 11  | keperluan_perkantoran      | Section 11 - Keperluan Perkantoran       |
+| 12  | penggantian_inventaris     | Section 12 - Penggantian Inventaris      |
+| 13  | pemeliharaan_kendaraan     | Section 13 - Pemeliharaan Kendaraan      |
+| 14  | pemeliharaan_gedung        | Section 14 - Pemeliharaan Gedung         |
+| 15  | sewa_gedung                | Section 15 - Sewa Gedung                 |
+| 16  | transportasi_terminal      | Section 16 - Transportasi Terminal       |
+| 17  | tiket_pesawat_dalam_negeri | Section 17 - Tiket Pesawat Dalam Negeri  |
+| 18  | tiket_pesawat_luar_negeri  | Section 18 - Tiket Pesawat Luar Negeri   |
+| 19  | perwakilan_ri              | Section 19 - Perwakilan RI Luar Negeri   |

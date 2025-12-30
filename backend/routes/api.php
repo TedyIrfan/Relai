@@ -17,6 +17,7 @@ use App\Http\Controllers\NominatifDetailRowController;
 use App\Http\Controllers\NominatifBiayaRowController;
 use App\Http\Controllers\NominatifEvidenceController;
 use App\Http\Controllers\Api\NonNominatifController;
+use App\Http\Controllers\SbmController;
 
 // Test endpoint for Swagger
 Route::get('/test', [SwaggerController::class, 'test']);
@@ -100,6 +101,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/anggarans', [AnggaranController::class, 'store']);      // CREATE anggaran
     Route::put('/anggarans/{id}', [AnggaranController::class, 'update']);  // UPDATE anggaran
     Route::delete('/anggarans/{id}', [AnggaranController::class, 'destroy']); // DELETE anggaran
+
+    // SBM (Master Standar Biaya Masukan) API Routes
+    Route::prefix('sbm')->group(function () {
+        // Specific routes first (to avoid conflicts with dynamic routes)
+        Route::get('/categories', [SbmController::class, 'categories']);           // Get all categories
+        Route::get('/summary', [SbmController::class, 'summary']);                  // Get summary statistics
+        Route::get('/filters/options', [SbmController::class, 'filters']);          // Get filter options (all)
+        Route::get('/filters/{category}', [SbmController::class, 'filtersByCategory']); // Get filter options by category
+        Route::get('/detail/{id}', [SbmController::class, 'detail']);               // Get single record by ID
+
+        // Dynamic routes last (must be at the bottom to avoid catching specific routes)
+        Route::get('/{category}', [SbmController::class, 'show']);                  // Get data by category
+    });
 
     // OLD NOMINATIF OPERATIONS - Disabled (migrated to new 4-table system)
     // Route::get('/nominatifs', [NominatifController::class, 'index']);       // GET all nominatifs

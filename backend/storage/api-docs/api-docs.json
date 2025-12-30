@@ -1163,6 +1163,431 @@
                     }
                 }
             }
+        },
+        "/api/sbm/categories": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get all SBM categories",
+                "operationId": "076d18558860cbbc86c99a8b92ad3549",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SbmCategory"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/sbm/{category}": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get SBM data by category with filters",
+                "operationId": "4747428c130ec7c3835bbc714269be49",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category name (e.g., transportasi_provinsi)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "transportasi_provinsi"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search keyword",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "provinsi",
+                        "in": "query",
+                        "description": "Filter by provinsi",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "grouping",
+                        "in": "query",
+                        "description": "Filter by grouping label",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Sort by field",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "id",
+                                "no",
+                                "provinsi",
+                                "uraian",
+                                "besaran"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Sort order",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page (max 100)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SbmDetail"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "category": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/sbm/filters/options": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get available filter options (all categories)",
+                "operationId": "3a2d4683bed4924709c0c96b0f8336ec",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "categories": {
+                                                    "description": "All available categories",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "sub_categories": {
+                                                    "description": "All available sub-categories",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "parent_sections": {
+                                                    "description": "All available parent sections",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "grouping_labels": {
+                                                    "description": "All available grouping labels",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/sbm/filters/{category}": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get filter options for specific category",
+                "operationId": "0e22774edd09a096a6bb7499269e63c9",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category name (e.g., honorarium_28, transportasi_provinsi)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "description": "Filter options specific to the category. Each field from the Excel file becomes a filter option with all unique values.",
+                                            "type": "object",
+                                            "example": {
+                                                "_source_files": [
+                                                    "Honorarium 28 SATUAN BIAYA UANG HARIAN DAN UANG REPRESENTASI PERJALANAN DINAS DALAM NEGERI.xlsx"
+                                                ],
+                                                "provinsi": [
+                                                    "ACEH",
+                                                    "DKI JAKARTA",
+                                                    "JAWA BARAT"
+                                                ],
+                                                "satuan": [
+                                                    "OH"
+                                                ]
+                                            },
+                                            "additionalProperties": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Category not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/sbm/summary": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get SBM summary statistics",
+                "operationId": "69f795777a4a979116d901a17a7304e5",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_records": {
+                                                    "type": "integer"
+                                                },
+                                                "total_categories": {
+                                                    "type": "integer"
+                                                },
+                                                "by_category": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/sbm/detail/{id}": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get single SBM record by ID",
+                "operationId": "89ae39385fd415c08e1fb2e323c5d542",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Record ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SbmDetail"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Record not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1248,6 +1673,73 @@
                     }
                 },
                 "type": "object"
+            },
+            "SbmDetail": {
+                "title": "SbmDetail",
+                "description": "Master Standar Biaya Masukan (SBM) detail",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "transportasi_provinsi"
+                    },
+                    "source_file": {
+                        "type": "string",
+                        "example": "SECTION 1.xlsx"
+                    },
+                    "no": {
+                        "type": "string",
+                        "example": "1"
+                    },
+                    "provinsi": {
+                        "type": "string",
+                        "example": "DKI Jakarta"
+                    },
+                    "uraian": {
+                        "type": "string",
+                        "example": "Tiket Pesawat Ekonomi"
+                    },
+                    "satuan": {
+                        "type": "string",
+                        "example": "orang"
+                    },
+                    "besaran": {
+                        "type": "number",
+                        "example": 1500000
+                    },
+                    "besaran_formatted": {
+                        "type": "string",
+                        "example": "Rp 1.500.000"
+                    }
+                },
+                "type": "object"
+            },
+            "SbmCategory": {
+                "title": "SbmCategory",
+                "description": "SBM Category with metadata",
+                "properties": {
+                    "category": {
+                        "type": "string",
+                        "example": "transportasi_provinsi"
+                    },
+                    "source_file": {
+                        "type": "string",
+                        "example": "SECTION 1.xlsx"
+                    },
+                    "total_records": {
+                        "type": "integer",
+                        "example": 34
+                    },
+                    "last_updated": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-31T10:00:00.000000Z"
+                    }
+                },
+                "type": "object"
             }
         },
         "responses": {
@@ -1276,9 +1768,9 @@
                 "scheme": "https",
                 "flows": {
                     "password": {
-                        "authorizationUrl": "http://localhost/oauth/authorize",
-                        "tokenUrl": "http://localhost/oauth/token",
-                        "refreshUrl": "http://localhost/token/refresh",
+                        "authorizationUrl": "http://localhost:8000/oauth/authorize",
+                        "tokenUrl": "http://localhost:8000/oauth/token",
+                        "refreshUrl": "http://localhost:8000/token/refresh",
                         "scopes": []
                     }
                 }
@@ -1303,6 +1795,10 @@
         {
             "name": "Nominatif",
             "description": "Nominatif management operations"
+        },
+        {
+            "name": "SBM",
+            "description": "Master Standar Biaya Masukan (SBM) operations"
         },
         {
             "name": "Anggaran",
