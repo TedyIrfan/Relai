@@ -1,5 +1,7 @@
 # 🚀 RelAI Project Setup
 
+#
+
 ## 📋 Project Overview
 
 Complete full-stack application with Laravel 12 backend and React frontend, configured with PostgreSQL database and modern development tools.
@@ -20,14 +22,14 @@ relai/
 
 ### **✅ Active Services & URLs**
 
-| Service          | Status         | Port     | URL                   | Technology                 | Access    |
-| ---------------- | -------------- | -------- | --------------------- | -------------------------- | --------- |
-| **Frontend**     | 🟢 **RUNNING** | **Auto** | http://localhost:5173 | React + Vite + Tailwind v4 | **Ready** |
-|                  |                | *(5173-5174)* | *(Auto-switch if port in use)* |                            |           |
-| **Backend**      | 🟡 **Ready**   | 8000     | http://localhost:8000 | Laravel 12                 | Local Dev |
-| **PostgreSQL**   | 🟢 **RUNNING** | 5432     | localhost:5432        | PostgreSQL 15              | Docker    |
-| **PgAdmin**      | 🟢 **RUNNING** | 5050     | http://localhost:5050 | PgAdmin 4                  | Docker    |
-| **Laravel Sail** | 🟢 **RUNNING** | 80       | http://localhost:80   | Laravel (Docker)           | Docker    |
+| Service          | Status         | Port          | URL                            | Technology                 | Access    |
+| ---------------- | -------------- | ------------- | ------------------------------ | -------------------------- | --------- |
+| **Frontend**     | 🟢 **RUNNING** | **Auto**      | http://localhost:5173          | React + Vite + Tailwind v4 | **Ready** |
+|                  |                | _(5173-5174)_ | _(Auto-switch if port in use)_ |                            |           |
+| **Backend**      | 🟡 **Ready**   | 8000          | http://localhost:8000          | Laravel 12                 | Local Dev |
+| **PostgreSQL**   | 🟢 **RUNNING** | 5432          | localhost:5432                 | PostgreSQL 15              | Docker    |
+| **PgAdmin**      | 🟢 **RUNNING** | 5050          | http://localhost:5050          | PgAdmin 4                  | Docker    |
+| **Laravel Sail** | 🟢 **RUNNING** | 80            | http://localhost:80            | Laravel (Docker)           | Docker    |
 
 ### **🔐 Access Credentials**
 
@@ -125,21 +127,25 @@ relai/
 #### **✅ Backend Issues - COMPLETED**
 
 - **✅ NominatifDetailRow Edit Not Working**: Fixed!
+
   - Issue: Edit data (Nama, Golongan, Jabatan, dll) tidak tersimpan di database
   - Solution: Model $fillable sudah diperbaiki, Controller update method sudah fix
   - Status: **COMPLETED** - Edit functionality working
 
 - **✅ Duplicate Field Names**: Fixed!
+
   - Issue: Field `nama` dan `person_name` duplikat di tabel
   - Solution: Migration created untuk hapus field `nama`
   - Status: **COMPLETED** - Migration ready to run
 
 - **✅ Evidence System**: Fixed!
+
   - Issue: Saat ini upload gambar, butuhnya Google Drive links dengan preview
   - Solution: Model dan Controller updated untuk Google Drive URL dengan preview functionality
   - Status: **COMPLETED** - Evidence system uses Google Drive with preview
 
 - **✅ Auto-Sort Missing**: Fixed!
+
   - Issue: Saat save draft, data tidak auto-sort by Nama lengkap
   - Solution: Auto-sort by person_name sudah diimplement di controller
   - Status: **COMPLETED** - Auto-sort functionality added
@@ -152,12 +158,14 @@ relai/
 #### **📋 REQUIRED ACTIONS**
 
 **RUN THIS MIGRATION:**
+
 ```bash
 cd backend
 php artisan migrate
 ```
 
 Migration yang akan dijalankan:
+
 - `2025_12_03_140242_update_nominatif_tables_remove_nama_and_update_evidence`
   - Hapus field `nama` dari tabel `nominatif_detail_rows`
   - Update tabel `nominatif_evidence` untuk Google Drive links dengan preview
@@ -168,6 +176,7 @@ Migration yang akan dijalankan:
     - Support Google Docs, Sheets, Slides, Forms
 
 #### **Schema Tabel Final**:
+
 ```php
 // nominatif_detail_rows (clean schema):
 ['id', 'nominatif_id', 'person_name', 'row_order', 'asal', 'tujuan',
@@ -188,6 +197,7 @@ Migration yang akan dijalankan:
 #### **🎯 Evidence Preview Features**
 
 **Model Methods Available:**
+
 ```php
 $evidence->preview_url        // "https://drive.google.com/file/d/ID/preview"
 $evidence->thumbnail_url      // "https://drive.google.com/thumbnail?id=ID&sz=w200"
@@ -197,6 +207,7 @@ $evidence->is_google_drive_link // true/false
 ```
 
 **Supported Google Services:**
+
 - **Google Drive Files**: Preview embed dengan `preview_url`
 - **Google Docs**: Document preview dengan collaborative editing
 - **Google Sheets**: Spreadsheet preview dengan cells display
@@ -204,6 +215,7 @@ $evidence->is_google_drive_link // true/false
 - **Google Forms**: Form preview dengan direct fill capability
 
 **URL Examples:**
+
 ```
 Input: https://drive.google.com/file/d/1ABCxyz/view?usp=sharing
 Preview: https://drive.google.com/file/d/1ABCxyz/preview
@@ -219,7 +231,7 @@ Login → Dashboard → Year Selection → Nominatif System → Excel-like Table
 ### **📊 Active Services:**
 
 - **Frontend**: http://localhost:5173 (React + Vite + Tailwind)
-  - *Auto-port switching (5173-5174) if port in use*
+  - _Auto-port switching (5173-5174) if port in use_
 - **Backend**: http://localhost/api (Laravel 12 + PostgreSQL)
 - **Database**: PostgreSQL 15 (Docker)
 - **PgAdmin**: http://localhost:5050 (Database Management)
@@ -501,36 +513,43 @@ DB_PASSWORD=password
 **Major Bug Fixes (December 2024):**
 
 **✅ Evidence Duplication Bug**
+
 - **Issue**: Setiap kali simpan draft, evidence yang sama membuat duplikat baru di database
 - **Solution**: Mengubah dari `create()` menjadi `updateOrCreate()` di `NominatifEvidenceController.php:354-361`
 - **Status**: **COMPLETED** - Evidence sekarang di-update, tidak membuat duplikat
 
 **✅ Bulk Update Tidak Tersimpan Bug**
+
 - **Issue**: Data yang diedit di frontend tidak tersimpan di database untuk baris kedua dan ketiga
 - **Solution**: Menambahkan logika bulk processing di `NominatifDetailRowController.php:248-283`
 - **Status**: **COMPLETED** - Semua baris data sekarang tersimpan dengan benar
 
 **✅ Evidence Description Tidak Sinkron Bug**
+
 - **Issue**: Ketika nama lengkap diubah, keterangan evidence tidak berubah (tetap "Evidence 1 untuk namaLama")
 - **Solution**: Menambahkan method `updateEvidenceDescriptions()` di `NominatifDetailRowController.php:633-658`
 - **Status**: **COMPLETED** - Keterangan evidence otomatis ikut berubah saat nama diedit
 
 **✅ Total Perhitungan Double Counting Bug**
+
 - **Issue**: Total pagu dan aktual menampilkan 2x lipat nilai seharusnya (3 baris × 200.000 = 1.200.000 seharusnya 600.000)
 - **Solution**: Memperbaiki logika reduce function di frontend `NominatifExcelTable.jsx:627-628`
 - **Status**: **COMPLETED** - Perhitungan total sekarang sudah akurat
 
 **✅ RKA Auto-Sync Race Condition Bug**
+
 - **Issue**: Edit biaya rows di nominatif tidak otomatis update RKA (contoh: 20jt→25jt→30jt tetap 20jt di RKA)
 - **Solution**: Fixed race condition di `NominatifBiayaRowController.php:1088-1090` dengan real-time calculation
 - **Status**: **COMPLETED** - RKA table sekarang auto-sync 100% saat edit biaya rows
 
 **✅ Evidence Auto-Update System - DECEMBER 2024**
+
 - **Issue**: Evidence description di database tidak terupdate saat nama person berubah, tetapi logs menunjukkan success
 - **Solution**: Fixed dual update conflict antara `NominatifDetailRowController` dan `NominatifEvidenceController`
 - **Status**: **COMPLETED** - Evidence auto-update working 100% di database
 
 **Detailed Evidence Auto-Update Implementation:**
+
 - **Auto-Generate Format**: `"evidence X punya [nama_lengkap]"` (dengan nomor urut yang benar)
 - **Real-time Update**: Saat nama diubah, keterangan evidence otomatis update
 - **Database Persistence**: Fix transaction conflicts dan ensure database updates committed
@@ -539,11 +558,13 @@ DB_PASSWORD=password
 - **Null Evidence Validation**: `evidence_link` menggunakan `nullable|url|max:255` untuk flexibilitas
 
 **Files Modified:**
+
 - `backend/app/Http/Controllers/NominatifDetailRowController.php:646-703` - Auto-update logic
 - `backend/app/Http/Controllers/NominatifEvidenceController.php:354-367` - Preserve existing keterangan
 - `backend/routes/api.php:551` - Evidence validation rules
 
 **Features Working:**
+
 - ✅ Auto-update evidence description based on nama changes
 - ✅ Proper evidence numbering with row_order
 - ✅ Database transaction handling with commit confirmation
@@ -552,6 +573,7 @@ DB_PASSWORD=password
 - ✅ Real-time logging for debugging evidence updates
 
 **📋 Final Action Required:**
+
 ```bash
 cd backend
 php artisan migrate
@@ -566,12 +588,14 @@ php artisan migrate
 **Major UI/UX Improvements & New Features:**
 
 **✅ NominatifCreate Layout Optimization**
+
 - **Issue**: Form elements tampil vertikal (kebawah) sehingga kurang efisien
 - **Solution**: Mengubah layout menjadi 2 kolom horizontal (lg:grid-cols-2)
 - **Status**: **COMPLETED** - Deskripsi di kiri, Tanggal & RKA Selection di kanan
 - **Files Modified**: `frontend/src/pages/NominatifCreate.jsx`
 
 **✅ Search Functionality for RKA Selection**
+
 - **Issue**: User sulit mencari Code RKA tanpa fitur search
 - **Solution**: Menambahkan search box di dropdown RKA dengan fitur:
   - Search berdasarkan Arti Kode, Kode Lengkap, atau Kode RKA
@@ -581,25 +605,28 @@ php artisan migrate
 - **Features**: Search box dengan icon, category filter yang lebih kompak
 
 **✅ Container Width Optimization**
+
 - **Issue**: Container terlalu sempit (max-w-2xl) untuk form yang lebar
 - **Solution**: Mengubah dari max-w-2xl menjadi max-w-7xl (sama dengan header)
 - **Status**: **COMPLETED** - Form sekarang lebih lebar dan memanfaatkan ruang layar
 
 **✅ Required Field Markers**
+
 - **Issue**: User tidak tahu field mana yang wajib diisi di tabel nominatif
-- **Solution**: Menambahkan tanda bintang merah (*) pada field wajib:
-  - Nama Lengkap *
-  - Golongan *
-  - Jabatan *
-  - Eselon *
-  - Asal *
-  - Tujuan *
-  - Tgl Pergi *
-  - Tgl Sampai *
+- **Solution**: Menambahkan tanda bintang merah (\*) pada field wajib:
+  - Nama Lengkap \*
+  - Golongan \*
+  - Jabatan \*
+  - Eselon \*
+  - Asal \*
+  - Tujuan \*
+  - Tgl Pergi \*
+  - Tgl Sampai \*
 - **Status**: **COMPLETED** - Required field indicators sudah terpasang
 - **Files Modified**: `frontend/src/components/tables/NominatifExcelTable.jsx`
 
 **✅ Non Nominatif Menu Addition**
+
 - **Issue**: Menu Non Nominatif belum ada di sidebar
 - **Solution**: Menambahkan menu baru "Non Nominatif" dengan:
   - Route: /non-nominatif
@@ -613,6 +640,7 @@ php artisan migrate
   - `frontend/src/utils/constants.js` (MENU_ITEMS updated)
 
 **✅ Dashboard & Master RKA Data Synchronization**
+
 - **Issue**: Dashboard menampilkan fallback data, tidak sinkron dengan Master RKA
 - **Solution**: Mengubah Dashboard untuk:
   - Mengambil data langsung dari API RKA details
@@ -625,6 +653,7 @@ php artisan migrate
 - **Files Modified**: `frontend/src/pages/Dashboard.jsx`
 
 **✅ KonfirmasiDialog Button Styling Fix**
+
 - **Issue**: Tombol "Ya, Kirim" tidak punya warna (undefined)
 - **Solution**: Menambahkan `success: 'bg-green-600 hover:bg-green-700'` di warnaButton object
 - **Status**: **COMPLETED** - Tombol sekarang berwarna hijau
@@ -641,6 +670,7 @@ php artisan migrate
 Non-Nominatif adalah sistem pengelolaan pengeluaran non-perjalanan dinas dengan flow yang sederhana:
 
 **Konsep Dasar:**
+
 - Input sederhana: Deskripsi, Tanggal, Dana Anggaran, Pilih RKA
 - Tidak ada detail rows seperti nominatif (cuma 1 transaksi)
 - Evidence opsional (link Google Drive)
@@ -649,6 +679,7 @@ Non-Nominatif adalah sistem pengelolaan pengeluaran non-perjalanan dinas dengan 
 ### **🗄️ Database Schema**
 
 #### **Tabel `non_nominatifs`**
+
 ```sql
 CREATE TABLE non_nominatifs (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -665,6 +696,7 @@ CREATE TABLE non_nominatifs (
 ```
 
 #### **Flow RKA Integration**
+
 ```sql
 -- Update RKA saat draft:
 UPDATE rka_details
@@ -681,10 +713,12 @@ WHERE id = ?;
 ### **🖥️ Frontend Implementation**
 
 #### **URL Routes:**
+
 - `/non-nominatif` - List semua data
 - `/non-nominatif/create` - Form create baru
 
 #### **UI Components:**
+
 ```
 ┌─────────────────────────────────────────┐
 │ Non-Nominatif List                      │
@@ -699,6 +733,7 @@ WHERE id = ?;
 ```
 
 #### **Create Form:**
+
 ```
 ┌─────────────────────────────────────────┐
 │ Buat Non-Nominatif Baru                 │
@@ -731,6 +766,7 @@ WHERE id = ?;
 ### **🔧 Backend API Structure**
 
 #### **Controllers:**
+
 ```php
 NonNominatifController:
 - index()           // GET /api/non-nominatifs
@@ -741,6 +777,7 @@ NonNominatifController:
 ```
 
 #### **Models:**
+
 ```php
 NonNominatif Model:
 - Relations: belongsTo RkaDetail, belongsTo User
@@ -749,6 +786,7 @@ NonNominatif Model:
 ```
 
 #### **API Response Format:**
+
 ```json
 // List Response
 {
@@ -772,50 +810,57 @@ NonNominatif Model:
 ### **⚡ Key Features**
 
 #### **Simple Input:**
+
 - Cuma 4 required fields
 - Tidak ada complex table seperti nominatif
 - Evidence opsional (1 link Google Drive)
 
 #### **Budget Tracking:**
+
 - Auto-update RKA saat submit
 - Real-time budget validation
 - Warning jika melebihi available budget
 
 #### **Status Management:**
+
 - Draft: Bisa diedit/dihapus
 - Submitted: Tidak bisa diubah
 - Auto-redirect ke list setelah action
 
 #### **Search & Filter:**
+
 - RKA dropdown dengan search
 - Category filter (A, B, C)
 - Budget validation warning
 
 ### **📊 Comparison: Nominatif vs Non-Nominatif**
 
-| Feature | Nominatif | Non-Nominatif |
-|---------|-----------|---------------|
-| **Input Form** | Complex (18 columns) | Simple (4 fields) |
-| **Detail Data** | Table rows (nama, jabatan, dll) | Tidak ada |
-| **Evidence** | Multiple per row | 1 link opsional |
-| **Budget Calc** | Auto 21 fields | Single dana_anggaran |
-| **User Flow** | Create → Edit Page → Save | Create → Direct Save |
-| **Complexity** | High | Low |
+| Feature         | Nominatif                       | Non-Nominatif        |
+| --------------- | ------------------------------- | -------------------- |
+| **Input Form**  | Complex (18 columns)            | Simple (4 fields)    |
+| **Detail Data** | Table rows (nama, jabatan, dll) | Tidak ada            |
+| **Evidence**    | Multiple per row                | 1 link opsional      |
+| **Budget Calc** | Auto 21 fields                  | Single dana_anggaran |
+| **User Flow**   | Create → Edit Page → Save       | Create → Direct Save |
+| **Complexity**  | High                            | Low                  |
 
 ### **🔧 Technical Implementation**
 
 #### **Frontend Files:**
+
 - `NonNominatif.jsx` - List page dengan table
 - `NonNominatifCreate.jsx` - Create form sederhana
 - Color theme: Blue (konsisten dengan Nominatif)
 
 #### **Database Features:**
+
 - Simple table structure
 - Foreign key relationships
 - Indexes for performance
 - Timestamps for audit
 
 #### **API Features:**
+
 - RESTful endpoints
 - Token authentication
 - Error handling
@@ -824,6 +869,7 @@ NonNominatif Model:
 ### **📝 Usage Examples**
 
 #### **Example 1: Pembelian ATK**
+
 ```
 Input:
 - Deskripsi: Pembelian ATK bulanan
@@ -838,6 +884,7 @@ Result:
 ```
 
 #### **Example 2: Maintenance AC**
+
 ```
 Input:
 - Deskripsi: Maintenance AC ruang meeting
@@ -854,6 +901,7 @@ Result:
 ### **🎯 Status Implementation**
 
 #### **✅ Frontend - 100% Complete**
+
 - List page dengan table 7 kolom
 - Create form sederhana dengan RKA dropdown search
 - Evidence link opsional dengan format URL validation
@@ -864,6 +912,7 @@ Result:
 - Real-time currency formatting (Indonesian)
 
 #### **✅ Backend - 100% Complete**
+
 - Database migration dengan foreign key relationships
 - NonNominatif model dengan eager loading relations
 - NonNominatifController dengan full CRUD operations
@@ -873,6 +922,7 @@ Result:
 - Transaction handling untuk data consistency
 
 #### **🔧 Database Schema - 100% Complete**
+
 ```sql
 CREATE TABLE non_nominatifs (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -889,6 +939,7 @@ CREATE TABLE non_nominatifs (
 ```
 
 #### **🔄 API Endpoints - 100% Complete**
+
 - `GET /api/non-nominatifs` - List semua data user
 - `POST /api/non-nominatifs` - Create baru
 - `GET /api/non-nominatifs/{id}` - Get detail
@@ -897,6 +948,7 @@ CREATE TABLE non_nominatifs (
 - `POST /api/non-nominatifs/{id}/submit` - Submit draft → SP2D
 
 #### **🎨 Frontend Features - 100% Complete**
+
 - **NonNominatif.jsx**: List page dengan table responsif + popup konfirmasi submit
 - **NonNominatifCreate.jsx**: Create form dengan validation + popup konfirmasi modern
 - **NonNominatifEdit.jsx**: Edit form dengan auto-load data + tombol "Simpan Draft"/"Submit"
@@ -911,6 +963,7 @@ CREATE TABLE non_nominatifs (
 - **Improved UX**: Redirect langsung ke list dengan notif muncul di halaman tujuan
 
 #### **🔧 Recent Enhancements (December 2024)**
+
 - **Popup Konfirmasi Modern**: Mengganti window.confirm dengan KonfirmasiDialog yang lebih bagus
 - **Tombol Konsistensi**: "Perbarui" → "Simpan Draft", "Perbarui dan Kirim" → "Submit"
 - **Loading States**: Spinner animations dan disabled states untuk semua tombol aksi
@@ -923,6 +976,7 @@ CREATE TABLE non_nominatifs (
 **Non-Nominatif system sudah 100% complete dan siap untuk production use!**
 
 **Test Credentials:**
+
 - Username: `eselon1` / Password: `eselon1`
 - Access: Menu → Non Nominatif
 
@@ -933,6 +987,7 @@ CREATE TABLE non_nominatifs (
 ### **📝 Nominatif Edit Form - 100% COMPLETE**
 
 **Overview:**
+
 - Edit flow terpisah dari create mode untuk UX yang lebih baik
 - Form awal menampilkan deskripsi, tanggal, dan RKA (locked)
 - Tombol navigasi ke halaman detail/table untuk edit rows
@@ -940,15 +995,18 @@ CREATE TABLE non_nominatifs (
 **Key Features:**
 
 **✅ Two-Step Edit Flow**
+
 - **Step 1**: Edit Form (deskripsi, tanggal, RKA yang sudah terpilih/locked)
 - **Step 2**: NominatifPage untuk edit detail rows dengan context preserved
 
 **✅ Locked RKA Selection**
+
 - RKA dropdown dalam mode edit bersifat **locked** (tidak bisa diubah)
 - Static display dengan background `bg-gray-100`
 - Menampilkan RKA yang sudah dipilih sebelumnya
 
 **✅ Status Display in Header**
+
 - Status badge ditampilkan di header dengan icon FileText
 - Format: **Edit Nominatif** | 📄 Status: draft/submitted
 - Warna status sama persis dengan table Nominatif:
@@ -956,27 +1014,32 @@ CREATE TABLE non_nominatifs (
   - submitted: `bg-yellow-100 text-yellow-800`
 
 **✅ Action Buttons with Icons**
+
 - **Batal**: Navigate ke `/nominatif` (list page)
 - **Simpan Draft**: Blue button dengan icon `Save`, loading spinner
 - **Submit**: Green button dengan icon `Send`, popup konfirmasi + loading spinner
 - Button style sama persis dengan NonNominatifEdit
 
 **✅ Smart Navigation (Kembali Button)**
+
 - Di NominatifPage, tombol "Kembali" sekarang cek query parameter `?id=`
   - Jika ada `?id=1` → kembali ke `/nominatif/edit/1` (edit form)
   - Jika tidak ada `?id` → kembali ke `/nominatif` (list page)
 
 **Files Created/Modified:**
+
 - `frontend/src/pages/NominatifEditForm.jsx` - Edit form page
 - `frontend/src/pages/NominatifEditTable.jsx` - **DELETED** (tidak dipakai)
 - `frontend/src/pages/NominatifPage.jsx` - Updated tombol Kembali logic
 - `frontend/src/App.jsx` - Route cleanup
 
 **URL Routes:**
+
 - `/nominatif/edit/:id` → NominatifEditForm
 - `/nominatif/:rkaId?id=:nominatifId` → NominatifPage (edit mode with context)
 
 **User Flow:**
+
 ```
 Nominatif List → Click Edit → NominatifEditForm
    → (Optional) Click "Ke Detail Nominatif" → NominatifPage
