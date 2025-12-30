@@ -63,10 +63,36 @@ class UserSeeder extends Seeder
             ]
         );
 
+        User::updateOrCreate(
+            ['username' => 'eselon3'],
+            [
+                'name' => 'Eselon 3 User',
+                'username' => 'eselon3',
+                'email' => 'eselon3@relai.gov.id',
+                'password' => Hash::make('eselon3'),
+                'jabatan' => 'Eselon 3',
+                'last_login' => now(),
+            ]
+        );
+
+        User::updateOrCreate(
+            ['username' => 'eselon4'],
+            [
+                'name' => 'Eselon 4 User',
+                'username' => 'eselon4',
+                'email' => 'eselon4@relai.gov.id',
+                'password' => Hash::make('eselon4'),
+                'jabatan' => 'Eselon 4',
+                'last_login' => now(),
+            ]
+        );
+
         $this->command->info('✅ Users created successfully!');
         $this->command->info('📝 Login Credentials:');
         $this->command->info('   • eselon1 / eselon1');
         $this->command->info('   • eselon2 / eselon2');
+        $this->command->info('   • eselon3 / eselon3');
+        $this->command->info('   • eselon4 / eselon4');
         $this->command->info('   • admin / admin123');
         $this->command->info('   • staff / staff123');
     }
