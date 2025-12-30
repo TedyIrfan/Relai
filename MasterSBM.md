@@ -358,6 +358,17 @@
 
 ## 5. SATUAN BIAYA PENERJEMAHAN DAN PENGETIKAN
 
+## 5.1 Dari Bahasa Asing ke Bahasa Indonesia atau Sebaliknya
+
+**Kolom:**
+
+- NO
+- URAIAN
+- SATUAN
+- BESARAN
+
+## 5.2 Dari Bahasa Indonesia ke Bahasa Daerah/Bahasa Lokal atau Sebaliknya
+
 **Kolom:**
 
 - NO
@@ -368,6 +379,17 @@
 ---
 
 ## 6. SATUAN BIAYA BANTUAN BEASISWA PROGRAM GELAR/NONGELAR DALAM NEGERI
+
+## 6.1 Biaya Hidup dan Biaya Operasional
+
+**Kolom:**
+
+- NO
+- URAIAN
+- SATUAN
+- BESARAN
+
+## 6.2 Biaya Hidup dan Biaya Operasional
 
 **Kolom:**
 
@@ -391,6 +413,17 @@
 
 ## 8. HONORARIUM NARASUMBER/PAKAR/PRAKTISI/PROFESIONAL
 
+## 8.1 Kegiatan Di Dalam Negeri
+
+**Kolom:**
+
+- NO
+- URAIAN
+- SATUAN
+- BESARAN
+
+## 8.2 Kegiatan Di Luar Negeri
+
 **Kolom:**
 
 - NO
@@ -411,7 +444,7 @@
 - SATUAN
 - BESARAN
 
-### 9.2 Pengadaan Bahan Makanan untuk Operasi Pasukan/Latihan Pratugas/Latihan Pasukan Lainnya Bagi Anggota Polri/TNI, Dikma/Taruna/Karbol/Kadet Bagi Anggota Polri/TNI, Diklat Lainnya Bagi Kementerian Pertahanan (Kemhan)/Anggota Polri/TNI, Anggota yang Sakit Bagi Kemhan/Anggota Polri/TNI, Tahanan Anggota Polri/TNI, dan Jaga Kawal Bagi Kemhan/Anggota Polri/TNI
+## 9.2 Pengadaan Bahan Makanan untuk Operasi Pasukan/Latihan Pratugas/Latihan Pasukan Lainnya Bagi Anggota Polri/TNI, Dikma/Taruna/Karbol/Kadet Bagi Anggota Polri/TNI, Diklat Lainnya Bagi Kementerian Pertahanan (Kemhan)/Anggota Polri/TNI, Anggota yang Sakit Bagi Kemhan/Anggota Polri/TNI, Tahanan Anggota Polri/TNI, dan Jaga Kawal Bagi Kemhan/Anggota Polri/TNI
 
 **Kolom:**
 
@@ -557,6 +590,24 @@
 - PJR RODA EMPAT
 - PJR RODA DUA (≤ 250 CC)
 - PJR RODA DUA (≥ 750 CC)
+
+### 13.5 Operasional Kendaraan Dinas Untuk Pengadaan Dari Sewa
+
+**Kolom:**
+
+- NO
+- URAIAN
+- SATUAN
+- BESARAN
+
+### 13.6 Kendaraan Bermotor Listrik Berbasis Baterai
+
+**Kolom:**
+
+- NO
+- URAIAN
+- SATUAN
+- BESARAN
 
 ---
 

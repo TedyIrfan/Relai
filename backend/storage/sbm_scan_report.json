@@ -1,5 +1,5 @@
 {
-    "scan_date": "2025-12-28 20:17:11",
+    "scan_date": "2025-12-30 16:24:06",
     "total_files": 31,
     "summary": {
         "success": 31,
@@ -905,7 +905,6 @@
                             "data_start_row": 94,
                             "data_end_row": 132,
                             "column_count": 5,
-                            "exclude": true,
                             "sample_data": [
                                 {
                                     "NO.": "01",
@@ -2348,7 +2347,6 @@
                             "data_start_row": 125,
                             "data_end_row": 129,
                             "column_count": 4,
-                            "exclude": true,
                             "sample_data": [
                                 {
                                     "NO.": "01",
@@ -2382,7 +2380,6 @@
                             "data_start_row": 131,
                             "data_end_row": 136,
                             "column_count": 4,
-                            "exclude": true,
                             "sample_data": [
                                 {
                                     "NO.": "01",

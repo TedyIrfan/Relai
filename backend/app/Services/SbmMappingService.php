@@ -319,7 +319,7 @@ class SbmMappingService
             'keperluan_perkantoran' => [
                 'label' => '11. Keperluan Sehari-hari Perkantoran',
                 'currency' => 'IDR',
-                'columns' => ['no', 'provinsi', 'memiliki_sampai_dengan_40_pegawai', 'memiliki_lebih_dari_40_pegawai'],
+                'columns' => ['no', 'provinsi', 'memiliki_sampai_dengan_40_pegawai_satuan', 'memiliki_sampai_dengan_40_pegawai_besaran', 'memiliki_lebih_dari_40_pegawai_satuan', 'memiliki_lebih_dari_40_pegawai_besaran'],
             ],
             'penggantian_inventaris' => [
                 'label' => '12. Penggantian Inventaris',
@@ -334,6 +334,8 @@ class SbmMappingService
                     '13.1' => [
                         'label' => 'Kendaraan Dinas Pejabat',
                         'currency' => 'IDR',
+                        'has_grouping' => true,
+                        'grouping_field' => 'provinsi',
                         'columns' => ['no', 'provinsi', 'satuan', 'besaran'],
                     ],
                     '13.2' => [
@@ -350,6 +352,16 @@ class SbmMappingService
                         'label' => 'Kendaraan Dinas Operasional Patroli Jalan Raya (PJR)',
                         'currency' => 'IDR',
                         'columns' => ['no', 'provinsi', 'satuan', 'pjr_roda_empat', 'pjr_roda_dua_max_250cc', 'pjr_roda_dua_min_750cc'],
+                    ],
+                    '13.5' => [
+                        'label' => 'Operasional Kendaraan Dinas Untuk Pengadaan Dari Sewa',
+                        'currency' => 'IDR',
+                        'columns' => ['no', 'uraian', 'satuan', 'besaran'],
+                    ],
+                    '13.6' => [
+                        'label' => 'Kendaraan Bermotor Listrik Berbasis Baterai',
+                        'currency' => 'IDR',
+                        'columns' => ['no', 'uraian', 'satuan', 'besaran'],
                     ],
                 ],
             ],
@@ -395,7 +407,7 @@ class SbmMappingService
                     '19.2' => [
                         'label' => 'Pemeliharaan, Pengadaan Inventaris Kantor, Pakaian Sopir/Satpam, Sewa Kendaraan, dan Konsumsi Rapat',
                         'currency' => 'USD',
-                        'columns' => ['no', 'kota', 'pemeliharaan', 'pengadaan_inventaris_kantor_ot', 'pakaian_sopir_satpam_stel', 'sewa_kendaraan_hari', 'konsumsi_rapat_ok'],
+                        'columns' => ['no', 'kota', 'pemeliharaan_kendaraan_dinas', 'pemeliharaan_gedung', 'pemeliharaan_halaman', 'pengadaan_inventaris_kantor_ot', 'pakaian_sopir_satpam_stel', 'sewa_kendaraan_sedan', 'sewa_kendaraan_bus', 'sewa_kendaraan_mobil_box', 'konsumsi_rapat_ok'],
                     ],
                 ],
             ],
@@ -484,13 +496,13 @@ class SbmMappingService
                 ],
             ],
 
-            // Honorarium 36 - Section 36.1 needs custom data_start_row, Section 36.4 should be excluded
+            // Honorarium 36 - Section 36.1 needs custom data_start_row
             'honorarium_36' => [
                 'Kendaraan Dinas Pejabat' => [
                     'data_start_row' => 5, // Skip row 4 (grouping label: "36.01.01 | PEJABAT ESELON I")
                 ],
                 'Kendaraan Operasional Kantor dan/atau Lapangan Roda 2 (Dua)' => [
-                    'exclude' => true, // Exclude section 36.4 from import
+                    // No longer excluded - import this section
                 ],
             ],
 
@@ -534,7 +546,7 @@ class SbmMappingService
                 ],
             ],
 
-            // Satuan Biaya 13 - Sections 13.5 and 13.6 should be excluded
+            // Satuan Biaya 13 - All sections should be imported
             'pemeliharaan_kendaraan' => [
                 'Kendaraan Dinas Pejabat' => [
                     'sub_category' => null,
@@ -549,10 +561,10 @@ class SbmMappingService
                     'sub_category' => null,
                 ],
                 'Operasional Kendaraan Dinas Untuk Pengadaan Dari Sewa' => [
-                    'exclude' => true, // Exclude section 13.5 from import
+                    'sub_category' => null, // No longer excluded - section 13.5
                 ],
                 'Kendaraan Bermotor Listrik Berbasis Baterai' => [
-                    'exclude' => true, // Exclude section 13.6 from import
+                    'sub_category' => null, // No longer excluded - section 13.6
                 ],
             ],
         ];

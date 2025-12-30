@@ -1260,7 +1260,17 @@ class SbmParserService
         // If satuan has a valid value (OH, Unit, etc.), this is DATA
         if ($satuanValue !== null && $satuanValue !== '' && $satuanValue !== '-') {
             $upperSatuan = strtoupper($satuanValue);
+            // Check if satuan contains any valid unit keywords
             if (in_array($upperSatuan, ['OH', 'OJ', 'OT', 'UNIT', 'ORANG', 'SETEL', 'EKSAMEPLAR', 'BUAH', 'KG', 'M2', 'M3', 'PACK', 'PER HARI', 'PER BULAN', 'PER TAHUN'])) {
+                return false; // This is data
+            }
+            // Also check if satuan contains valid unit keywords (like "Unit/Tahun", "Unit/Bulan", etc.)
+            if (strpos($upperSatuan, 'UNIT') !== false || strpos($upperSatuan, 'ORANG') !== false ||
+                strpos($upperSatuan, 'OH') !== false || strpos($upperSatuan, 'OJ') !== false ||
+                strpos($upperSatuan, 'OT') !== false || strpos($upperSatuan, 'SETEL') !== false ||
+                strpos($upperSatuan, 'BUAH') !== false || strpos($upperSatuan, 'PACK') !== false ||
+                strpos($upperSatuan, 'KG') !== false || strpos($upperSatuan, 'M2') !== false ||
+                strpos($upperSatuan, 'M3') !== false) {
                 return false; // This is data
             }
         }
