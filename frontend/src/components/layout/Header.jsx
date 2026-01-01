@@ -128,7 +128,8 @@ const Header = ({ toggleSidebar, sidebarOpen, selectedYear, onYearChange, loadin
                     <div className="p-2">
                       <div className="px-3 py-2 text-sm text-gray-600">
                         <p className="font-medium">Login Info</p>
-                        <p className="text-xs text-gray-500">Login: {new Date().toLocaleString('id-ID')}</p>
+                        <p className="text-xs text-gray-500">Login Saat Ini: {user?.last_login ? new Date(user.last_login).toLocaleString('id-ID') : '-'}</p>
+                        <p className="text-xs text-gray-500">Login Terakhir: {user?.previous_login ? new Date(user.previous_login).toLocaleString('id-ID') : 'Belum ada'}</p>
                       </div>
 
                       <div className="border-t border-gray-100 my-2"></div>

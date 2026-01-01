@@ -102,19 +102,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/anggarans/{id}', [AnggaranController::class, 'update']);  // UPDATE anggaran
     Route::delete('/anggarans/{id}', [AnggaranController::class, 'destroy']); // DELETE anggaran
 
-    // SBM (Master Standar Biaya Masukan) API Routes
-    Route::prefix('sbm')->group(function () {
-        // Specific routes first (to avoid conflicts with dynamic routes)
-        Route::get('/categories', [SbmController::class, 'categories']);           // Get all categories
-        Route::get('/summary', [SbmController::class, 'summary']);                  // Get summary statistics
-        Route::get('/filters/options', [SbmController::class, 'filters']);          // Get filter options (all)
-        Route::get('/filters/{category}', [SbmController::class, 'filtersByCategory']); // Get filter options by category
-        Route::get('/detail/{id}', [SbmController::class, 'detail']);               // Get single record by ID
-
-        // Dynamic routes last (must be at the bottom to avoid catching specific routes)
-        Route::get('/{category}', [SbmController::class, 'show']);                  // Get data by category
-    });
-
     // OLD NOMINATIF OPERATIONS - Disabled (migrated to new 4-table system)
     // Route::get('/nominatifs', [NominatifController::class, 'index']);       // GET all nominatifs
     // Route::post('/nominatifs', [NominatifController::class, 'store']);      // CREATE nominatif
@@ -158,6 +145,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::get('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'show']); // GET single penginapan record
     // Route::put('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'update']); // UPDATE penginapan record
     // Route::delete('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'destroy']); // DELETE penginapan record
+});
+
+// SBM (Master Standar Biaya Masukan) API Routes (Public - for testing)
+Route::prefix('sbm')->group(function () {
+    // Specific routes first (to avoid conflicts with dynamic routes)
+    Route::get('/categories', [SbmController::class, 'categories']);           // Get all categories
+    Route::get('/summary', [SbmController::class, 'summary']);                  // Get summary statistics
+    Route::get('/filters/options', [SbmController::class, 'filters']);          // Get filter options (all)
+    Route::get('/filters/{category}', [SbmController::class, 'filtersByCategory']); // Get filter options by category
+    Route::get('/detail/{id}', [SbmController::class, 'detail']);               // Get single record by ID
+
+    // Dynamic routes last (must be at the bottom to avoid catching specific routes)
+    Route::get('/{category}', [SbmController::class, 'show']);                  // Get data by category
 });
 
 // Dashboard API Routes (Public - for testing)
