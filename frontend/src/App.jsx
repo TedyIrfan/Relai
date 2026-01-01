@@ -6,6 +6,7 @@ import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MasterSBM from './pages/MasterSBM';
+import SBMCategoryDetail from './pages/SBMCategoryDetail';
 import MasterRKA from './pages/MasterRKA';
 import Nominatif from './pages/Nominatif';
 import NominatifPage from './pages/NominatifPage';
@@ -32,6 +33,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <MasterSBM />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/master-sbm/:category" element={
+            <ProtectedRoute>
+              <Layout>
+                <SBMCategoryDetail />
               </Layout>
             </ProtectedRoute>
           } />
