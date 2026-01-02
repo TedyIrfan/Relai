@@ -348,6 +348,27 @@ class DashboardController extends Controller
 
     /**
      * Get KPI metrics only
+     *
+     * @OA\Get(
+     *     path="/api/dashboard/kpi",
+     *     tags={"Dashboard"},
+     *     summary="Get KPI metrics",
+     *     description="Get key performance indicators for budget monitoring",
+     *     @OA\Response(
+     *         response=200,
+     *         description="KPI data retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="tahun", type="integer", example=2025),
+     *                 @OA\Property(property="totalAnggaran", type="number", example=4012497127395),
+     *                 @OA\Property(property="anggaranTerpakai", type="number", example=0),
+     *                 @OA\Property(property="anggaranSP2D", type="number", example=0),
+     *                 @OA\Property(property="sisaAnggaran", type="number", example=4012497127395)
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function kpi()
     {
@@ -366,6 +387,28 @@ class DashboardController extends Controller
 
     /**
      * Get chart data only
+     *
+     * @OA\Get(
+     *     path="/api/dashboard/charts",
+     *     tags={"Dashboard"},
+     *     summary="Get chart data",
+     *     description="Get chart data for budget visualization by category",
+     *     @OA\Parameter(
+     *         name="tahun",
+     *         in="query",
+     *         required=false,
+     *         description="Tahun anggaran",
+     *         @OA\Schema(type="integer", example=2025)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Chart data retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
      */
     public function charts($tahun = 2025)
     {
@@ -410,6 +453,24 @@ class DashboardController extends Controller
 
     /**
      * Get all kategori by tahun
+     *
+     * @OA\Get(
+     *     path="/api/kategori/{tahun}",
+     *     tags={"Dashboard"},
+     *     summary="Get kategori by tahun",
+     *     description="Get all kategori anggaran for specific year",
+     *     @OA\Parameter(
+     *         name="tahun",
+     *         in="path",
+     *         required=true,
+     *         description="Tahun anggaran",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Kategori data retrieved successfully"
+     *     )
+     * )
      */
     public function getKategoriByTahun($tahun)
     {
@@ -442,6 +503,42 @@ class DashboardController extends Controller
 
     /**
      * Update anggaran terpakai untuk kategori tertentu
+     *
+     * @OA\Post(
+     *     path="/api/kategori/{tahun}/{kategori}/update-terpakai",
+     *     tags={"Dashboard"},
+     *     summary="Update anggaran terpakai",
+     *     description="Update anggaran terpakai for specific kategori",
+     *     @OA\Parameter(
+     *         name="tahun",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="kategori",
+     *         in="path",
+     *         required=true,
+     *         description="Kategori (KA/KB/KC or A/B/C)",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="jumlah",
+     *         in="query",
+     *         required=true,
+     *         description="Jumlah anggaran terpakai",
+     *         @OA\Schema(type="number")
+     *     ),
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         required=false,
+     *         description="Type: add or subtract",
+     *         @OA\Schema(type="string", enum={"add", "subtract"})
+     *     ),
+     *     @OA\Response(response=200, description="Update successful"),
+     *     @OA\Response(response=404, description="Kategori tidak ditemukan")
+     * )
      */
     public function updateAnggaranTerpakai(Request $request, $tahun, $kategori)
     {
@@ -480,6 +577,42 @@ class DashboardController extends Controller
 
     /**
      * Update SP2D untuk kategori tertentu
+     *
+     * @OA\Post(
+     *     path="/api/kategori/{tahun}/{kategori}/update-sp2d",
+     *     tags={"Dashboard"},
+     *     summary="Update SP2D",
+     *     description="Update SP2D for specific kategori",
+     *     @OA\Parameter(
+     *         name="tahun",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="kategori",
+     *         in="path",
+     *         required=true,
+     *         description="Kategori (KA/KB/KC or A/B/C)",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="jumlah",
+     *         in="query",
+     *         required=true,
+     *         description="Jumlah SP2D",
+     *         @OA\Schema(type="number")
+     *     ),
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         required=false,
+     *         description="Type: add or subtract",
+     *         @OA\Schema(type="string", enum={"add", "subtract"})
+     *     ),
+     *     @OA\Response(response=200, description="Update successful"),
+     *     @OA\Response(response=404, description="Kategori tidak ditemukan")
+     * )
      */
     public function updateSP2D(Request $request, $tahun, $kategori)
     {
@@ -517,6 +650,22 @@ class DashboardController extends Controller
 
     /**
      * Sync main anggaran from kategori data
+     *
+     * @OA\Post(
+     *     path="/api/kategori/{tahun}/sync",
+     *     tags={"Dashboard"},
+     *     summary="Sync main anggaran",
+     *     description="Sync main anggaran from kategori data",
+     *     @OA\Parameter(
+     *         name="tahun",
+     *         in="path",
+     *         required=true,
+     *         description="Tahun anggaran",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(response=200, description="Sync successful"),
+     *     @OA\Response(response=404, description="Data anggaran tidak ditemukan")
+     * )
      */
     public function syncMainAnggaran($tahun)
     {

@@ -1,12 +1,106 @@
 # Nominatif API Guide - Frontend Documentation
 
+> 📖 **Panduan Penggunaan Swagger UI:** Lihat [guides/swagger_usage.md](../guides/swagger_usage.md) untuk cara test API di Swagger.
+
 ## Base URL
 ```
 http://localhost/api
 ```
 
+## Authentication & Security Status
+
+### ⚠️ IMPORTANT - Public Endpoints
+
+**Current Status (Development Mode):**
+- Nominatif API menggunakan **Public endpoints** - TIDAK memerlukan authentication
+- Ini sengaja dibuat **PUBLIC** oleh tim untuk kemudahan testing dan development
+- Frontend dapat langsung mengakses data Nominatif tanpa login
+
+**Routes Available:**
+| Route | Auth Required | Status |
+|-------|---------------|--------|
+| `/api/nominatifs-new` | ❌ NO | PUBLIC |
+| `/api/nominatifs-new/{id}` | ❌ NO | PUBLIC |
+| `/api/nominatifs/{nominatifId}/details` | ❌ NO | PUBLIC |
+| `/api/nominatifs/details/{detailRowId}/biaya` | ❌ NO | PUBLIC |
+| `/api/nominatifs/{nominatifId}/evidence` | ❌ NO | PUBLIC |
+
+### 🔐 Security Comparison with Other Systems
+
+| Sistem | Development | Production | Status |
+|--------|-------------|------------|--------|
+| **Nominatif** | Public | Secure (Sanctum) | ⚠️ PUBLIC sekarang, SECURE routes ready |
+| **SBM** | Public | Secure (Sanctum) | ⚠️ PUBLIC sekarang, SECURE routes ready |
+| **RKA** | Public | Secure (Sanctum) | ⚠️ PUBLIC sekarang, SECURE routes ready |
+| **Non-Nominatif** | Secure (Sanctum) | Secure (Sanctum) | ✅ SECURE sekarang |
+| **Anggaran** | Secure (Sanctum) | Secure (Sanctum) | ✅ SECURE sekarang |
+
+### 📝 Note
+Sistem Nominatif baru menggunakan "Manual Token Validation" di dokumentasi, tetapi routes saat ini masih **PUBLIC** untuk kemudahan development. Untuk production, perlu ditambahkan middleware authentication.
+
+### 🔐 Production-Ready Secure Routes
+
+**Secure routes sekarang tersedia untuk production:**
+
+| Environment | Base Route | Auth Required |
+|-------------|------------|---------------|
+| Development | `/api/nominatifs-new/*` | ❌ NO |
+| Production | `/api/secure/nominatifs-new/*` | ✅ YES (Sanctum) |
+
+**Secure Endpoints Available (29 routes total):**
+
+**Master (nominatifs-new):**
+- `GET /api/secure/nominatifs-new` - Get all nominatifs
+- `GET /api/secure/nominatifs-new/{id}` - Get nominatif by ID
+- `POST /api/secure/nominatifs-new` - Create nominatif
+- `PUT /api/secure/nominatifs-new/{id}` - Update nominatif
+- `DELETE /api/secure/nominatifs-new/{id}` - Delete nominatif
+- `POST /api/secure/nominatifs-new/{id}/submit` - Submit nominatif
+- `GET /api/secure/nominatifs-new/search?q={keyword}` - Search nominatifs
+- `GET /api/secure/nominatifs-new/statistics` - Get statistics
+
+**Detail Rows:**
+- `GET /api/secure/nominatifs/{nominatifId}/details` - Get all detail rows
+- `POST /api/secure/nominatifs/{nominatifId}/details` - Create detail row
+- `PUT /api/secure/nominatifs/{nominatifId}/details/{rowId}` - Update detail row
+- `DELETE /api/secure/nominatifs/{nominatifId}/details/{rowId}` - Delete detail row
+- `POST /api/secure/nominatifs/{nominatifId}/details/validate` - Validate draft data
+- `POST /api/secure/nominatifs/{nominatifId}/details/execute` - Execute draft
+- `POST /api/secure/nominatifs/{nominatifId}/details/bulk` - Bulk create
+- `PUT /api/secure/nominatifs/{nominatifId}/details/bulk` - Bulk update
+
+**Biaya Rows:**
+- `GET /api/secure/nominatifs/details/{detailRowId}/biaya` - Get biaya row
+- `POST /api/secure/nominatifs/details/{detailRowId}/biaya` - Create biaya row
+- `GET /api/secure/nominatifs/details/{detailRowId}/biaya/{biayaId}` - Get biaya by ID
+- `PUT /api/secure/nominatifs/details/{detailRowId}/biaya/{biayaId}` - Update biaya row
+- `PUT /api/secure/nominatifs/details/{detailRowId}/biaya/{biazaId}/simplified` - Update simplified
+- `DELETE /api/secure/nominatifs/details/{detailRowId}/biaya/{biayaId}` - Delete biaya row
+
+**Evidence:**
+- `GET /api/secure/nominatifs/{nominatifId}/evidence` - Get all evidence
+- `GET /api/secure/nominatifs/{nominatifId}/evidence/all` - Get all evidence with file info
+- `GET /api/secure/nominatifs/{nominatifId}/evidence/{evidenceId}` - Get evidence by ID
+- `PUT /api/secure/nominatifs/{nominatifId}/evidence/{evidenceId}` - Update evidence
+- `DELETE /api/secure/nominatifs/{nominatifId}/evidence/{evidenceId}` - Delete evidence
+- `POST /api/secure/nominatifs/{nominatifId}/details/{detailRowId}/evidence` - Create evidence
+
+**Contoh untuk Production:**
+```javascript
+// Frontend untuk production
+const token = localStorage.getItem('token');
+
+fetch('http://localhost/api/secure/nominatifs-new', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+})
+```
+
+---
+
 ## Authentication
-**Catatan:** Nominatif system menggunakan **Manual Token Validation** (bukan Sanctum).
+**Catatan:** Nominatif system documentation menyebutkan **Manual Token Validation**, namun saat ini routes masih bersifat **PUBLIC**.
 
 ### Login
 ```http

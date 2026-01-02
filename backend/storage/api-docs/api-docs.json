@@ -900,241 +900,273 @@
                 }
             }
         },
-        "/api/nominatifs-new": {
+        "/api/dashboard/kpi": {
             "get": {
                 "tags": [
-                    "Nominatif"
+                    "Dashboard"
                 ],
-                "summary": "Get list of nominatifs",
-                "description": "Returns list of nominatifs with pagination",
-                "operationId": "getNominatifsList",
+                "summary": "Get KPI metrics",
+                "description": "Get key performance indicators for budget monitoring",
+                "operationId": "f4299aaaa6a08108e7fbfc5839cce336",
+                "responses": {
+                    "200": {
+                        "description": "KPI data retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "tahun": {
+                                                    "type": "integer",
+                                                    "example": 2025
+                                                },
+                                                "totalAnggaran": {
+                                                    "type": "number",
+                                                    "example": 4012497127395
+                                                },
+                                                "anggaranTerpakai": {
+                                                    "type": "number",
+                                                    "example": 0
+                                                },
+                                                "anggaranSP2D": {
+                                                    "type": "number",
+                                                    "example": 0
+                                                },
+                                                "sisaAnggaran": {
+                                                    "type": "number",
+                                                    "example": 4012497127395
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dashboard/charts": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get chart data",
+                "description": "Get chart data for budget visualization by category",
+                "operationId": "6f4bf0eb69bc1aeed81abb26e2802f64",
                 "parameters": [
                     {
-                        "name": "status",
+                        "name": "tahun",
                         "in": "query",
-                        "description": "Filter by status",
+                        "description": "Tahun anggaran",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2025
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chart data retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/kategori/{tahun}": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get kategori by tahun",
+                "description": "Get all kategori anggaran for specific year",
+                "operationId": "6dbd8ecedc083c1571f9219241442b46",
+                "parameters": [
+                    {
+                        "name": "tahun",
+                        "in": "path",
+                        "description": "Tahun anggaran",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Kategori data retrieved successfully"
+                    }
+                }
+            }
+        },
+        "/api/kategori/{tahun}/{kategori}/update-terpakai": {
+            "post": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Update anggaran terpakai",
+                "description": "Update anggaran terpakai for specific kategori",
+                "operationId": "f5275c494103f6129dbb9564eaf2c191",
+                "parameters": [
+                    {
+                        "name": "tahun",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "kategori",
+                        "in": "path",
+                        "description": "Kategori (KA/KB/KC or A/B/C)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "jumlah",
+                        "in": "query",
+                        "description": "Jumlah anggaran terpakai",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Type: add or subtract",
                         "required": false,
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "draft",
-                                "submitted"
+                                "add",
+                                "subtract"
                             ]
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "deskripsi_perjalanan_dinas": {
-                                                                "type": "string",
-                                                                "example": "Perjalanan Dinas Jakarta"
-                                                            },
-                                                            "status": {
-                                                                "type": "string",
-                                                                "example": "draft"
-                                                            },
-                                                            "total_pagu_trip": {
-                                                                "type": "number",
-                                                                "example": 5000000
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Update successful"
+                    },
+                    "404": {
+                        "description": "Kategori tidak ditemukan"
                     }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "post": {
-                "tags": [
-                    "Nominatif"
-                ],
-                "summary": "Create new nominatif",
-                "description": "Create a new nominatif record",
-                "operationId": "createNominatif",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "rka_detail_id",
-                                    "deskripsi_perjalanan_dinas",
-                                    "tanggal_mulai",
-                                    "tanggal_selesai"
-                                ],
-                                "properties": {
-                                    "rka_detail_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "deskripsi_perjalanan_dinas": {
-                                        "type": "string",
-                                        "example": "Perjalanan Dinas Test"
-                                    },
-                                    "tanggal_mulai": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2025-11-24"
-                                    },
-                                    "tanggal_selesai": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2025-11-27"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Nominatif created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Nominatif created successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "deskripsi_perjalanan_dinas": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "draft"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
+                }
             }
         },
-        "/api/nominatifs-new/{id}": {
-            "get": {
+        "/api/kategori/{tahun}/{kategori}/update-sp2d": {
+            "post": {
                 "tags": [
-                    "Nominatif"
+                    "Dashboard"
                 ],
-                "summary": "Get nominatif by ID",
-                "description": "Returns detailed nominatif information with all related data",
-                "operationId": "getNominatifById",
+                "summary": "Update SP2D",
+                "description": "Update SP2D for specific kategori",
+                "operationId": "d8236b72e2224c9a5034e41caef2b233",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "tahun",
                         "in": "path",
-                        "description": "Nominatif ID",
                         "required": true,
                         "schema": {
-                            "type": "integer",
-                            "example": 1
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "kategori",
+                        "in": "path",
+                        "description": "Kategori (KA/KB/KC or A/B/C)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "jumlah",
+                        "in": "query",
+                        "description": "Jumlah SP2D",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Type: add or subtract",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "add",
+                                "subtract"
+                            ]
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "nominatif": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 1
-                                                        },
-                                                        "deskripsi_perjalanan_dinas": {
-                                                            "type": "string"
-                                                        },
-                                                        "status": {
-                                                            "type": "string",
-                                                            "example": "draft"
-                                                        },
-                                                        "total_pagu_trip": {
-                                                            "type": "number",
-                                                            "example": 5000000
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Update successful"
                     },
                     "404": {
-                        "description": "Nominatif not found"
+                        "description": "Kategori tidak ditemukan"
                     }
-                },
-                "security": [
+                }
+            }
+        },
+        "/api/kategori/{tahun}/sync": {
+            "post": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Sync main anggaran",
+                "description": "Sync main anggaran from kategori data",
+                "operationId": "c35ed5e725056ddf21cafc7127e50338",
+                "parameters": [
                     {
-                        "sanctum": []
+                        "name": "tahun",
+                        "in": "path",
+                        "description": "Tahun anggaran",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
-                ]
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sync successful"
+                    },
+                    "404": {
+                        "description": "Data anggaran tidak ditemukan"
+                    }
+                }
             }
         },
         "/api/test": {
@@ -1588,6 +1620,2019 @@
                     }
                 ]
             }
+        },
+        "/api/nominatifs-new": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get all nominatifs",
+                "description": "Get list of all nominatifs perjalanan dinas for the authenticated user",
+                "operationId": "76e65a2db8208853727524a2fb5b79b9",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/NominatifNew"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Create new nominatif",
+                "description": "Create a new nominatif perjalanan dinas",
+                "operationId": "704d9ff2cec43af4f0deb85f5d4a2cc3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rka_detail_id",
+                                    "deskripsi_perjalanan_dinas",
+                                    "tanggal_mulai",
+                                    "tanggal_selesai"
+                                ],
+                                "properties": {
+                                    "rka_detail_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "deskripsi_perjalanan_dinas": {
+                                        "type": "string",
+                                        "example": "Perjalanan Dinas ke Jakarta"
+                                    },
+                                    "tanggal_mulai": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-15"
+                                    },
+                                    "tanggal_selesai": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-17"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Nominatif created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NominatifNew"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nominatif created successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/nominatifs-new/{id}": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get nominatif by ID",
+                "description": "Get detailed information about a specific nominatif",
+                "operationId": "d182e4ddf4f5171c041f115c5bd34b44",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Nominatif ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NominatifNew"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nominatif not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Update nominatif",
+                "description": "Update nominatif perjalanan dinas (only draft status)",
+                "operationId": "25a3db165721d116dd9d0067b1388c0a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "deskripsi_perjalanan_dinas": {
+                                        "type": "string"
+                                    },
+                                    "tanggal_mulai": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "tanggal_selesai": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Nominatif updated successfully"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Delete nominatif",
+                "description": "Delete nominatif (only draft status)",
+                "operationId": "82ff0b0960d9eebe355d36725b5173c8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Nominatif deleted successfully"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs-new/{id}/submit": {
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Submit nominatif",
+                "description": "Submit nominatif to change status from draft to submitted",
+                "operationId": "fdfcd2580e8cb6b13d825ac7ead3c973",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Nominatif submitted successfully"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs-new/search": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Search nominatifs",
+                "description": "Search nominatifs by keyword",
+                "operationId": "e3263fac6a25e6a1e9a2f66e440d2861",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search keyword",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs-new/statistics": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get nominatif statistics",
+                "description": "Get statistics about nominatifs",
+                "operationId": "c717a5408d59b2a20fc6aa83fb28acb7",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/details": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get detail rows for nominatif",
+                "description": "Get all person and route data rows for a nominatif",
+                "operationId": "9eaaeb42aa397ca9046d89887c8455da",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/NominatifDetailRow"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Create detail row",
+                "description": "Create a new person and route data row",
+                "operationId": "bd5202d0eafc8b7580f403e5d2050d22",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "person_name",
+                                    "asal",
+                                    "tujuan",
+                                    "tanggal_pergi",
+                                    "tanggal_sampai",
+                                    "golongan",
+                                    "jabatan",
+                                    "eselon"
+                                ],
+                                "properties": {
+                                    "person_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "main",
+                                            "tambahan"
+                                        ],
+                                        "example": "main"
+                                    },
+                                    "person_name": {
+                                        "type": "string",
+                                        "example": "Ahmad Sudrajat"
+                                    },
+                                    "row_order": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "asal": {
+                                        "type": "string",
+                                        "example": "Jakarta"
+                                    },
+                                    "tujuan": {
+                                        "type": "string",
+                                        "example": "Bandung"
+                                    },
+                                    "tanggal_pergi": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-15"
+                                    },
+                                    "tanggal_sampai": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-17"
+                                    },
+                                    "golongan": {
+                                        "type": "string",
+                                        "example": "IV/e"
+                                    },
+                                    "jabatan": {
+                                        "type": "string",
+                                        "example": "Kepala Bagian"
+                                    },
+                                    "eselon": {
+                                        "type": "string",
+                                        "example": "IIb"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Detail row created successfully"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/details/validate": {
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Validate draft data",
+                "description": "Validate nominatif draft data before saving",
+                "operationId": "eadb50a3884f7fe3a263605b6eac3f61",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "details": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "biaya": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Validation successful"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/details/execute": {
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Execute draft",
+                "description": "Execute validated draft data and save to database",
+                "operationId": "e11baf7799855bc839196578fe38bc37",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Draft executed successfully"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/details/bulk": {
+            "put": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Bulk update detail rows",
+                "description": "Update multiple detail rows at once",
+                "operationId": "cfe7fa92e1a3773654b105a92b067ee2",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk update successful"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Bulk create detail rows",
+                "description": "Create multiple detail rows at once",
+                "operationId": "c71e7bc47505547b31dc9270854782df",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk create successful"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/details/{rowId}": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get detail row by ID",
+                "operationId": "8739855636cc52c6ef10d4d7a8df6ddf",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "rowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Update detail row",
+                "operationId": "8dc079512f03ae2c7e48c84668394e12",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "rowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail row updated successfully"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Delete detail row",
+                "operationId": "ae048733a851426cafa522944922ba60",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "rowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail row deleted successfully"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/details/{detailRowId}/biaya": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get biaya rows for detail row",
+                "description": "Get all financial data for a specific detail row",
+                "operationId": "77264dae3718e3e0832c94583327e79d",
+                "parameters": [
+                    {
+                        "name": "detailRowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NominatifBiayaRow"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Create biaya row",
+                "description": "Create financial data for a detail row",
+                "operationId": "181d6ac7f8be68ff23cd2daefb15c8d2",
+                "parameters": [
+                    {
+                        "name": "detailRowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "transport_pesawat_non_pp_pagu": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 1500000
+                                    },
+                                    "transport_pesawat_non_pp_aktual": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 1350000
+                                    },
+                                    "transport_taksi_pagu": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 100000
+                                    },
+                                    "transport_taksi_aktual": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 95000
+                                    },
+                                    "penginapan_jumlah_malam": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "penginapan_pagu_perhari": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 500000
+                                    },
+                                    "penginapan_aktual_perhari": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 480000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Biaya row created successfully"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/details/{detailRowId}/biaya/{biayaId}": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get biaya row by ID",
+                "operationId": "d3612d59c0b2c8a3fedf0396085f4dc4",
+                "parameters": [
+                    {
+                        "name": "detailRowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "biayaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Update biaya row",
+                "operationId": "0b946224603c1ec36c9594b9c8727970",
+                "parameters": [
+                    {
+                        "name": "detailRowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "biayaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Biaya row updated successfully"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Delete biaya row",
+                "operationId": "3872c9c8320c73d0a347c594a921522b",
+                "parameters": [
+                    {
+                        "name": "detailRowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "biayaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Biaya row deleted successfully"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/details/{detailRowId}/biaya/{biayaId}/simplified": {
+            "put": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Update biaya row (simplified)",
+                "description": "Update only the essential fields of biaya row",
+                "operationId": "2798d9f7c5b5c6f1e1acff6df92db85b",
+                "parameters": [
+                    {
+                        "name": "detailRowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "biayaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Biaya row updated successfully"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/evidence": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get evidence for nominatif",
+                "description": "Get all evidence files for a nominatif",
+                "operationId": "ef7f51ae24540f72868066eecffd90c1",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/NominatifEvidence"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/evidence/all": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get all evidence with file type info",
+                "description": "Get all evidence files with file type information",
+                "operationId": "21f10807073597408449f8582d1efe09",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/evidence/{evidenceId}": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get evidence by ID",
+                "operationId": "7f421408aed82d43249a8cfc1a5713dd",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "evidenceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Update evidence",
+                "operationId": "56142ebfffaab5cb00e9bb46ec642fc5",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "evidenceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Evidence updated successfully"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Delete evidence",
+                "operationId": "b17fe507a9c6fcc88f26faa933ebf6d1",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "evidenceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Evidence deleted successfully"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/evidence/{evidenceId}/download": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Download evidence",
+                "description": "Download or get evidence file",
+                "operationId": "542dab7983bbccd987542f6cc1d04afa",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "evidenceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Evidence file"
+                    }
+                }
+            }
+        },
+        "/api/nominatifs/{nominatifId}/details/{detailRowId}/evidence": {
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Create evidence for detail row",
+                "description": "Create evidence file for a specific detail row",
+                "operationId": "d43d12d91fb8928d8be491bf8677285a",
+                "parameters": [
+                    {
+                        "name": "nominatifId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "detailRowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "evidence_link",
+                                    "evidence_name"
+                                ],
+                                "properties": {
+                                    "evidence_link": {
+                                        "type": "string",
+                                        "example": "https://drive.google.com/file/d/1ABCxyz/view?usp=sharing"
+                                    },
+                                    "evidence_name": {
+                                        "type": "string",
+                                        "example": "Tiket Pesawat PDF"
+                                    },
+                                    "keterangan": {
+                                        "type": "string",
+                                        "example": "Tiket pesawat PP"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Evidence created successfully"
+                    }
+                }
+            }
+        },
+        "/api/non-nominatifs": {
+            "get": {
+                "tags": [
+                    "NonNominatif"
+                ],
+                "summary": "Get all non-nominatifs",
+                "description": "Get list of all non-nominatif pengeluaran for the authenticated user",
+                "operationId": "eb47e7ec064a2f0b256f996a9b7e790f",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/NonNominatif"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "NonNominatif"
+                ],
+                "summary": "Create new non-nominatif",
+                "description": "Create a new non-nominatif pengeluaran",
+                "operationId": "edb57716aa3f5a15dda590165e0b22d5",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rka_detail_id",
+                                    "deskripsi_kegiatan",
+                                    "tanggal",
+                                    "total_anggaran_terpakai",
+                                    "evidence_link"
+                                ],
+                                "properties": {
+                                    "rka_detail_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "deskripsi_kegiatan": {
+                                        "type": "string",
+                                        "example": "Pembelian ATK Bulanan"
+                                    },
+                                    "tanggal": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-15"
+                                    },
+                                    "total_anggaran_terpakai": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "example": 5000000
+                                    },
+                                    "evidence_link": {
+                                        "type": "string",
+                                        "example": "https://drive.google.com/file/d/1ABCxyz/view?usp=sharing"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Non-nominatif created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NonNominatif"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non-nominatif created successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/non-nominatifs/{id}": {
+            "get": {
+                "tags": [
+                    "NonNominatif"
+                ],
+                "summary": "Get non-nominatif by ID",
+                "operationId": "8781f736fcca0a81175386e02b10ecca",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NonNominatif"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Non-nominatif not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "NonNominatif"
+                ],
+                "summary": "Update non-nominatif",
+                "description": "Update non-nominatif (only draft status)",
+                "operationId": "5bf5da775a784ab5438000da144e82f3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "deskripsi_kegiatan": {
+                                        "type": "string"
+                                    },
+                                    "tanggal": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "total_anggaran_terpakai": {
+                                        "type": "number",
+                                        "format": "decimal"
+                                    },
+                                    "evidence_link": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Non-nominatif updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "NonNominatif"
+                ],
+                "summary": "Delete non-nominatif",
+                "description": "Delete non-nominatif (only draft status)",
+                "operationId": "c85c9fd125e75bcc431d16fb2b3187fc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Non-nominatif deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/non-nominatifs/{id}/submit": {
+            "post": {
+                "tags": [
+                    "NonNominatif"
+                ],
+                "summary": "Submit non-nominatif",
+                "description": "Submit non-nominatif to change status from draft to submitted",
+                "operationId": "982864576897641c2fb3b1ef3a407f01",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Non-nominatif submitted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/rka-details": {
+            "get": {
+                "tags": [
+                    "RKA"
+                ],
+                "summary": "Get all RKA details",
+                "description": "Get list of RKA (Rencana Kerja dan Anggaran) details with optional search and filter",
+                "operationId": "5e8e98bbf040e8936726edfb48bedebf",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by layanan, code_rka, wilayah, or arti_kode",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "kategori",
+                        "in": "query",
+                        "description": "Filter by kategori (A/B/C)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RKADetail"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/rka-details/import": {
+            "post": {
+                "tags": [
+                    "RKA"
+                ],
+                "summary": "Import RKA details from Excel",
+                "description": "Import RKA details data from Excel file (xlsx/xls/csv)",
+                "operationId": "945b18d827406485565851fd23ededd8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "excel_file": {
+                                        "description": "Excel file (max 10MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Import successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data berhasil diimport!"
+                                        },
+                                        "imported_count": {
+                                            "type": "integer",
+                                            "example": 65
+                                        },
+                                        "errors": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": []
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/rka-details/kategori": {
+            "get": {
+                "tags": [
+                    "RKA"
+                ],
+                "summary": "Get all kategori anggaran",
+                "description": "Get list of kategori anggaran (A/B/C) with budget information",
+                "operationId": "2e2fc936b7a8240334dcb4d0772f2335",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/KategoriAnggaran"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/secure/sbm/categories": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get all SBM categories (Secure)",
+                "description": "Get all 31 SBM categories with record counts",
+                "operationId": "94b662ce1cfd73b02f250602ecf59e09",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/sbm/{category}": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get SBM data by category (Secure)",
+                "description": "Get SBM data for specific category with optional filters",
+                "operationId": "792b860d4b98e760dd6fb2fc5e0729a1",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category name (e.g., transportasi_provinsi, honorarium_28)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/sbm/summary": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get SBM summary statistics (Secure)",
+                "operationId": "9314e30165252435814a7e4c9035e9f3",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/sbm/filters/options": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get SBM filter options (Secure)",
+                "operationId": "fa7e1203f2588dec8340e0a12f9b5199",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/sbm/filters/{category}": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get SBM filter options by category (Secure)",
+                "operationId": "85edb84d724dbd5c471a3c284a580fc8",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/sbm/detail/{id}": {
+            "get": {
+                "tags": [
+                    "SBM"
+                ],
+                "summary": "Get SBM record by ID (Secure)",
+                "operationId": "09cbfa6ffea23b3f31ab3f47c5c90a7b",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/nominatifs-new": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get all nominatifs (Secure)",
+                "operationId": "44ed1dabbde3fcd1489d104c711743e6",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Create nominatif (Secure)",
+                "operationId": "defefbe1a65b504f1003ef93ab88a9e7",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/nominatifs-new/{id}": {
+            "get": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Get nominatif by ID (Secure)",
+                "operationId": "919e32f0b1cd552d7349c79d970ac4d7",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Update nominatif (Secure)",
+                "operationId": "6ed56b3caf00509cec20726aa21b761b",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Delete nominatif (Secure)",
+                "operationId": "3d00d0f9279bea4607b613715f440892",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/nominatifs-new/{id}/submit": {
+            "post": {
+                "tags": [
+                    "Nominatif"
+                ],
+                "summary": "Submit nominatif (Secure)",
+                "operationId": "e56f9d3d256aaa1e459818deb1a88beb",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard data (Secure)",
+                "operationId": "024d7f977ea2b97923e88f934ca98bdb",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/dashboard/{tahun}": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard data by year (Secure)",
+                "operationId": "e4155b6806fbe6350ca4cb075d56f363",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/dashboard/kpi": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get KPI metrics (Secure)",
+                "operationId": "b0a025c1ee56fe29d10be9322080aa21",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/dashboard/charts": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get chart data (Secure)",
+                "operationId": "0286afce1c66871d87815c8137a7d8a0",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/kategori/{tahun}": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get kategori by year (Secure)",
+                "operationId": "3ac36c333f34d627538efa485e35eb78",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/kategori/{tahun}/{kategori}/update-terpakai": {
+            "post": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Update anggaran terpakai (Secure)",
+                "operationId": "3711145799606b839094a6a1b7077b20",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/kategori/{tahun}/{kategori}/update-sp2d": {
+            "post": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Update SP2D (Secure)",
+                "operationId": "0a6f15f834a7e736a71db94b9aa98e10",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/kategori/{tahun}/sync": {
+            "post": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Sync main anggaran (Secure)",
+                "operationId": "45b68beabd2753b1ee0dea8555b74c53",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/rka-details": {
+            "get": {
+                "tags": [
+                    "RKA"
+                ],
+                "summary": "Get all RKA details (Secure)",
+                "operationId": "fdad98dabf0ff29771e7ecd19f04e943",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/rka-details/import": {
+            "post": {
+                "tags": [
+                    "RKA"
+                ],
+                "summary": "Import RKA details from Excel (Secure)",
+                "operationId": "4c08023e45ed7d0364fc323dea812b8e",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/secure/rka-details/kategori": {
+            "get": {
+                "tags": [
+                    "RKA"
+                ],
+                "summary": "Get all kategori anggaran (Secure)",
+                "operationId": "db65e27574cf466197a22e15a63da40d",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1642,7 +3687,7 @@
                         "format": "decimal",
                         "example": 2000000000
                     },
-                    "anggaran_terpakai": {
+                    "anggaran_berjalan": {
                         "type": "number",
                         "format": "decimal",
                         "example": 500000000
@@ -1740,6 +3785,764 @@
                     }
                 },
                 "type": "object"
+            },
+            "NominatifNew": {
+                "title": "NominatifNew",
+                "description": "Nominatif Perjalanan Dinas Master",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "rka_detail_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "deskripsi_perjalanan_dinas": {
+                        "type": "string",
+                        "example": "Perjalanan Dinas ke Jakarta untuk Koordinasi Program"
+                    },
+                    "tanggal_mulai": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-15"
+                    },
+                    "tanggal_selesai": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-17"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "submitted"
+                        ],
+                        "example": "draft"
+                    },
+                    "total_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 5000000
+                    },
+                    "total_biaya_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 4500000
+                    },
+                    "total_pagu_trip": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 15000000
+                    },
+                    "total_aktual_trip": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 13500000
+                    },
+                    "total_anggaran_berjalan_trip": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 12000000
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    },
+                    "rka_detail": {
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "code_rka": {
+                                "type": "string"
+                            },
+                            "layanan": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    }
+                },
+                "type": "object"
+            },
+            "NominatifDetailRow": {
+                "title": "NominatifDetailRow",
+                "description": "Nominatif Detail Row - Person and Route Data",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nominatif_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "person_type": {
+                        "type": "string",
+                        "enum": [
+                            "main",
+                            "tambahan"
+                        ],
+                        "example": "main"
+                    },
+                    "person_name": {
+                        "type": "string",
+                        "example": "Ahmad Sudrajat"
+                    },
+                    "row_order": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "asal": {
+                        "type": "string",
+                        "example": "Jakarta"
+                    },
+                    "tujuan": {
+                        "type": "string",
+                        "example": "Bandung"
+                    },
+                    "tanggal_pergi": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-15"
+                    },
+                    "tanggal_sampai": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-17"
+                    },
+                    "no": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "golongan": {
+                        "type": "string",
+                        "example": "IV/e"
+                    },
+                    "jabatan": {
+                        "type": "string",
+                        "example": "Kepala Bagian"
+                    },
+                    "eselon": {
+                        "type": "string",
+                        "example": "IIb"
+                    },
+                    "jumlah_hari": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "formatted_date_range": {
+                        "type": "string",
+                        "example": "15 Jan 2025 - 17 Jan 2025"
+                    },
+                    "total_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 5000000
+                    },
+                    "total_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 4500000
+                    },
+                    "evidence_count": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "NominatifBiayaRow": {
+                "title": "NominatifBiayaRow",
+                "description": "Nominatif Biaya Row - Financial Data",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nominatif_detail_row_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "transport_pesawat_non_pp_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 1500000
+                    },
+                    "transport_pesawat_non_pp_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 1350000
+                    },
+                    "transport_taksi_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 100000
+                    },
+                    "transport_taksi_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 95000
+                    },
+                    "penginapan_jumlah_malam": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "penginapan_pagu_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 500000
+                    },
+                    "penginapan_aktual_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 480000
+                    },
+                    "uang_harian_meeting_fullboard_jumlah_hari": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "uang_harian_meeting_fullboard_pagu_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 300000
+                    },
+                    "uang_harian_meeting_fullboard_aktual_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 300000
+                    },
+                    "uang_harian_meeting_fullday_jumlah_hari": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "uang_harian_meeting_fullday_pagu_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 150000
+                    },
+                    "uang_harian_meeting_fullday_aktual_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 150000
+                    },
+                    "uang_harian_luar_kota_jumlah_hari": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "uang_harian_luar_kota_pagu_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 400000
+                    },
+                    "uang_harian_luar_kota_aktual_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 400000
+                    },
+                    "uang_harian_dalam_kota_jumlah_hari": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "uang_harian_dalam_kota_pagu_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 200000
+                    },
+                    "uang_harian_dalam_kota_aktual_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 200000
+                    },
+                    "representasi_luar_kota_jumlah_hari": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "representasi_luar_kota_pagu_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 250000
+                    },
+                    "representasi_luar_kota_aktual_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 250000
+                    },
+                    "representasi_dalam_kota_jumlah_hari": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "representasi_dalam_kota_pagu_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 150000
+                    },
+                    "representasi_dalam_kota_aktual_perhari": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 150000
+                    },
+                    "penginapan_total_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 1000000
+                    },
+                    "penginapan_total_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 960000
+                    },
+                    "penginapan_anggaran_berjalan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 980000
+                    },
+                    "uang_harian_meeting_fullboard_total_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 300000
+                    },
+                    "uang_harian_meeting_fullboard_total_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 300000
+                    },
+                    "uang_harian_meeting_fullboard_anggaran_berjalan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 300000
+                    },
+                    "uang_harian_meeting_fullday_total_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "uang_harian_meeting_fullday_total_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "uang_harian_meeting_fullday_anggaran_berjalan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "uang_harian_luar_kota_total_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 1200000
+                    },
+                    "uang_harian_luar_kota_total_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 1200000
+                    },
+                    "uang_harian_luar_kota_anggaran_berjalan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 1200000
+                    },
+                    "uang_harian_dalam_kota_total_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "uang_harian_dalam_kota_total_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "uang_harian_dalam_kota_anggaran_berjalan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "representasi_luar_kota_total_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "representasi_luar_kota_total_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "representasi_luar_kota_anggaran_berjalan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "representasi_dalam_kota_total_pagu": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "representasi_dalam_kota_total_aktual": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "representasi_dalam_kota_anggaran_berjalan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 0
+                    },
+                    "total_pagu_row": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 5000000
+                    },
+                    "total_aktual_row": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 4810000
+                    },
+                    "total_anggaran_berjalan_row": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 4780000
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "NominatifEvidence": {
+                "title": "NominatifEvidence",
+                "description": "Nominatif Evidence - File Evidence Links",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nominatif_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nominatif_detail_row_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "evidence_link": {
+                        "type": "string",
+                        "example": "https://drive.google.com/file/d/1ABCxyz/view?usp=sharing"
+                    },
+                    "evidence_name": {
+                        "type": "string",
+                        "example": "Tiket Pesawat PDF"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "example": "Tiket pesawat PP Jakarta - Bandung",
+                        "nullable": true
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "google_drive_id": {
+                        "type": "string",
+                        "example": "1ABCxyz"
+                    },
+                    "preview_url": {
+                        "type": "string",
+                        "example": "https://drive.google.com/file/d/1ABCxyz/preview"
+                    },
+                    "thumbnail_url": {
+                        "type": "string",
+                        "example": "https://drive.google.com/thumbnail?id=1ABCxyz&sz=w200"
+                    },
+                    "is_google_drive_link": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "is_google_docs_link": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "document_type": {
+                        "type": "string",
+                        "example": "Google Drive File"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "NonNominatif": {
+                "title": "NonNominatif",
+                "description": "Non-Nominatif Pengeluaran",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "rka_detail_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "deskripsi_kegiatan": {
+                        "type": "string",
+                        "example": "Pembelian ATK Bulanan"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-15"
+                    },
+                    "total_anggaran_terpakai": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 5000000
+                    },
+                    "evidence_link": {
+                        "type": "string",
+                        "example": "https://drive.google.com/file/d/1ABCxyz/view?usp=sharing"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "submitted",
+                            "rejected"
+                        ],
+                        "example": "draft"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    },
+                    "rka_detail": {
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "code_rka": {
+                                "type": "string"
+                            },
+                            "layanan": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    }
+                },
+                "type": "object"
+            },
+            "RKADetail": {
+                "title": "RKADetail",
+                "description": "RKA Detail - Rencana Kerja dan Anggaran",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "programDukunganManajemen": {
+                        "type": "string",
+                        "example": "7394"
+                    },
+                    "kodeProgram": {
+                        "type": "string",
+                        "example": "EBA"
+                    },
+                    "layananUmum": {
+                        "type": "string",
+                        "example": "962"
+                    },
+                    "kodeLayanan1": {
+                        "type": "string",
+                        "example": "EBA"
+                    },
+                    "kodeLayanan2": {
+                        "type": "string",
+                        "example": "962"
+                    },
+                    "layananTataUsaha": {
+                        "type": "string",
+                        "example": "001"
+                    },
+                    "kategoriAnggaran": {
+                        "description": "Kategori A/B/C",
+                        "type": "string",
+                        "example": "A"
+                    },
+                    "codeRka": {
+                        "type": "string",
+                        "example": "524111"
+                    },
+                    "layanan": {
+                        "type": "string",
+                        "example": "Belanja Perjalanan Dinas Biasa Dalam Wilayah"
+                    },
+                    "wilayah": {
+                        "type": "string",
+                        "example": "Jakarta"
+                    },
+                    "artiKode": {
+                        "type": "string",
+                        "example": "Belanja Perjalanan Dinas Biasa"
+                    },
+                    "sisaPemakaianAnggaran": {
+                        "type": "number",
+                        "example": 50
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "Aktif"
+                    },
+                    "anggaranPerjalanan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 5000000
+                    },
+                    "anggaranLayanan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 100000000
+                    },
+                    "anggaranLayananUsed": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 25000000
+                    },
+                    "anggaranLayananAvailable": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 75000000
+                    },
+                    "sp2d": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 10000000
+                    },
+                    "anggaran_berjalan": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 25000000
+                    },
+                    "anggaran_sp2d": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 10000000
+                    },
+                    "anggaran_tersisa": {
+                        "type": "number",
+                        "format": "integer",
+                        "example": 65000000
+                    },
+                    "sbm": {
+                        "type": "string",
+                        "example": "perwakilan_ri"
+                    }
+                },
+                "type": "object"
+            },
+            "KategoriAnggaran": {
+                "title": "KategoriAnggaran",
+                "description": "Kategori Anggaran (A/B/C)",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "tahun": {
+                        "type": "integer",
+                        "example": 2025
+                    },
+                    "nama_kategori": {
+                        "type": "string",
+                        "example": "Kategori A"
+                    },
+                    "kode": {
+                        "description": "Kode kategori (A/B/C)",
+                        "type": "string",
+                        "example": "A"
+                    },
+                    "total_anggaran_kategori": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 2000000000
+                    },
+                    "anggaran_berjalan_kategori": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 500000000
+                    },
+                    "sp2d_kategori": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 300000000
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "example": "Kategori anggaran A"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00.000000Z"
+                    },
+                    "sisa_anggaran_kategori": {
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 1500000000
+                    }
+                },
+                "type": "object"
             }
         },
         "responses": {
@@ -1793,12 +4596,20 @@
             "description": "Dashboard and budget management operations"
         },
         {
-            "name": "Nominatif",
-            "description": "Nominatif management operations"
+            "name": "RKA",
+            "description": "RKA Details (Rencana Kerja dan Anggaran) operations"
         },
         {
             "name": "SBM",
             "description": "Master Standar Biaya Masukan (SBM) operations"
+        },
+        {
+            "name": "Nominatif",
+            "description": "Nominatif Perjalanan Dinas operations"
+        },
+        {
+            "name": "NonNominatif",
+            "description": "Non-Nominatif operations"
         },
         {
             "name": "Anggaran",

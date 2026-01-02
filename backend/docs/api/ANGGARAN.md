@@ -1,9 +1,44 @@
 # Anggaran API Guide - Frontend Documentation
 
+> 📖 **Panduan Penggunaan Swagger UI:** Lihat [guides/swagger_usage.md](../guides/swagger_usage.md) untuk cara test API di Swagger.
+
 ## Base URL
 ```
 http://localhost/api
 ```
+
+## Authentication & Security Status
+
+### 🔐 SECURE Endpoints (Laravel Sanctum)
+
+**Current Status:**
+- Anggaran API menggunakan **Secure endpoints** - MEMERLUKAN authentication
+- Dilindungi dengan **Laravel Sanctum** Bearer token
+- Frontend HARUS login terlebih dahulu sebelum mengakses
+
+**Routes Available:**
+| Route | Auth Required | Status |
+|-------|---------------|--------|
+| `/api/anggarans` | ✅ YES (Sanctum) | SECURE |
+| `/api/anggarans/{id}` | ✅ YES (Sanctum) | SECURE |
+| `/api/anggarans` (POST) | ✅ YES (Sanctum) | SECURE |
+| `/api/anggarans/{id}` (PUT) | ✅ YES (Sanctum) | SECURE |
+| `/api/anggarans/{id}` (DELETE) | ✅ YES (Sanctum) | SECURE |
+
+### 🔐 Security Comparison with Other Systems
+
+| Sistem | Development | Status |
+|--------|-------------|--------|
+| **Anggaran** | Secure (Sanctum) | ✅ SECURE sekarang |
+| **Non-Nominatif** | Secure (Sanctum) | ✅ SECURE sekarang |
+| **SBM** | Public | ⚠️ PUBLIC |
+| **RKA** | Public | ⚠️ PUBLIC |
+| **Nominatif** | Public | ⚠️ PUBLIC |
+
+### 📝 Note
+Anggaran berisi data keuangan sensitif, oleh karena itu sistem ini sudah diamankan dengan Sanctum authentication sejak awal development.
+
+---
 
 ## Authentication
 **Catatan:** Anggaran system menggunakan **Laravel Sanctum** Bearer token.

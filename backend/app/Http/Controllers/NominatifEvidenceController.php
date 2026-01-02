@@ -99,7 +99,7 @@ class NominatifEvidenceController extends Controller
     /**
      * Display the specified evidence file.
      */
-    public function show($evidenceId)
+    public function show($nominatifId, $evidenceId)
     {
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
@@ -158,7 +158,7 @@ class NominatifEvidenceController extends Controller
     /**
      * Remove the specified evidence file from storage.
      */
-    public function destroy($evidenceId)
+    public function destroy($nominatifId, $evidenceId)
     {
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
@@ -180,12 +180,7 @@ class NominatifEvidenceController extends Controller
 
         DB::beginTransaction();
         try {
-            // Delete file from storage
-            if (Storage::disk('public')->exists($evidence->evidence_foto_path)) {
-                Storage::disk('public')->delete($evidence->evidence_foto_path);
-            }
-
-            // Delete database record
+            // Delete database record (Google Drive links, no file storage cleanup needed)
             $evidence->delete();
 
             DB::commit();
@@ -203,36 +198,6 @@ class NominatifEvidenceController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-    }
-
-    /**
-     * Download evidence file.
-     */
-    public function download($evidenceId)
-    {
-        $evidence = NominatifEvidence::findOrFail($evidenceId);
-
-        // Security check
-        if ($evidence->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
-
-        // Check if file exists
-        if (!Storage::disk('public')->exists($evidence->evidence_foto_path)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'File not found'
-            ], 404);
-        }
-
-        // Return file download
-        return Storage::disk('public')->download(
-            $evidence->evidence_foto_path,
-            $evidence->evidence_foto_name
-        );
     }
 
     /**

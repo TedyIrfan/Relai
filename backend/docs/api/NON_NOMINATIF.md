@@ -1,9 +1,45 @@
 # Non-Nominatif API Guide - Frontend Documentation
 
+> 📖 **Panduan Penggunaan Swagger UI:** Lihat [guides/swagger_usage.md](../guides/swagger_usage.md) untuk cara test API di Swagger.
+
 ## Base URL
 ```
 http://localhost/api
 ```
+
+## Authentication & Security Status
+
+### 🔐 SECURE Endpoints (Laravel Sanctum)
+
+**Current Status:**
+- Non-Nominatif API menggunakan **Secure endpoints** - MEMERLUKAN authentication
+- Dilindungi dengan **Laravel Sanctum** Bearer token
+- Frontend HARUS login terlebih dahulu sebelum mengakses
+
+**Routes Available:**
+| Route | Auth Required | Status |
+|-------|---------------|--------|
+| `/api/non-nominatifs` | ✅ YES (Sanctum) | SECURE |
+| `/api/non-nominatifs/{id}` | ✅ YES (Sanctum) | SECURE |
+| `/api/non-nominatifs` (POST) | ✅ YES (Sanctum) | SECURE |
+| `/api/non-nominatifs/{id}` (PUT) | ✅ YES (Sanctum) | SECURE |
+| `/api/non-nominatifs/{id}` (DELETE) | ✅ YES (Sanctum) | SECURE |
+| `/api/non-nominatifs/{id}/submit` | ✅ YES (Sanctum) | SECURE |
+
+### 🔐 Security Comparison with Other Systems
+
+| Sistem | Development | Status |
+|--------|-------------|--------|
+| **Non-Nominatif** | Secure (Sanctum) | ✅ SECURE sekarang |
+| **Anggaran** | Secure (Sanctum) | ✅ SECURE sekarang |
+| **SBM** | Public | ⚠️ PUBLIC |
+| **RKA** | Public | ⚠️ PUBLIC |
+| **Nominatif** | Public | ⚠️ PUBLIC |
+
+### 📝 Note
+Non-Nominatif berisi data pengeluaran keuangan, oleh karena itu sistem ini sudah diamankan dengan Sanctum authentication sejak awal development.
+
+---
 
 ## Authentication
 **Catatan:** Non-Nominatif system menggunakan **Laravel Sanctum** Bearer token.

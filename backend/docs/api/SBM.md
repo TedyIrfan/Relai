@@ -1,36 +1,71 @@
 # SBM API Guide - Frontend Documentation
 
+> 📖 **Panduan Penggunaan Swagger UI:** Lihat [guides/swagger_usage.md](../guides/swagger_usage.md) untuk cara test API di Swagger.
+
 ## Base URL
 ```
 http://localhost/api
 ```
 
-## Authentication
-Semua endpoint membutuhkan Bearer token (dari login).
+## Authentication & Security Status
 
-### Login
-```http
-POST /api/auth/login
-Content-Type: application/json
+### ⚠️ IMPORTANT - Public Endpoints
 
-{
-  "username": "eselon1",
-  "password": "eselon1"
-}
-```
+**Current Status (Development Mode):**
+- SBM API menggunakan **Public endpoints** - TIDAK memerlukan authentication
+- Ini sengaja dibuat **PUBLIC** oleh tim untuk kemudahan testing dan development
+- Frontend dapat langsung mengakses data SBM tanpa login
 
-Response:
-```json
-{
-  "message": "Login successful",
-  "token": "1|your_token_here",
-  "user": { ... }
-}
-```
+**Routes Available:**
+| Route | Auth Required | Status |
+|-------|---------------|--------|
+| `/api/sbm/categories` | ❌ NO | PUBLIC |
+| `/api/sbm/{category}` | ❌ NO | PUBLIC |
+| `/api/sbm/summary` | ❌ NO | PUBLIC |
+| `/api/sbm/filters/options` | ❌ NO | PUBLIC |
+| `/api/sbm/filters/{category}` | ❌ NO | PUBLIC |
+| `/api/sbm/detail/{id}` | ❌ NO | PUBLIC |
 
-Untuk request selanjutnya, tambahkan header:
-```
-Authorization: Bearer 1|your_token_here
+### 🔐 Security Comparison with Other Systems
+
+| Sistem | Development | Production | Status |
+|--------|-------------|------------|--------|
+| **SBM** | Public | Secure (Sanctum) | ⚠️ PUBLIC sekarang, SECURE routes ready |
+| **RKA** | Public | Secure (Sanctum) | ⚠️ PUBLIC sekarang, SECURE routes ready |
+| **Nominatif** | Public | Secure (Sanctum) | ⚠️ PUBLIC sekarang, SECURE routes ready |
+| **Non-Nominatif** | Secure (Sanctum) | Secure (Sanctum) | ✅ SECURE sekarang |
+| **Anggaran** | Secure (Sanctum) | Secure (Sanctum) | ✅ SECURE sekarang |
+
+### 📝 Note
+SBM (Master Standar Biaya Masukan) adalah data referensi yang bersifat publik. Untuk production, routes ini tetap bisa dipertahankan sebagai public endpoints karena tidak berisi data sensitif.
+
+### 🔐 Production-Ready Secure Routes
+
+**Secure routes sekarang tersedia untuk production:**
+
+| Environment | Base Route | Auth Required |
+|-------------|------------|---------------|
+| Development | `/api/sbm/*` | ❌ NO |
+| Production | `/api/secure/sbm/*` | ✅ YES (Sanctum) |
+
+**Secure Endpoints Available:**
+- `GET /api/secure/sbm/categories` - Get all categories
+- `GET /api/secure/sbm/summary` - Get summary statistics
+- `GET /api/secure/sbm/filters/options` - Get filter options
+- `GET /api/secure/sbm/filters/{category}` - Get filter options by category
+- `GET /api/secure/sbm/detail/{id}` - Get single record by ID
+- `GET /api/secure/sbm/{category}` - Get data by category
+
+**Contoh untuk Production:**
+```javascript
+// Frontend untuk production
+const token = localStorage.getItem('token');
+
+fetch('http://localhost/api/secure/sbm/categories', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+})
 ```
 
 ---

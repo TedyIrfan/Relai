@@ -11,12 +11,6 @@ use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
 use Carbon\Carbon;
 
-/**
- * @OA\Tag(
- *     name="Nominatif",
- *     description="Nominatif management operations"
- * )
- */
 class NominatifNewController extends Controller
 {
     public function __construct()
@@ -64,41 +58,6 @@ class NominatifNewController extends Controller
         return $accessToken->tokenable;
     }
 
-    /**
-     * @OA\Get(
-     *      path="/api/nominatifs-new",
-     *      operationId="getNominatifsList",
-     *      tags={"Nominatif"},
-     *      summary="Get list of nominatifs",
-     *      description="Returns list of nominatifs with pagination",
-     *      security={{"sanctum":{}}},
-     *      @OA\Parameter(
-     *          name="status",
-     *          in="query",
-     *          description="Filter by status",
-     *          required=false,
-     *          @OA\Schema(
-     *              type="string",
-     *              enum={"draft", "submitted"}
-     *          )
-     *      ),
-     *      @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *          @OA\JsonContent(
-     *              @OA\Property(property="success", type="boolean", example=true),
-     *              @OA\Property(property="data", type="object",
-     *                  @OA\Property(property="data", type="array", @OA\Items(
-     *                      @OA\Property(property="id", type="integer", example=1),
-     *                      @OA\Property(property="deskripsi_perjalanan_dinas", type="string", example="Perjalanan Dinas Jakarta"),
-     *                      @OA\Property(property="status", type="string", example="draft"),
-     *                      @OA\Property(property="total_pagu_trip", type="number", example=5000000)
-     *                  ))
-     *              )
-     *          )
-     *      )
-     * )
-     */
     public function index(Request $request)
     {
         try {
@@ -175,39 +134,6 @@ class NominatifNewController extends Controller
         }
     }
 
-    /**
-     * @OA\Post(
-     *      path="/api/nominatifs-new",
-     *      operationId="createNominatif",
-     *      tags={"Nominatif"},
-     *      summary="Create new nominatif",
-     *      description="Create a new nominatif record",
-     *      security={{"sanctum":{}}},
-     *      @OA\RequestBody(
-     *          required=true,
-     *          @OA\JsonContent(
-     *              required={"rka_detail_id","deskripsi_perjalanan_dinas","tanggal_mulai","tanggal_selesai"},
-     *              @OA\Property(property="rka_detail_id", type="integer", example=1),
-     *              @OA\Property(property="deskripsi_perjalanan_dinas", type="string", example="Perjalanan Dinas Test"),
-     *              @OA\Property(property="tanggal_mulai", type="string", format="date", example="2025-11-24"),
-     *              @OA\Property(property="tanggal_selesai", type="string", format="date", example="2025-11-27")
-     *          )
-     *      ),
-     *      @OA\Response(
-     *          response=201,
-     *          description="Nominatif created successfully",
-     *          @OA\JsonContent(
-     *              @OA\Property(property="success", type="boolean", example=true),
-     *              @OA\Property(property="message", type="string", example="Nominatif created successfully"),
-     *              @OA\Property(property="data", type="object",
-     *                  @OA\Property(property="id", type="integer", example=1),
-     *                  @OA\Property(property="deskripsi_perjalanan_dinas", type="string"),
-     *                  @OA\Property(property="status", type="string", example="draft")
-     *              )
-     *          )
-     *      )
-     * )
-     */
     public function store(Request $request)
     {
         // Manual token validation
@@ -266,42 +192,6 @@ class NominatifNewController extends Controller
         }
     }
 
-    /**
-     * @OA\Get(
-     *      path="/api/nominatifs-new/{id}",
-     *      operationId="getNominatifById",
-     *      tags={"Nominatif"},
-     *      summary="Get nominatif by ID",
-     *      description="Returns detailed nominatif information with all related data",
-     *      security={{"sanctum":{}}},
-     *      @OA\Parameter(
-     *          name="id",
-     *          in="path",
-     *          description="Nominatif ID",
-     *          required=true,
-     *          @OA\Schema(type="integer", example=1)
-     *      ),
-     *      @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *          @OA\JsonContent(
-     *              @OA\Property(property="success", type="boolean", example=true),
-     *              @OA\Property(property="data", type="object",
-     *                  @OA\Property(property="nominatif", type="object",
-     *                      @OA\Property(property="id", type="integer", example=1),
-     *                      @OA\Property(property="deskripsi_perjalanan_dinas", type="string"),
-     *                      @OA\Property(property="status", type="string", example="draft"),
-     *                      @OA\Property(property="total_pagu_trip", type="number", example=5000000)
-     *                  )
-     *              )
-     *          )
-     *      ),
-     *      @OA\Response(
-     *          response=404,
-     *          description="Nominatif not found"
-     *      )
-     * )
-     */
     public function show($id)
     {
         $nominatif = NominatifNew::with([
