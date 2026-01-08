@@ -31,23 +31,25 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
 
     return Object.keys(dataFields).filter(key =>
       key !== '_detected_currency' && key !== '_row_number' &&
-      key !== 'id' && key !== 'category' && key !== 'source_file' && key !== 'currency'
+      key !== 'id' && key !== 'category' && key !== 'source_file' && key !== 'currency' &&
+      key !== 'sub_category' && key !== 'parent_section' && key !== 'grouping_label' &&
+      key !== 'no'
     );
   };
 
-  const renderCellValue = (value) => {
+  const renderCellValue = (value, itemCurrency = 'IDR') => {
     if (value === null || value === undefined || value === '') {
       return <span className="text-gray-400">-</span>;
     }
 
     if (typeof value === 'number') {
-      return formatCurrency(value);
+      return formatCurrency(value, itemCurrency);
     }
 
     if (typeof value === 'string' && /^[\d.,]+$/.test(value.trim())) {
       const numValue = parseFloat(value.replace(/,/g, ''));
       if (!isNaN(numValue)) {
-        return formatCurrency(numValue);
+        return formatCurrency(numValue, itemCurrency);
       }
     }
 
@@ -174,7 +176,7 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
                         </td>
                         {headers.map(header => (
                           <td key={header} className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
-                            {renderCellValue(dataFields[header])}
+                            {renderCellValue(dataFields[header], item.currency || 'IDR')}
                           </td>
                         ))}
                       </tr>
@@ -185,11 +187,11 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
                               <div className="grid grid-cols-2 gap-2">
                                 <div><span className="font-medium text-gray-700">ID:</span> {itemId}</div>
                                 <div><span className="font-medium text-gray-700">Category:</span> {item.category}</div>
-                                {item.parent_section && (
-                                  <div><span className="font-medium text-gray-700">Parent:</span> {item.parent_section}</div>
-                                )}
                                 {item.sub_category && (
-                                  <div><span className="font-medium text-gray-700">Sub:</span> {item.sub_category}</div>
+                                  <div><span className="font-medium text-gray-700">Sub Category:</span> {item.sub_category}</div>
+                                )}
+                                {item.parent_section && (
+                                  <div><span className="font-medium text-gray-700">Parent Section:</span> {item.parent_section}</div>
                                 )}
                                 <div><span className="font-medium text-gray-700">Currency:</span> {item.currency || 'IDR'}</div>
                                 <div className="col-span-2"><span className="font-medium text-gray-700">Source:</span> {item.source_file}</div>

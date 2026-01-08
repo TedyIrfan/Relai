@@ -91,11 +91,11 @@ const SBMFolderList = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Kategori SBM</h2>
-            <p className="text-gray-600 mt-1">Standar Biaya Masukan - Pilih kategori untuk melihat detail</p>
+            <h2 className="text-2xl font-bold text-gray-900">Master SBM</h2>
+            <p className="text-gray-600 mt-1">Standar Biaya Masukan - Pilih SBM untuk melihat detail</p>
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
-            <span className="text-blue-700 font-medium">{categories.length} Kategori</span>
+            <span className="text-blue-700 font-medium">{categories.length} File SBM</span>
           </div>
         </div>
 
@@ -131,7 +131,7 @@ const SBMFolderList = () => {
                     {group}
                   </span>
                   <span className="bg-blue-100 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
-                    {groupCategories.length} kategori
+                    {groupCategories.length} {group === 'Honorarium' ? 'Honorarium' : 'Section'}
                   </span>
                 </div>
                 <svg

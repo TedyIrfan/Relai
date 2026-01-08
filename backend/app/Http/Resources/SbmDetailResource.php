@@ -19,6 +19,10 @@ class SbmDetailResource extends JsonResource
             return [
                 'id' => $this->id,
                 'category' => $this->category,
+                'sub_category' => $this->sub_category,
+                'parent_section' => $this->parent_section,
+                'grouping_label' => $this->grouping_label,
+                'currency' => $this->currency,
                 'source_file' => $this->source_file,
             ];
         }
@@ -29,6 +33,10 @@ class SbmDetailResource extends JsonResource
         // Tambahkan metadata dari tabel utama
         $data['id'] = $this->id;
         $data['category'] = $this->category;
+        $data['sub_category'] = $this->sub_category;
+        $data['parent_section'] = $this->parent_section;
+        $data['grouping_label'] = $this->grouping_label;
+        $data['currency'] = $this->currency;
         $data['source_file'] = $this->source_file;
 
         // Format besaran ke currency (jika ada)

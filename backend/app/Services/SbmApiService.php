@@ -496,7 +496,12 @@ class SbmApiService
 
         // Filter by Sub Category
         if (!empty($filters['sub_category'])) {
-            $query->where('data->sub_category', $filters['sub_category']);
+            $query->where('sub_category', $filters['sub_category']);
+        }
+
+        // Filter by Parent Section
+        if (!empty($filters['parent_section'])) {
+            $query->where('parent_section', $filters['parent_section']);
         }
     }
 
