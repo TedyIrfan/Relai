@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Database, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Database, FileText, ChevronDown, ChevronRight, Search, X } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import sbmService, { SBM_CATEGORIES } from '../services/sbmService';
 import SBMTable from '../components/sbm/SBMTable';
@@ -12,6 +12,7 @@ const SBMCategoryDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedSections, setExpandedSections] = useState(new Set(['all']));
+  const [universalSearch, setUniversalSearch] = useState('');
 
   const categoryInfo = SBM_CATEGORIES[category] || { label: category, group: 'Other' };
 
@@ -55,15 +56,6 @@ const SBMCategoryDetail = () => {
       }
       return newSet;
     });
-  };
-
-  const expandAll = () => {
-    const allKeys = getGroupedData().map((_, index) => `section-${index}`);
-    setExpandedSections(new Set(['all', ...allKeys]));
-  };
-
-  const collapseAll = () => {
-    setExpandedSections(new Set(['all']));
   };
 
   // Group data logic for all categories
@@ -131,6 +123,32 @@ const SBMCategoryDetail = () => {
     }];
   }, [allData, hasGroupingLabel, hasSubCategory, categoryInfo]);
 
+  // Universal search functions
+  const getFilteredDataBySection = (group) => {
+    if (!universalSearch) return group.data;
+    const searchTerm = universalSearch.toLowerCase();
+    return group.data.filter(item => {
+      const dataFields = item.data || item;
+      return Object.values(dataFields).some(value =>
+        value && value.toString().toLowerCase().includes(searchTerm)
+      );
+    });
+  };
+
+  const getMatchCount = (group) => {
+    if (!universalSearch) return group.count;
+    return getFilteredDataBySection(group).length;
+  };
+
+  const getTotalMatches = () => {
+    if (!universalSearch) return allData.length;
+    return getGroupedData.reduce((total, group) => total + getMatchCount(group), 0);
+  };
+
+  const resetUniversalSearch = () => {
+    setUniversalSearch('');
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -169,23 +187,6 @@ const SBMCategoryDetail = () => {
               <FileText className="w-4 h-4 text-green-600" />
               <span className="text-green-700 text-sm">{allData.length} Data</span>
             </div>
-
-            {getGroupedData.length > 1 && (
-              <>
-                <button
-                  onClick={expandAll}
-                  className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
-                >
-                  Expand All
-                </button>
-                <button
-                  onClick={collapseAll}
-                  className="px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
-                >
-                  Collapse All
-                </button>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -207,12 +208,67 @@ const SBMCategoryDetail = () => {
         </div>
       )}
 
+      {/* Universal Search Bar */}
+      {!loading && getGroupedData.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Cari Data"
+                value={universalSearch}
+                onChange={(e) => setUniversalSearch(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full text-sm"
+              />
+              {universalSearch && (
+                <button
+                  onClick={resetUniversalSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {universalSearch && (
+              <button
+                onClick={resetUniversalSearch}
+                className="px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+          {universalSearch && (
+            <div className="mt-2 text-sm">
+              {getTotalMatches() > 0 ? (
+                <span className="text-green-600">
+                  ✓ Ditemukan <strong>{getTotalMatches()}</strong> data
+                </span>
+              ) : (
+                <span className="text-orange-600">
+                  ⚠️ Tidak ada data yang cocok
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Vertical Tables Layout */}
       {!loading && getGroupedData.length > 0 && (
         <div className="space-y-6">
           {getGroupedData.map((group, index) => {
             const sectionKey = `section-${index}`;
+            const filteredData = getFilteredDataBySection(group);
+            const matchCount = getMatchCount(group);
+            const hasMatches = !universalSearch || matchCount > 0;
             const isExpanded = expandedSections.has('all') || expandedSections.has(sectionKey);
+
+            // Hide sections without matches during search
+            if (universalSearch && !hasMatches) {
+              return null;
+            }
 
             return (
               <div key={sectionKey} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -229,7 +285,15 @@ const SBMCategoryDetail = () => {
                     )}
                     <div className="text-left">
                       <h3 className="font-semibold text-gray-900">{group.title}</h3>
-                      <p className="text-sm text-gray-500">{group.count} Data</p>
+                      <p className="text-sm text-gray-500">
+                        {universalSearch ? (
+                          <>
+                            ✓ <strong>{matchCount}</strong> match ditemukan
+                          </>
+                        ) : (
+                          <>{group.count} Data</>
+                        )}
+                      </p>
                     </div>
                   </div>
                 </button>
@@ -239,12 +303,12 @@ const SBMCategoryDetail = () => {
                   <div className="border-t border-gray-200">
                     <SBMTable
                       data={{
-                        data: group.data,
+                        data: filteredData,
                         meta: {
-                          total: group.count,
+                          total: matchCount,
                           current_page: 1,
                           last_page: 1,
-                          per_page: group.count
+                          per_page: matchCount
                         }
                       }}
                       loading={false}

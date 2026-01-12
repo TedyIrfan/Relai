@@ -1,32 +1,21 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Database } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
 const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }) => {
   const [expandedRow, setExpandedRow] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   const items = data.data || [];
   const meta = data.meta || {};
-
-  // Filter items based on search
-  const filteredItems = items.filter(item => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    const dataFields = item.data || item;
-    return Object.values(dataFields).some(value =>
-      value && value.toString().toLowerCase().includes(searchLower)
-    );
-  });
 
   const toggleRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
 
   const getTableHeaders = () => {
-    if (filteredItems.length === 0) return [];
+    if (items.length === 0) return [];
 
-    const firstItem = filteredItems[0];
+    const firstItem = items[0];
     const dataFields = firstItem.data || firstItem;
 
     return Object.keys(dataFields).filter(key =>
@@ -65,29 +54,15 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
 
   return (
     <div className="bg-white rounded-lg border border-gray-200">
-      {/* Header with Search */}
+      {/* Header */}
       <div className="p-4 border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 rounded-lg p-2">
-              <Search className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Data SBM</h3>
-              <p className="text-xs text-gray-500">Standar Biaya Masukan</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-100 rounded-lg p-2">
+            <Database className="w-4 h-4 text-blue-600" />
           </div>
-
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Cari data..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64 text-sm"
-            />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Data SBM</h3>
+            <p className="text-xs text-gray-500">Standar Biaya Masukan</p>
           </div>
         </div>
       </div>
@@ -99,12 +74,6 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
         <span>Halaman: <strong>{meta.current_page || 1}</strong> dari <strong>{meta.last_page || 1}</strong></span>
         <span>•</span>
         <span>Per halaman: <strong>{meta.per_page || 15}</strong></span>
-        {searchTerm && (
-          <>
-            <span>•</span>
-            <span>Filter: <strong>"{searchTerm}"</strong></span>
-          </>
-        )}
       </div>
 
       {/* Loading State */}
@@ -118,14 +87,14 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
       )}
 
       {/* Empty State */}
-      {!loading && filteredItems.length === 0 && (
+      {!loading && items.length === 0 && (
         <div className="p-8 text-center text-gray-500">
-          {searchTerm ? `Tidak ada data yang cocok dengan "${searchTerm}"` : 'Tidak ada data'}
+          Tidak ada data
         </div>
       )}
 
       {/* Table */}
-      {!loading && filteredItems.length > 0 && (
+      {!loading && items.length > 0 && (
         <>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -148,7 +117,7 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredItems.map((item, index) => {
+                {items.map((item, index) => {
                   const dataFields = item.data || item;
                   const itemId = item.id;
 
