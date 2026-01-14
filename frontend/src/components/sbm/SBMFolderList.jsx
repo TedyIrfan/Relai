@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import sbmService, { SBM_CATEGORIES } from '../../services/sbmService';
+import Fuse from 'fuse.js';
 
 const SBMFolderList = () => {
   const [categories, setCategories] = useState([]);
@@ -57,10 +58,20 @@ const SBMFolderList = () => {
 
   // Filter by search
   const filteredGroups = Object.entries(groupedCategories).reduce((acc, [group, cats]) => {
-    const filtered = cats.filter(cat =>
-      cat.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cat.category?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    if (!searchTerm) {
+      acc[group] = cats;
+      return acc;
+    }
+
+    const fuse = new Fuse(cats, {
+      keys: ['label', 'category'],
+      threshold: 0.3,
+      ignoreLocation: true,
+      includeScore: false
+    });
+
+    const filtered = fuse.search(searchTerm).map(result => result.item);
+
     if (filtered.length > 0) {
       acc[group] = filtered;
     }
@@ -103,7 +114,7 @@ const SBMFolderList = () => {
         <div className="mt-4">
           <input
             type="text"
-            placeholder="Cari kategori..."
+            placeholder="Cari Master SBM..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

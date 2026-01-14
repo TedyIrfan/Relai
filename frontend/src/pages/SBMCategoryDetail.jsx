@@ -3,6 +3,7 @@ import { ArrowLeft, Database, FileText, ChevronDown, ChevronRight, Search, X } f
 import { useParams, useNavigate } from 'react-router-dom';
 import sbmService, { SBM_CATEGORIES } from '../services/sbmService';
 import SBMTable from '../components/sbm/SBMTable';
+import Fuse from 'fuse.js';
 
 const SBMCategoryDetail = () => {
   const { category } = useParams();
@@ -126,12 +127,16 @@ const SBMCategoryDetail = () => {
   // Universal search functions
   const getFilteredDataBySection = (group) => {
     if (!universalSearch) return group.data;
-    const searchTerm = universalSearch.toLowerCase();
+
+    const searchClean = universalSearch.toLowerCase().replace(/\s+/g, '');
+
     return group.data.filter(item => {
       const dataFields = item.data || item;
-      return Object.values(dataFields).some(value =>
-        value && value.toString().toLowerCase().includes(searchTerm)
-      );
+      return Object.values(dataFields).some(value => {
+        if (!value) return false;
+        const valueClean = value.toString().toLowerCase().replace(/\s+/g, '');
+        return valueClean.includes(searchClean);
+      });
     });
   };
 
