@@ -31,7 +31,7 @@ const SBMReferensiModal = ({ isOpen, onClose, fieldName, fieldLabel }) => {
     }
   }, [isOpen]);
 
-  // Pop up Master SBM Di Nominatif
+  // Icon Search Pop up Master SBM di Nominatif
 
   // Fetch data dari Master SBM saat category berubah
   useEffect(() => {
