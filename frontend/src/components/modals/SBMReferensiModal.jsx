@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   X,
   Search,
@@ -21,6 +21,16 @@ const SBMReferensiModal = ({ isOpen, onClose, fieldName, fieldLabel }) => {
   const [tableHeaders, setTableHeaders] = useState([]);
   const [expandedSections, setExpandedSections] = useState(new Set(["all"]));
 
+  // Cache untuk menyimpan data yang sudah di-fetch
+  const dataCache = useRef(new Map());
+
+  // Clear cache saat modal close
+  useEffect(() => {
+    if (!isOpen) {
+      dataCache.current.clear();
+    }
+  }, [isOpen]);
+
   // Pop up Master SBM Di Nominatif
 
   // Fetch data dari Master SBM saat category berubah
@@ -31,6 +41,14 @@ const SBMReferensiModal = ({ isOpen, onClose, fieldName, fieldLabel }) => {
   }, [isOpen, selectedCategory]);
 
   const fetchSbmData = async (category) => {
+    // Check cache dulu
+    if (dataCache.current.has(category)) {
+      const cached = dataCache.current.get(category);
+      setSbmData(cached.data);
+      setTableHeaders(cached.headers);
+      return;
+    }
+
     try {
       setLoading(true);
       const result = await sbmService.getAllByCategory(category);
@@ -54,6 +72,9 @@ const SBMReferensiModal = ({ isOpen, onClose, fieldName, fieldLabel }) => {
             key !== "no"
         );
         setTableHeaders(headers);
+
+        // Simpan ke cache
+        dataCache.current.set(category, { data: result.data, headers });
       } else {
         setSbmData([]);
         setTableHeaders([]);
