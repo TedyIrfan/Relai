@@ -1,0 +1,501 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import Notifikasi from '../components/Notifikasi';
+import KonfirmasiDialog from '../components/KonfirmasiDialog';
+import nonNominatifService from '../services/nonNominatifService';
+import { consoleLog, consoleError, consoleWarn } from '../utils/logger';
+
+const NonNominatif = () => {
+  const navigate = useNavigate();
+  const [nonNominatifs, setNonNominatifs] = useState([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [dialogKonfirmasi, setDialogKonfirmasi] = useState({
+    isOpen: false,
+    nonNominatifId: null,
+    deskripsi: '',
+    type: 'delete' // 'delete' or 'submit'
+  });
+
+  // Add deleting and submitting state for visual feedback
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch non-nominatif list
+  useEffect(() => {
+    const fetchNonNominatifs = async () => {
+      try {
+        setLoading(true);
+        const data = await nonNominatifService.getAll();
+
+  
+        // Handle different response structures
+        let nonNominatifArray = [];
+
+        if (Array.isArray(data)) {
+          nonNominatifArray = data;
+        } else if (data && Array.isArray(data.data)) {
+          nonNominatifArray = data.data;
+        } else if (data && Array.isArray(data.results)) {
+          nonNominatifArray = data.results;
+        } else if (data && Array.isArray(data.non_nominatifs)) {
+          nonNominatifArray = data.non_nominatifs;
+        } else if (data && typeof data === 'object') {
+          // Try to find array in nested properties (for Laravel pagination)
+          if (data.data && Array.isArray(data.data.data)) {
+            nonNominatifArray = data.data.data;
+          } else if (data.data && Array.isArray(data.data.results)) {
+            nonNominatifArray = data.data.results;
+          } else {
+            // Try to find array in nested properties
+            const possibleArrays = Object.values(data).filter(val => Array.isArray(val));
+            if (possibleArrays.length > 0) {
+              nonNominatifArray = possibleArrays[0];
+            }
+          }
+        }
+
+        if (Array.isArray(nonNominatifArray)) {
+          setNonNominatifs(nonNominatifArray);
+          setIsDataLoaded(true);
+            } else {
+            setNonNominatifs([]);
+          setIsDataLoaded(true);
+        }
+      } catch (error) {
+        consoleError('Error fetching non-nominatifs:', error);
+        setNonNominatifs([]);
+        setIsDataLoaded(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNonNominatifs();
+  }, []);
+
+  // Check for stored notifications from other pages
+  useEffect(() => {
+    const storedNotification = localStorage.getItem('showSuccessNotification');
+    if (storedNotification) {
+      try {
+        const notification = JSON.parse(storedNotification);
+        // Show the notification
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi(notification.message, notification.type);
+        }
+        // Clear the stored notification
+        localStorage.removeItem('showSuccessNotification');
+      } catch (error) {
+        // Clear invalid stored notification
+        localStorage.removeItem('showSuccessNotification');
+      }
+    }
+  }, []);
+
+  // Get status badge color
+  const getStatusBadge = (status) => {
+    const badges = {
+      'draft': 'bg-gray-100 text-gray-800',
+      'submitted': 'bg-yellow-100 text-yellow-800',
+      'rejected': 'bg-red-100 text-red-800'
+    };
+    return badges[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  // Format currency
+  const formatRupiah = (amount) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  // Handle actions
+  const handleCreateNew = () => {
+    navigate('/non-nominatif/create');
+  };
+
+  const handleEdit = (nonNominatif) => {
+    navigate(`/non-nominatif/${nonNominatif.id}/edit`);
+  };
+
+  const handleDeleteClick = (id, deskripsi) => {
+    setDialogKonfirmasi({
+      isOpen: true,
+      nonNominatifId: id,
+      deskripsi: deskripsi,
+      type: 'delete'
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const deleteId = dialogKonfirmasi.nonNominatifId;
+
+      // Set loading state immediately for UI feedback
+      setIsDeleting(true);
+
+      // Close dialog immediately for better UX
+      handleCloseDialog();
+
+      const response = await fetch(`http://localhost/api/non-nominatifs/${deleteId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Optimized state update - find and remove specific item
+        setNonNominatifs(prevNonNominatifs => {
+          const index = prevNonNominatifs.findIndex(nom => nom.id === deleteId);
+          if (index > -1) {
+            // Create new array without the deleted item for better performance
+            const newNonNominatifs = [...prevNonNominatifs];
+            newNonNominatifs.splice(index, 1);
+            return newNonNominatifs;
+          }
+          return prevNonNominatifs;
+        });
+
+        // Tampilkan notifikasi sukses
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi('Data berhasil dihapus', 'success');
+        }
+      } else {
+        // Tampilkan notifikasi error
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi('Gagal menghapus non-nominatif', 'error');
+        }
+      }
+    } catch (error) {
+      consoleError('Error deleting non-nominatif:', error);
+      // Tampilkan notifikasi error jaringan
+      if (window.tampilkanNotifikasi) {
+        window.tampilkanNotifikasi('Terjadi kesalahan jaringan', 'error');
+      }
+    } finally {
+      // Always reset loading state
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogKonfirmasi({
+      isOpen: false,
+      nonNominatifId: null,
+      deskripsi: '',
+      type: 'delete'
+    });
+  };
+
+  const handleSubmit = (id) => {
+    // Buka dialog konfirmasi
+    const nonNominatif = nonNominatifs.find(n => n.id === id);
+    setDialogKonfirmasi({
+      isOpen: true,
+      nonNominatifId: id,
+      deskripsi: nonNominatif?.deskripsi_kegiatan || '',
+      type: 'submit'
+    });
+  };
+
+  const handleConfirmSubmit = async () => {
+    // Set loading state immediately
+    setIsSubmitting(true);
+    const nonNominatif = nonNominatifs.find(n => n.id === dialogKonfirmasi.nonNominatifId);
+
+    try {
+      const response = await nonNominatifService.submit(dialogKonfirmasi.nonNominatifId);
+
+      if (response) {
+        // Show success popup notification
+        if (window.tampilkanNotifikasi) {
+          window.tampilkanNotifikasi('Non-nominatif berhasil dikirim', 'success');
+
+          // Show second notification with details
+          setTimeout(() => {
+            if (window.tampilkanNotifikasi && nonNominatif) {
+              window.tampilkanNotifikasi(
+                `${nonNominatif.deskripsi_kegiatan}\nRp ${parseInt(nonNominatif.total_anggaran_terpakai).toLocaleString('id-ID')}`,
+                'info'
+              );
+            }
+          }, 500);
+        }
+
+        // Update status non-nominatif di local state
+        setNonNominatifs(nonNominatifs.map(nom =>
+          nom.id === dialogKonfirmasi.nonNominatifId ? { ...nom, status: 'submitted' } : nom
+        ));
+
+        // Refresh data after delay to show notifications
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    } catch (error) {
+      consoleError('Error submitting non-nominatif:', error);
+      // Show error popup notification
+      if (window.tampilkanNotifikasi) {
+        window.tampilkanNotifikasi('Gagal mengirim non-nominatif', 'error');
+      } else {
+        alert('Gagal mengirim non-nominatif');
+      }
+    } finally {
+      // Always reset loading state
+      setIsSubmitting(false);
+      // Tutup dialog
+      setDialogKonfirmasi({ isOpen: false, nonNominatifId: null });
+    }
+  };
+
+
+  return (
+      <>
+      {/* Komponen Notifikasi - di luar container utama */}
+      <Notifikasi />
+
+      {/* Komponen Dialog Konfirmasi */}
+      <KonfirmasiDialog
+        isOpen={dialogKonfirmasi.isOpen}
+        onClose={handleCloseDialog}
+        onConfirm={dialogKonfirmasi.type === 'delete' ? handleConfirmDelete : handleConfirmSubmit}
+        title={dialogKonfirmasi.type === 'delete' ? 'Konfirmasi Hapus Data' : 'Konfirmasi Pengiriman Non-Nominatif'}
+        message={dialogKonfirmasi.type === 'delete'
+          ? `Apakah Anda yakin ingin menghapus data non-nominatif ini?\n\nDeskripsi: ${dialogKonfirmasi.deskripsi}\n\nData yang sudah dihapus tidak dapat dikembalikan.`
+          : `Apakah Anda yakin ingin mengirim data non-nominatif ini?\n\nDeskripsi: ${dialogKonfirmasi.deskripsi}\n\nSetelah non-nominatif dikirim, data RKA anggaran tidak akan bisa diedit lagi.\n\nPastikan semua data sudah benar sebelum melanjutkan.`
+        }
+        confirmText={dialogKonfirmasi.type === 'delete' ? 'Ya, Hapus' : 'Submit'}
+        cancelText="Batal"
+        type={dialogKonfirmasi.type === 'delete' ? 'danger' : 'success'}
+        iconType="warning"
+        isLoading={dialogKonfirmasi.type === 'submit' ? isSubmitting : false}
+      />
+
+      <div className="min-h-screen bg-gray-50">
+        {/* Header - Full Width */}
+        <div className="bg-white shadow-lg rounded-xl mx-4 mt-4 border-b border-gray-200 relative">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <FileText className="w-6 h-6 text-blue-600 mr-3" />
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Non-Nominatif
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Kelola pengeluaran non-nominatif
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleCreateNew}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4" />
+              Buat Non-Nominatif
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards - Full Width */}
+      <div className="px-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white shadow-lg rounded-xl px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Non-Nominatif</p>
+                <p className="text-2xl font-bold text-gray-900">{isDataLoaded && Array.isArray(nonNominatifs) ? nonNominatifs.length : 0}</p>
+              </div>
+              <FileText className="w-8 h-8 text-blue-600" />
+            </div>
+          </div>
+
+          <div className="bg-white shadow-lg rounded-xl px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Draft</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {isDataLoaded && Array.isArray(nonNominatifs) ? nonNominatifs.filter(n => n.status === 'draft').length : 0}
+                </p>
+              </div>
+              <Clock className="w-8 h-8 text-gray-600" />
+            </div>
+          </div>
+
+          <div className="bg-white shadow-lg rounded-xl px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Submit</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {isDataLoaded && Array.isArray(nonNominatifs) ? nonNominatifs.filter(n => n.status === 'submitted').length : 0}
+                </p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Non-Nominatif List - FULL WIDTH SCREEN */}
+      <div className="bg-white shadow-lg rounded-xl mx-4 mt-4 border-b border-gray-200 relative">
+        <div className="px-4 sm:px-6 lg:px-8 py-3 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Daftar Non-Nominatif
+          </h2>
+          <p className="text-sm text-gray-600">
+            Total {isDataLoaded && Array.isArray(nonNominatifs) ? nonNominatifs.length : 0} non-nominatif
+          </p>
+        </div>
+
+        <div className="px-4 sm:px-6 lg:px-8 overflow-hidden">
+            <table className="w-full table-fixed">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
+                    Code RKA
+                  </th>
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '15%'}}>
+                    Layanan
+                  </th>
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '30%'}}>
+                    Deskripsi Kegiatan
+                  </th>
+                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '15%'}}>
+                    Dana Anggaran
+                  </th>
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '6%'}}>
+                    Status
+                  </th>
+                  <th className="px-1 py-1 text-left text-xs font-medium text-gray-600 uppercase" style={{width: '8%'}}>
+                    Tanggal
+                  </th>
+                  <th className="px-1 py-1 text-right text-xs font-medium text-gray-600 uppercase" style={{width: '6%'}}>
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
+                        Memuat data...
+                      </div>
+                    </td>
+                  </tr>
+                ) : isDataLoaded && Array.isArray(nonNominatifs) && nonNominatifs.length > 0 ? (
+                  nonNominatifs.map((nonNominatif) => (
+                    <tr key={nonNominatif.id} className="hover:bg-gray-50">
+                      <td className="px-1 py-1 text-sm font-mono text-gray-900">
+                        {nonNominatif.rka_detail?.code_rka || '-'}
+                      </td>
+                      <td className="px-1 py-1 text-sm text-gray-900">
+                        <div className="truncate" title={nonNominatif.rka_detail?.layanan || '-'}>
+                          {nonNominatif.rka_detail?.layanan || '-'}
+                        </div>
+                      </td>
+                      <td className="px-1 py-1 text-sm text-gray-900">
+                        <div className="truncate" title={nonNominatif.deskripsi_kegiatan || '-'}>
+                          {nonNominatif.deskripsi_kegiatan || '-'}
+                        </div>
+                      </td>
+                      <td className="px-1 py-1 text-sm font-medium text-right text-gray-900">
+                        {formatRupiah(nonNominatif.total_anggaran_terpakai || 0)}
+                      </td>
+                      <td className="px-1 py-1 text-sm">
+                        <span className={`inline-flex items-center px-1 py-0 rounded-full text-xs font-medium ${getStatusBadge(nonNominatif.status)}`}>
+                          {nonNominatif.status}
+                        </span>
+                      </td>
+                      <td className="px-1 py-1 text-sm text-gray-900">
+                        <div className="flex items-center gap-0.5">
+                          <Calendar className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                          {formatDate(nonNominatif.tanggal)}
+                        </div>
+                      </td>
+                      <td className="px-1 py-1 text-sm text-right">
+                        <div className="flex items-center justify-end gap-0.5">
+                          {(nonNominatif.status === 'draft' || nonNominatif.status === 'rejected') && (
+                            <button
+                              onClick={() => handleEdit(nonNominatif)}
+                              className="p-1 text-blue-600 hover:text-blue-800"
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                          {(nonNominatif.status === 'draft' || nonNominatif.status === 'rejected') && (
+                            <button
+                              onClick={() => handleDeleteClick(nonNominatif.id, nonNominatif.deskripsi_kegiatan)}
+                              disabled={isDeleting}
+                              className={`p-1 ${isDeleting ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
+                              title={isDeleting ? 'Menghapus...' : 'Hapus'}
+                            >
+                              <Trash2 className={`w-4 h-4 ${isDeleting ? 'animate-pulse' : ''}`} />
+                            </button>
+                          )}
+                          {(nonNominatif.status === 'draft' || nonNominatif.status === 'rejected') && (
+                            <button
+                              onClick={() => handleSubmit(nonNominatif.id)}
+                              className="p-1 text-blue-600 hover:text-blue-800"
+                              title="Submit"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <FileText className="w-12 h-12 text-gray-400 mb-4" />
+                        <p className="text-lg font-medium text-gray-900 mb-2">
+                          Belum ada non-nominatif
+                        </p>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Buat non-nominatif pertama Anda dengan klik tombol "Buat Non-Nominatif"
+                        </p>
+                        <button
+                          onClick={handleCreateNew}
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Buat Non-Nominatif Pertama
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default NonNominatif;

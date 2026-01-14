@@ -111,7 +111,9 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Update last login
+        // Simpan last_login ke previous_login sebelum diupdate
+        $user->previous_login = $user->last_login;
+        // Update last_login ke waktu sekarang
         $user->last_login = now();
         $user->save();
 
@@ -377,7 +379,7 @@ class AuthController extends Controller
      */
     public function index()
     {
-        $users = User::select('id', 'username', 'jabatan', 'is_active', 'created_at', 'last_login')
+        $users = User::select('id', 'username', 'jabatan', 'is_active', 'created_at', 'last_login', 'previous_login')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -424,7 +426,7 @@ class AuthController extends Controller
      */
     public function show($id)
     {
-        $user = User::select('id', 'username', 'jabatan', 'is_active', 'created_at', 'last_login')
+        $user = User::select('id', 'username', 'jabatan', 'is_active', 'created_at', 'last_login', 'previous_login')
                    ->find($id);
 
         if (!$user) {

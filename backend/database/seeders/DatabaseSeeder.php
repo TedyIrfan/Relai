@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Database\Seeders\SbmDetailsSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,16 +17,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            UserSeeder::class,
             KategoriAnggaranSeeder::class,
             MasterRKASeeder::class,
+            SbmDetailsSeeder::class,
         ]);
 
-        // User::factory(10)->create();
-
-        // Comment out test user since username is required
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        $this->command->info('🚀 Database seeding completed!');
     }
 }

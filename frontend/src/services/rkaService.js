@@ -1,5 +1,5 @@
-import api from './api';
-import { getFallbackKodeAnggaranOptions } from '../data/nominatifDummy.js';
+import api from "./api";
+import { getFallbackKodeAnggaranOptions } from "../data/nominatifDummy.js";
 
 const rkaService = {
   /**
@@ -7,10 +7,10 @@ const rkaService = {
    */
   getRKADetails: async (params = {}) => {
     try {
-      const response = await api.get('/rka-details', { params });
+      const response = await api.get("/rka-details", { params });
       return response.data;
     } catch (error) {
-      console.error('Error fetching RKA details:', error);
+      console.error("Error fetching RKA details:", error);
       throw error;
     }
   },
@@ -20,10 +20,10 @@ const rkaService = {
    */
   getKategoriList: async () => {
     try {
-      const response = await api.get('/rka-details/kategori');
+      const response = await api.get("/rka-details/kategori");
       return response.data;
     } catch (error) {
-      console.error('Error fetching kategori list:', error);
+      console.error("Error fetching kategori list:", error);
       throw error;
     }
   },
@@ -34,13 +34,13 @@ const rkaService = {
   getKodeAnggaranOptions: async () => {
     try {
       // Get all RKA details first
-      const response = await api.get('/rka-details');
+      const response = await api.get("/rka-details");
 
       // Tampilkan semua data tanpa filter - user bisa mencari sendiri
       const perjalananData = response.data;
 
       // Format untuk dropdown dengan format lengkap: LayananUmum.KodeLayanan1.KodeLayanan2.LayananTataUsaha.Kategori.CodeRKA
-      return perjalananData.map(item => {
+      return perjalananData.map((item) => {
         // Use camelCase fields from API response
         const kodeAnggaranFormat = `${item.layananUmum}.${item.kodeLayanan1}.${item.kodeLayanan2}.${item.layananTataUsaha}.${item.kategoriAnggaran}.${item.codeRka}`;
         return {
@@ -75,12 +75,14 @@ const rkaService = {
             item.codeRka,
             `${item.layananUmum}.${item.kodeLayanan1}.${item.kodeLayanan2}`, // format pendek
             `${item.layananUmum}.${item.kodeLayanan1}.${item.kodeLayanan2}.${item.layananTataUsaha}`, // format medium
-            kodeAnggaranFormat // format lengkap
-          ].join(' ').toLowerCase()
+            kodeAnggaranFormat, // format lengkap
+          ]
+            .join(" ")
+            .toLowerCase(),
         };
       });
     } catch (error) {
-      console.warn('API failed, using fallback data:', error);
+      console.warn("API failed, using fallback data:", error);
       // Return fallback data if API fails
       return getFallbackKodeAnggaranOptions();
     }
@@ -94,7 +96,7 @@ const rkaService = {
       const response = await api.get(`/rka-details/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching RKA detail:', error);
+      console.error("Error fetching RKA detail:", error);
       throw error;
     }
   },
@@ -105,20 +107,20 @@ const rkaService = {
   importExcel: async (file) => {
     try {
       const formData = new FormData();
-      formData.append('excel_file', file);
+      formData.append("excel_file", file);
 
-      const response = await api.post('/rka-details/import', formData, {
+      const response = await api.post("/rka-details/import", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       return response.data;
     } catch (error) {
-      console.error('Error importing Excel file:', error);
+      console.error("Error importing Excel file:", error);
       throw error;
     }
-  }
+  },
 };
 
 export default rkaService;

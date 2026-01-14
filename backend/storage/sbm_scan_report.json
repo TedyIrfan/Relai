@@ -1,0 +1,2844 @@
+{
+    "scan_date": "2025-12-30 16:24:06",
+    "total_files": 31,
+    "summary": {
+        "success": 31,
+        "error": 0,
+        "with_multiple_sheets": 0,
+        "with_sections": 13
+    },
+    "files": [
+        {
+            "filename": "Honorarium 28 SATUAN BIAYA UANG HARIAN DAN UANG REPRESENTASI PERJALANAN DINAS DALAM NEGERI.xlsx",
+            "category": "honorarium_28",
+            "sbm_number": 28,
+            "display_order": 28,
+            "source_file": "Honorarium 28 SATUAN BIAYA UANG HARIAN DAN UANG REPRESENTASI PERJALANAN DINAS DALAM NEGERI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium28",
+                    "total_rows": 48,
+                    "highest_column": "F",
+                    "header_row": 3,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "Uang Harian Perjalanan Dinas Dalam Negeri",
+                        "Uang Representasi Perjalanan Dinas Dalam Negeri"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "Uang Harian Perjalanan Dinas Dalam Negeri",
+                            "header_row": 3,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "LUAR KOTA",
+                                "DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM",
+                                "DIKLAT"
+                            ],
+                            "data_start_row": 4,
+                            "data_end_row": 42,
+                            "column_count": 6,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "OH",
+                                    "LUAR KOTA": "Rp360,000",
+                                    "DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM": "Rp140,000",
+                                    "DIKLAT": "Rp110,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA   UTARA",
+                                    "SATUAN": "OH",
+                                    "LUAR KOTA": "Rp370,000",
+                                    "DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM": "Rp150,000",
+                                    "DIKLAT": "Rp110,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "OH",
+                                    "LUAR KOTA": "Rp370,000",
+                                    "DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM": "Rp150,000",
+                                    "DIKLAT": "Rp110,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Uang Representasi Perjalanan Dinas Dalam Negeri",
+                            "header_row": 44,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "LUAR KOTA",
+                                "DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM"
+                            ],
+                            "data_start_row": 45,
+                            "data_end_row": 48,
+                            "column_count": 5,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "URAIAN": "PEJABAT  NEGARA",
+                                    "SATUAN": "OH",
+                                    "LUAR  KOTA": "Rp250,000",
+                                    "DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM": "Rp125,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "URAIAN": "PEJABAT  ESELON  I",
+                                    "SATUAN": "OH",
+                                    "LUAR  KOTA": "Rp200,000",
+                                    "DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM": "Rp100,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "URAIAN": "PEJABAT  ESELON  II",
+                                    "SATUAN": "OH",
+                                    "LUAR  KOTA": "Rp150,000",
+                                    "DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM": "Rp75,000"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "LUAR KOTA",
+                        "DALAM KOTA LEBIH DARI 8 (DELAPAN) JAM",
+                        "DIKLAT"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 29 SATUAN BIAYA UANG HARIAN PERJALANAN DINAS LUAR NEGERI.xlsx",
+            "category": "honorarium_29",
+            "sbm_number": 29,
+            "display_order": 29,
+            "source_file": "Honorarium 29 SATUAN BIAYA UANG HARIAN PERJALANAN DINAS LUAR NEGERI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium29",
+                    "total_rows": 118,
+                    "highest_column": "G",
+                    "header_row": 3,
+                    "data_start_row": 4,
+                    "data_end_row": 118,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "NEGARA",
+                        "SATUAN",
+                        "GOLONGAN A",
+                        "GOLONGAN B",
+                        "GOLONGAN C",
+                        "GOLONGAN D"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "-",
+                            "NEGARA": "AMERIKA   UTARA",
+                            "SATUAN": "-",
+                            "GOLONGAN A": "-",
+                            "GOLONGAN B": "-",
+                            "GOLONGAN C": "-",
+                            "GOLONGAN D": "-"
+                        },
+                        {
+                            "NO.": "01",
+                            "NEGARA": "Amerika  Serikat",
+                            "SATUAN": "OH",
+                            "GOLONGAN A": "659",
+                            "GOLONGAN B": "563",
+                            "GOLONGAN C": "505",
+                            "GOLONGAN D": "447"
+                        },
+                        {
+                            "NO.": "02",
+                            "NEGARA": "Kanada",
+                            "SATUAN": "OH",
+                            "GOLONGAN A": "552",
+                            "GOLONGAN B": "467",
+                            "GOLONGAN C": "416",
+                            "GOLONGAN D": "365"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 30 PENGINAPAN DINAS DALAM NEGERI.xlsx",
+            "category": "honorarium_30",
+            "sbm_number": 30,
+            "display_order": 30,
+            "source_file": "Honorarium 30 PENGINAPAN DINAS DALAM NEGERI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium30",
+                    "total_rows": 41,
+                    "highest_column": "K",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 41,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "TARIF HOTEL PEJABAT NEGARA \/ PEJABAT ESELON I",
+                        "TARIF HOTEL PEJABAT NEGARA LAINNYA \/ PEJABAT ESELON II",
+                        "TARIF HOTEL PEJABAT ESELON III \/ GOLONGAN IV",
+                        "TARIF HOTEL PEJABAT ESELON IV \/ GOLONGAN III  \/ II \/ I"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "A  C  E  H",
+                            "SATUAN": "OH",
+                            "TARIF HOTEL PEJABAT NEGARA \/ PEJABAT ESELON I": "Rp4,774,000",
+                            "TARIF HOTEL PEJABAT NEGARA LAINNYA \/ PEJABAT ESELON II": "Rp3,526,000",
+                            "TARIF HOTEL PEJABAT ESELON III \/ GOLONGAN IV": "Rp1,578,000",
+                            "TARIF HOTEL PEJABAT ESELON IV \/ GOLONGAN III  \/ II \/ I": "Rp770,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATERA UTARA",
+                            "SATUAN": "OH",
+                            "TARIF HOTEL PEJABAT NEGARA \/ PEJABAT ESELON I": "Rp4,960,000",
+                            "TARIF HOTEL PEJABAT NEGARA LAINNYA \/ PEJABAT ESELON II": "Rp2,195,000",
+                            "TARIF HOTEL PEJABAT ESELON III \/ GOLONGAN IV": "Rp1,188,000",
+                            "TARIF HOTEL PEJABAT ESELON IV \/ GOLONGAN III  \/ II \/ I": "Rp699,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "SATUAN": "OH",
+                            "TARIF HOTEL PEJABAT NEGARA \/ PEJABAT ESELON I": "Rp3,820,000",
+                            "TARIF HOTEL PEJABAT NEGARA LAINNYA \/ PEJABAT ESELON II": "Rp3,119,000",
+                            "TARIF HOTEL PEJABAT ESELON III \/ GOLONGAN IV": "Rp1,650,000",
+                            "TARIF HOTEL PEJABAT ESELON IV \/ GOLONGAN III  \/ II \/ I": "Rp852,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 31 SATUAN BIAYA RAPAT atau PERTEMUAN DI LUAR KANTOR.xlsx",
+            "category": "honorarium_31",
+            "sbm_number": 31,
+            "display_order": 31,
+            "source_file": "Honorarium 31 SATUAN BIAYA RAPAT atau PERTEMUAN DI LUAR KANTOR.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium31",
+                    "total_rows": 130,
+                    "highest_column": "G",
+                    "header_row": 4,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "Menteri dan Setingkat Menteri",
+                        "Pejabat Eselon I dan II",
+                        "Pejabat Eselon III Ke Bawah",
+                        "Uang Harian Kegiatan Rapat\/Pertemuan di Luar Kantor"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "Menteri dan Setingkat Menteri",
+                            "header_row": 4,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "HALFDAY",
+                                "FULLDAY",
+                                "FULLBOARD"
+                            ],
+                            "data_start_row": 5,
+                            "data_end_row": 43,
+                            "column_count": 6,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "OP",
+                                    "HALFDAY": "Rp453,000",
+                                    "FULLDAY": "Rp663,000",
+                                    "FULLBOARD": "Rp1,871,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA  UTARA",
+                                    "SATUAN": "OP",
+                                    "HALFDAY": "Rp451,000",
+                                    "FULLDAY": "Rp675,000",
+                                    "FULLBOARD": "Rp1,350,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "RIAU",
+                                    "SATUAN": "OP",
+                                    "HALFDAY": "Rp319,000",
+                                    "FULLDAY": "Rp582,000",
+                                    "FULLBOARD": "Rp1,229,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Pejabat Eselon I dan II",
+                            "header_row": 45,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "HALFDAY",
+                                "FULLDAY",
+                                "FULLBOARD"
+                            ],
+                            "data_start_row": 46,
+                            "data_end_row": 84,
+                            "column_count": 6,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "OP",
+                                    "HALFDAY": "Rp413,000",
+                                    "FULLDAY": "Rp575,000",
+                                    "FULLBOARD": "Rp1,075,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA   UTARA",
+                                    "SATUAN": "OP",
+                                    "HALFDAY": "Rp411,000",
+                                    "FULLDAY": "Rp511,000",
+                                    "FULLBOARD": "Rp1,011,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "RIAU",
+                                    "SATUAN": "OP",
+                                    "HALFDAY": "Rp279,000",
+                                    "FULLDAY": "Rp432,000",
+                                    "FULLBOARD": "Rp1,084,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Pejabat Eselon III Ke Bawah",
+                            "header_row": 86,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "HALFDAY",
+                                "FULLDAY",
+                                "FULLBOARD"
+                            ],
+                            "data_start_row": 87,
+                            "data_end_row": 125,
+                            "column_count": 6,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "OP",
+                                    "HALFDAY": "Rp315,000",
+                                    "FULLDAY": "Rp397,000",
+                                    "FULLBOARD": "Rp948,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA   UTARA",
+                                    "SATUAN": "OP",
+                                    "HALFDAY": "Rp279,000",
+                                    "FULLDAY": "Rp462,000",
+                                    "FULLBOARD": "Rp826,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "RIAU",
+                                    "SATUAN": "OP",
+                                    "HALFDAY": "Rp219,000",
+                                    "FULLDAY": "Rp397,000",
+                                    "FULLBOARD": "Rp888,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Uang Harian Kegiatan Rapat\/Pertemuan di Luar Kantor",
+                            "header_row": 127,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 128,
+                            "data_end_row": 130,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "URAIAN": "FULLBOARD",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "Rp130,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "URAIAN": "FULLDAY",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "Rp95,000"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "HALFDAY",
+                        "FULLDAY",
+                        "FULLBOARD"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 32 SATUAN BIAYA TIKET PERJALANAN DINAS PINDAH LUAR NEGERI (ONE  WAY ).xlsx",
+            "category": "honorarium_32",
+            "sbm_number": 32,
+            "display_order": 32,
+            "source_file": "Honorarium 32 SATUAN BIAYA TIKET PERJALANAN DINAS PINDAH LUAR NEGERI (ONE  WAY ).xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium32",
+                    "total_rows": 136,
+                    "highest_column": "I",
+                    "header_row": 3,
+                    "data_start_row": 4,
+                    "data_end_row": 136,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PERWAKILAN",
+                        "SATUAN",
+                        "JAKARTA - PERWAKILAN (Published)",
+                        "JAKARTA - PERWAKILAN (Business)",
+                        "JAKARTA - PERWAKILAN (First)",
+                        "PERWAKILAN - JAKARTA (Published)",
+                        "PERWAKILAN - JAKARTA (Business)",
+                        "PERWAKILAN - JAKARTA (First)"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PERWAKILAN": "Abu Dhabi",
+                            "SATUAN": "Orang\/Kali",
+                            "JAKARTA - PERWAKILAN (Published)": "1,150",
+                            "JAKARTA - PERWAKILAN (Business)": "3,060",
+                            "JAKARTA - PERWAKILAN (First)": "3,790",
+                            "PERWAKILAN - JAKARTA (Published)": "1,140",
+                            "PERWAKILAN - JAKARTA (Business)": "3,270",
+                            "PERWAKILAN - JAKARTA (First)": "3,790"
+                        },
+                        {
+                            "NO.": "02",
+                            "PERWAKILAN": "Abuja",
+                            "SATUAN": "Orang\/Kali",
+                            "JAKARTA - PERWAKILAN (Published)": "3,400",
+                            "JAKARTA - PERWAKILAN (Business)": "5,240",
+                            "JAKARTA - PERWAKILAN (First)": "8,410",
+                            "PERWAKILAN - JAKARTA (Published)": "3,220",
+                            "PERWAKILAN - JAKARTA (Business)": "6,278",
+                            "PERWAKILAN - JAKARTA (First)": "8,410"
+                        },
+                        {
+                            "NO.": "03",
+                            "PERWAKILAN": "Addis Ababa",
+                            "SATUAN": "Orang\/Kali",
+                            "JAKARTA - PERWAKILAN (Published)": "2,221",
+                            "JAKARTA - PERWAKILAN (Business)": "3,080",
+                            "JAKARTA - PERWAKILAN (First)": "4,950",
+                            "PERWAKILAN - JAKARTA (Published)": "1,950",
+                            "PERWAKILAN - JAKARTA (Business)": "3,350",
+                            "PERWAKILAN - JAKARTA (First)": "4,380"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 33 SATUAN BIAYA OPERASIONAL KHUSUS KEPALA PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI.xlsx",
+            "category": "honorarium_33",
+            "sbm_number": 33,
+            "display_order": 33,
+            "source_file": "Honorarium 33 SATUAN BIAYA OPERASIONAL KHUSUS KEPALA PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium33",
+                    "total_rows": 145,
+                    "highest_column": "D",
+                    "header_row": 3,
+                    "data_start_row": 4,
+                    "data_end_row": 145,
+                    "has_sections": true,
+                    "sections": [
+                        "AMERIKA UTARA  DAN  TENGAH",
+                        "AMERIKA  SELATAN  DAN  KARIBIA",
+                        "EROPA  TENGAH  DAN  TIMUR",
+                        "EROPA  BARAT",
+                        "AFRIKA",
+                        "ASIA  SELATAN  DAN  TENGAH",
+                        "ASIA  TIMUR  DAN  PASIFIK",
+                        "TIMUR  TENGAH"
+                    ],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PERWAKILAN  RI",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PERWAKILAN  RI": "New  York  (Konsulat  Jenderal Republik  Indonesia)",
+                            "SATUAN": "OT",
+                            "BESARAN": "24,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PERWAKILAN  RI": "Ottawa",
+                            "SATUAN": "OT",
+                            "BESARAN": "36,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PERWAKILAN  RI": "New  York  (Perutusan  Tetap  Republik Indonesia)",
+                            "SATUAN": "OT",
+                            "BESARAN": "36,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 34 SATUAN BIAYA MAKANAN PENAMBAH DAYA TAHAN TUBUH.xlsx",
+            "category": "honorarium_34",
+            "sbm_number": 34,
+            "display_order": 34,
+            "source_file": "Honorarium 34 SATUAN BIAYA MAKANAN PENAMBAH DAYA TAHAN TUBUH.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium34",
+                    "total_rows": 41,
+                    "highest_column": "D",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 41,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "ACEH",
+                            "SATUAN": "OH",
+                            "BESARAN": "Rp19,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATRA   UTARA",
+                            "SATUAN": "OH",
+                            "BESARAN": "Rp19,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "SATUAN": "OH",
+                            "BESARAN": "Rp19,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 35 SATUAN BIAYA SEWA KENDARAAN.xlsx",
+            "category": "honorarium_35",
+            "sbm_number": 35,
+            "display_order": 35,
+            "source_file": "Honorarium 35 SATUAN BIAYA SEWA KENDARAAN.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium35",
+                    "total_rows": 126,
+                    "highest_column": "F",
+                    "header_row": 3,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "Sewa Kendaraan Pelaksanaan Kegiatan Insidentil",
+                        "Sewa Kendaraan Operasional Pejabat",
+                        "Sewa Kendaraan Operasional Kantor dan\/atau Lapangan"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "Sewa Kendaraan Pelaksanaan Kegiatan Insidentil",
+                            "header_row": 3,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "RODA 4",
+                                "RODA 6\/ BUSSEDANG",
+                                "RODA 6\/ BUSBESAR"
+                            ],
+                            "data_start_row": 4,
+                            "data_end_row": 42,
+                            "column_count": 6,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Per  hari",
+                                    "RODA  4": "Rp930,000",
+                                    "RODA  6\/ BUSSEDANG": "Rp3,282,000",
+                                    "RODA  6\/ BUSBESAR": "Rp4,638,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA   UTARA",
+                                    "SATUAN": "Per  hari",
+                                    "RODA  4": "Rp1,220,000",
+                                    "RODA  6\/ BUSSEDANG": "Rp3,062,000",
+                                    "RODA  6\/ BUSBESAR": "Rp3,753,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "Per  hari",
+                                    "RODA  4": "Rp978,000",
+                                    "RODA  6\/ BUSSEDANG": "Rp3,155,000",
+                                    "RODA  6\/ BUSBESAR": "Rp4,585,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Sewa Kendaraan Operasional Pejabat",
+                            "header_row": 44,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 46,
+                            "data_end_row": 86,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "35.02.01",
+                                    "PROVINSI": "PEJABAT  ESELON  I",
+                                    "SATUAN": "Per  bulan",
+                                    "BESARAN": "Rp17,660,000"
+                                },
+                                {
+                                    "NO.": "-",
+                                    "PROVINSI": "PEJABAT  ESELON  II",
+                                    "SATUAN": "-",
+                                    "BESARAN": "-"
+                                },
+                                {
+                                    "NO.": "35.2.2.1",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Per  bulan",
+                                    "BESARAN": "Rp14,180,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Sewa Kendaraan Operasional Kantor dan\/atau Lapangan",
+                            "header_row": 87,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "PICK UP",
+                                "MINIBUS",
+                                "DOUBLE GARDAN"
+                            ],
+                            "data_start_row": 88,
+                            "data_end_row": 126,
+                            "column_count": 6,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Per  bulan",
+                                    "PICK  UP": "Rp6,300,000",
+                                    "MINIBUS": "Rp6,530,000",
+                                    "DOUBLE GARDAN": "Rp15,230,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA  UTARA",
+                                    "SATUAN": "Per  bulan",
+                                    "PICK  UP": "Rp6,080,000",
+                                    "MINIBUS": "Rp6,080,000",
+                                    "DOUBLE GARDAN": "Rp15,080,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "Per  bulan",
+                                    "PICK  UP": "Rp5,930,000",
+                                    "MINIBUS": "Rp6,000,000",
+                                    "DOUBLE GARDAN": "Rp15,000,000"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "RODA  4",
+                        "RODA  6\/ BUSSEDANG",
+                        "RODA  6\/ BUSBESAR"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 36 SATUAN BIAYA PENGADAAN KENDARAAN DINAS.xlsx",
+            "category": "honorarium_36",
+            "sbm_number": 36,
+            "display_order": 36,
+            "source_file": "Honorarium 36 SATUAN BIAYA PENGADAAN KENDARAAN DINAS.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 139,
+                    "highest_column": "F",
+                    "header_row": 3,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "Kendaraan Dinas Pejabat",
+                        "Kendaraan Pejabat Eselon III sebagai Kepala Kantor, Operasional Kantor dan\/atau Lapangan Roda 4 (Empat)",
+                        "Kendaraan Operasional Bus",
+                        "Kendaraan Operasional Kantor dan\/atau Lapangan Roda 2 (Dua)",
+                        "Kendaraan Listrik Berbasis Baterai"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "Kendaraan Dinas Pejabat",
+                            "header_row": 3,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 5,
+                            "data_end_row": 45,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "36.01.01",
+                                    "PROVINSI": "PEJABAT  ESELON  I",
+                                    "SATUAN": "Unit",
+                                    "BESARAN": "Rp878,913,000"
+                                },
+                                {
+                                    "NO.": "-",
+                                    "PROVINSI": "PEJABAT  ESELON  II",
+                                    "SATUAN": "-",
+                                    "BESARAN": "-"
+                                },
+                                {
+                                    "NO.": "36.1.2.1",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Unit",
+                                    "BESARAN": "Rp641,995,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Kendaraan Pejabat Eselon III sebagai Kepala Kantor, Operasional Kantor dan\/atau Lapangan Roda 4 (Empat)",
+                            "header_row": 46,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "PICK UP",
+                                "PEJABAT ESELON III\/MINIBUS",
+                                "DOUBLE GARDAN"
+                            ],
+                            "data_start_row": 47,
+                            "data_end_row": 85,
+                            "column_count": 6,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Unit",
+                                    "PICK  UP": "Rp309,291,000",
+                                    "PEJABAT ESELON\nIII\/MINIBUS": "Rp401,541,000",
+                                    "DOUBLE GARDAN": "Rp518,306,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA  UTARA",
+                                    "SATUAN": "Unit",
+                                    "PICK  UP": "Rp282,447,000",
+                                    "PEJABAT ESELON\nIII\/MINIBUS": "Rp402,522,000",
+                                    "DOUBLE GARDAN": "Rp501,507,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "Unit",
+                                    "PICK  UP": "Rp317,452,000",
+                                    "PEJABAT ESELON\nIII\/MINIBUS": "Rp431,233,000",
+                                    "DOUBLE GARDAN": "Rp475,248,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Kendaraan Operasional Bus",
+                            "header_row": 87,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 88,
+                            "data_end_row": 92,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "URAIAN": "Roda  4  dan\/atau  Bus  Kecil",
+                                    "SATUAN": "Unit",
+                                    "BESARAN": "Rp498,810,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "URAIAN": "Roda  6  dan\/atau  Bus  Sedang",
+                                    "SATUAN": "Unit",
+                                    "BESARAN": "Rp768,820,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "URAIAN": "Roda  6  dan\/atau  Bus  Besar",
+                                    "SATUAN": "Unit",
+                                    "BESARAN": "Rp1,268,200,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Kendaraan Operasional Kantor dan\/atau Lapangan Roda 2 (Dua)",
+                            "header_row": 93,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "OPERASIONAL",
+                                "LAPANGAN"
+                            ],
+                            "data_start_row": 94,
+                            "data_end_row": 132,
+                            "column_count": 5,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Unit",
+                                    "OPERASIONAL": "Rp37,464,000",
+                                    "LAPANGAN": "Rp37,798,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA  UTARA",
+                                    "SATUAN": "Unit",
+                                    "OPERASIONAL": "Rp38,879,000",
+                                    "LAPANGAN": "Rp41,140,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "Unit",
+                                    "OPERASIONAL": "Rp35,688,000",
+                                    "LAPANGAN": "Rp40,258,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Kendaraan Listrik Berbasis Baterai",
+                            "header_row": 134,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 135,
+                            "data_end_row": 139,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "URAIAN": "Pejabat  Eselon  I",
+                                    "SATUAN": "Unit",
+                                    "BESARAN": "Rp966,804,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "URAIAN": "Pejabat  Eselon  II",
+                                    "SATUAN": "Unit",
+                                    "BESARAN": "Rp746,110,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "URAIAN": "Kendaraan  Operasional  Kantor",
+                                    "SATUAN": "Unit",
+                                    "BESARAN": "Rp430,080,000"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 37 SATUAN BIAYA PENGADAAN PAKAIAN DINAS.xlsx",
+            "category": "honorarium_37",
+            "sbm_number": 37,
+            "display_order": 37,
+            "source_file": "Honorarium 37 SATUAN BIAYA PENGADAAN PAKAIAN DINAS.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium37",
+                    "total_rows": 41,
+                    "highest_column": "H",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 41,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "PAKAIAN DINAS DOKTER",
+                        "PAKAIAN DINAS PEGAWAI\/ PERAWAT",
+                        "PAKAIAN SERAGAM MAHASISWA\/ TARUNA",
+                        "PAKAIAN  KERJA PENGEMUDI\/ PETUGAS KEBERSIHA\/ PRAMUBAKTI",
+                        "PAKAIAN KERJA SATPAM"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "ACEH",
+                            "SATUAN": "Setel",
+                            "PAKAIAN DINAS DOKTER": "Rp2,294,000",
+                            "PAKAIAN DINAS PEGAWAI\/ PERAWAT": "Rp1,099,000",
+                            "PAKAIAN SERAGAM MAHASISWA\/ TARUNA": "Rp1,022,000",
+                            "PAKAIAN  KERJA PENGEMUDI\/ PETUGAS KEBERSIHA\/ PRAMUBAKTI": "Rp825,000",
+                            "PAKAIAN KERJA SATPAM": "Rp2,210,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATRA   UTARA",
+                            "SATUAN": "Setel",
+                            "PAKAIAN DINAS DOKTER": "Rp1,537,000",
+                            "PAKAIAN DINAS PEGAWAI\/ PERAWAT": "Rp1,134,000",
+                            "PAKAIAN SERAGAM MAHASISWA\/ TARUNA": "Rp1,265,000",
+                            "PAKAIAN  KERJA PENGEMUDI\/ PETUGAS KEBERSIHA\/ PRAMUBAKTI": "Rp938,000",
+                            "PAKAIAN KERJA SATPAM": "Rp1,554,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "SATUAN": "Setel",
+                            "PAKAIAN DINAS DOKTER": "Rp1,651,000",
+                            "PAKAIAN DINAS PEGAWAI\/ PERAWAT": "Rp978,000",
+                            "PAKAIAN SERAGAM MAHASISWA\/ TARUNA": "Rp880,000",
+                            "PAKAIAN  KERJA PENGEMUDI\/ PETUGAS KEBERSIHA\/ PRAMUBAKTI": "Rp709,000",
+                            "PAKAIAN KERJA SATPAM": "Rp1,845,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 38 SATUAN BIAYA KONSUMSI RAPAT atau PERTEMUAN.xlsx",
+            "category": "honorarium_38",
+            "sbm_number": 38,
+            "display_order": 38,
+            "source_file": "Honorarium 38 SATUAN BIAYA KONSUMSI RAPAT atau PERTEMUAN.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium38",
+                    "total_rows": 47,
+                    "highest_column": "E",
+                    "header_row": 3,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "RAPAT KOORDINASI T INGKAT MENTERI\/ ESELON I\/SETARA",
+                        "RAPAT BIASA"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "RAPAT KOORDINASI T INGKAT MENTERI\/ ESELON I\/SETARA",
+                            "header_row": 3,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "MAKAN",
+                                "KUDAPAN (SNACK )"
+                            ],
+                            "data_start_row": 4,
+                            "data_end_row": 5,
+                            "column_count": 5,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "RAPAT  KOORDINASI  TINGKAT MENTERI \/  ESELON  I \/ SETARA",
+                                    "SATUAN": "Orang\/Kali",
+                                    "MAKAN": "Rp118,000",
+                                    "KUDAPAN (SNACK  )": "Rp53,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "RAPAT BIASA",
+                            "header_row": 8,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "MAKAN",
+                                "KUDAPAN (SNACK )"
+                            ],
+                            "data_start_row": 9,
+                            "data_end_row": 47,
+                            "column_count": 5,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Orang\/Kali",
+                                    "MAKAN": "Rp51,000",
+                                    "KUDAPAN (SNACK  )": "Rp21,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA   UTARA",
+                                    "SATUAN": "Orang\/Kali",
+                                    "MAKAN": "Rp47,000",
+                                    "KUDAPAN (SNACK  )": "Rp17,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "Orang\/Kali",
+                                    "MAKAN": "Rp52,000",
+                                    "KUDAPAN (SNACK  )": "Rp18,000"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "MAKAN",
+                        "KUDAPAN (SNACK  )"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "Honorarium 39 SATUAN BIAYA KONSUMSI KEGIATAN PENDIDIKAN DAN PELATIHAN (DIKLAT).xlsx",
+            "category": "honorarium_39",
+            "sbm_number": 39,
+            "display_order": 39,
+            "source_file": "Honorarium 39 SATUAN BIAYA KONSUMSI KEGIATAN PENDIDIKAN DAN PELATIHAN (DIKLAT).xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Honorarium39",
+                    "total_rows": 41,
+                    "highest_column": "E",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 41,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "MAKAN",
+                        "KUDAPAN (SNACK  )"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "ACEH",
+                            "SATUAN": "Orang\/Kali",
+                            "MAKAN": "Rp41,000",
+                            "KUDAPAN (SNACK  )": "Rp17,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATRA   UTARA",
+                            "SATUAN": "Orang\/Kali",
+                            "MAKAN": "Rp38,000",
+                            "KUDAPAN (SNACK  )": "Rp14,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "SATUAN": "Orang\/Kali",
+                            "MAKAN": "Rp42,000",
+                            "KUDAPAN (SNACK  )": "Rp15,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "1. SATUAN BIAYA TRANSPORTASI DARAT DARI IBUKOTA PROVINSI KE KABUPATEN atau KOTA DALAM PROVINSI YANG SAMA (ONE  WAY ).xlsx",
+            "category": "transportasi_provinsi",
+            "sbm_number": 1,
+            "display_order": 1,
+            "source_file": "1. SATUAN BIAYA TRANSPORTASI DARAT DARI IBUKOTA PROVINSI KE KABUPATEN atau KOTA DALAM PROVINSI YANG SAMA (ONE  WAY ).xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 394,
+                    "highest_column": "E",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 394,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "IBUKOTA  PROVINSI",
+                        "KABUPATEN\/KOTA  TUJUAN",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "-",
+                            "IBUKOTA  PROVINSI": "ACEH",
+                            "KABUPATEN\/KOTA  TUJUAN": "-",
+                            "SATUAN": "-",
+                            "BESARAN": "-"
+                        },
+                        {
+                            "NO.": "01",
+                            "IBUKOTA  PROVINSI": "Banda  Aceh",
+                            "KABUPATEN\/KOTA  TUJUAN": "Kab.  Aceh  Barat",
+                            "SATUAN": "Orang\/Kali",
+                            "BESARAN": "Rp275,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "IBUKOTA  PROVINSI": "Banda  Aceh",
+                            "KABUPATEN\/KOTA  TUJUAN": "Kab.  Aceh  Barat  Daya",
+                            "SATUAN": "Orang\/Kali",
+                            "BESARAN": "Rp298,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "2. SATUAN BIAYA TRANSPORTASI DARI DKI JAKARTA KE KABUPATEN atau KOTA SEKITAR (ONE WAY  ).xlsx",
+            "category": "transportasi_dki",
+            "sbm_number": 2,
+            "display_order": 2,
+            "source_file": "2. SATUAN BIAYA TRANSPORTASI DARI DKI JAKARTA KE KABUPATEN atau KOTA SEKITAR (ONE WAY  ).xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 11,
+                    "highest_column": "E",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 11,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "IBUKOTA  PROVINSI",
+                        "KABUPATEN\/KOTA  TUJUAN",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "IBUKOTA  PROVINSI": "Jakarta",
+                            "KABUPATEN\/KOTA  TUJUAN": "Kota  Bekasi",
+                            "SATUAN": "Orang\/Kali",
+                            "BESARAN": "Rp284,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "IBUKOTA  PROVINSI": "Jakarta",
+                            "KABUPATEN\/KOTA  TUJUAN": "Kab. Bekasi",
+                            "SATUAN": "Orang\/Kali",
+                            "BESARAN": "Rp284,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "IBUKOTA  PROVINSI": "Jakarta",
+                            "KABUPATEN\/KOTA  TUJUAN": "Kab.  Bogor",
+                            "SATUAN": "Orang\/Kali",
+                            "BESARAN": "Rp300,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "3. SATUAN BIAYA TRANSPOR KEGIATAN DALAM KABUPATENKOTA PERGI PULANG (PP).xlsx",
+            "category": "transportasi_kabupaten",
+            "sbm_number": 3,
+            "display_order": 3,
+            "source_file": "3. SATUAN BIAYA TRANSPOR KEGIATAN DALAM KABUPATENKOTA PERGI PULANG (PP).xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "SATUAN BIAYA TRANSPOR KEGIATAN ",
+                    "total_rows": 4,
+                    "highest_column": "D",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 4,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO",
+                        "URAIAN",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO": "01",
+                            "URAIAN": "SATUAN BIAYA TRANSPOR KEGIATAN DALAM KABUPATEN\/KOTA PERGI PULANG (PP)",
+                            "SATUAN": "Orang\/Kali",
+                            "BESARAN": "Rp170,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "4. SATUAN BIAYA PEMELIHARAAN SARANA KANTOR.xlsx",
+            "category": "pemeliharaan_sarana_kantor",
+            "sbm_number": 4,
+            "display_order": 4,
+            "source_file": "4. SATUAN BIAYA PEMELIHARAAN SARANA KANTOR.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 20,
+                    "highest_column": "D",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 20,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO",
+                        "URAIAN",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO": "01",
+                            "URAIAN": "Inventaris  Kantor",
+                            "SATUAN": "Pegawai\/Tahun",
+                            "BESARAN": "Rp80,000"
+                        },
+                        {
+                            "NO": "02",
+                            "URAIAN": "Personal Computer\/Notebook",
+                            "SATUAN": "Unit\/Tahun",
+                            "BESARAN": "Rp730,000"
+                        },
+                        {
+                            "NO": "03",
+                            "URAIAN": "Printer",
+                            "SATUAN": "Unit\/Tahun",
+                            "BESARAN": "Rp690,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "5. SATUAN BIAYA PENERJEMAHAN DAN PENGETIKAN.xlsx",
+            "category": "penerjemahan_pengetikan",
+            "sbm_number": 5,
+            "display_order": 5,
+            "source_file": "5. SATUAN BIAYA PENERJEMAHAN DAN PENGETIKAN.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 15,
+                    "highest_column": "D",
+                    "header_row": 3,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "Dari Bahasa Asing ke Bahasa Indonesia atau Sebaliknya",
+                        "Dari Bahasa Indonesia ke Bahasa Daerah\/Bahasa Lokal atau Sebaliknya"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "Dari Bahasa Asing ke Bahasa Indonesia atau Sebaliknya",
+                            "header_row": 3,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 4,
+                            "data_end_row": 12,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO": "a.",
+                                    "URAIAN": "Bahasa  Inggris",
+                                    "SATUAN": "Halaman  Jadi",
+                                    "BESARAN": "Rp250,000"
+                                },
+                                {
+                                    "NO": "b.",
+                                    "URAIAN": "Bahasa  Jepang",
+                                    "SATUAN": "Halaman  Jadi",
+                                    "BESARAN": "Rp420,000"
+                                },
+                                {
+                                    "NO": "c.",
+                                    "URAIAN": "Bahasa  Mandarin",
+                                    "SATUAN": "Halaman  Jadi",
+                                    "BESARAN": "Rp410,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Dari Bahasa Indonesia ke Bahasa Daerah\/Bahasa Lokal atau Sebaliknya",
+                            "header_row": 13,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 14,
+                            "data_end_row": 15,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO": "a.",
+                                    "URAIAN": "Dari  Bahasa  Indonesia  ke  Bahasa  Daerah\/Bahasa  Lokal  atau  Sebaliknya",
+                                    "SATUAN": "Halaman  Jadi",
+                                    "BESARAN": "Rp174,000"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO",
+                        "URAIAN",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "6. SATUAN BIAYA BANTUAN BEASISWA PROGRAM GELARNONGELAR DALAM NEGERI.xlsx",
+            "category": "beasiswa",
+            "sbm_number": 6,
+            "display_order": 6,
+            "source_file": "6. SATUAN BIAYA BANTUAN BEASISWA PROGRAM GELARNONGELAR DALAM NEGERI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 13,
+                    "highest_column": "D",
+                    "header_row": 3,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "Biaya Hidup dan Biaya Operasional",
+                        "Uang Buku dan Referensi"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "Biaya Hidup dan Biaya Operasional",
+                            "header_row": 3,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 4,
+                            "data_end_row": 5,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO": "a.",
+                                    "URAIAN": "Biaya  Hidup  dan  Biaya  Operasional",
+                                    "SATUAN": "OT",
+                                    "BESARAN": "Rp27,600,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Uang Buku dan Referensi",
+                            "header_row": 7,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 8,
+                            "data_end_row": 13,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO": "a.",
+                                    "URAIAN": "Diploma  I",
+                                    "SATUAN": "OT",
+                                    "BESARAN": "Rp1,662,500"
+                                },
+                                {
+                                    "NO": "b.",
+                                    "URAIAN": "Diploma  III",
+                                    "SATUAN": "OT",
+                                    "BESARAN": "Rp1,987,500"
+                                },
+                                {
+                                    "NO": "c.",
+                                    "URAIAN": "Diploma  IV  dan  Strata  1",
+                                    "SATUAN": "OT",
+                                    "BESARAN": "Rp2,312,500"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO",
+                        "URAIAN",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "7. SATUAN BIAYA SEWA MESIN FOTOKOPI.xlsx",
+            "category": "sewa_fotokopi",
+            "sbm_number": 7,
+            "display_order": 7,
+            "source_file": "7. SATUAN BIAYA SEWA MESIN FOTOKOPI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "SATUAN BIAYA SEWA MESIN FOTOKOP",
+                    "total_rows": 4,
+                    "highest_column": "D",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 4,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO",
+                        "URAIAN",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO": "a.",
+                            "URAIAN": "SATUAN BIAYA SEWA MESIN FOTOKOPI",
+                            "SATUAN": "Unit\/Bulan",
+                            "BESARAN": "Rp5,500,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "8. HONORARARIUM NARASUMBER PAKAR PRAKTISI PROFESIONAL.xlsx",
+            "category": "honorarium_narasumber",
+            "sbm_number": 8,
+            "display_order": 8,
+            "source_file": "8. HONORARARIUM NARASUMBER PAKAR PRAKTISI PROFESIONAL.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 26,
+                    "highest_column": "F",
+                    "header_row": 3,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "Kegiatan Di Dalam Negeri",
+                        "Kegiatan Di Luar Negeri"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "Kegiatan Di Dalam Negeri",
+                            "header_row": 3,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 4,
+                            "data_end_row": 5,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO": "a.",
+                                    "URAIAN": "Kegiatan  Di  Dalam  Negeri",
+                                    "SATUAN": "OJ",
+                                    "BESARAN": "Rp1,700,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Kegiatan Di Luar Negeri",
+                            "header_row": 7,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 8,
+                            "data_end_row": 11,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO": "a.",
+                                    "URAIAN": "Narasumber  Kelas  A",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "$330"
+                                },
+                                {
+                                    "NO": "b.",
+                                    "URAIAN": "Narasumber  Kelas  B",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "$275"
+                                },
+                                {
+                                    "NO": "c.",
+                                    "URAIAN": "Narasumber  Kelas  C",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "$220"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO",
+                        "URAIAN",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "9. SATUAN BIAYA PENGADAAN BAHAN MAKANAN.xlsx",
+            "category": "bahan_makanan",
+            "sbm_number": 9,
+            "display_order": 9,
+            "source_file": "9. SATUAN BIAYA PENGADAAN BAHAN MAKANAN.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 288,
+                    "highest_column": "I",
+                    "header_row": 3,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "Pengadaan Bahan Makanan untuk Narapidana\/Tahanan dan Anak di Lapas\/Rutan Kementerian Hukum dan Hak Asasi Manusia",
+                        "Pengadaan Bahan Makanan untuk Operasi Pasukan\/Latihan Pratugas\/Latihan Pasukan Lainnya Bagi Anggota Polri\/TNI, Dikma\/Taruna\/Karbol\/Kadet Bagi Anggota Polri\/TNI, Diklat Lainnya Bagi Kementerian Pertahanan (Kemhan)\/Anggota Polri\/TNI, Anggota yang Sakit Bagi Kemhan\/Anggota Polri\/TNI, Tahanan Anggota Polri\/TNI, dan Jaga Kawal Bagi Kemhan\/Anggota Polri\/TNI",
+                        "Pengadaan Bahan Makanan untuk Pasien Rumah Sakit dan Penyandang Masalah Kesejahteraan Sosial (PMKS)",
+                        "Pengadaan Bahan Makanan untuk Keluarga Penjaga Menara Suar (PMS), Petugas Pengamatan Laut, Anak Buah Kapal (ABK) Cadangan pada Kapal Negara, ABK Aktif pada Kapal Negara, dan Petugas Stasiun Radio Pantai (SROP) dan Vessel Traffic Information Service (VTIS)",
+                        "Pengadaan Bahan Makanan untuk Petugas Bengkel dan Galangan Kapal Kenavigasian, Petugas Pabrik Gas Aga untuk Lampu Suar, PMS, dan Kelompok Tenaga Kesehatan Kerja Pelayaran",
+                        "Pengadaan Bahan Makanan untuk Mahasiswa \/ Siswa Sipil dan Mahasiswa Militer \/ Semi Militer di Lingkup Sekolah Kedinasan",
+                        "Pengadaan Bahan Makanan untuk Rescue Team"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "Pengadaan Bahan Makanan untuk Narapidana\/Tahanan dan Anak di Lapas\/Rutan Kementerian Hukum dan Hak Asasi Manusia",
+                            "header_row": 3,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 4,
+                            "data_end_row": 43,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO\n.": "01",
+                                    "PROVINSI": "A  C  E  H",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "Rp23,000"
+                                },
+                                {
+                                    "NO\n.": "02",
+                                    "PROVINSI": "SUMATERA   UTARA",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "Rp22,000"
+                                },
+                                {
+                                    "NO\n.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "Rp25,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Pengadaan Bahan Makanan untuk Operasi Pasukan\/Latihan Pratugas\/Latihan Pasukan Lainnya Bagi Anggota Polri\/TNI, Dikma\/Taruna\/Karbol\/Kadet Bagi Anggota Polri\/TNI, Diklat Lainnya Bagi Kementerian Pertahanan (Kemhan)\/Anggota Polri\/TNI, Anggota yang Sakit Bagi Kemhan\/Anggota Polri\/TNI, Tahanan Anggota Polri\/TNI, dan Jaga Kawal Bagi Kemhan\/Anggota Polri\/TNI",
+                            "header_row": 44,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "OPERASI PASUKAN\/LATIHAN PRA TUGAS\/LATIHAN PASUKAN LAINNYA BAGI ANGGOTA POLRI\/TNI",
+                                "DIKMA TARUNA\/ KARBOL\/ KADET BAGI ANGGOTA POLRI\/TNI",
+                                "DIKLAT LAINNYA BAGI KEMHAN\/ ANGGOTA POLRI\/TNI",
+                                "ANGGOTA YANG SAKIT BAGI KEMHAN\/ ANGGOTA POLRI\/TNI",
+                                "TAHANAN ANGGOTA POLRI\/TNI",
+                                "JAGA KAWAL BAGI KEMHAN\/ ANGGOTA POLRI\/TNI"
+                            ],
+                            "data_start_row": 45,
+                            "data_end_row": 83,
+                            "column_count": 9,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "A  C  E  H",
+                                    "SATUAN": "OH",
+                                    "OPERASI PASUKAN\/LATIHAN  PRA TUGAS\/LATIHAN PASUKAN LAINNYA BAGI ANGGOTA POLRI\/TNI": "Rp83,000",
+                                    "DIKMA TARUNA\/ KARBOL\/ KADET BAGI ANGGOTA POLRI\/TNI": "Rp83,000",
+                                    "DIKLAT LAINNYA BAGI KEMHAN\/ ANGGOTA POLRI\/TNI": "Rp87,000",
+                                    "ANGGOTA YANG SAKIT BAGI KEMHAN\/ ANGGOTA POLRI\/TNI": "Rp32,000",
+                                    "TAHANAN ANGGOTA POLRI\/TNI": "Rp33,000",
+                                    "JAGA KAWAL BAGI KEMHAN\/ ANGGOTA POLRI\/TNI": "Rp70,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATERA   UTARA",
+                                    "SATUAN": "OH",
+                                    "OPERASI PASUKAN\/LATIHAN  PRA TUGAS\/LATIHAN PASUKAN LAINNYA BAGI ANGGOTA POLRI\/TNI": "Rp83,000",
+                                    "DIKMA TARUNA\/ KARBOL\/ KADET BAGI ANGGOTA POLRI\/TNI": "Rp83,000",
+                                    "DIKLAT LAINNYA BAGI KEMHAN\/ ANGGOTA POLRI\/TNI": "Rp87,000",
+                                    "ANGGOTA YANG SAKIT BAGI KEMHAN\/ ANGGOTA POLRI\/TNI": "Rp32,000",
+                                    "TAHANAN ANGGOTA POLRI\/TNI": "Rp33,000",
+                                    "JAGA KAWAL BAGI KEMHAN\/ ANGGOTA POLRI\/TNI": "Rp70,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "OH",
+                                    "OPERASI PASUKAN\/LATIHAN  PRA TUGAS\/LATIHAN PASUKAN LAINNYA BAGI ANGGOTA POLRI\/TNI": "Rp83,000",
+                                    "DIKMA TARUNA\/ KARBOL\/ KADET BAGI ANGGOTA POLRI\/TNI": "Rp83,000",
+                                    "DIKLAT LAINNYA BAGI KEMHAN\/ ANGGOTA POLRI\/TNI": "Rp87,000",
+                                    "ANGGOTA YANG SAKIT BAGI KEMHAN\/ ANGGOTA POLRI\/TNI": "Rp32,000",
+                                    "TAHANAN ANGGOTA POLRI\/TNI": "Rp33,000",
+                                    "JAGA KAWAL BAGI KEMHAN\/ ANGGOTA POLRI\/TNI": "Rp70,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Pengadaan Bahan Makanan untuk Pasien Rumah Sakit dan Penyandang Masalah Kesejahteraan Sosial (PMKS)",
+                            "header_row": 85,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "PASIEN RUMAH SAKIT",
+                                "PMKS"
+                            ],
+                            "data_start_row": 86,
+                            "data_end_row": 124,
+                            "column_count": 5,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "A  C  E  H",
+                                    "SATUAN": "OH",
+                                    "PASIEN  RUMAH SAKIT": "Rp32,000",
+                                    "PMKS": "Rp30,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATERA   UTARA",
+                                    "SATUAN": "OH",
+                                    "PASIEN  RUMAH SAKIT": "Rp32,000",
+                                    "PMKS": "Rp30,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "OH",
+                                    "PASIEN  RUMAH SAKIT": "Rp32,000",
+                                    "PMKS": "Rp32,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Pengadaan Bahan Makanan untuk Keluarga Penjaga Menara Suar (PMS), Petugas Pengamatan Laut, Anak Buah Kapal (ABK) Cadangan pada Kapal Negara, ABK Aktif pada Kapal Negara, dan Petugas Stasiun Radio Pantai (SROP) dan Vessel Traffic Information Service (VTIS)",
+                            "header_row": 126,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "KELUARGA PMS",
+                                "PETUGAS PENGAMATAN LAUT",
+                                "ABK CADANGAN PADA KAPAL NEGARA",
+                                "ABK AKTIF PADA KAPAL NEGARA",
+                                "PETUGAS SROP DAN VTIS"
+                            ],
+                            "data_start_row": 127,
+                            "data_end_row": 165,
+                            "column_count": 8,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "A  C  E  H",
+                                    "SATUAN": "OH",
+                                    "KELUARGA PMS": "Rp18,000",
+                                    "PETUGAS PENGAMATAN LAUT": "Rp27,000",
+                                    "ABK CADANGAN PADA KAPAL NEGARA": "Rp27,000",
+                                    "ABK  AKTIF PADA KAPAL NEGARA": "Rp32,000",
+                                    "PETUGAS SROP DAN  VTIS": "Rp32,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATERA  UTARA",
+                                    "SATUAN": "OH",
+                                    "KELUARGA PMS": "Rp18,000",
+                                    "PETUGAS PENGAMATAN LAUT": "Rp27,000",
+                                    "ABK CADANGAN PADA KAPAL NEGARA": "Rp27,000",
+                                    "ABK  AKTIF PADA KAPAL NEGARA": "Rp32,000",
+                                    "PETUGAS SROP DAN  VTIS": "Rp32,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "OH",
+                                    "KELUARGA PMS": "Rp18,000",
+                                    "PETUGAS PENGAMATAN LAUT": "Rp27,000",
+                                    "ABK CADANGAN PADA KAPAL NEGARA": "Rp27,000",
+                                    "ABK  AKTIF PADA KAPAL NEGARA": "Rp32,000",
+                                    "PETUGAS SROP DAN  VTIS": "Rp32,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Pengadaan Bahan Makanan untuk Petugas Bengkel dan Galangan Kapal Kenavigasian, Petugas Pabrik Gas Aga untuk Lampu Suar, PMS, dan Kelompok Tenaga Kesehatan Kerja Pelayaran",
+                            "header_row": 167,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "PETUGAS BENGKEL DAN GALANGAN KAPAL KENAVIGASIAN",
+                                "PETUGAS PABRIK GAS AGA UNTUK LAMPU SUAR",
+                                "PMS",
+                                "KELOMPOK TENAGA KESEHATAN KERJA PELAYARAN"
+                            ],
+                            "data_start_row": 168,
+                            "data_end_row": 206,
+                            "column_count": 7,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "A  C  E  H",
+                                    "SATUAN": "OH",
+                                    "PETUGAS \nBENGKEL DAN \nGALANGAN \nKAPAL \nKENAVIGASIAN": "Rp32,000",
+                                    "PETUGAS \nPABRIK GAS \nAGA UNTUK \nLAMPU SUAR": "Rp32,000",
+                                    "PMS": "Rp32,000",
+                                    "KELOMPOK \nTENAGA \nKESEHATAN \nKERJA \nPELAYARAN": "Rp32,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATERA  UTARA",
+                                    "SATUAN": "OH",
+                                    "PETUGAS \nBENGKEL DAN \nGALANGAN \nKAPAL \nKENAVIGASIAN": "Rp32,000",
+                                    "PETUGAS \nPABRIK GAS \nAGA UNTUK \nLAMPU SUAR": "Rp32,000",
+                                    "PMS": "Rp32,000",
+                                    "KELOMPOK \nTENAGA \nKESEHATAN \nKERJA \nPELAYARAN": "Rp32,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "OH",
+                                    "PETUGAS \nBENGKEL DAN \nGALANGAN \nKAPAL \nKENAVIGASIAN": "Rp32,000",
+                                    "PETUGAS \nPABRIK GAS \nAGA UNTUK \nLAMPU SUAR": "Rp32,000",
+                                    "PMS": "Rp32,000",
+                                    "KELOMPOK \nTENAGA \nKESEHATAN \nKERJA \nPELAYARAN": "Rp32,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Pengadaan Bahan Makanan untuk Mahasiswa \/ Siswa Sipil dan Mahasiswa Militer \/ Semi Militer di Lingkup Sekolah Kedinasan",
+                            "header_row": 208,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "MAHASISWA\/ SISWA SIPIL DI LINGKUP SEKOLAH KEDINASAN",
+                                "MAHASISWA MILITER\/SEMI MILITER DI LINGKUP SEKOLAH KEDINASAN"
+                            ],
+                            "data_start_row": 209,
+                            "data_end_row": 247,
+                            "column_count": 5,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "A  C  E  H",
+                                    "SATUAN": "OH",
+                                    "MAHASISWA\/ SISWA  SIPIL  DI LINGKUP SEKOLAH KEDINASAN": "Rp32,000",
+                                    "MAHASISWA MILITER\/SEMI MILITER  DI LINGKUP SEKOLAH\nKEDINASAN": "Rp45,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATERA  UTARA",
+                                    "SATUAN": "OH",
+                                    "MAHASISWA\/ SISWA  SIPIL  DI LINGKUP SEKOLAH KEDINASAN": "Rp32,000",
+                                    "MAHASISWA MILITER\/SEMI MILITER  DI LINGKUP SEKOLAH\nKEDINASAN": "Rp46,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "OH",
+                                    "MAHASISWA\/ SISWA  SIPIL  DI LINGKUP SEKOLAH KEDINASAN": "Rp32,000",
+                                    "MAHASISWA MILITER\/SEMI MILITER  DI LINGKUP SEKOLAH\nKEDINASAN": "Rp46,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Pengadaan Bahan Makanan untuk Rescue Team",
+                            "header_row": 249,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 250,
+                            "data_end_row": 288,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "A  C  E  H",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "Rp37,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATERA    UTARA",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "Rp37,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "OH",
+                                    "BESARAN": "Rp37,000"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO\n.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "10. SATUAN BIAYA KONSUMSI TAHANAN DETENIABK NONJUSTISIA.xlsx",
+            "category": "konsumsi_tahanan",
+            "sbm_number": 10,
+            "display_order": 10,
+            "source_file": "10. SATUAN BIAYA KONSUMSI TAHANAN DETENIABK NONJUSTISIA.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 41,
+                    "highest_column": "D",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 41,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "ACEH",
+                            "SATUAN": "OH",
+                            "BESARAN": "Rp43,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATRA   UTARA",
+                            "SATUAN": "OH",
+                            "BESARAN": "Rp41,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "SATUAN": "OH",
+                            "BESARAN": "Rp36,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "11. SATUAN BIAYA KEPERLUAN SEHARI-HARI PERKANTORAN DI DALAM NEGERI.xlsx",
+            "category": "keperluan_perkantoran",
+            "sbm_number": 11,
+            "display_order": 11,
+            "source_file": "11. SATUAN BIAYA KEPERLUAN SEHARI-HARI PERKANTORAN DI DALAM NEGERI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 41,
+                    "highest_column": "F",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 41,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (SATUAN)",
+                        "MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (BESARAN)",
+                        "MEMILIKI  LEBIH  DARI  40 PEGAWAI (SATUAN)",
+                        "MEMILIKI  LEBIH  DARI  40 PEGAWAI (BESARAN)"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "ACEH",
+                            "MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (SATUAN)": "Satker\/Tahun",
+                            "MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (BESARAN)": "Rp60,870,000",
+                            "MEMILIKI  LEBIH  DARI  40 PEGAWAI (SATUAN)": "OT",
+                            "MEMILIKI  LEBIH  DARI  40 PEGAWAI (BESARAN)": "Rp1,530,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATRA  UTARA",
+                            "MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (SATUAN)": "Satker\/Tahun",
+                            "MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (BESARAN)": "Rp60,020,000",
+                            "MEMILIKI  LEBIH  DARI  40 PEGAWAI (SATUAN)": "OT",
+                            "MEMILIKI  LEBIH  DARI  40 PEGAWAI (BESARAN)": "Rp1,510,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (SATUAN)": "Satker\/Tahun",
+                            "MEMILIKI  SAMPAI  DENGAN  40 PEGAWAI (BESARAN)": "Rp60,020,000",
+                            "MEMILIKI  LEBIH  DARI  40 PEGAWAI (SATUAN)": "OT",
+                            "MEMILIKI  LEBIH  DARI  40 PEGAWAI (BESARAN)": "Rp1,510,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "12. SATUAN BIAYA PENGGANTIAN INVENTARIS LAMA DAN ATAU PEMBELIAN INVENTARIS UNTUK PEGAWAI BARU.xlsx",
+            "category": "penggantian_inventaris",
+            "sbm_number": 12,
+            "display_order": 12,
+            "source_file": "12. SATUAN BIAYA PENGGANTIAN INVENTARIS LAMA DAN ATAU PEMBELIAN INVENTARIS UNTUK PEGAWAI BARU.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 41,
+                    "highest_column": "D",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 41,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "ACEH",
+                            "SATUAN": "Pegawai\/Tahun",
+                            "BESARAN": "Rp2,523,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATRA   UTARA",
+                            "SATUAN": "Pegawai\/Tahun",
+                            "BESARAN": "Rp1,988,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "SATUAN": "Pegawai\/Tahun",
+                            "BESARAN": "Rp3,002,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "13. SATUAN BIAYA PEMELIHARAAN DAN OPERASIONAL KENDARAAN DINAS.xlsx",
+            "category": "pemeliharaan_kendaraan",
+            "sbm_number": 13,
+            "display_order": 13,
+            "source_file": "13. SATUAN BIAYA PEMELIHARAAN DAN OPERASIONAL KENDARAAN DINAS.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 136,
+                    "highest_column": "F",
+                    "header_row": 3,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "Kendaraan Dinas Pejabat",
+                        "Kendaraan Dinas Operasional",
+                        "Operasional dalam Lingkungan Kantor, Roda 6, Roda 6 Khusus Tahanan Kejaksaan, dan Speed Boat",
+                        "Kendaraan Dinas Operasional Patroli Jalan Raya (PJR)",
+                        "Operasional Kendaraan Dinas Untuk Pengadaan Dari Sewa",
+                        "Kendaraan Bermotor Listrik Berbasis Baterai"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "Kendaraan Dinas Pejabat",
+                            "header_row": 3,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 4,
+                            "data_end_row": 41,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "13.01.01",
+                                    "PROVINSI": "PEJABAT NEGARA",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "BESARAN": "Rp45,670,000"
+                                },
+                                {
+                                    "NO.": "13.01.02",
+                                    "PROVINSI": "PEJABAT  ESELON  I",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "BESARAN": "Rp42,350,000"
+                                },
+                                {
+                                    "NO.": "13.1.3.1",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "BESARAN": "Rp43,610,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Kendaraan Dinas Operasional",
+                            "header_row": 43,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "RODA EMPAT",
+                                "DOUBLE GARDAN",
+                                "RODA DUA"
+                            ],
+                            "data_start_row": 44,
+                            "data_end_row": 78,
+                            "column_count": 6,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "RODA  EMPAT": "Rp37,970,000",
+                                    "DOUBLE GARDAN": "Rp40,990,000",
+                                    "RODA  DUA": "Rp5,250,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA   UTARA",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "RODA  EMPAT": "Rp36,820,000",
+                                    "DOUBLE GARDAN": "Rp39,410,000",
+                                    "RODA  DUA": "Rp5,020,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "RODA  EMPAT": "Rp36,900,000",
+                                    "DOUBLE GARDAN": "Rp39,550,000",
+                                    "RODA  DUA": "Rp4,990,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Operasional dalam Lingkungan Kantor, Roda 6, Roda 6 Khusus Tahanan Kejaksaan, dan Speed Boat",
+                            "header_row": 80,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "Satuan",
+                                "Besaran"
+                            ],
+                            "data_start_row": 81,
+                            "data_end_row": 86,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "URAIAN": "Operasional  dalam  Lingkungan  Kantor",
+                                    "Satuan": "Unit\/Tahun",
+                                    "Besaran": "Rp9,750,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "URAIAN": "Roda  6",
+                                    "Satuan": "Unit\/Tahun",
+                                    "Besaran": "Rp37,110,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "URAIAN": "Roda  6  Khusus  Tahanan  Kejaksaan",
+                                    "Satuan": "Unit\/Tahun",
+                                    "Besaran": "Rp40,760,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Kendaraan Dinas Operasional Patroli Jalan Raya (PJR)",
+                            "header_row": 87,
+                            "columns": [
+                                "NO",
+                                "PROVINSI",
+                                "SATUAN",
+                                "PJR RODA EMPAT",
+                                "PJR RODA DUA (≤ 250 CC)",
+                                "PJR RODA DUA (≥ 750 CC)"
+                            ],
+                            "data_start_row": 88,
+                            "data_end_row": 122,
+                            "column_count": 6,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "PROVINSI": "ACEH",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "PJR  RODA EMPAT": "Rp78,370,000",
+                                    "PJR  RODA DUA\n(≤  250  CC)": "Rp19,680,000",
+                                    "PJR  RODA DUA\n(≥  750  CC)": "Rp47,080,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "PROVINSI": "SUMATRA  UTARA",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "PJR  RODA EMPAT": "Rp75,920,000",
+                                    "PJR  RODA DUA\n(≤  250  CC)": "Rp18,960,000",
+                                    "PJR  RODA DUA\n(≥  750  CC)": "Rp43,840,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "PROVINSI": "R  I  A  U",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "PJR  RODA EMPAT": "Rp76,090,000",
+                                    "PJR  RODA DUA\n(≤  250  CC)": "Rp18,890,000",
+                                    "PJR  RODA DUA\n(≥  750  CC)": "Rp42,510,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Operasional Kendaraan Dinas Untuk Pengadaan Dari Sewa",
+                            "header_row": 124,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 125,
+                            "data_end_row": 129,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "URAIAN": "Pejabat  Eselon  I",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "BESARAN": "Rp35,000,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "URAIAN": "Pejabat  Eselon  II",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "BESARAN": "Rp33,800,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "URAIAN": "Operasional  Kantor  dan\/atau  Lapangan",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "BESARAN": "Rp30,000,000"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Kendaraan Bermotor Listrik Berbasis Baterai",
+                            "header_row": 130,
+                            "columns": [
+                                "NO",
+                                "URAIAN",
+                                "SATUAN",
+                                "BESARAN"
+                            ],
+                            "data_start_row": 131,
+                            "data_end_row": 136,
+                            "column_count": 4,
+                            "sample_data": [
+                                {
+                                    "NO.": "01",
+                                    "URAIAN": "Pejabat  Negara",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "BESARAN": "Rp14,840,000"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "URAIAN": "Pejabat  Eselon  I",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "BESARAN": "Rp11,100,000"
+                                },
+                                {
+                                    "NO.": "03",
+                                    "URAIAN": "Pejabat  Eselon  II",
+                                    "SATUAN": "Unit\/Tahun",
+                                    "BESARAN": "Rp10,990,000"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "14. SATUAN BIAYA PEMELIHARAAN GEDUNG BANGUNAN DALAM NEGERI.xlsx",
+            "category": "pemeliharaan_gedung",
+            "sbm_number": 14,
+            "display_order": 14,
+            "source_file": "14. SATUAN BIAYA PEMELIHARAAN GEDUNG BANGUNAN DALAM NEGERI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 41,
+                    "highest_column": "F",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 41,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "GEDUNG BERTINGKAT",
+                        "GEDUNG TIDAK BERTINGKAT",
+                        "HALAMAN GEDUNG\/ BANGUNAN KANTOR"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "ACEH",
+                            "SATUAN": "m2\/tahun",
+                            "GEDUNG BERTINGKAT": "Rp192,000",
+                            "GEDUNG TIDAK BERTINGKAT": "Rp148,000",
+                            "HALAMAN GEDUNG\/ BANGUNAN KANTOR": "Rp10,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATRA  UTARA",
+                            "SATUAN": "m2\/tahun",
+                            "GEDUNG BERTINGKAT": "Rp229,000",
+                            "GEDUNG TIDAK BERTINGKAT": "Rp171,000",
+                            "HALAMAN GEDUNG\/ BANGUNAN KANTOR": "Rp10,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "SATUAN": "m2\/tahun",
+                            "GEDUNG BERTINGKAT": "Rp217,000",
+                            "GEDUNG TIDAK BERTINGKAT": "Rp162,000",
+                            "HALAMAN GEDUNG\/ BANGUNAN KANTOR": "Rp11,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "15. SATUAN BIAYA SEWA GEDUNG PERTEMUAN.xlsx",
+            "category": "sewa_gedung",
+            "sbm_number": 15,
+            "display_order": 15,
+            "source_file": "15. SATUAN BIAYA SEWA GEDUNG PERTEMUAN.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 41,
+                    "highest_column": "D",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 41,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "ACEH",
+                            "SATUAN": "Per  hari",
+                            "BESARAN": "Rp12,884,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATRA   UTARA",
+                            "SATUAN": "Per  hari",
+                            "BESARAN": "Rp24,315,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "SATUAN": "Per  hari",
+                            "BESARAN": "Rp26,772,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "16. SATUAN BIAYA TRANSPORTASI DARI DANATAU KE TERMINAL BUS STASIUN BANDARA PELABUHAN DALAM RANGKA PERJALANAN DINAS DALAM NEGERI.xlsx",
+            "category": "transportasi_terminal",
+            "sbm_number": 16,
+            "display_order": 16,
+            "source_file": "16. SATUAN BIAYA TRANSPORTASI DARI DANATAU KE TERMINAL BUS STASIUN BANDARA PELABUHAN DALAM RANGKA PERJALANAN DINAS DALAM NEGERI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 37,
+                    "highest_column": "D",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 37,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "PROVINSI",
+                        "SATUAN",
+                        "BESARAN"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "PROVINSI": "ACEH",
+                            "SATUAN": "Orang\/Kali",
+                            "BESARAN": "Rp136,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "PROVINSI": "SUMATRA  UTARA",
+                            "SATUAN": "Orang\/Kali",
+                            "BESARAN": "Rp308,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "PROVINSI": "R  I  A  U",
+                            "SATUAN": "Orang\/Kali",
+                            "BESARAN": "Rp109,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "17. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS DALAM NEGERI PERGI PULANG  (PP).xlsx",
+            "category": "tiket_pesawat_dalam_negeri",
+            "sbm_number": 17,
+            "display_order": 17,
+            "source_file": "17. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS DALAM NEGERI PERGI PULANG  (PP).xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 319,
+                    "highest_column": "F",
+                    "header_row": 2,
+                    "data_start_row": 3,
+                    "data_end_row": 319,
+                    "has_sections": false,
+                    "sections": [],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "KOTA ASAL",
+                        "KOTA TUJUAN",
+                        "SATUAN  BIAYA  TIKET BISNIS",
+                        "SATUAN  BIAYA  TIKET EKONOMI"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "KOTA ASAL": "JAKARTA",
+                            "KOTA TUJUAN": "AMBON",
+                            "SATUAN  BIAYA  TIKET BISNIS": "Rp13,285,000",
+                            "SATUAN  BIAYA  TIKET EKONOMI": "Rp7,081,000"
+                        },
+                        {
+                            "NO.": "02",
+                            "KOTA ASAL": "JAKARTA",
+                            "KOTA TUJUAN": "BALIKPAPAN",
+                            "SATUAN  BIAYA  TIKET BISNIS": "Rp7,412,000",
+                            "SATUAN  BIAYA  TIKET EKONOMI": "Rp3,797,000"
+                        },
+                        {
+                            "NO.": "03",
+                            "KOTA ASAL": "JAKARTA",
+                            "KOTA TUJUAN": "BANDA  ACEH",
+                            "SATUAN  BIAYA  TIKET BISNIS": "Rp7,519,000",
+                            "SATUAN  BIAYA  TIKET EKONOMI": "Rp4,492,000"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "18. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP).xlsx",
+            "category": "tiket_pesawat_luar_negeri",
+            "sbm_number": 18,
+            "display_order": 18,
+            "source_file": "18. SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI PERGI PULANG (PP).xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 155,
+                    "highest_column": "E",
+                    "header_row": 3,
+                    "data_start_row": 4,
+                    "data_end_row": 155,
+                    "has_sections": true,
+                    "sections": [
+                        "AMERIKA  UTARA",
+                        "AMERIKA  SELATAN",
+                        "AMERIKA  TENGAH",
+                        "EROPA  BARAT",
+                        "EROPA  UTARA",
+                        "EROPA  SELATAN",
+                        "EROPA  TIMUR",
+                        "AFRIKA  BARAT",
+                        "AFRIKA  TIMUR",
+                        "AFRIKA  SELATAN",
+                        "AFRIKA  UTARA",
+                        "ASIA  BARAT",
+                        "ASIA  TENGAH",
+                        "ASIA  TIMUR",
+                        "ASIA  SELATAN",
+                        "ASIA  TENGGARA",
+                        "ASIA  PASIFIK"
+                    ],
+                    "sub_sections": [],
+                    "columns": [
+                        "NO.",
+                        "KOTA",
+                        "BESARAN EKSEKUTIF",
+                        "BESARAN BISNIS",
+                        "BESARAN EKONOMI"
+                    ],
+                    "sample_data": [
+                        {
+                            "NO.": "01",
+                            "KOTA": "Chicago",
+                            "BESARAN EKSEKUTIF": "12,733",
+                            "BESARAN BISNIS": "6,891",
+                            "BESARAN EKONOMI": "3,662"
+                        },
+                        {
+                            "NO.": "02",
+                            "KOTA": "Houston",
+                            "BESARAN EKSEKUTIF": "12,635",
+                            "BESARAN BISNIS": "6,487",
+                            "BESARAN EKONOMI": "3,591"
+                        },
+                        {
+                            "NO.": "03",
+                            "KOTA": "Los  Angeles",
+                            "BESARAN EKSEKUTIF": "11,411",
+                            "BESARAN BISNIS": "5,925",
+                            "BESARAN EKONOMI": "3,242"
+                        }
+                    ]
+                }
+            ],
+            "total_sheets": 1
+        },
+        {
+            "filename": "19. SATUAN BIAYA PENYELENGGARAAN PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI.xlsx",
+            "category": "perwakilan_ri",
+            "sbm_number": 19,
+            "display_order": 19,
+            "source_file": "19. SATUAN BIAYA PENYELENGGARAAN PERWAKILAN REPUBLIK INDONESIA DI LUAR NEGERI.xlsx",
+            "status": "success",
+            "error": null,
+            "sheets": [
+                {
+                    "name": "Sheet1",
+                    "total_rows": 312,
+                    "highest_column": "K",
+                    "header_row": 4,
+                    "data_start_row": 0,
+                    "data_end_row": 0,
+                    "has_sections": true,
+                    "sections": [
+                        "ATK, Langganan Koran \/ Majalah, Lampu, Pengamanan Sendiri, Kantong Diplomatik, dan Jamuan",
+                        "Pemeliharaan, Pengadaan Inventaris Kantor, Pakaian Sopir\/Satpam, Sewa Kendaraan, dan Konsumsi Rapat"
+                    ],
+                    "sub_sections": [
+                        {
+                            "label": "ATK, Langganan Koran \/ Majalah, Lampu, Pengamanan Sendiri, Kantong Diplomatik, dan Jamuan",
+                            "header_row": 4,
+                            "columns": [
+                                "NO",
+                                "K O T A",
+                                "ATK (OT)",
+                                "Langganan Koran\/ Majalah (Eksemplar\/ Bulan)",
+                                "Lampu (Buah)",
+                                "Pengamanan Sendiri (OB)",
+                                "Kantong Diplomatik (kg)",
+                                "Jamuan (OH)"
+                            ],
+                            "data_start_row": 5,
+                            "data_end_row": 157,
+                            "column_count": 8,
+                            "sample_data": [
+                                {
+                                    "NO.": "-",
+                                    "K  O    T    A": "AMERIKA  UTARA",
+                                    "ATK (OT)": "-",
+                                    "Langganan Koran\/ Majalah (Eksemplar\/ Bulan)": "-",
+                                    "Lampu (Buah)": "-",
+                                    "Pengamanan Sendiri\n(OB)": "-",
+                                    "Kantong Diplomatik (kg)": "-",
+                                    "Jamuan (OH)": "-"
+                                },
+                                {
+                                    "NO.": "01",
+                                    "K  O    T    A": "Chicago",
+                                    "ATK (OT)": "1,297",
+                                    "Langganan Koran\/ Majalah (Eksemplar\/ Bulan)": "38",
+                                    "Lampu (Buah)": "18",
+                                    "Pengamanan Sendiri\n(OB)": "2,574",
+                                    "Kantong Diplomatik (kg)": "96",
+                                    "Jamuan (OH)": "91"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "K  O    T    A": "Houston",
+                                    "ATK (OT)": "1,220",
+                                    "Langganan Koran\/ Majalah (Eksemplar\/ Bulan)": "37",
+                                    "Lampu (Buah)": "18",
+                                    "Pengamanan Sendiri\n(OB)": "2,521",
+                                    "Kantong Diplomatik (kg)": "94",
+                                    "Jamuan (OH)": "89"
+                                }
+                            ]
+                        },
+                        {
+                            "label": "Pemeliharaan, Pengadaan Inventaris Kantor, Pakaian Sopir\/Satpam, Sewa Kendaraan, dan Konsumsi Rapat",
+                            "header_row": 160,
+                            "columns": [
+                                "NO",
+                                "K O T A",
+                                "Pemeliharaan Kendaraan dinas (Unit\/ Tahun)",
+                                "Pemeliharaan Gedung (m2\/ Tahun)",
+                                "Pemeliharaan Halaman (m2\/ Tahun)",
+                                "Pengadaan Inventaris Kantor (OT)",
+                                "Pakaian Sopir\/ Satpam (Stel)",
+                                "Sewa kendaraan Sedan (hari)",
+                                "Sewa kendaraan Bus (hari)",
+                                "Sewa kendaraan Mobil Box (hari)",
+                                "Konsumsi Rapat (OK)"
+                            ],
+                            "data_start_row": 161,
+                            "data_end_row": 312,
+                            "column_count": 11,
+                            "sample_data": [
+                                {
+                                    "NO.": "AMERIKA  UTARA",
+                                    "K  O    T    A": "-",
+                                    "Pemeliharaan Kendaraan dinas  (Unit\/ Tahun)": "-",
+                                    "Pemeliharaan Gedung (m2\/ Tahun)": "-",
+                                    "Pemeliharaan Halaman (m2\/ Tahun)": "-",
+                                    "Pengadaan Inventaris Kantor  (OT)": "-",
+                                    "Pakaian Sopir\/ Satpam (Stel)": "-",
+                                    "Sewa  kendaraan\nSedan (hari)": "-",
+                                    "Sewa  kendaraan\nBus (hari)": "-",
+                                    "Sewa  kendaraan\nMobil Box (hari)": "-",
+                                    "Konsumsi Rapat (OK)": ""
+                                },
+                                {
+                                    "NO.": "01",
+                                    "K  O    T    A": "Chicago",
+                                    "Pemeliharaan Kendaraan dinas  (Unit\/ Tahun)": "8,528",
+                                    "Pemeliharaan Gedung (m2\/ Tahun)": "82",
+                                    "Pemeliharaan Halaman (m2\/ Tahun)": "9",
+                                    "Pengadaan Inventaris Kantor  (OT)": "695",
+                                    "Pakaian Sopir\/ Satpam (Stel)": "327",
+                                    "Sewa  kendaraan\nSedan (hari)": "306",
+                                    "Sewa  kendaraan\nBus (hari)": "408",
+                                    "Sewa  kendaraan\nMobil Box (hari)": "418",
+                                    "Konsumsi Rapat (OK)": "47"
+                                },
+                                {
+                                    "NO.": "02",
+                                    "K  O    T    A": "Houston",
+                                    "Pemeliharaan Kendaraan dinas  (Unit\/ Tahun)": "8,353",
+                                    "Pemeliharaan Gedung (m2\/ Tahun)": "80",
+                                    "Pemeliharaan Halaman (m2\/ Tahun)": "9",
+                                    "Pengadaan Inventaris Kantor  (OT)": "681",
+                                    "Pakaian Sopir\/ Satpam (Stel)": "320",
+                                    "Sewa  kendaraan\nSedan (hari)": "300",
+                                    "Sewa  kendaraan\nBus (hari)": "400",
+                                    "Sewa  kendaraan\nMobil Box (hari)": "409",
+                                    "Konsumsi Rapat (OK)": "46"
+                                }
+                            ]
+                        }
+                    ],
+                    "columns": [
+                        "NO.",
+                        "K  O    T    A",
+                        "ATK (OT)",
+                        "Langganan Koran\/ Majalah (Eksemplar\/ Bulan)",
+                        "Lampu (Buah)",
+                        "Pengamanan Sendiri\n(OB)",
+                        "Kantong Diplomatik (kg)",
+                        "Jamuan (OH)"
+                    ],
+                    "sample_data": []
+                }
+            ],
+            "total_sheets": 1
+        }
+    ]
+}

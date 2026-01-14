@@ -1,12 +1,26 @@
 // Utility functions for formatting and calculations
 
 /**
- * Format number to Indonesian Rupiah
+ * Format number to currency (IDR or USD)
+ * @param {number} amount - The amount to format
+ * @param {string} currency - Currency code ('IDR' or 'USD'), defaults to 'IDR'
  */
-export const formatCurrency = (amount) => {
+export const formatCurrency = (amount, currency = 'IDR') => {
   // Handle null, undefined, or invalid values
   const numericAmount = parseFloat(amount) || 0;
 
+  const currencyUpper = currency.toUpperCase();
+
+  if (currencyUpper === 'USD') {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(numericAmount);
+  }
+
+  // Default to IDR
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',

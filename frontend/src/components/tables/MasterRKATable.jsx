@@ -15,7 +15,6 @@ const MasterRKATable = () => {
       try {
         setLoading(true);
         const params = new URLSearchParams();
-        if (searchTerm) params.append('search', searchTerm);
         if (selectedKategori) params.append('kategori', selectedKategori);
 
         const response = await fetch(`http://localhost:80/api/rka-details?${params}`);
@@ -39,10 +38,19 @@ const MasterRKATable = () => {
     };
 
     fetchData();
-  }, [searchTerm, selectedKategori]);
+  }, [selectedKategori]);
 
-  // Only use API data
-  const filteredData = rkaData;
+  // Client-side fuzzy search filter
+  const filteredData = rkaData.filter(item => {
+    if (!searchTerm) return true;
+
+    const searchClean = searchTerm.toLowerCase().replace(/\s+/g, '');
+    return Object.values(item).some(value => {
+      if (!value) return false;
+      const valueClean = value.toString().toLowerCase().replace(/\s+/g, '');
+      return valueClean.includes(searchClean);
+    });
+  });
 
   // Search by specific field prioritized
   const getSearchHighlight = (text, field) => {

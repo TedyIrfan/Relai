@@ -6,8 +6,15 @@ import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MasterSBM from './pages/MasterSBM';
+import SBMCategoryDetail from './pages/SBMCategoryDetail';
 import MasterRKA from './pages/MasterRKA';
 import Nominatif from './pages/Nominatif';
+import NominatifPage from './pages/NominatifPage';
+import NominatifCreate from './pages/NominatifCreate';
+import NominatifEditForm from './pages/NominatifEditForm';
+import NonNominatif from './pages/NonNominatif';
+import NonNominatifCreate from './pages/NonNominatifCreate';
+import NonNominatifEdit from './pages/NonNominatifEdit';
 
 function App() {
   return (
@@ -29,6 +36,13 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
+          <Route path="/master-sbm/:category" element={
+            <ProtectedRoute>
+              <Layout>
+                <SBMCategoryDetail />
+              </Layout>
+            </ProtectedRoute>
+          } />
           <Route path="/master-rka" element={
             <ProtectedRoute>
               <Layout>
@@ -40,6 +54,48 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Nominatif />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/nominatif/edit/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <NominatifEditForm />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/nominatif/:rkaId" element={
+            <ProtectedRoute>
+              <Layout>
+                <NominatifPage />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/nominatif/create" element={
+            <ProtectedRoute>
+              <Layout>
+                <NominatifCreate />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/non-nominatif" element={
+            <ProtectedRoute>
+              <Layout>
+                <NonNominatif />
+              </Layout>
+            </ProtectedRoute>
+          } />
+            <Route path="/non-nominatif/create" element={
+            <ProtectedRoute>
+              <Layout>
+                <NonNominatifCreate />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/non-nominatif/:id/edit" element={
+            <ProtectedRoute>
+              <Layout>
+                <NonNominatifEdit />
               </Layout>
             </ProtectedRoute>
           } />
