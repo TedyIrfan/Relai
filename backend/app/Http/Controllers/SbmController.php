@@ -129,4 +129,48 @@ class SbmController extends Controller
             'data' => new SbmDetailResource($record),
         ]);
     }
+
+    /**
+     * GET /api/sbm/search
+     * Search across all Master SBM categories
+     * Used by Master SBM Search Popup in Nominatif
+     */
+    public function search(Request $request)
+    {
+        // Validate input
+        $query = $request->query('q');
+
+        if (!$query || strlen(trim($query)) < 2) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Query parameter "q" is required (minimum 2 characters)',
+            ], 400);
+        }
+
+        $searchTerm = trim($query);
+        $startTime = microtime(true);
+
+        try {
+            // Search across all categories
+            $results = $this->service->searchAll($searchTerm);
+
+            $searchTime = round((microtime(true) - $startTime) * 1000);
+
+            return response()->json([
+                'success' => true,
+                'data' => $results,
+                'meta' => [
+                    'total_results' => array_sum(array_column($results, 'count')),
+                    'total_categories' => count($results),
+                    'search_time_ms' => $searchTime,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error during search',
+                'error' => app()->environment('development') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
 }

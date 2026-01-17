@@ -1,108 +1,87 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import {
-  X,
-  Search,
-  FileText,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Database,
-} from "lucide-react";
-import sbmService, { SBM_CATEGORIES } from "../../services/sbmService";
-import SBMTable from "../sbm/SBMTable";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { X, Search, FileText, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
+import sbmService from '../../services/sbmService';
+import SBMTable from '../sbm/SBMTable';
 
 const SBMReferensiModal = ({ isOpen, onClose, fieldName, fieldLabel }) => {
-  const [selectedCategory, setSelectedCategory] = useState("honorarium_28");
-  const [categorySearch, setCategorySearch] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sbmData, setSbmData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
-  const [tableHeaders, setTableHeaders] = useState([]);
-  const [expandedSections, setExpandedSections] = useState(new Set(["all"]));
+  const [results, setResults] = useState([]);
+  const [error, setError] = useState(null);
+  const [expandedSections, setExpandedSections] = useState(new Set());
+  const abortControllerRef = useRef(null);
 
-  // Cache untuk menyimpan data yang sudah di-fetch
-  const dataCache = useRef(new Map());
-
-  // Clear cache saat modal close
+  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      dataCache.current.clear();
+      setSearchTerm('');
+      setResults([]);
+      setLoading(false);
+      setError(null);
+      setExpandedSections(new Set());
     }
   }, [isOpen]);
 
-  // Icon Search Pop up Master SBM di Nominatif
-
-  // Fetch data dari Master SBM saat category berubah
-  useEffect(() => {
-    if (isOpen && selectedCategory) {
-      fetchSbmData(selectedCategory);
-    }
-  }, [isOpen, selectedCategory]);
-
-  const fetchSbmData = async (category) => {
-    // Check cache dulu
-    if (dataCache.current.has(category)) {
-      const cached = dataCache.current.get(category);
-      setSbmData(cached.data);
-      setTableHeaders(cached.headers);
+  // Perform search
+  const performSearch = useCallback(async (term) => {
+    if (!term || term.trim().length < 2) {
+      setResults([]);
       return;
     }
 
+    // Abort previous search
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      const result = await sbmService.getAllByCategory(category);
-      if (result.success && result.data && result.data.length > 0) {
-        setSbmData(result.data);
+      const response = await sbmService.searchMasterSBM(term);
 
-        // Extract headers dari first item (same as SBMTable)
-        const firstItem = result.data[0];
-        const dataFields = firstItem.data || firstItem;
-        const headers = Object.keys(dataFields).filter(
-          (key) =>
-            key !== "_detected_currency" &&
-            key !== "_row_number" &&
-            key !== "id" &&
-            key !== "category" &&
-            key !== "source_file" &&
-            key !== "currency" &&
-            key !== "sub_category" &&
-            key !== "parent_section" &&
-            key !== "grouping_label" &&
-            key !== "no"
-        );
-        setTableHeaders(headers);
+      if (response.success) {
+        // DEBUG: Log search results for verification
+        console.log('🔍 Search Results:', {
+          term: term,
+          categories: response.data?.length || 0,
+          totalRecords: response.data?.reduce((sum, r) => sum + (r.filteredCount || 0), 0) || 0
+        });
 
-        // Simpan ke cache
-        dataCache.current.set(category, { data: result.data, headers });
+        setResults(response.data || []);
       } else {
-        setSbmData([]);
-        setTableHeaders([]);
+        setError(response.message || 'Search failed');
       }
-    } catch (error) {
-      console.error("Error fetching SBM data:", error);
-      setSbmData([]);
-      setTableHeaders([]);
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        const errorMsg = err.response?.data?.message || err.message || 'Terjadi kesalahan saat mencari data';
+        setError(errorMsg);
+        console.error('Search error:', err);
+        console.error('Error response:', err.response?.data);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Filter kategori berdasarkan search
-  const filteredCategories = Object.entries(SBM_CATEGORIES).filter(
-    ([key, value]) => {
-      if (!categorySearch) return true;
-      const searchLower = categorySearch.toLowerCase();
-      return (
-        value.label.toLowerCase().includes(searchLower) ||
-        key.toLowerCase().includes(searchLower)
-      );
+  // Debounced search
+  useEffect(() => {
+    if (!isOpen || !searchTerm) {
+      setResults([]);
+      return;
     }
-  );
+
+    const debounceTimer = setTimeout(() => {
+      performSearch(searchTerm);
+    }, 1000);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm, isOpen, performSearch]);
 
   // Toggle section expand/collapse
-  const toggleSection = (sectionKey) => {
-    setExpandedSections((prev) => {
+  const toggleSection = useCallback((sectionKey) => {
+    setExpandedSections(prev => {
       const newSet = new Set(prev);
       if (newSet.has(sectionKey)) {
         newSet.delete(sectionKey);
@@ -111,313 +90,327 @@ const SBMReferensiModal = ({ isOpen, onClose, fieldName, fieldLabel }) => {
       }
       return newSet;
     });
-  };
+  }, []);
 
-  // Group data logic (same as SBMCategoryDetail)
-  const getGroupedData = useMemo(() => {
-    if (!sbmData.length) return [];
+  // Get grouped data (same logic as Master SBM)
+  const getGroupedData = useCallback((categoryData, categoryKey) => {
+    if (!categoryData || categoryData.length === 0) return [];
 
-    // Check if category has grouping_label
-    const hasGroupingLabel = [
-      "honorarium_29",
-      "honorarium_32",
-      "honorarium_33",
-    ].includes(selectedCategory);
+    // Hardcode grouping type per category (same as Master SBM page)
+    const hasGroupingLabel = ['honorarium_29', 'honorarium_32', 'honorarium_33'].includes(categoryKey);
+    const hasSubCategory = categoryKey === 'honorarium_31';
 
-    // Check if category has sub_category
-    const hasSubCategory = selectedCategory === "honorarium_31";
-
-    // Case 1: H29, H32, H33 - grouping_label
+    // Case 1: grouping_label (H29, H32, H33)
     if (hasGroupingLabel) {
       const groups = {};
-      sbmData.forEach((item) => {
-        const label = item.grouping_label || "Uncategorized";
-        if (!groups[label]) groups[label] = [];
-        groups[label].push(item);
+      categoryData.forEach(item => {
+        const label = item.grouping_label;
+        if (label) {
+          if (!groups[label]) groups[label] = [];
+          groups[label].push(item);
+        }
       });
       return Object.entries(groups)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([label, items]) => ({
           title: label,
           data: items,
-          count: items.length,
+          count: items.length
         }));
     }
 
-    // Case 2: H31 - parent_section + sub_category
+    // Case 2: parent_section + sub_category (H31)
     if (hasSubCategory) {
       const groups = {};
-      sbmData.forEach((item) => {
-        const parent = item.parent_section || "Uncategorized";
-        const sub = item.sub_category || "";
+      categoryData.forEach(item => {
+        const parent = item.parent_section || '';
+        const sub = item.sub_category || '';
         const key = `${parent}|${sub}`;
         if (!groups[key]) {
           groups[key] = {
             title: sub ? `${parent} - ${sub}` : parent,
-            items: [],
+            items: []
           };
         }
         groups[key].items.push(item);
       });
       return Object.values(groups)
         .sort((a, b) => a.title.localeCompare(b.title))
-        .map((g) => ({
+        .map(g => ({
           title: g.title,
           data: g.items,
-          count: g.items.length,
+          count: g.items.length
         }));
     }
 
     // Case 3: Multiple parent_sections
-    const parentSections = [
-      ...new Set(sbmData.map((item) => item.parent_section).filter(Boolean)),
-    ];
+    const parentSections = [...new Set(categoryData.map(item => item.parent_section).filter(Boolean))];
     if (parentSections.length > 1) {
       return parentSections
         .sort((a, b) => a.localeCompare(b))
-        .map((section) => ({
+        .map(section => ({
           title: section,
-          data: sbmData.filter((item) => item.parent_section === section),
-          count: sbmData.filter((item) => item.parent_section === section)
-            .length,
+          data: categoryData.filter(item => item.parent_section === section),
+          count: categoryData.filter(item => item.parent_section === section).length
         }));
     }
 
-    // Case 4: Single section
-    return [
-      {
-        title: SBM_CATEGORIES[selectedCategory]?.label || selectedCategory,
-        data: sbmData,
-        count: sbmData.length,
-      },
-    ];
-  }, [sbmData, selectedCategory]);
+    // Case 4: Single section - no title (direct table)
+    return [{
+      title: '',
+      data: categoryData,
+      count: categoryData.length
+    }];
+  }, []);
 
-  // Filter data by section
-  const getFilteredDataBySection = (group) => {
-    if (!searchTerm) return group.data;
-
-    const searchClean = searchTerm.toLowerCase().replace(/\s+/g, "");
-
-    return group.data.filter((item) => {
-      const dataFields = item.data || item;
-      return Object.values(dataFields).some((value) => {
-        if (!value) return false;
-        const valueClean = value.toString().toLowerCase().replace(/\s+/g, "");
-        return valueClean.includes(searchClean);
-      });
-    });
-  };
-
-  const getMatchCount = (group) => {
-    if (!searchTerm) return group.count;
-    return getFilteredDataBySection(group).length;
-  };
+  // Calculate totals - use filteredCount from backend
+  const totalResults = results.reduce((sum, r) => sum + (r.filteredCount || 0), 0);
+  const totalCategories = results.length;
 
   if (!isOpen) return null;
 
-  const selectedCategoryInfo = SBM_CATEGORIES[selectedCategory];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-2">
-      {/* Modal Content - No Backdrop */}
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[85vh] flex flex-col mx-4">
+    <div className="fixed inset-0 flex items-start justify-center pt-2 z-50">
+      <div className="bg-white rounded-3xl shadow-xl w-full max-w-6xl max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 rounded-lg p-2">
-              <FileText className="w-5 h-5 text-blue-600" />
+        <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">REFERENSI MASTER SBM</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Cari referensi dari MASTER SBM</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                REFERENSI MASTER SBM
-              </h2>
-              <p className="text-sm text-gray-500">
-                Cari referensi dari Master SBM
-              </p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-auto p-6">
-          {/* Dropdown Pilih File */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Pilih File:
-            </label>
-            <div className="relative">
-              {/* Combobox Input */}
-              <div
-                className="flex items-center w-full h-12 px-4 pr-12 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 transition-colors bg-white"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <Search className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={categorySearch}
-                  onChange={(e) => {
-                    setCategorySearch(e.target.value);
-                    setIsDropdownOpen(true);
-                  }}
-                  placeholder={
-                    isDropdownOpen
-                      ? "Cari file..."
-                      : selectedCategoryInfo?.label ||
-                        "Pilih file Master SBM..."
-                  }
-                  className="flex-1 outline-none text-gray-900 placeholder-gray-600"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <ChevronDown
-                  className={`w-5 h-5 text-gray-500 transition-transform ${
-                    isDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </div>
-
-              {/* Dropdown Menu */}
-              {isDropdownOpen && (
-                <div className="absolute z-10 w-full mt-2 max-h-64 overflow-auto bg-white border-2 border-gray-200 rounded-xl shadow-xl">
-                  {filteredCategories.length === 0 ? (
-                    <div className="px-4 py-3 text-gray-500 text-sm">
-                      Tidak ada file yang cocok
-                    </div>
-                  ) : (
-                    filteredCategories.map(([key, value]) => (
-                      <div
-                        key={key}
-                        onClick={() => {
-                          setSelectedCategory(key);
-                          setCategorySearch("");
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`px-4 py-3 cursor-pointer transition-colors ${
-                          selectedCategory === key
-                            ? "bg-blue-50 text-blue-700 font-medium"
-                            : "hover:bg-gray-50 text-gray-700"
-                        }`}
-                      >
-                        {value.label}
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Search Bar */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Cari:
-            </label>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        {/* Search Bar */}
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
+                placeholder="Cari data Master SBM..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Cari data..."
-                className="w-full h-12 pl-12 pr-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoFocus
               />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+              >
+                Reset
+              </button>
+            )}
           </div>
 
-          {/* Results */}
-          <div>
-            {loading ? (
-              <div className="p-8 text-center text-gray-500">
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
-                  Memuat data...
-                </div>
+          {/* Status */}
+          <div className="mt-3">
+            {!searchTerm || searchTerm.length < 2 ? (
+              <p className="text-sm text-gray-500">
+                Mulai ketik untuk mencari data Master SBM
+              </p>
+            ) : loading ? (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Sedang mencari di Master SBM...
               </div>
-            ) : getGroupedData.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                Tidak ada data
-              </div>
+            ) : error ? (
+              <p className="text-sm text-red-600">⚠️ {error}</p>
+            ) : totalResults > 0 ? (
+              <p className="text-sm text-green-600">
+                ✓ Ditemukan <strong>{totalResults}</strong> data dari <strong>{totalCategories}</strong> SBM
+              </p>
             ) : (
-              <div className="space-y-4">
-                {getGroupedData.map((group, index) => {
-                  const sectionKey = `section-${index}`;
-                  const filteredData = getFilteredDataBySection(group);
-                  const matchCount = getMatchCount(group);
-                  const hasMatches = !searchTerm || matchCount > 0;
-                  const isExpanded =
-                    expandedSections.has("all") ||
-                    expandedSections.has(sectionKey);
-
-                  // Hide sections without matches during search
-                  if (searchTerm && !hasMatches) {
-                    return null;
-                  }
-
-                  return (
-                    <div
-                      key={sectionKey}
-                      className="bg-white rounded-lg border border-gray-200 overflow-hidden"
-                    >
-                      {/* Section Header - Clickable to Expand/Collapse */}
-                      <button
-                        onClick={() => toggleSection(sectionKey)}
-                        className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          {isExpanded ? (
-                            <ChevronDown className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                          )}
-                          <span className="font-semibold text-gray-900 text-sm">
-                            {group.title}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {searchTerm
-                            ? `${matchCount} match`
-                            : `${group.count} data`}
-                        </span>
-                      </button>
-
-                      {/* Table Content - Only show when expanded */}
-                      {isExpanded && (
-                        <SBMTable
-                          data={{
-                            data: filteredData,
-                            meta: {
-                              total: matchCount,
-                              current_page: 1,
-                              last_page: 1,
-                              per_page: matchCount,
-                            },
-                          }}
-                          loading={false}
-                          sort={{ field: "id", order: "asc" }}
-                          onSort={null}
-                          onPageChange={null}
-                          onPerPageChange={null}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              <p className="text-sm text-orange-600">⚠️ Tidak ada data yang cocok</p>
             )}
           </div>
         </div>
 
+        {/* Results */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          {!searchTerm || searchTerm.length < 2 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Search className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg font-medium mb-2">Cari Data Master SBM</p>
+              <p className="text-sm">Ketik untuk memulai pencarian</p>
+            </div>
+          ) : loading ? (
+            <div className="text-center py-12 text-gray-500">
+              <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-blue-500" />
+              <p>Sedang mencari...</p>
+            </div>
+          ) : results.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg font-medium">Tidak ada data yang cocok</p>
+              <p className="text-sm mt-2">Coba kata kunci lain</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {results.map((result, idx) => {
+                const uiKey = `category-${idx}`;
+                // Auto-expand categories by default
+                const isExpanded = !expandedSections.has(uiKey);
+
+                // Use grouping from backend
+                const grouping = result.grouping || [];
+
+                // Filter sections - show all sections with data (ignore match_count bug)
+                const visibleSections = grouping.filter(g => g.total_count > 0);
+
+                return (
+                  <div key={uiKey} className="border border-gray-200 rounded-lg overflow-hidden">
+                    {/* Category Header */}
+                    <button
+                      onClick={() => toggleSection(uiKey)}
+                      className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-5 h-5 text-blue-600" />
+                        <div className="text-left">
+                          <h3 className="font-semibold text-gray-900 text-sm">{result.categoryName}</h3>
+                          <p className="text-xs text-gray-500">{result.group}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">
+                          {result.filteredCount}/{result.totalCount} data
+                        </span>
+                        {isExpanded ? (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Sections - using backend grouping */}
+                    {isExpanded && (
+                      <div className="border-t border-gray-200">
+                        {visibleSections.length === 0 ? (
+                          <div className="p-4 text-center text-gray-500 text-sm">
+                            Tidak ada data yang cocok dalam SBM ini
+                          </div>
+                        ) : (
+                          visibleSections.map((section, sectionIdx) => {
+                            const sectionKey = `section-${idx}-${sectionIdx}`;
+                            // Sections default to expanded (can be collapsed by user)
+                            const sectionExpanded = !expandedSections.has(sectionKey);
+
+                            // Filter data for this section
+                            const sectionData = result.data.filter(item => {
+                              // "all" key - show all data
+                              if (section.key === 'all') {
+                                return true;
+                              }
+
+                              // parent|sub format (H31)
+                              if (section.key.includes('|')) {
+                                const [parent, sub] = section.key.split('|', 2);
+                                const itemParent = item.parent_section || '';
+                                const itemSub = item.sub_category || '';
+                                return itemParent === parent && itemSub === sub;
+                              }
+
+                              // grouping_label (H29, H32, H33)
+                              if (item.grouping_label === section.key) {
+                                return true;
+                              }
+
+                              // parent_section (H28, H30, etc)
+                              if (item.parent_section === section.key) {
+                                return true;
+                              }
+
+                              return false;
+                            });
+
+                            return (
+                              <div key={sectionKey}>
+                                {/* Section Header */}
+                                <button
+                                  onClick={() => toggleSection(sectionKey)}
+                                  className="w-full px-4 py-2 flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                                >
+                                  {sectionExpanded ? (
+                                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                                  ) : (
+                                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                                  )}
+                                  <span className="text-sm font-medium text-gray-700">{section.label}</span>
+                                  <span className="text-xs text-green-600">
+                                    ✓ {section.match_count}/{section.total_count} data
+                                  </span>
+                                </button>
+
+                                {/* Section Data */}
+                                {sectionExpanded && (
+                                  <div className="p-4">
+                                    {sectionData.length === 0 ? (
+                                      <div className="text-center text-gray-500 text-sm">
+                                        ⚠️ Data tidak ditemukan (filter issue)
+                                      </div>
+                                    ) : (
+                                      <SBMTable
+                                        data={{
+                                          data: sectionData,
+                                          meta: {
+                                            total: section.match_count,
+                                            current_page: 1,
+                                            last_page: 1,
+                                            per_page: section.match_count
+                                          }
+                                        }}
+                                        loading={false}
+                                        sort={{ field: 'id', order: 'asc' }}
+                                        onSort={null}
+                                        onPageChange={null}
+                                        onPerPageChange={null}
+                                        enableRowExpand={false}
+                                      />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Footer */}
-        <div className="flex items-center justify-end px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-3xl">
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors"
+            className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
           >
             Tutup
           </button>

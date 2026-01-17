@@ -8,6 +8,87 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class SbmApiService
 {
     /**
+     * Search across all SBM categories
+     * Used by Master SBM Search Popup in Nominatif
+     */
+    public function searchAll(string $searchTerm): array
+    {
+        $results = [];
+
+        // Get ALL categories dynamically from database
+        $categories = SbmDetail::select('category')
+            ->distinct()
+            ->pluck('category')
+            ->toArray();
+
+        foreach ($categories as $categoryKey) {
+            // Build query for this category
+            $query = SbmDetail::where('category', $categoryKey);
+
+            // Apply search - OPTIMIZED for performance
+            $query->where(function ($q) use ($searchTerm) {
+                // Normalize search term for better matching
+                $normalizedSearch = preg_replace('/\s+/', '', strtolower(trim($searchTerm)));
+
+                // Split into words for multi-word search
+                $words = array_filter(explode(' ', strtolower(trim($searchTerm))));
+
+                if (empty($words)) {
+                    return;
+                }
+
+                // OPTIMIZED: Simple LIKE queries without heavy regex
+                $q->where(function ($main) use ($normalizedSearch, $words) {
+                    // Try normalized search first (for "J A M B I" → "jambi")
+                    $main->whereRaw("LOWER(data::text) LIKE ?", ['%' . $normalizedSearch . '%']);
+
+                    // Also match individual words (more flexible)
+                    foreach ($words as $word) {
+                        $main->orWhereRaw("LOWER(data::text) LIKE ?", ['%' . $word . '%']);
+                    }
+                })
+
+                // Search in metadata fields (lightweight)
+                ->orWhere('source_file', 'ilike', '%' . $normalizedSearch . '%')
+                ->orWhere('parent_section', 'ilike', '%' . $normalizedSearch . '%')
+                ->orWhere('sub_category', 'ilike', '%' . $normalizedSearch . '%');
+            });
+
+            // Get all matching records (no limit for complete results)
+            $records = $query->get();
+
+            if ($records->isNotEmpty()) {
+                // Get category label and group
+                $categoryLabel = $this->getCategoryLabel($categoryKey);
+                $categoryGroup = $this->getCategoryGroup($categoryKey);
+
+                // Get total count for this category
+                $totalCount = SbmDetail::where('category', $categoryKey)->count();
+
+                // Get grouping metadata (with total_count and match_count per group)
+                $grouping = $this->getGroupingMetadata($categoryKey, $records->toArray());
+
+                $results[] = [
+                    'category' => $categoryKey,
+                    'categoryName' => $categoryLabel,
+                    'group' => $categoryGroup,
+                    'totalCount' => $totalCount,
+                    'filteredCount' => $records->count(),
+                    'grouping' => $grouping,
+                    'data' => $records->toArray(),
+                ];
+            }
+        }
+
+        // Sort by category name
+        usort($results, function ($a, $b) {
+            return strcmp($a['categoryName'], $b['categoryName']);
+        });
+
+        return $results;
+    }
+
+    /**
      * Get all categories dengan metadata
      */
     public function getAllCategories(): array
@@ -475,6 +556,229 @@ class SbmApiService
     public function getById(int $id): ?SbmDetail
     {
         return SbmDetail::find($id);
+    }
+
+    /**
+     * Apply search across all JSON data fields
+     */
+    private function applySearchAllFields($query, string $searchTerm): void
+    {
+        // Normalize search term: remove spaces
+        $normalizedSearch = preg_replace('/\s+/', '', strtolower($searchTerm));
+
+        // Split into words for strict matching
+        $searchWords = array_filter(explode(' ', $normalizedSearch));
+
+        // Build search query
+        $query->where(function ($q) use ($searchWords) {
+            // Search in all JSON fields using raw JSONB query
+            $q->whereRaw("EXISTS (
+                SELECT 1
+                FROM jsonb_each_text(data)
+                WHERE lower(replace(value::text, '\\s+', '')) LIKE ?
+            )", ['%' . $searchWords[0] . '%']);
+
+            // If multiple words, ensure ALL words exist
+            foreach (array_slice($searchWords, 1) as $word) {
+                $q->whereRaw("EXISTS (
+                    SELECT 1
+                    FROM jsonb_each_text(data)
+                    WHERE lower(replace(value::text, '\\s+', '')) LIKE ?
+                )", ['%' . $word . '%']);
+            }
+
+            // Also search in source_file, parent_section, sub_category
+            foreach ($searchWords as $word) {
+                $q->orWhere('source_file', 'ilike', '%' . $word . '%')
+                  ->orWhere('parent_section', 'ilike', '%' . $word . '%')
+                  ->orWhere('sub_category', 'ilike', '%' . $word . '%');
+            }
+        });
+    }
+
+    /**
+     * Get category label from defined labels
+     */
+    private function getCategoryLabel(string $category): string
+    {
+        $labels = [
+            'honorarium_28' => 'Honorarium 28 SATUAN BIAYA UANG HARIAN DAN UANG REPRESENTASI PERJALANAN DINAS DALAM NEGERI',
+            'honorarium_29' => 'Honorarium 29 SATUAN BIAYA UANG HARIAN PERJALANAN DINAS LUAR NEGERI',
+            'honorarium_30' => 'Honorarium 30 SATUAN BIAYA PENGINAPAN PERJALANAN DINAS DALAM NEGERI',
+            'honorarium_31' => 'Honorarium 31 SATUAN BIAYA PAKET KEGIATAN RAPAT/PERTEMUAN DI LUAR KANTOR',
+            'honorarium_32' => 'Honorarium 32 SATUAN BIAYA TIKET PERJALANAN DINAS PINDAH LUAR NEGERI',
+            'honorarium_33' => 'Honorarium 33 SATUAN BIAYA OPERASIONAL KEPALA PERWAKILAN RI LUAR NEGERI',
+            'honorarium_34' => 'Honorarium 34 SATUAN BIAYA MAKANAN PENAMBAH DAYA TAHAN TUBUH',
+            'honorarium_35' => 'Honorarium 35 SATUAN BIAYA SEWA KENDARAAN',
+            'honorarium_36' => 'Honorarium 36 SATUAN BIAYA PENGADAAN KENDARAAN DINAS',
+            'honorarium_37' => 'Honorarium 37 SATUAN BIAYA PENGADAAN PAKAIAN DINAS',
+            'honorarium_38' => 'Honorarium 38 SATUAN BIAYA KONSUMSI RAPAT/PERTEMUAN',
+            'honorarium_39' => 'Honorarium 39 SATUAN BIAYA KONSUMSI DIKLAT',
+            'transportasi_provinsi' => 'Section 1 SATUAN BIAYA TRANSPORTASI PROVINSI',
+            'transportasi_dki' => 'Section 2 SATUAN BIAYA TRANSPORTASI DKI JAKARTA',
+            'transportasi_kabupaten' => 'Section 3 SATUAN BIAYA TRANSPORTASI KABUPATEN',
+            'pemeliharaan_sarana_kantor' => 'Section 4 SATUAN BIAYA PEMELIHARAAN SARANA KANTOR',
+            'penerjemahan_pengetikan' => 'Section 5 SATUAN BIAYA PENERJEMAHAN DAN PENGETIKAN',
+            'beasiswa' => 'Section 6 SATUAN BIAYA BEASISWA',
+            'sewa_fotokopi' => 'Section 7 SATUAN BIAYA SEWA FOTOKOPI',
+            'honorarium_narasumber' => 'Section 8 SATUAN BIAYA HONORARIUM NARASUMBER',
+            'bahan_makanan' => 'Section 9 SATUAN BIAYA BAHAN MAKANAN',
+            'konsumsi_tahanan' => 'Section 10 SATUAN BIAYA KONSUMSI TAHANAN',
+            'keperluan_perkantoran' => 'Section 11 SATUAN BIAYA KEPERLUAN PERKANTORAN',
+            'penggantian_inventaris' => 'Section 12 SATUAN BIAYA PENGGANTIAN INVENTARIS',
+            'pemeliharaan_kendaraan' => 'Section 13 SATUAN BIAYA PEMELIHARAAN KENDARAAN',
+            'pemeliharaan_gedung' => 'Section 14 SATUAN BIAYA PEMELIHARAAN GEDUNG',
+            'sewa_gedung' => 'Section 15 SATUAN BIAYA SEWA GEDUNG',
+            'transportasi_terminal' => 'Section 16 SATUAN BIAYA TRANSPORTASI TERMINAL',
+            'tiket_pesawat_dalam_negeri' => 'Section 17 SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS DALAM NEGERI',
+            'tiket_pesawat_luar_negeri' => 'Section 18 SATUAN BIAYA TIKET PESAWAT PERJALANAN DINAS LUAR NEGERI',
+            'perwakilan_ri' => 'Section 19 SATUAN BIAYA PERWAKILAN RI LUAR NEGERI',
+        ];
+
+        return $labels[$category] ?? $category;
+    }
+
+    /**
+     * Get category group
+     */
+    private function getCategoryGroup(string $category): string
+    {
+        if (str_starts_with($category, 'honorarium_')) {
+            return 'Honorarium';
+        }
+        return 'Section';
+    }
+
+    /**
+     * Check if category has grouping_label field
+     */
+    private function hasGroupingLabel(string $categoryKey): bool
+    {
+        return in_array($categoryKey, ['honorarium_29', 'honorarium_32', 'honorarium_33']);
+    }
+
+    /**
+     * Check if category has sub_category field
+     */
+    private function hasSubCategory(string $categoryKey): bool
+    {
+        return $categoryKey === 'honorarium_31';
+    }
+
+    /**
+     * Get grouping metadata for a category
+     * Returns total_count and match_count for each group
+     */
+    private function getGroupingMetadata(string $categoryKey, array $filteredData): array
+    {
+        // Get ALL records for this category (to calculate total counts)
+        $allRecords = SbmDetail::where('category', $categoryKey)->get();
+        $grouping = [];
+
+        // Case 1: grouping_label (H29, H32, H33)
+        if ($this->hasGroupingLabel($categoryKey)) {
+            $groups = [];
+
+            // Build groups from all records
+            foreach ($allRecords as $record) {
+                $label = $record->grouping_label;
+                if (!$label) continue;
+
+                if (!isset($groups[$label])) {
+                    $groups[$label] = [
+                        'label' => $label,
+                        'key' => $label,
+                        'total_count' => 0,
+                        'match_count' => 0,
+                    ];
+                }
+                $groups[$label]['total_count']++;
+            }
+
+            // Count matches from filtered data
+            $filteredIds = array_column($filteredData, 'id');
+            foreach ($filteredData as $record) {
+                $label = $record->grouping_label ?? null;
+                if ($label && isset($groups[$label])) {
+                    $groups[$label]['match_count']++;
+                }
+            }
+
+            $grouping = array_values($groups);
+        }
+        // Case 2: parent_section + sub_category (H31)
+        elseif ($this->hasSubCategory($categoryKey)) {
+            $groups = [];
+
+            foreach ($allRecords as $record) {
+                $parent = $record->parent_section ?? '';
+                $sub = $record->sub_category ?? '';
+                $key = "{$parent}|{$sub}";
+                $label = $sub ? "{$parent} - {$sub}" : $parent;
+
+                if (!isset($groups[$key])) {
+                    $groups[$key] = [
+                        'label' => $label,
+                        'key' => $key,
+                        'total_count' => 0,
+                        'match_count' => 0,
+                    ];
+                }
+                $groups[$key]['total_count']++;
+            }
+
+            foreach ($filteredData as $record) {
+                $parent = $record->parent_section ?? '';
+                $sub = $record->sub_category ?? '';
+                $key = "{$parent}|{$sub}";
+                if (isset($groups[$key])) {
+                    $groups[$key]['match_count']++;
+                }
+            }
+
+            $grouping = array_values($groups);
+        }
+        // Case 3 & 4: parent_section grouping (H28, H30, Section files, etc)
+        else {
+            $parentSections = $allRecords->pluck('parent_section')->unique()->filter()->toArray();
+
+            if (count($parentSections) > 1) {
+                // Multiple parent_sections - create groups
+                foreach ($parentSections as $section) {
+                    $totalInSection = $allRecords->where('parent_section', $section)->count();
+                    $matchInSection = collect($filteredData)->where('parent_section', $section)->count();
+
+                    $grouping[] = [
+                        'label' => $section,
+                        'key' => $section,
+                        'total_count' => $totalInSection,
+                        'match_count' => $matchInSection,
+                    ];
+                }
+            } elseif (count($parentSections) === 1) {
+                // Single parent_section - create one group
+                $section = $parentSections[0];
+                $totalInSection = $allRecords->where('parent_section', $section)->count();
+                $matchInSection = collect($filteredData)->where('parent_section', $section)->count();
+
+                $grouping[] = [
+                    'label' => $section,
+                    'key' => $section,
+                    'total_count' => $totalInSection,
+                    'match_count' => $matchInSection,
+                ];
+            } else {
+                // No parent_section - create "All Data" group
+                $grouping[] = [
+                    'label' => 'Semua Data',
+                    'key' => 'all',
+                    'total_count' => $allRecords->count(),
+                    'match_count' => count($filteredData),
+                ];
+            }
+        }
+
+        return $grouping;
     }
 
     // ==================== PRIVATE HELPER METHODS ====================

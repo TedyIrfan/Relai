@@ -154,6 +154,7 @@ Route::prefix('sbm')->group(function () {
     Route::get('/filters/options', [SbmController::class, 'filters']);          // Get filter options (all)
     Route::get('/filters/{category}', [SbmController::class, 'filtersByCategory']); // Get filter options by category
     Route::get('/detail/{id}', [SbmController::class, 'detail']);               // Get single record by ID
+    Route::get('/search', [SbmController::class, 'search']);                     // Search across all categories
 
     // Dynamic routes last (must be at the bottom to avoid catching specific routes)
     Route::get('/{category}', [SbmController::class, 'show']);                  // Get data by category

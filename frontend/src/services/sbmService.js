@@ -248,6 +248,17 @@ const sbmService = {
     const response = await api.get(`/sbm/detail/${id}`);
     return response.data;
   },
+
+  /**
+   * Search across all Master SBM categories
+   * Used by Master SBM Search Popup in Nominatif
+   */
+  searchMasterSBM: async (query) => {
+    const response = await api.get(`/sbm/search`, {
+      params: { q: query }
+    });
+    return response.data;
+  },
 };
 
 export default sbmService;

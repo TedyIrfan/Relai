@@ -1525,27 +1525,43 @@ const NominatifExcelTable = forwardRef(
 
                     {/* Transportasi - Pesawat Non-PP */}
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                      <input
-                        type="text"
-                        value={
-                          row.transport_pesawat_non_pp_pagu
-                            ? `Rp ${
-                                parseFloat(
-                                  row.transport_pesawat_non_pp_pagu || 0
-                                ).toLocaleString("id-ID") || ""
-                              }`
-                            : ""
-                        }
-                        onChange={(e) =>
-                          updateRow(
-                            row.id,
-                            "transport_pesawat_non_pp_pagu",
-                            e.target.value.replace(/[^\d]/g, "")
-                          )
-                        }
-                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                        placeholder="Rp 0"
-                      />
+                      <div className="flex items-center">
+                        <input
+                          type="text"
+                          value={
+                            row.transport_pesawat_non_pp_pagu
+                              ? `Rp ${
+                                  parseFloat(
+                                    row.transport_pesawat_non_pp_pagu || 0
+                                  ).toLocaleString("id-ID") || ""
+                                }`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "transport_pesawat_non_pp_pagu",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "transport_pesawat_non_pp_pagu",
+                              "Pagu Tiket Pesawat NON PP"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                      </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
                       <input
