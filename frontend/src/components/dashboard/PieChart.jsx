@@ -3,31 +3,50 @@ import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Legend, T
 import { CHART_COLORS } from '../../utils/chartConfig';
 import { formatCurrency } from '../../utils/currency';
 
-const PieChart = ({ categories = [], total = 0, loading = false }) => {
-  // Check if categories is valid array
-  if (!categories || !Array.isArray(categories)) {
+const PieChart = ({ budgetUsage = [], total = 0, anggaranBerjalan = 0, anggaranSP2D = 0, loading = false, categories = null }) => {
+  // Support both old (categories) and new (budgetUsage) props for backward compatibility
+  const data = Array.isArray(budgetUsage) && budgetUsage.length > 0
+    ? budgetUsage.map((item, index) => {
+        const value = parseFloat(item.value) || 0;
+        const totalValue = parseFloat(total) || 0;
+
+        // Color scheme: Terpakai = orange, Sisa = green
+        const color = item.type === 'terpakai'
+          ? '#f97316' // orange for terpakai
+          : '#22c55e'; // green for sisa
+
+        return {
+          name: item.name,
+          value: value,
+          percentage: totalValue > 0 ? (value / totalValue) * 100 : 0,
+          color: color,
+          type: item.type
+        };
+      })
+    : (categories || []).map((category, index) => {
+        // Fallback to original category-based logic if budgetUsage not provided
+        const anggaranValue = parseFloat(category.anggaran) || 0;
+        const totalValue = parseFloat(total) || 0;
+
+        return {
+          name: category.nama || `Kategori ${index + 1}`,
+          value: anggaranValue,
+          percentage: totalValue > 0 ? (anggaranValue / totalValue) * 100 : 0,
+          color: CHART_COLORS.primary[index % CHART_COLORS.primary.length]
+        };
+      });
+
+  // Check if we have valid data
+  if (data.length === 0 && (!categories || categories.length === 0)) {
     return (
       <div className="flex items-center justify-center h-80 text-gray-500">
         <div className="text-center">
-          <p className="text-lg font-medium">Tidak ada data kategori</p>
-          <p className="text-sm">Data kategori tidak tersedia</p>
+          <p className="text-lg font-medium">Tidak ada data</p>
+          <p className="text-sm">Data anggaran tidak tersedia</p>
         </div>
       </div>
     );
   }
-
-  // Format data for pie chart - distribusi per kategori
-  const data = categories.map((category, index) => {
-    const anggaranValue = parseFloat(category.anggaran) || 0;
-    const totalValue = parseFloat(total) || 0;
-
-    return {
-      name: category.nama || `Kategori ${index + 1}`,
-      value: anggaranValue,
-      percentage: totalValue > 0 ? (anggaranValue / totalValue) * 100 : 0,
-      color: CHART_COLORS.primary[index % CHART_COLORS.primary.length]
-    };
-  });
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload }) => {
@@ -39,8 +58,13 @@ const PieChart = ({ categories = [], total = 0, loading = false }) => {
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-800">
           <p className="font-medium text-gray-800">{payload[0].name}</p>
           <p className="text-sm text-gray-600">{formatCurrency(payload[0].value)}</p>
+          {currentData && currentData.type === 'terpakai' && (
+            <p className="text-xs text-gray-500">
+              (Berjalan: {formatCurrency(anggaranBerjalan || 0)} + SP2D: {formatCurrency(anggaranSP2D || 0)})
+            </p>
+          )}
           <p className="text-xs text-gray-500">
-            {percentage.toFixed(1)}% dari total
+            {percentage.toFixed(4)}% dari total anggaran
           </p>
         </div>
       );
@@ -78,8 +102,8 @@ const PieChart = ({ categories = [], total = 0, loading = false }) => {
     return (
       <div className="flex items-center justify-center h-80 text-gray-500">
         <div className="text-center">
-          <p className="text-lg font-medium">Tidak ada data kategori</p>
-          <p className="text-sm">Kategori anggaran belum tersedia</p>
+          <p className="text-lg font-medium">Tidak ada data</p>
+          <p className="text-sm">Data anggaran tidak tersedia</p>
         </div>
       </div>
     );
@@ -134,9 +158,9 @@ const PieChart = ({ categories = [], total = 0, loading = false }) => {
       {/* Summary stats */}
       <div className="mt-6 pt-6 border-t border-gray-300">
         <div className="text-center">
-          <p className="text-sm text-gray-500">Total Anggaran Semua Kategori</p>
+          <p className="text-sm text-gray-500">Total Anggaran</p>
           <p className="text-lg font-semibold text-gray-800">
-            {formatCurrency(data.reduce((sum, item) => sum + item.value, 0))}
+            {formatCurrency(total || 0)}
           </p>
         </div>
       </div>

@@ -4,65 +4,99 @@ import { formatBarData } from '../../utils/chartConfig';
 import { formatCurrency } from '../../utils/currency';
 
 const BarChart = ({ categories, loading = false }) => {
-  const data = formatBarData(categories);
+  // Format data for bar chart
+  const rawData = formatBarData(categories);
+
+  // Use cube root scale for better visualization of extreme values
+  // Cube root preserves the relative proportions while compressing the range
+  const transformValue = (val) => val === 0 ? 0 : Math.cbrt(val);
+
+  // Get max value for scale calculation
+  const allValues = rawData.flatMap(item => [item.anggaran, item.berjalan, item.sp2d]);
+  const maxDataValue = Math.max(...allValues);
+
+  // Transform data for visualization (using cube root scale)
+  const data = rawData.map(category => ({
+    ...category,
+    // Keep original values for display
+    _anggaran: category.anggaran,
+    _berjalan: category.berjalan,
+    _sp2d: category.sp2d,
+    // Use transformed values for rendering
+    anggaran: transformValue(category.anggaran),
+    berjalan: transformValue(category.berjalan),
+    sp2d: transformValue(category.sp2d)
+  }));
+
+  // Transformed max value for Y-axis domain
+  const maxTransformedValue = transformValue(maxDataValue);
+
+  // Check if data has actual values greater than 0
+  const hasValidData = rawData.some(item => item.anggaran > 0 || item.berjalan > 0 || item.sp2d > 0);
+
+  console.log('📊 BarChart data:', data);
+  console.log('📊 Raw data:', rawData);
+  console.log('📊 Max value:', maxDataValue);
+  console.log('📊 Max transformed:', maxTransformedValue);
+  console.log('📊 hasValidData:', hasValidData);
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      // Find the original category data
+      const originalCat = rawData.find(cat => cat.name === label);
+
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
           <p className="font-medium text-gray-800 mb-2">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {formatCurrency(entry.value)}
-            </p>
-          ))}
+          {payload.map((entry, index) => {
+            // Get real value from original data
+            let realValue = entry.value;
+            if (originalCat) {
+              if (entry.dataKey === 'anggaran') realValue = originalCat._anggaran;
+              else if (entry.dataKey === 'berjalan') realValue = originalCat._berjalan;
+              else if (entry.dataKey === 'sp2d') realValue = originalCat._sp2d;
+            }
+
+            return (
+              <p key={index} className="text-sm" style={{ color: entry.color }}>
+                {entry.name}: {formatCurrency(realValue)}
+              </p>
+            );
+          })}
         </div>
       );
     }
     return null;
   };
 
-  // Custom YAxis tick formatter - Logarithmic Scale version
-  const formatYAxis = (value) => {
-    if (value >= 1000000000000) {
-      return `${(value / 1000000000000).toFixed(1)}T`;
+  // Custom YAxis tick formatter - shows original scale labels
+  const formatYAxis = (transformedValue) => {
+    // Convert back from cube root to original value for display
+    const originalValue = Math.pow(transformedValue, 3);
+
+    if (originalValue >= 1000000000000) {
+      return `${(originalValue / 1000000000000).toFixed(1)}T`;
     }
-    if (value >= 1000000000) {
-      return `${(value / 1000000000).toFixed(1)}M`;
+    if (originalValue >= 1000000000) {
+      return `${(originalValue / 1000000000).toFixed(1)}M`;
     }
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(0)}JT`;
+    if (originalValue >= 1000000) {
+      return `${(originalValue / 1000000).toFixed(1)}JT`;
     }
-    if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}RB`;
+    if (originalValue >= 1000) {
+      return `${(originalValue / 1000).toFixed(1)}RB`;
     }
-    return value.toString();
+    return originalValue.toString();
   };
 
-  // Logarithmic scale tick formatter
-  const formatYAxisLog = (value) => {
-    // Untuk log scale, kita perlu format yang lebih detail
-    if (value >= 1000000000000) {
-      return `${(value / 1000000000000).toFixed(1)}T`;
-    }
-    if (value >= 1000000000) {
-      return `${(value / 1000000000).toFixed(1)}M`;
-    }
-    if (value >= 1000000000) {
-      return `${(value / 1000000000).toFixed(1)}M`;
-    }
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}JT`;
-    }
-    if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}RB`;
-    }
-    if (value >= 1) {
-      return value.toString();
-    }
-    return value.toString();
-  };
+  console.log('📊 BarChart rendering:', {
+    dataLength: data.length,
+    hasValidData,
+    maxDataValue,
+    maxTransformedValue,
+    firstItem: data[0]
+  });
 
   if (loading) {
     return (
@@ -76,8 +110,19 @@ const BarChart = ({ categories, loading = false }) => {
     return (
       <div className="flex items-center justify-center h-80 text-gray-500">
         <div className="text-center">
-          <p className="text-lg font-medium">Tidak ada data kategori</p>
-          <p className="text-sm">Kategori anggaran belum tersedia</p>
+          <p className="text-lg font-medium">Tidak ada data</p>
+          <p className="text-sm">Data anggaran tidak tersedia</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasValidData) {
+    return (
+      <div className="flex items-center justify-center h-80 text-gray-500">
+        <div className="text-center">
+          <p className="text-lg font-medium">Data belum tersedia</p>
+          <p className="text-sm">Silakan input data anggaran terlebih dahulu</p>
         </div>
       </div>
     );
@@ -90,7 +135,7 @@ const BarChart = ({ categories, loading = false }) => {
           Anggaran per Kategori
         </h3>
         <p className="text-xs text-gray-500 mt-1">
-          Logarithmic Scale - Semua data terlihat proporsional
+          Cube Root Scale - {hasValidData ? `Max: ${(maxDataValue / 1000000000000).toFixed(1)}T` : 'Belum ada data'}
         </p>
       </div>
 
@@ -103,12 +148,12 @@ const BarChart = ({ categories, loading = false }) => {
             axisLine={{ stroke: '#E5E7EB' }}
           />
           <YAxis
-            scale="log"
-            domain={[1, 'dataMax']}
-            tickFormatter={formatYAxisLog}
+            scale="linear"
+            domain={[0, maxTransformedValue * 1.1]}
+            tickFormatter={formatYAxis}
             tick={{ fill: '#6B7280', fontSize: 11 }}
             axisLine={{ stroke: '#E5E7EB' }}
-            label={{ value: 'Anggaran (Log Scale)', angle: -90, position: 'insideLeft', style: { fill: '#6B7280', fontSize: 10 } }}
+            label={{ value: 'Anggaran (Cube Root Scale)' , angle: -90, position: 'insideLeft', style: { fill: '#6B7280', fontSize: 10 } }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
@@ -128,82 +173,24 @@ const BarChart = ({ categories, loading = false }) => {
           <div>
             <p className="text-xs text-gray-500">Total Anggaran</p>
             <p className="text-sm font-semibold text-blue-600">
-              {formatCurrency(data.reduce((sum, item) => sum + item.anggaran, 0))}
+              {formatCurrency(rawData.reduce((sum, item) => sum + item.anggaran, 0))}
             </p>
           </div>
           <div>
             <p className="text-xs text-gray-500">Total Berjalan</p>
             <p className="text-sm font-semibold text-orange-600">
-              {formatCurrency(data.reduce((sum, item) => sum + (item.berjalan || 0), 0))}
+              {formatCurrency(rawData.reduce((sum, item) => sum + item.berjalan, 0))}
             </p>
           </div>
           <div>
             <p className="text-xs text-gray-500">Total SP2D</p>
             <p className="text-sm font-semibold text-green-600">
-              {formatCurrency(data.reduce((sum, item) => sum + (item.sp2d || 0), 0))}
+              {formatCurrency(rawData.reduce((sum, item) => sum + item.sp2d, 0))}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Progress bars per kategori */}
-      <div className="mt-6 pt-6 border-t border-gray-300">
-        <h4 className="text-sm font-semibold text-gray-700 mb-4 text-center">
-          Progress Penggunaan per Kategori
-        </h4>
-        <div className="space-y-4">
-          {data.map((category, index) => {
-            const usagePercentage = category.anggaran > 0 ? (category.berjalan / category.anggaran) * 100 : 0;
-            const sp2dPercentage = category.anggaran > 0 ? (category.sp2d / category.anggaran) * 100 : 0;
-            const remainingPercentage = Math.max(0, 100 - usagePercentage - sp2dPercentage);
-
-            return (
-              <div key={index} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700">{category.name}</span>
-                  <span className="text-xs text-gray-500">
-                    {formatCurrency(category.berjalan + category.sp2d)} / {formatCurrency(category.anggaran)}
-                  </span>
-                </div>
-                <div className="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
-                  {/* Anggaran Berjalan Progress */}
-                  <div
-                    className="absolute left-0 top-0 h-full bg-orange-500 transition-all duration-500 ease-out"
-                    style={{ width: `${usagePercentage}%` }}
-                  />
-                  {/* SP2D Progress */}
-                  <div
-                    className="absolute top-0 h-full bg-green-500 transition-all duration-500 ease-out"
-                    style={{
-                      left: `${usagePercentage}%`,
-                      width: `${sp2dPercentage}%`
-                    }}
-                  />
-                  {/* Remaining */}
-                  <div
-                    className="absolute top-0 h-full bg-gray-300"
-                    style={{
-                      left: `${usagePercentage + sp2dPercentage}%`,
-                      width: `${remainingPercentage}%`
-                    }}
-                  />
-                  {/* Percentage Labels */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-medium text-gray-700 mix-blend-difference">
-                      {(usagePercentage + sp2dPercentage).toFixed(1)}% Terpakai
-                    </span>
-                  </div>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Berjalan: {usagePercentage.toFixed(1)}%</span>
-                  <span>SP2D: {sp2dPercentage.toFixed(1)}%</span>
-                  <span>Sisa: {remainingPercentage.toFixed(1)}%</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 };
