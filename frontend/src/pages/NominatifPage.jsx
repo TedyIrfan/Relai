@@ -25,6 +25,7 @@ const NominatifPage = () => {
   const [success, setSuccess] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [nominatif, setNominatif] = useState(null);
+  const [viewMode, setViewMode] = useState(false); // true = read-only view mode for submitted
 
   // Get draft data from localStorage (from create page)
   const [draftData, setDraftData] = useState(null);
@@ -168,6 +169,8 @@ const NominatifPage = () => {
               consoleLog('✅ Data loaded successfully:', data);
               setNominatif(data);
               setIsEditMode(true);
+              // Set viewMode based on status
+              setViewMode(data.status === 'submitted');
               await loadNominatifDetailRows(data.id);
             } else {
               throw new Error('Data nominatif tidak valid atau kosong');
@@ -1011,7 +1014,7 @@ const NominatifPage = () => {
               </button>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  Input Nominatif
+                  {viewMode ? 'View Nominatif' : 'Input Nominatif'}
                 </h1>
                 {/* Show deskripsi for both create and edit mode */}
                 {(draftData?.deskripsi || nominatif?.deskripsi_perjalanan_dinas) && (
@@ -1034,7 +1037,7 @@ const NominatifPage = () => {
             <div className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-gray-400" />
               <span className="text-sm text-gray-600">
-                Status: <span className="font-medium">Draft</span>
+                Status: <span className="font-medium">{viewMode ? 'Submitted' : 'Draft'}</span>
               </span>
             </div>
           </div>
@@ -1069,6 +1072,7 @@ const NominatifPage = () => {
           initialData={nominatifData}
           onSave={handleSave}
           onSubmit={handleSubmit}
+          readOnly={viewMode}
         />
       </div>
 

@@ -22,7 +22,7 @@ const globalStyles = `
 `;
 
 const NominatifExcelTable = forwardRef(
-  ({ rkaDetail, initialData = [], onSave, onSubmit }, ref) => {
+  ({ rkaDetail, initialData = [], onSave, onSubmit, readOnly = false }, ref) => {
     const processedInitialData = initialData;
 
     // Removed excessive logging to prevent console spam
@@ -1071,7 +1071,8 @@ const NominatifExcelTable = forwardRef(
               </p>
             </div>
           </div>
-          {/* Action Bar */}
+          {/* Action Bar - Hide in view mode */}
+          {!readOnly && (
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center space-x-3">
               <button
@@ -1102,6 +1103,7 @@ const NominatifExcelTable = forwardRef(
               </button>
             </div>
           </div>
+          )}
 
           {/* Table Container */}
           <div className="border border-gray-200 rounded-lg">
@@ -1320,6 +1322,7 @@ const NominatifExcelTable = forwardRef(
                   <tr key={row.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
                       <div className="flex items-center space-x-2">
+                        {!readOnly && (
                         <button
                           onClick={() => deleteRow(row.id)}
                           className={`transition-all duration-200 ${
@@ -1332,6 +1335,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3 border-r border-gray-200 w-56">
@@ -1347,6 +1351,7 @@ const NominatifExcelTable = forwardRef(
                           onChange={(e) =>
                             updateRow(row.id, "nama_lengkap", e.target.value)
                           }
+                          disabled={readOnly}
                           className={`w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-1 ${
                             validationErrors[index]?.nama_lengkap
                               ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -1369,6 +1374,7 @@ const NominatifExcelTable = forwardRef(
                             onChange={(e) =>
                               updateRow(row.id, "golongan", e.target.value)
                             }
+                            disabled={readOnly}
                             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:border-gray-500 bg-white ${
                               validationErrors[index]?.golongan
                                 ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -1398,6 +1404,7 @@ const NominatifExcelTable = forwardRef(
                           onChange={(e) =>
                             updateRow(row.id, "jabatan", e.target.value)
                           }
+                          disabled={readOnly}
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
                             validationErrors[index]?.jabatan
                               ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -1420,6 +1427,7 @@ const NominatifExcelTable = forwardRef(
                             onChange={(e) =>
                               updateRow(row.id, "eselon", e.target.value)
                             }
+                            disabled={readOnly}
                             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:border-gray-500 bg-white ${
                               validationErrors[index]?.eselon
                                 ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -1449,6 +1457,7 @@ const NominatifExcelTable = forwardRef(
                           onChange={(e) =>
                             updateRow(row.id, "asal", e.target.value)
                           }
+                          disabled={readOnly}
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
                             validationErrors[index]?.asal
                               ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -1471,6 +1480,7 @@ const NominatifExcelTable = forwardRef(
                           onChange={(e) =>
                             updateRow(row.id, "tujuan", e.target.value)
                           }
+                          disabled={readOnly}
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
                             validationErrors[index]?.tujuan
                               ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -1493,6 +1503,7 @@ const NominatifExcelTable = forwardRef(
                           onChange={(e) =>
                             updateRow(row.id, "tanggal_pergi", e.target.value)
                           }
+                          disabled={readOnly}
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
                             validationErrors[index]?.tanggal_pergi
                               ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -1514,6 +1525,7 @@ const NominatifExcelTable = forwardRef(
                           onChange={(e) =>
                             updateRow(row.id, "tanggal_sampai", e.target.value)
                           }
+                          disabled={readOnly}
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
                             validationErrors[index]?.tanggal_sampai
                               ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -1544,9 +1556,11 @@ const NominatifExcelTable = forwardRef(
                               e.target.value.replace(/[^\d]/g, "")
                             )
                           }
+                          disabled={readOnly}
                           className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                           placeholder="Rp 0"
                         />
+                        {!readOnly && (
                         <button
                           onClick={() =>
                             openSearchModal(
@@ -1561,6 +1575,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Search className="w-4 h-4" strokeWidth={2.5} />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1582,6 +1597,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value.replace(/[^\d]/g, "")
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="Rp 0"
                       />
@@ -1608,9 +1624,11 @@ const NominatifExcelTable = forwardRef(
                               e.target.value.replace(/[^\d]/g, "")
                             )
                           }
+                          disabled={readOnly}
                           className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                           placeholder="Rp 0"
                         />
+                        {!readOnly && (
                         <button
                           onClick={() =>
                             openSearchModal(
@@ -1625,6 +1643,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Search className="w-4 h-4" strokeWidth={2.5} />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1646,6 +1665,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value.replace(/[^\d]/g, "")
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="Rp 0"
                       />
@@ -1664,6 +1684,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="0"
                       />
@@ -1686,9 +1707,11 @@ const NominatifExcelTable = forwardRef(
                               e.target.value.replace(/[^\d]/g, "")
                             )
                           }
+                          disabled={readOnly}
                           className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                           placeholder="Rp 0"
                         />
+                        {!readOnly && (
                         <button
                           onClick={() =>
                             openSearchModal(
@@ -1703,6 +1726,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Search className="w-4 h-4" strokeWidth={2.5} />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1722,6 +1746,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value.replace(/[^\d]/g, "")
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="Rp 0"
                       />
@@ -1742,6 +1767,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="0"
                       />
@@ -1765,9 +1791,11 @@ const NominatifExcelTable = forwardRef(
                               e.target.value.replace(/[^\d]/g, "")
                             )
                           }
+                          disabled={readOnly}
                           className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                           placeholder="Rp 0"
                         />
+                        {!readOnly && (
                         <button
                           onClick={() =>
                             openSearchModal(
@@ -1782,6 +1810,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Search className="w-4 h-4" strokeWidth={2.5} />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1822,6 +1851,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="0"
                       />
@@ -1845,9 +1875,11 @@ const NominatifExcelTable = forwardRef(
                               e.target.value.replace(/[^\d]/g, "")
                             )
                           }
+                          disabled={readOnly}
                           className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                           placeholder="Rp 0"
                         />
+                        {!readOnly && (
                         <button
                           onClick={() =>
                             openSearchModal(
@@ -1862,6 +1894,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Search className="w-4 h-4" strokeWidth={2.5} />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1882,6 +1915,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value.replace(/[^\d]/g, "")
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="Rp 0"
                       />
@@ -1900,6 +1934,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="0"
                       />
@@ -1922,9 +1957,11 @@ const NominatifExcelTable = forwardRef(
                               e.target.value.replace(/[^\d]/g, "")
                             )
                           }
+                          disabled={readOnly}
                           className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                           placeholder="Rp 0"
                         />
+                        {!readOnly && (
                         <button
                           onClick={() =>
                             openSearchModal(
@@ -1939,6 +1976,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Search className="w-4 h-4" strokeWidth={2.5} />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -1958,6 +1996,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value.replace(/[^\d]/g, "")
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="Rp 0"
                       />
@@ -1976,6 +2015,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="0"
                       />
@@ -1998,9 +2038,11 @@ const NominatifExcelTable = forwardRef(
                               e.target.value.replace(/[^\d]/g, "")
                             )
                           }
+                          disabled={readOnly}
                           className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                           placeholder="Rp 0"
                         />
+                        {!readOnly && (
                         <button
                           onClick={() =>
                             openSearchModal(
@@ -2015,6 +2057,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Search className="w-4 h-4" strokeWidth={2.5} />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -2034,6 +2077,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value.replace(/[^\d]/g, "")
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="Rp 0"
                       />
@@ -2052,6 +2096,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="0"
                       />
@@ -2074,9 +2119,11 @@ const NominatifExcelTable = forwardRef(
                               e.target.value.replace(/[^\d]/g, "")
                             )
                           }
+                          disabled={readOnly}
                           className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                           placeholder="Rp 0"
                         />
+                        {!readOnly && (
                         <button
                           onClick={() =>
                             openSearchModal(
@@ -2091,6 +2138,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Search className="w-4 h-4" strokeWidth={2.5} />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -2110,6 +2158,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value.replace(/[^\d]/g, "")
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="Rp 0"
                       />
@@ -2128,6 +2177,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="0"
                       />
@@ -2150,9 +2200,11 @@ const NominatifExcelTable = forwardRef(
                               e.target.value.replace(/[^\d]/g, "")
                             )
                           }
+                          disabled={readOnly}
                           className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                           placeholder="Rp 0"
                         />
+                        {!readOnly && (
                         <button
                           onClick={() =>
                             openSearchModal(
@@ -2167,6 +2219,7 @@ const NominatifExcelTable = forwardRef(
                         >
                           <Search className="w-4 h-4" strokeWidth={2.5} />
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
@@ -2186,6 +2239,7 @@ const NominatifExcelTable = forwardRef(
                             e.target.value.replace(/[^\d]/g, "")
                           )
                         }
+                        disabled={readOnly}
                         className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
                         placeholder="Rp 0"
                       />
@@ -2224,6 +2278,7 @@ const NominatifExcelTable = forwardRef(
                                 // Update row state with new evidence link
                                 updateRow(row.id, "evidence_link", newLink);
                               }}
+                              disabled={readOnly}
                             />
                           </div>
                         </div>

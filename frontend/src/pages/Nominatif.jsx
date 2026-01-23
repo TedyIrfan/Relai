@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Eye } from 'lucide-react';
 import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
 import { consoleError } from '../utils/logger';
@@ -136,6 +136,11 @@ const Nominatif = () => {
   const handleEdit = (nominatif) => {
     // Langsung ke form edit dulu
     navigate(`/nominatif/edit/${nominatif.id}`);
+  };
+
+  const handleView = (nominatif) => {
+    // Navigate ke detail page dengan view mode (read-only)
+    navigate(`/nominatif/${nominatif.rka_detail_id}?id=${nominatif.id}`);
   };
 
   const handleDeleteClick = (id, deskripsi) => {
@@ -461,6 +466,15 @@ const Nominatif = () => {
                       </td>
                       <td className="px-1 py-1 text-sm text-right">
                         <div className="flex items-center justify-end gap-0.5">
+                          {nominatif.status === 'submitted' && (
+                            <button
+                              onClick={() => handleView(nominatif)}
+                              className="p-1 text-blue-600 hover:text-blue-800"
+                              title="View"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
                           {(nominatif.status === 'draft' || nominatif.status === 'rejected') && (
                             <button
                               onClick={() => handleEdit(nominatif)}
