@@ -12,6 +12,7 @@ const NominatifPage = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams(); // Add search params hook
   const specificNominatifId = searchParams.get('id'); // Get ?id=... from URL
+  const isViewModeFromURL = searchParams.get('viewMode') === 'true'; // Get ?viewMode=true from URL (from All Status Nominatif)
 
   const tableRef = useRef(null);
   const { success: showSuccess, error: showError, notifications, close } = useNotification();
@@ -164,13 +165,13 @@ const NominatifPage = () => {
             const result = await response.json();
             // Handle response structure
             const data = result.data?.nominatif || result.data;
-            
+
             if (data && data.id) {
               consoleLog('✅ Data loaded successfully:', data);
               setNominatif(data);
               setIsEditMode(true);
-              // Set viewMode based on status
-              setViewMode(data.status === 'submitted');
+              // Set viewMode based on status OR if coming from All Status Nominatif URL parameter
+              setViewMode(data.status === 'submitted' || isViewModeFromURL);
               await loadNominatifDetailRows(data.id);
             } else {
               throw new Error('Data nominatif tidak valid atau kosong');
@@ -1006,7 +1007,7 @@ const NominatifPage = () => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <button
-                onClick={() => specificNominatifId ? navigate(`/nominatif/edit/${specificNominatifId}`) : navigate('/nominatif')}
+                onClick={() => isViewModeFromURL ? navigate('/all-status-nominatif') : (specificNominatifId ? navigate(`/nominatif/edit/${specificNominatifId}`) : navigate('/nominatif'))}
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mr-4"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -1014,7 +1015,7 @@ const NominatifPage = () => {
               </button>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {viewMode ? 'View Nominatif' : 'Input Nominatif'}
+                  {isViewModeFromURL ? 'View Nominatif (Read-Only)' : (viewMode ? 'View Nominatif' : 'Input Nominatif')}
                 </h1>
                 {/* Show deskripsi for both create and edit mode */}
                 {(draftData?.deskripsi || nominatif?.deskripsi_perjalanan_dinas) && (
@@ -1037,7 +1038,15 @@ const NominatifPage = () => {
             <div className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-gray-400" />
               <span className="text-sm text-gray-600">
-                Status: <span className="font-medium">{viewMode ? 'Submitted' : 'Draft'}</span>
+                {isViewModeFromURL ? (
+                  <>
+                    Mode: <span className="font-medium">View-Only (All Status)</span>
+                  </>
+                ) : (
+                  <>
+                    Status: <span className="font-medium">{nominatif?.status || 'Draft'}</span>
+                  </>
+                )}
               </span>
             </div>
           </div>

@@ -138,9 +138,9 @@ const AllStatusNominatif = () => {
     });
   };
 
-  // Handle view nominatif
+  // Handle view nominatif - selalu view-only dari All Status
   const handleViewNominatif = (nominatif) => {
-    navigate(`/nominatif/${nominatif.rka_detail_id}?id=${nominatif.id}`);
+    navigate(`/nominatif/${nominatif.rka_detail_id}?id=${nominatif.id}&viewMode=true`);
   };
 
   // Handle view non-nominatif (show detail modal)
