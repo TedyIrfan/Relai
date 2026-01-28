@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, DollarSign, Calendar, Save, Send, Link, Edit } from 'lucide-react';
+import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, DollarSign, Calendar, Save, Send, Link, Edit, Eye } from 'lucide-react';
 import nonNominatifService from '../services/nonNominatifService';
 import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
@@ -18,6 +18,7 @@ const NonNominatifEdit = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [originalStatus, setOriginalStatus] = useState('');
+  const [viewMode, setViewMode] = useState(false); // true = read-only view mode for submitted
 
   // State untuk dialog konfirmasi
   const [dialogKonfirmasi, setDialogKonfirmasi] = useState({
@@ -66,8 +67,10 @@ const NonNominatifEdit = () => {
         consoleLog('Form data to set:', formDataToSet);
         setFormData(formDataToSet);
 
-        // Set original status
+        // Set original status and view mode
         setOriginalStatus(data.status);
+        // Set view mode if already submitted
+        setViewMode(data.status === 'submitted');
 
         // Set selected RKA
         if (data.rka_detail_id) {
@@ -357,10 +360,10 @@ const NonNominatifEdit = () => {
               <Edit className="w-6 h-6 text-blue-600 mr-3" />
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  Edit Non-Nominatif
+                  {viewMode ? 'View Non-Nominatif' : 'Edit Non-Nominatif'}
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Perbarui data kegiatan non-nominatif
+                  {viewMode ? 'Lihat data non-nominatif (read-only)' : 'Perbarui data kegiatan non-nominatif'}
                 </p>
               </div>
             </div>
@@ -387,8 +390,14 @@ const NonNominatifEdit = () => {
                   value={formData.deskripsiKegiatan}
                   onChange={(e) => handleInputChange('deskripsiKegiatan', e.target.value)}
                   placeholder="Contoh: Pembelian alat tulis kantor untuk periode Desember 2024..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-4 py-3 border rounded-lg ${
+                    viewMode
+                      ? 'bg-gray-100 border-gray-200 text-gray-600 cursor-not-allowed'
+                      : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
                   rows={6}
+                  readOnly={viewMode}
+                  disabled={viewMode}
                 />
               </div>
 
@@ -405,7 +414,13 @@ const NonNominatifEdit = () => {
                     id="tanggal"
                     value={formData.tanggalKegiatan}
                     onChange={(e) => handleInputChange('tanggalKegiatan', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full px-4 py-3 border rounded-lg ${
+                      viewMode
+                        ? 'bg-gray-100 border-gray-200 text-gray-600 cursor-not-allowed'
+                        : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
+                    readOnly={viewMode}
+                    disabled={viewMode}
                   />
                 </div>
 
@@ -423,7 +438,13 @@ const NonNominatifEdit = () => {
                       value={formatDisplayCurrency(formData.danaAnggaran)}
                       onChange={handleDanaAnggaranChange}
                       placeholder="0"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className={`w-full pl-10 pr-4 py-3 border rounded-lg ${
+                        viewMode
+                          ? 'bg-gray-100 border-gray-200 text-gray-600 cursor-not-allowed'
+                          : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
+                      readOnly={viewMode}
+                      disabled={viewMode}
                     />
                   </div>
                 </div>
@@ -490,57 +511,88 @@ const NonNominatifEdit = () => {
                 value={formData.evidenceLink}
                 onChange={(e) => handleInputChange('evidenceLink', e.target.value)}
                 placeholder="https://drive.google.com/file/d/..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-4 py-3 border rounded-lg ${
+                  viewMode
+                    ? 'bg-gray-100 border-gray-200 text-gray-600 cursor-not-allowed'
+                    : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                readOnly={viewMode}
+                disabled={viewMode}
               />
               <p className="text-sm text-gray-500 mt-1">
-                Masukkan link Google Drive untuk bukti pendukung
+                {viewMode ? (
+                  <a
+                    href={formData.evidenceLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Buka Evidence di Google Drive
+                  </a>
+                ) : (
+                  'Masukkan link Google Drive untuk bukti pendukung'
+                )}
               </p>
             </div>
 
             {/* Action Buttons */}
             <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-              <button
-                onClick={() => navigate('/non-nominatif')}
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                Batal
-              </button>
+              {viewMode ? (
+                // View Mode - Only show Back button
+                <button
+                  onClick={() => navigate('/non-nominatif')}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  Kembali
+                </button>
+              ) : (
+                // Edit Mode - Show all buttons
+                <>
+                  <button
+                    onClick={() => navigate('/non-nominatif')}
+                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Batal
+                  </button>
 
-              <button
-                onClick={handleSaveDraft}
-                disabled={saving || submitting || !selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
-                className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {saving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Menyimpan...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Simpan Draft
-                  </>
-                )}
-              </button>
+                  <button
+                    onClick={handleSaveDraft}
+                    disabled={saving || submitting || !selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
+                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Menyimpan...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Simpan Draft
+                      </>
+                    )}
+                  </button>
 
-              <button
-                onClick={handleSubmit}
-                disabled={submitting || saving || !selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
-                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-              >
-                {submitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Mengirim...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Submit
-                  </>
-                )}
-              </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting || saving || !selectedRKA || !formData.deskripsiKegiatan || !formData.tanggalKegiatan || !formData.danaAnggaran || !formData.evidenceLink}
+                    className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Mengirim...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Submit
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
