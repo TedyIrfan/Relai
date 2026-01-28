@@ -28,6 +28,7 @@ Route::post('/auth/create-user', [AuthController::class, 'createUser']);
 
 // NEW NOMINATIF SYSTEM (Phase 2) - Separated Tables Architecture (Manual Token Validation)
 Route::prefix('nominatifs-new')->group(function () {
+    Route::get('/all', [NominatifNewController::class, 'indexAll']); // All Status Nominatif - show all nominatifs from all users
     Route::get('/', [NominatifNewController::class, 'index']);
     Route::post('/', [NominatifNewController::class, 'store']);
     Route::get('/search', [NominatifNewController::class, 'search']);
@@ -62,7 +63,14 @@ Route::prefix('nominatifs/details/{detailRowId}/biaya')->group(function () {
 });
 
 // NON-NOMINATIF SYSTEM - Sanctum Token Validation
-Route::middleware('auth:sanctum')->apiResource('non-nominatifs', NonNominatifController::class);
+Route::middleware('auth:sanctum')->prefix('non-nominatifs')->group(function () {
+    Route::get('/all', [NonNominatifController::class, 'indexAll']); // All Status Non-Nominatif - show all from all users
+    Route::get('/', [NonNominatifController::class, 'index']); // Filter by authenticated user
+    Route::post('/', [NonNominatifController::class, 'store']);
+    Route::get('/{id}', [NonNominatifController::class, 'show']);
+    Route::put('/{id}', [NonNominatifController::class, 'update']);
+    Route::delete('/{id}', [NonNominatifController::class, 'destroy']);
+});
 Route::middleware('auth:sanctum')->post('non-nominatifs/{id}/submit', [NonNominatifController::class, 'submit']);
 
 // Evidence (File Upload) - Manual Token Validation

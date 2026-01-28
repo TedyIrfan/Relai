@@ -15,6 +15,7 @@ import NominatifEditForm from './pages/NominatifEditForm';
 import NonNominatif from './pages/NonNominatif';
 import NonNominatifCreate from './pages/NonNominatifCreate';
 import NonNominatifEdit from './pages/NonNominatifEdit';
+import AllStatusNominatif from './pages/AllStatusNominatif';
 
 function App() {
   return (
@@ -96,6 +97,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <NonNominatifEdit />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/all-status-nominatif" element={
+            <ProtectedRoute>
+              <Layout>
+                <AllStatusNominatif />
               </Layout>
             </ProtectedRoute>
           } />

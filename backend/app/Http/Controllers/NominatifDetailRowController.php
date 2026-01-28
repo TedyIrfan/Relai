@@ -188,13 +188,9 @@ class NominatifDetailRowController extends Controller
         $detailRow = NominatifDetailRow::with(['biayaRow', 'evidence', 'nominatif.user'])
             ->findOrFail($rowId);
 
-        // Security check
-        if ($detailRow->nominatif->user_id !== $this->getAuthenticatedUser(request())?->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
+        // 🔥 REMOVED: Security check for READ-ONLY access
+        // All authenticated users can view detail rows (read-only) from other users
+        // This is needed for "All Status" feature where users can view nominatifs from all users
 
         return response()->json([
             'success' => true,

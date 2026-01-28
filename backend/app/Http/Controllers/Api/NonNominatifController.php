@@ -12,9 +12,10 @@ use Illuminate\Support\Facades\DB;
 class NonNominatifController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Get all non-nominatifs from all users (for All Status feature)
+     * This endpoint does NOT filter by user_id - shows all non-nominatifs
      */
-    public function index()
+    public function indexAll()
     {
         $nonNominatifs = NonNominatif::with('rkaDetail')
             ->with('user:id,name')
@@ -22,6 +23,33 @@ class NonNominatifController extends Controller
             ->get();
 
         return response()->json([
+            'success' => true,
+            'data' => $nonNominatifs
+        ]);
+    }
+
+    /**
+     * Display a listing of the resource (filtered by authenticated user)
+     */
+    public function index()
+    {
+        $user = request()->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $nonNominatifs = NonNominatif::with('rkaDetail')
+            ->with('user:id,name')
+            ->where('user_id', $user->id) // Filter by authenticated user only
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
             'data' => $nonNominatifs
         ]);
     }
