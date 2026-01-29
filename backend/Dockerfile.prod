@@ -1,15 +1,7 @@
-# Multistage build for production
-FROM node:18-alpine AS frontend
+# Production Dockerfile - Backend Only
+# Frontend should be built separately with: cd frontend && npm run build
 
-# Install frontend dependencies
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-
-# Build frontend assets
-RUN npm run build
-
-# Production stage
+# Stage 1: Production Image
 FROM php:8.4-fpm-alpine AS production
 
 # Install system dependencies
@@ -18,38 +10,72 @@ RUN apk add --no-cache \
     postgresql-client \
     curl \
     bash \
-    supervisor \
     libzip-dev \
-    zip
+    zip \
+    tzdata \
+    composer \
+    oniguruma \
+    oniguruma-dev \
+    icu-dev \
+    icu \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    libxml2-dev
+
+# Set timezone
+ENV TZ=Asia/Jakarta
 
 # Install PHP extensions
-RUN docker-php-ext-install \
+RUN apk add --no-cache \
+    php84-tokenizer \
+    php84-session \
+    php84-fileinfo \
+    php84-xml \
+    php84-simplexml \
+    php84-xmlreader \
+    php84-xmlwriter \
+    php84-dom \
+    php84-gd \
+    php84-curl \
+    php84-ctype \
+    php84-mbstring \
+    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install \
     pdo_pgsql \
     pgsql \
-    mbstring \
     exif \
     pcntl \
     bcmath \
     zip \
-    intl
+    intl \
+    opcache
 
-# Get Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Configure PHP for production
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && echo "opcache.enable=1" >> $PHP_INI_DIR/php.ini \
+    && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/php.ini \
+    && echo "opcache.interned_strings_buffer=16" >> $PHP_INI_DIR/php.ini \
+    && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/php.ini \
+    && echo "opcache.revalidate_freq=2" >> $PHP_INI_DIR/php.ini
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel application
+# Copy application files
 COPY . .
 
-# Install dependencies and optimize
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Copy frontend assets
-COPY --from=frontend /app/public/build public
+# Install Composer dependencies
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --prefer-dist
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Expose port
 EXPOSE 9000
