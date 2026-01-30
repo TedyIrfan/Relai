@@ -170,8 +170,6 @@ jobs:
         run: |
           tar -czf relai-deploy.tar.gz \
             backend/ \
-            docker-compose.prod.yml \
-            .env.example \
             README.md \
             README-CICD.md \
             DEPLOYMENT-PROGRESS.md
