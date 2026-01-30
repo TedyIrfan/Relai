@@ -1,372 +1,272 @@
-# 🚀 RelAI - Setup Guide untuk Developer
+# 🚀 RelAI - Local Production Setup
 
-> **Panduan cepat untuk temen-temen developer yang mau pull & run project ini**
-
----
-
-## 📋 Mode Apa yang Mau Dipakai?
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     PILIH MODE                                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  1️⃣  DEVELOPMENT MODE (untuk coding)                            │
-│     • Hot-reload enabled                                          │
-│     • Debug mode on                                               │
-│     • Port 8000                                                   │
-│     • Command: docker-compose up                                 │
-│                                                                   │
-│  2️⃣  PRODUCTION MODE (untuk deploy)                              │
-│     • Optimized build                                             │
-│     • Debug mode off                                              │
-│     • Port 80/443                                                 │
-│     • Command: docker-compose -f backend/docker-compose.prod.yml  │
-│     • Pull image dari GHCR (GA USAH BUILD!)                      │
-│                                                                   │
-└───────────────────────────────────────────────────────────────────┘
-```
+> **Panduan local production untuk testing sebelum deployment**
 
 ---
 
-## 1️⃣ DEVELOPMENT MODE
+## 📋 Prerequisite (Wajib!)
 
-**Untuk:** Temen-temen developer yang mau coding/mengembangkan
-
-### Prerequisites
-
-```bash
-# Install Docker Desktop
-# Download: https://www.docker.com/products/docker-desktop/
-
-# Atau install Docker + Docker Compose di Linux
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-```
-
-### Step-by-Step
-
-#### 1. Clone Repository
-
-```bash
-git clone https://github.com/TedyIrfan/Relai.git
-cd Relai
-```
-
-#### 2. Setup Environment File
-
-```bash
-# Copy environment file
-cp backend/.env.example backend/.env
-
-# Edit sesuai kebutuhan (optional, default sudah work)
-# nano backend/.env
-```
-
-#### 3. Start Containers (Build Pertama Kali)
-
-```bash
-# Build & start semua containers
-docker-compose up -d --build
-
-# Tunggu sampai selesai... (±5-10 menit pertama kali)
-```
-
-#### 4. Run Migrations & Seeder
-
-```bash
-# Migrate database
-docker-compose exec app php artisan migrate
-
-# Seed database (dummy data)
-docker-compose exec app php artisan db:seed
-```
-
-#### 5. Install Frontend Dependencies (Opsional - kalau mau coding frontend)
-
-```bash
-# Install frontend dependencies
-cd frontend
-npm install
-
-# Run dev server (hot-reload)
-npm run dev
-```
-
-#### 6. Access Application
-
-```
-Frontend: http://localhost:8000
-Backend API: http://localhost:8000/api
-PgAdmin: http://localhost:5050
-  Email: admin@relai.com
-  Password: admin123
-```
-
-### Daily Commands
-
-```bash
-# Start containers
-docker-compose up -d
-
-# Stop containers
-docker-compose down
-
-# View logs
-docker-compose logs -f app
-
-# Enter app container (shell)
-docker-compose exec app bash
-
-# Run artisan command
-docker-compose exec app php artisan {command}
-
-# Run tests
-docker-compose exec app php artisan test
-
-# Clear cache
-docker-compose exec app php artisan cache:clear
-docker-compose exec app php artisan config:clear
-docker-compose exec app php artisan route:clear
-```
-
-### Troubleshooting Development
-
-#### Port sudah dipakai?
-
-```bash
-# Cek port yang dipakai
-# Windows
-netstat -ano | findstr :8000
-
-# Mac/Linux
-lsof -i :8000
-
-# Kill process
-# Windows: taskkill /PID {PID} /F
-# Mac/Linux: kill -9 {PID}
-```
-
-#### Database connection error?
-
-```bash
-# Restart postgres container
-docker-compose restart postgres
-
-# Cek postgres logs
-docker-compose logs postgres
-```
+✅ **Backend sudah ready** (Laravel 12)
+✅ **Frontend sudah build** (React)
+✅ **Docker sudah terinstall**
+✅ **Project sudah diclone**
 
 ---
 
-## 2️⃣ PRODUCTION MODE
+## 🎯 Apa ini?
 
-**Untuk:** Deploy ke server/VPS
+**Local Production** = Test production mode di lokal kamu sebelum deploy ke server beneran.
 
-### Step-by-Step
+**Kenapa perlu?**
+- ✅ Test apakah aplikasi jalan di production mode
+- ✅ Cek migration & seeding
+- ✅ Test environment variables
+- ✅ Debugging sebelum deploy
 
-#### 1. Clone Repository
+---
 
-```bash
-git clone https://github.com/TedyIrfan/Relai.git
-cd Relai
-```
+## 📝 Step-by-Step
 
-#### 2. Setup Environment File
-
-```bash
-# Copy production environment file
-cp backend/.env.prod.example backend/.env
-
-# EDIT WAJIB - sesuaikan dengan environment kamu
-nano backend/.env
-
-# Yang wajib di-edit:
-# - APP_KEY: Generate dengan 'php artisan key:generate'
-# - APP_URL: Domain atau IP server
-# - DB_PASSWORD: Password database yang kuat
-# - REDIS_PASSWORD: Password Redis
-```
-
-#### 3. Pull Image dari GHCR (GA USAH BUILD!)
-
-```bash
-# Login ke GitHub Container Registry
-# Buat Personal Access Token dulu di GitHub:
-# Settings → Developer settings → Personal access tokens → Tokens (classic)
-# Scope: read:packages
-
-echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
-
-# Pull image (GA USAH BUILD, image sudah ready!)
-docker pull ghcr.io/tedyirfan/relai:latest
-```
-
-#### 4. Start Production Containers
+### 1. Setup Environment File
 
 ```bash
 # Masuk ke backend directory
-cd backend
+cd Relai/backend
 
-# Start production containers
-docker-compose -f docker-compose.prod.yml up -d
+# Copy production environment file
+cp .env.prod.example .env
 
-# Wait for containers to be healthy
-docker-compose -f docker-compose.prod.yml ps
+# EDIT FILE INI - PENTING!
+nano .env  # atau pake VS Code / editor lain
 ```
 
-#### 5. Run Migrations & Seeder
+**Yang WAJIB di-edit di `.env`:**
+
+```env
+# Generate key dengan: php artisan key:generate
+APP_KEY=base64:PASTE_GENERATED_KEY_DISINI
+
+# URL aplikasi (lokal untuk testing)
+APP_URL=http://localhost
+
+# Database password (bebas, yang penting cocok)
+POSTGRES_PASSWORD=relai123
+DB_PASSWORD=relai123
+
+# Redis password (optional)
+REDIS_PASSWORD=
+```
+
+### 2. Generate APP_KEY
+
+**Kalau sudah ada container development jalan:**
 
 ```bash
-# Migrate database
-docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate --force
-
-# Seed database (optional - untuk production sebaiknya hati-hati)
-docker-compose -f backend/docker-compose.prod.yml exec app php artisan db:seed --force
-
-# Atau combine migrate + seed
-docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate:fresh --seed --force
-```
-
-#### 6. Access Application
-
-```
-Application: http://your-server-ip atau http://your-domain.com
-API: http://your-server-ip/api atau http://your-domain.com/api
-```
-
-### Daily Commands (Production)
-
-```bash
-# Start containers
-docker-compose -f backend/docker-compose.prod.yml up -d
-
-# Stop containers
-docker-compose -f backend/docker-compose.prod.yml down
-
-# View logs
-docker-compose -f backend/docker-compose.prod.yml logs -f app
-
-# Restart app container
-docker-compose -f backend/docker-compose.prod.yml restart app
-
-# Enter app container
-docker-compose -f backend/docker-compose.prod.yml exec app bash
-
-# Update to latest image
-docker pull ghcr.io/tedyirfan/relai:latest
-docker-compose -f backend/docker-compose.prod.yml up -d
-
-# Backup database
-docker-compose -f backend/docker-compose.prod.yml exec postgres pg_dump -U postgres relai > backup.sql
-```
-
----
-
-## 🔄 Update Project
-
-### Development Mode
-
-```bash
-# Pull latest changes
-git pull origin main
-
-# Rebuild containers (kalau ada perubahan di Dockerfile atau dependencies)
-docker-compose up -d --build
-
-# Install baru dependencies (kalau composer/package.json berubah)
-docker-compose exec app composer install
-cd frontend && npm install
-```
-
-### Production Mode
-
-```bash
-# Pull latest changes
-git pull origin main
-
-# Pull latest image
-docker pull ghcr.io/tedyirfan/relai:latest
-
-# Restart dengan image baru
-docker-compose -f backend/docker-compose.prod.yml up -d
-
-# Run migrations (kalau ada schema changes)
-docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate --force
-```
-
----
-
-## 📝 Perbedaan Command: Sail vs Docker Compose
-
-| Task | Laravel Sail (Dulu) | Docker Compose (Sekarang: Dev) | Docker Compose (Sekarang: Prod) |
-|------|---------------------|--------------------------------|----------------------------------|
-| Start | `./vendor/bin/sail up` | `docker-compose up -d` | `docker-compose -f backend/docker-compose.prod.yml up -d` |
-| Stop | `./vendor/bin/sail down` | `docker-compose down` | `docker-compose -f backend/docker-compose.prod.yml down` |
-| Artisan | `sail artisan` | `docker-compose exec app php artisan` | `docker-compose -f backend/docker-compose.prod.yml exec app php artisan` |
-| Migrate | `sail artisan migrate` | `docker-compose exec app php artisan migrate` | `docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate` |
-| Seed | `sail artisan db:seed` | `docker-compose exec app php artisan db:seed` | `docker-compose -f backend/docker-compose.prod.yml exec app php artisan db:seed` |
-| Composer | `sail composer install` | `docker-compose exec app composer install` | `docker-compose -f backend/docker-compose.prod.yml exec app composer install` |
-| Test | `sail artisan test` | `docker-compose exec app php artisan test` | `docker-compose -f backend/docker-compose.prod.yml exec app php artisan test` |
-
----
-
-## 🔑 Generate APP_KEY untuk Production
-
-```bash
-# Masuk ke container
-docker-compose -f backend/docker-compose.prod.yml exec app bash
+# Masuk ke container development
+docker-compose exec app bash
 
 # Generate key
 php artisan key:generate
 
-# Copy generated key dan paste ke backend/.env
-# Contoh output: base64:abcdefghijklmnopqrstuvwxyz1234567890
+# Copy output-nya, lalu exit
+exit
+```
 
-# Exit container
+**Kalau BELUM ada container sama sekali:**
+
+```bash
+# Generate key manual atau copy dari .env.example
+# Atau generate online: https://generate-random.org/api-key-generator
+```
+
+### 3. Build/Pull Image
+
+```bash
+# Di backend directory
+
+# Build image lokal (PERTAMA KALI saja)
+docker-compose -f docker-compose.prod.yml build
+
+# ATAU pull dari GHCR (kalau image sudah ada di registry)
+docker pull ghcr.io/tedyirfan/relai:latest
+```
+
+### 4. Start Containers
+
+```bash
+# Di backend directory
+docker-compose -f docker-compose.prod.yml up -d
+
+# Cek status
+docker-compose -f docker-compose.prod.yml ps
+```
+
+**Expected output:**
+```
+NAME                  STATUS              PORTS
+relai-app-prod        Up (healthy)        9000/tcp
+relai-nginx-prod      Up                  0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp
+relai-postgres-prod   Up (healthy)        5432/tcp
+relai-redis-prod      Up                  6379/tcp
+```
+
+### 5. Run Migrations & Seeder
+
+```bash
+# Migrate database
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate --force
+
+# Seed database (opsional - kalau mau dummy data)
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan db:seed --force
+
+# Atau fresh migrate + seed (HATI-HATI: hapus semua data yang ada!)
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate:fresh --seed --force
+```
+
+### 6. Akses Application
+
+```
+Application: http://localhost
+API: http://localhost/api
+```
+
+---
+
+## 🔄 Daily Commands
+
+### Start/Stop Containers
+
+```bash
+# Start
+docker-compose -f backend/docker-compose.prod.yml up -d
+
+# Stop
+docker-compose -f backend/docker-compose.prod.yml down
+
+# Restart
+docker-compose -f backend/docker-compose.prod.yml restart
+
+# Restart specific service
+docker-compose -f backend/docker-compose.prod.yml restart app
+docker-compose -f backend/docker-compose.prod.yml restart nginx
+```
+
+### View Logs
+
+```bash
+# All logs
+docker-compose -f backend/docker-compose.prod.yml logs -f
+
+# Specific service logs
+docker-compose -f backend/docker-compose.prod.yml logs -f app
+docker-compose -f backend/docker-compose.prod.yml logs -f nginx
+docker-compose -f backend/docker-compose.prod.yml logs -f postgres
+
+# Last 100 lines
+docker-compose -f backend/docker-compose.prod.yml logs --tail=100 app
+```
+
+### Run Artisan Commands
+
+```bash
+# Migrate
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate --force
+
+# Seeder
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan db:seed --force
+
+# Cache clear
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan cache:clear
+
+# Config clear
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan config:clear
+
+# Route list
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan route:list
+
+# Custom command
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan {your-command}
+```
+
+### Backup Database
+
+```bash
+# Backup database ke file
+docker-compose -f backend/docker-compose.prod.yml exec postgres pg_dump -U postgres relai > backup-$(date +%Y%m%d).sql
+
+# Backup dengan timestamp
+docker-compose -f backend/docker-compose.prod.yml exec postgres pg_dump -U postgres relai > backup-$(date +%Y%m%d-%H%M%S).sql
+```
+
+### Restore Database
+
+```bash
+# Restore dari file backup
+cat backup-20250130.sql | docker-compose -f backend/docker-compose.prod.yml exec -T postgres psql -U postgres relai
+```
+
+### Enter Container Shell
+
+```bash
+# Masuk ke app container
+docker-compose -f backend/docker-compose.prod.yml exec app bash
+
+# Dari dalam container, bisa jalankan command langsung
+php artisan migrate
+php artisan db:seed
+php artisan cache:clear
+# dll
+
+# Exit
 exit
 ```
 
 ---
 
-## 🐛 Troubleshooting Common Issues
+## 🐛 Troubleshooting
 
 ### Container tidak bisa start
 
 ```bash
 # Cek logs
-docker-compose logs app
-# atau production
 docker-compose -f backend/docker-compose.prod.yml logs app
 
-# Cek semua container status
+# Cek container status
+docker-compose -f backend/docker-compose.prod.yml ps
+
+# Cek semua Docker containers
 docker ps -a
 
 # Rebuild dari scratch
-docker-compose down -v
-docker-compose up -d --build
+docker-compose -f backend/docker-compose.prod.yml down
+docker-compose -f backend/docker-compose.prod.yml up -d --force-recreate
 ```
 
-### Database connection refused
+### Database connection error
 
 ```bash
-# Cek postgres running
+# Cek postgres container running
 docker ps | grep postgres
 
 # Cek postgres health
-docker-compose ps
+docker-compose -f backend/docker-compose.prod.yml ps
 
 # Restart postgres
-docker-compose restart postgres
+docker-compose -f backend/docker-compose.prod.yml restart postgres
+
+# Cek postgres logs
+docker-compose -f backend/docker-compose.prod.yml logs postgres
 ```
 
 ### Permission denied storage/logs
 
 ```bash
-# Fix permission
-docker-compose exec app chown -R www-data:www-data storage bootstrap/cache
+# Fix permission dari dalam container
+docker-compose -f backend/docker-compose.prod.yml exec app chown -R www-data:www-data storage bootstrap/cache
 
-# Atau set permission dari host
+# Fix permission dari host (Windows: lewat Docker Desktop settings)
+# Linux/Mac:
+sudo chown -R www-data:www-data backend/storage backend/bootstrap/cache
 sudo chmod -R 775 backend/storage backend/bootstrap/cache
 ```
 
@@ -374,62 +274,138 @@ sudo chmod -R 775 backend/storage backend/bootstrap/cache
 
 ```bash
 # Cek app container running
-docker ps | grep app
+docker ps | grep relai-app-prod
 
 # Cek nginx logs
-docker-compose logs nginx
+docker-compose -f backend/docker-compose.prod.yml logs nginx
 
 # Restart nginx
-docker-compose restart nginx
+docker-compose -f backend/docker-compose.prod.yml restart nginx
+
+# Restart app
+docker-compose -f backend/docker-compose.prod.yml restart app
+```
+
+### Port 80 already in use
+
+```bash
+# Windows: Cek port yang dipakai
+netstat -ano | findstr :80
+
+# Kill process (Windows)
+taskkill /PID {PID} /F
+
+# Linux/Mac:
+sudo lsof -i :80
+sudo kill -9 {PID}
+
+# Atau ubah port di .env
+NGINX_PORT=8080
+```
+
+### Port 443 already in use
+
+```bash
+# Windows: Cek port yang dipakai
+netstat -ano | findstr :443
+
+# Kill process (Windows)
+taskkill /PID {PID} /F
+
+# Linux/Mac:
+sudo lsof -i :443
+sudo kill -9 {PID}
+
+# Atau ubah port di .env
+NGINX_SSL_PORT=8443
+```
+
+### Image pull error (unauthorized)
+
+```bash
+# Login ulang ke GHCR
+echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+
+# Cek login success
+```
+
+### Out of disk space
+
+```bash
+# Cek disk usage
+df -h  # Linux/Mac
+# Windows: lewat File Explorer
+
+# Clean Docker unused images
+docker system prune -a
+
+# Clean volumes (HATI-HATI: akan hapus database!)
+docker system prune -a --volumes
 ```
 
 ---
 
-## 📚 Quick Reference
+## 📊 Quick Reference
 
-### Development Quick Start
-
-```bash
-git clone https://github.com/TedyIrfan/Relai.git && cd Relai
-cp backend/.env.example backend/.env
-docker-compose up -d --build
-docker-compose exec app php artisan migrate
-docker-compose exec app php artisan db:seed
-# Open http://localhost:8000
-```
-
-### Production Quick Start
+### Quick Start
 
 ```bash
-git clone https://github.com/TedyIrfan/Relai.git && cd Relai
-cp backend/.env.prod.example backend/.env
-# EDIT backend/.env dulu!
-echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin
-docker pull ghcr.io/tedyirfan/relai:latest
-cd backend && docker-compose -f docker-compose.prod.yml up -d
+cd Relai/backend
+cp .env.prod.example .env
+nano .env  # EDIT!
+docker-compose -f docker-compose.prod.yml up -d
 docker-compose -f docker-compose.prod.yml exec app php artisan migrate --force
 docker-compose -f docker-compose.prod.yml exec app php artisan db:seed --force
+# Open http://localhost
+```
+
+### Common Commands
+
+```bash
+# Start/Stop
+docker-compose -f backend/docker-compose.prod.yml up -d
+docker-compose -f backend/docker-compose.prod.yml down
+
+# Logs
+docker-compose -f backend/docker-compose.prod.yml logs -f app
+
+# Migrate/Seed
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate --force
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan db:seed --force
+
+# Cache clear
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan cache:clear
 ```
 
 ---
 
 ## 💡 Tips
 
-1. **Development mode** pakai port 8000, biar ga bentrok dengan production port 80
-2. **Selalu pull image baru** sebelum deploy di production (jangan build sendiri)
-3. **Backup database** sebelum running migrations di production
-4. **Cek logs** kalau ada error: `docker-compose logs -f {service-name}`
-5. **PgAdmin** available untuk manage database via GUI di development mode
+1. **Pastikan port 80 dan 443 available** sebelum start
+2. **Backup database** sebelum running fresh migrate
+3. **Cek logs** kalau ada error: `docker-compose logs -f`
+4. **Hapus containers** kalau mau bersih-bersih: `docker-compose down -v`
+5. **Rebuild image** kalau ada perubahan: `docker-compose build`
 
 ---
 
-## 🆘 Butuh Bantuan?
+## 🆘 Still Stuck?
 
 Kalau masih ada error:
-1. Cek logs: `docker-compose logs -f`
-2. Pastikan Docker running: `docker ps`
-3. Cek port conflict: `lsof -i :{port}` atau `netstat -ano | findstr :{port}`
-4. Rebuild containers: `docker-compose down && docker-compose up -d --build`
+
+1. **Cek logs:** `docker-compose -f backend/docker-compose.prod.yml logs -f`
+2. **Pastikan Docker running:** `docker ps`
+3. **Cek port conflict:** Windows: `netstat -ano | findstr :80` | Linux/Mac: `sudo lsof -i :80`
+4. **Restart containers:** `docker-compose -f backend/docker-compose.prod.yml restart`
+5. **Rebuild dari scratch:** `docker-compose -f backend/docker-compose.prod.yml down && docker-compose -f backend/docker-compose.prod.yml up -d --force-recreate`
+
+---
+
+## 📚 Related Documentation
+
+- [README.md](./README.md) - Main project documentation
+- [README-CICD.md](./README-CICD.md) - CI/CD pipeline documentation
+- [backend/docker-compose.prod.yml](./backend/docker-compose.prod.yml) - Production compose file
 
 ---
 
