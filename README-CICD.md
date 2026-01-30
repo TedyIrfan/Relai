@@ -1,6 +1,9 @@
 # 🚀 RelAI - CI/CD Documentation
 
 > **GitHub Actions Workflow** for automated testing, building, and deployment preparation.
+>
+> **📖 Setup Guide:** See [SETUP.md](./SETUP.md) for local development & deployment setup.
+> **🔧 Helper Scripts:** Use `dev.bat` (Windows) or `dev.sh` (Linux/Mac) for quick commands.
 
 ---
 
@@ -12,6 +15,7 @@
 - [Required Secrets](#required-secrets)
 - [Usage](#usage)
 - [Deployment Guide](#deployment-guide)
+- [Helper Scripts](#helper-scripts)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -275,6 +279,72 @@ nano backend/.env
 docker-compose -f docker-compose.prod.yml up -d
 
 # Run migrations
+docker-compose -f docker-compose.prod.yml exec app php artisan migrate --force
+```
+
+---
+
+## 🔧 Helper Scripts
+
+Project includes helper scripts to simplify common tasks:
+
+### Development Scripts
+
+**Windows (dev.bat):**
+```bash
+dev.bat              # Start all containers
+dev.bat stop         # Stop all containers
+dev.bat restart      # Restart all containers
+dev.bat logs         # View logs
+dev.bat migrate      # Run migrations
+dev.bat seed         # Run seeder
+dev.bat artisan      # Run artisan command
+dev.bat bash         # Enter app container
+dev.bat test         # Run tests
+dev.bat fresh        # Fresh migrate + seed (WARNING: wipes data!)
+dev.bat build        # Rebuild containers
+dev.bat status       # Show container status
+```
+
+**Linux/Mac (dev.sh):**
+```bash
+./dev.sh              # Start all containers
+./dev.sh stop         # Stop all containers
+./dev.sh restart      # Restart all containers
+./dev.sh logs         # View logs
+./dev.sh migrate      # Run migrations
+./dev.sh seed         # Run seeder
+./dev.sh artisan      # Run artisan command
+./dev.sh bash         # Enter app container
+./dev.sh test         # Run tests
+./dev.sh fresh        # Fresh migrate + seed (WARNING: wipes data!)
+./dev.sh build        # Rebuild containers
+./dev.sh status       # Show container status
+```
+
+### Production Scripts
+
+**Windows (prod.bat):**
+```bash
+prod.bat start         # Start production containers
+prod.bat stop          # Stop production containers
+prod.bat restart       # Restart production containers
+prod.bat logs          # View logs
+prod.bat migrate       # Run migrations
+prod.bat seed          # Run seeder (WARNING!)
+prod.bat update        # Pull latest image & restart
+prod.bat backup        # Backup database
+prod.bat status        # Show container status
+prod.bat artisan       # Run artisan command
+prod.bat bash          # Enter app container
+```
+
+**Linux/Mac (Manual commands):**
+```bash
+cd backend
+docker-compose -f docker-compose.prod.yml start
+docker-compose -f docker-compose.prod.yml stop
+docker-compose -f docker-compose.prod.yml logs -f
 docker-compose -f docker-compose.prod.yml exec app php artisan migrate --force
 ```
 

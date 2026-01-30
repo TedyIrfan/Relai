@@ -1,6 +1,28 @@
 # 🚀 RelAI Project Setup
 
-#
+> **⚡ Quick Start:** First time here? Check [SETUP.md](./SETUP.md) for step-by-step installation guide!
+
+## 🎯 Quick Start Commands
+
+**For Development:**
+```bash
+# Windows
+dev.bat
+
+# Linux/Mac
+./dev.sh
+```
+
+**For Production:**
+```bash
+# Windows
+prod.bat start
+
+# Linux/Mac
+cd backend && docker-compose -f docker-compose.prod.yml up -d
+```
+
+---
 
 ## 📋 Project Overview
 
