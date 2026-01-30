@@ -5,7 +5,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import MasterSBM from './pages/MasterSBM';
+import MasterSBM from './pages/MasterSbm';
 import SBMCategoryDetail from './pages/SBMCategoryDetail';
 import MasterRKA from './pages/MasterRKA';
 import Nominatif from './pages/Nominatif';
