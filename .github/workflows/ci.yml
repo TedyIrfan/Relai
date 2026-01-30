@@ -1,0 +1,202 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================
+  # Job 1: Backend Tests (Laravel)
+  # ============================================
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_pgsql, pgsql, zip, bcmath, intl, mbstring
+          coverage: none
+
+      - name: Copy .env
+        run: |
+          cd backend
+          cp .env.example .env
+
+      - name: Install Composer dependencies
+        run: |
+          cd backend
+          composer install --prefer-dist --no-progress --no-suggest --no-dev
+
+      - name: Run PHPUnit tests
+        run: |
+          cd backend
+          php artisan test --without-ticker
+
+  # ============================================
+  # Job 2: Frontend Tests & Build
+  # ============================================
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter check (optional)
+        run: npm run lint --if-present
+        continue-on-error: true
+
+      - name: Build frontend
+        env:
+          VITE_API_URL: /api
+        run: npm run build
+
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # ============================================
+  # Job 3: Docker Build & Push
+  # ============================================
+  docker-build:
+    name: Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-build]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            APP_ENV=production
+
+      - name: Image digest
+        run: echo "Image pushed with digest ${{ steps.meta.outputs.digest }}"
+
+  # ============================================
+  # Job 4: Create Deployment Package
+  # ============================================
+  package-artifacts:
+    name: Package Deployment Artifacts
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+      - name: Copy frontend to backend public
+        run: |
+          rm -rf backend/public/assets
+          rm -f backend/public/index.html
+          rm -f backend/public/vite.svg
+          cp -r frontend/dist/* backend/public/
+
+      - name: Create deployment package
+        run: |
+          tar -czf relai-deploy.tar.gz \
+            backend/ \
+            docker-compose.prod.yml \
+            .env.example \
+            README.md \
+            README-CICD.md \
+            DEPLOYMENT-PROGRESS.md
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-package
+          path: relai-deploy.tar.gz
+          retention-days: 30
+
+      - name: Create Release Summary
+        run: |
+          echo "## 🚀 Deployment Package Ready" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Image: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Deployment Package: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Quick Deploy Commands" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "# Pull latest image" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/\${{ github.repository }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Or download and extract deployment package" >> $GITHUB_STEP_SUMMARY
+          echo "wget https://github.com/\${{ github.repository }}/releases/download/latest/relai-deploy.tar.gz" >> $GITHUB_STEP_SUMMARY
+          echo "tar -xzf relai-deploy.tar.gz" >> $GITHUB_STEP_SUMMARY
+          echo "docker-compose -f docker-compose.prod.yml up -d" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
