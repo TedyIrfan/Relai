@@ -79,13 +79,9 @@ class NominatifEvidenceController extends Controller
     {
         $nominatif = NominatifNew::findOrFail($nominatifId);
 
-        // Security check
-        if ($nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
+        // 🔥 REMOVED: Security check for READ-ONLY access
+        // All authenticated users can view evidence (read-only) from other users
+        // This is needed for "All Status" feature where users can view nominatifs from all users
 
         $evidenceFiles = $nominatif->evidence()->orderBy('created_at', 'desc')->get();
 
@@ -95,7 +91,7 @@ class NominatifEvidenceController extends Controller
         ]);
     }
 
-  
+
     /**
      * Display the specified evidence file.
      */
@@ -103,13 +99,8 @@ class NominatifEvidenceController extends Controller
     {
         $evidence = NominatifEvidence::findOrFail($evidenceId);
 
-        // Security check
-        if ($evidence->nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
+        // 🔥 REMOVED: Security check for READ-ONLY access
+        // All authenticated users can view evidence (read-only) from other users
 
         return response()->json([
             'success' => true,
@@ -207,13 +198,9 @@ class NominatifEvidenceController extends Controller
     {
         $nominatif = NominatifNew::findOrFail($nominatifId);
 
-        // Security check
-        if ($nominatif->user_id !== $this->getAuthenticatedUser(app('request'))?->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
+        // 🔥 REMOVED: Security check for READ-ONLY access
+        // All authenticated users can view evidence (read-only) from other users
+        // This is needed for "All Status" feature where users can view nominatifs from all users
 
         $evidenceFiles = $nominatif->evidence()->orderBy('created_at', 'desc')->get();
 

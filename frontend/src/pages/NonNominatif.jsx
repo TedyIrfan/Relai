@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Eye } from 'lucide-react';
 import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
 import nonNominatifService from '../services/nonNominatifService';
@@ -130,6 +130,11 @@ const NonNominatif = () => {
   };
 
   const handleEdit = (nonNominatif) => {
+    navigate(`/non-nominatif/${nonNominatif.id}/edit`);
+  };
+
+  const handleView = (nonNominatif) => {
+    // Navigate to edit page - will show in view mode if status is submitted
     navigate(`/non-nominatif/${nonNominatif.id}/edit`);
   };
 
@@ -435,6 +440,15 @@ const NonNominatif = () => {
                       </td>
                       <td className="px-1 py-1 text-sm text-right">
                         <div className="flex items-center justify-end gap-0.5">
+                          {nonNominatif.status === 'submitted' && (
+                            <button
+                              onClick={() => handleView(nonNominatif)}
+                              className="p-1 text-purple-600 hover:text-purple-800"
+                              title="View"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
                           {(nonNominatif.status === 'draft' || nonNominatif.status === 'rejected') && (
                             <button
                               onClick={() => handleEdit(nonNominatif)}

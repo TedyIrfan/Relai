@@ -124,20 +124,36 @@ const SBMCategoryDetail = () => {
     }];
   }, [allData, hasGroupingLabel, hasSubCategory, categoryInfo]);
 
-  // Universal search functions
+  // Universal search functions dengan Fuse.js
   const getFilteredDataBySection = (group) => {
     if (!universalSearch) return group.data;
 
-    const searchClean = universalSearch.toLowerCase().replace(/\s+/g, '');
+    // Normalize search: hapus spasi untuk "R I A U" → "riau"
+    const searchTerm = universalSearch.toLowerCase().replace(/\s+/g, '');
 
-    return group.data.filter(item => {
+    // Prepare data for Fuse.js - gabung semua values jadi 1 string
+    const fuseData = group.data.map(item => {
       const dataFields = item.data || item;
-      return Object.values(dataFields).some(value => {
-        if (!value) return false;
-        const valueClean = value.toString().toLowerCase().replace(/\s+/g, '');
-        return valueClean.includes(searchClean);
-      });
+      // Gabung semua values jadi 1 string (mirip logic asli)
+      const allValues = Object.values(dataFields)
+        .filter(v => v !== null && v !== undefined)
+        .map(v => v.toString().toLowerCase().replace(/\s+/g, ''))
+        .join(' ');
+      return { item, allValues };
     });
+
+    // Fuse.js configuration - threshold 0 untuk exact match seperti .includes()
+    const fuseOptions = {
+      includeScore: false,
+      threshold: 0,              // 0 = exact match (sama seperti .includes)
+      ignoreLocation: true,
+      keys: ['allValues']
+    };
+
+    const fuse = new Fuse(fuseData, fuseOptions);
+    const results = fuse.search(searchTerm);
+
+    return results.map(r => r.item.item);
   };
 
   const getMatchCount = (group) => {
@@ -321,6 +337,7 @@ const SBMCategoryDetail = () => {
                       onSort={null}
                       onPageChange={null}
                       onPerPageChange={null}
+                      enableRowExpand={false}
                     />
                   </div>
                 )}

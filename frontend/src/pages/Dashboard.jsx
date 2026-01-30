@@ -55,12 +55,28 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
           C: { nama: 'Kategori C - Konferensi', anggaran: 0, berjalan: 0, sp2d: 0, sisa: 0 }
         };
 
+        console.log('📊 Raw RKA Data:', rkaData);
+        console.log('📊 RKA Data sample:', rkaData.slice(0, 3));
+        console.log('📊 First RKA item EXPANDED:', JSON.stringify(rkaData[0], null, 2));
+
         rkaData.forEach(item => {
-          const kategori = item.kategoriAnggaran || 'C';
+          const kategori = item.kategoriAnggaran || item.kategori_anggaran || 'C';
           const anggaranLayanan = parseFloat(item.anggaranLayanan) || 0;
           const anggaranBerjalan = parseFloat(item.anggaran_berjalan) || 0;
           const anggaranSp2d = parseFloat(item.anggaran_sp2d) || 0;
           const anggaranTersisa = parseFloat(item.anggaran_tersisa) || 0;
+
+          // Debug first item
+          if (rkaData.indexOf(item) === 0) {
+            console.log('📊 First RKA item:', {
+              kategori,
+              kategoriAnggaran: item.kategoriAnggaran,
+              kategori_anggaran: item.kategori_anggaran,
+              anggaranLayanan,
+              anggaranBerjalan,
+              anggaranSp2d
+            });
+          }
 
           // Sum to totals
           totals.totalAnggaran += anggaranLayanan; // Total = Sum of all anggaranLayanan (total budget)
@@ -76,6 +92,10 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
             kategoriData[kategori].sisa += anggaranTersisa;
           }
         });
+
+        const finalKategoriArray = Object.values(kategoriData);
+        console.log('📊 Kategori Data after grouping:', JSON.stringify(kategoriData, null, 2));
+        console.log('📊 Kategori Array EXPANDED:', JSON.stringify(finalKategoriArray, null, 2));
 
         // Calculate sisa anggaran as total - (berjalan + sp2d)
         const calculatedSisa = totals.totalAnggaran - totals.anggaranBerjalan - totals.anggaranSP2D;
@@ -173,6 +193,27 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
 
   // Convert string values to numbers
   const numericTotal = parseFloat(totalAnggaran) || 0;
+  const numericSP2D = parseFloat(anggaranSP2D) || 0;
+  const numericSisa = parseFloat(sisaAnggaran) || 0;
+
+  // Prepare budget usage data for PieChart (Terpakai vs Sisa)
+  // Terpakai = Anggaran Berjalan + Anggaran SP2D
+  // Sisa = Total - (Berjalan + SP2D)
+  const numericBerjalan = parseFloat(anggaranBerjalan) || 0;
+  const totalTerpakai = numericBerjalan + numericSP2D;
+
+  const budgetUsageData = [
+    {
+      name: 'Terpakai',
+      value: totalTerpakai,
+      type: 'terpakai'
+    },
+    {
+      name: 'Sisa',
+      value: numericSisa,
+      type: 'sisa'
+    }
+  ];
 
   useEffect(() => {
     // Initial load from API
@@ -225,8 +266,10 @@ const Dashboard = ({ selectedYear: propSelectedYear, onYearChange: propOnYearCha
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PieChart
-          categories={safeKategori}
+          budgetUsage={budgetUsageData}
           total={numericTotal}
+          anggaranBerjalan={parseFloat(anggaranBerjalan) || 0}
+          anggaranSP2D={parseFloat(anggaranSP2D) || 0}
           loading={loading}
         />
 

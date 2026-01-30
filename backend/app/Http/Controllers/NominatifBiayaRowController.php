@@ -80,30 +80,19 @@ class NominatifBiayaRowController extends Controller
 
         $detailRow = NominatifDetailRow::findOrFail($detailRowId);
 
-        // Security check dengan debug logging
+        // 🔥 REMOVED: Security check for READ-ONLY access
+        // All authenticated users can view biaya data (read-only) from other users
+        // This is needed for "All Status" feature where users can view nominatifs from all users
         $authenticatedUserId = $this->getAuthenticatedUser(app('request'))?->id;
-        $nominatifOwnerId = $detailRow->nominatif->user_id;
 
-        \Log::info('NominatifBiayaRowController::index - Security Check', [
-            'detailRowId' => $detailRowId,
-            'authenticatedUserId' => $authenticatedUserId,
-            'nominatifOwnerId' => $nominatifOwnerId,
-            'isAuthorized' => $authenticatedUserId == $nominatifOwnerId,
-            'nominatifId' => $detailRow->nominatif_id
-        ]);
-
-        if ($nominatifOwnerId !== $authenticatedUserId) {
-            \Log::error('NominatifBiayaRowController::index - UNAUTHORIZED', [
-                'detailRowId' => $detailRowId,
-                'authenticatedUserId' => $authenticatedUserId,
-                'nominatifOwnerId' => $nominatifOwnerId,
-            ]);
-
+        if (!$authenticatedUserId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
+                'message' => 'Unauthorized - Invalid token'
+            ], 401);
         }
+
+        // Allow read-only access for all authenticated users
 
         // Cari biaya row yang sudah ada
         $biayaRow = NominatifBiayaRow::where('nominatif_detail_row_id', $detailRow->id)->first();

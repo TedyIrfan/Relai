@@ -12,7 +12,8 @@ export const ROUTES = {
   masterSbm: '/master-sbm',
   masterRka: '/master-rka',
   nominatif: '/nominatif',
-  nonNominatif: '/non-nominatif'
+  nonNominatif: '/non-nominatif',
+  allStatusNominatif: '/all-status-nominatif'
 };
 
 export const MENU_ITEMS = [
@@ -49,6 +50,13 @@ export const MENU_ITEMS = [
     name: 'Non Nominatif',
     icon: 'FileText',
     route: ROUTES.nonNominatif,
+    active: true
+  },
+  {
+    id: 'all-status-nominatif',
+    name: 'All Status Nominatif',
+    icon: 'Globe',
+    route: ROUTES.allStatusNominatif,
     active: true
   }
 ];

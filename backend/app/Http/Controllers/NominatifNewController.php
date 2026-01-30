@@ -58,7 +58,11 @@ class NominatifNewController extends Controller
         return $accessToken->tokenable;
     }
 
-    public function index(Request $request)
+    /**
+     * Get all nominatifs from all users (for All Status Nominatif feature)
+     * This endpoint does NOT filter by user_id - shows all nominatifs
+     */
+    public function indexAll(Request $request)
     {
         try {
             $query = NominatifNew::with([
@@ -69,7 +73,93 @@ class NominatifNewController extends Controller
                           ->orderBy('row_order');
                 },
                 'detailRows.biayaRow'
-            ]); // ->byUser(Auth::id()); // Temporarily disabled for debugging
+            ]);
+
+        // Filter by status if provided
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by date range if provided
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('tanggal_mulai', [$request->start_date, $request->end_date]);
+        }
+
+        // Search functionality
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('deskripsi_perjalanan_dinas', 'ILIKE', "%{$search}%")
+                  ->orWhereHas('detailRows', function ($subQuery) use ($search) {
+                      $subQuery->where('person_name', 'ILIKE', "%{$search}%")
+                             ->orWhere('asal', 'ILIKE', "%{$search}%")
+                             ->orWhere('tujuan', 'ILIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        $nominatifs = $query->orderBy('created_at', 'desc')->paginate(10);
+
+        // Calculate totals for each nominatif
+        $nominatifs->getCollection()->transform(function ($nominatif) {
+            $totalPagu = $nominatif->detailRows->sum(function ($row) {
+                return $row->biayaRow?->total_pagu_row ?? 0;
+            });
+            $totalAktual = $nominatif->detailRows->sum(function ($row) {
+                return $row->biayaRow?->total_aktual_row ?? 0;
+            });
+            $totalAnggaranBerjalan = $totalPagu - $totalAktual;
+
+            $nominatif->total_pagu_trip = $totalPagu;
+            $nominatif->total_aktual_trip = $totalAktual;
+            $nominatif->total_anggaran_berjalan_trip = $totalAnggaranBerjalan;
+
+            return $nominatif;
+        });
+
+            return response()->json([
+                'success' => true,
+                'data' => $nominatifs,
+                'meta' => [
+                    'current_page' => $nominatifs->currentPage(),
+                    'last_page' => $nominatifs->lastPage(),
+                    'per_page' => $nominatifs->perPage(),
+                    'total' => $nominatifs->total(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('NominatifNewController@indexAll error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch all nominatifs: ' . $e->getMessage(),
+                'error' => config('app.debug') ? $e->getTrace() : null
+            ], 500);
+        }
+    }
+
+    public function index(Request $request)
+    {
+        try {
+            // Get authenticated user using manual token validation
+            $user = $this->getAuthenticatedUser($request);
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized - Invalid or missing token'
+                ], 401);
+            }
+
+            $query = NominatifNew::with([
+                'rkaDetail:id,code_rka,layanan',
+                'user:id,name,email',
+                'detailRows' => function ($query) {
+                    $query->select('id', 'nominatif_id', 'person_name', 'jabatan', 'eselon', 'row_order')
+                          ->orderBy('row_order');
+                },
+                'detailRows.biayaRow'
+            ])->where('user_id', $user->id); // Filter by authenticated user only
 
         // Filter by status if provided
         if ($request->has('status')) {

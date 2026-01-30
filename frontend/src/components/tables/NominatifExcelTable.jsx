@@ -1,5 +1,6 @@
 import React, { useState, useRef, forwardRef } from "react";
-import { Plus, Trash2, Save, Send, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Save, Send, CheckCircle, Search } from "lucide-react";
+import SBMReferensiModal from "../modals/SBMReferensiModal";
 
 // Global CSS untuk menghilangkan arrow buttons dari currency inputs
 const globalStyles = `
@@ -21,7 +22,7 @@ const globalStyles = `
 `;
 
 const NominatifExcelTable = forwardRef(
-  ({ rkaDetail, initialData = [], onSave, onSubmit }, ref) => {
+  ({ rkaDetail, initialData = [], onSave, onSubmit, readOnly = false }, ref) => {
     const processedInitialData = initialData;
 
     // Removed excessive logging to prevent console spam
@@ -33,6 +34,12 @@ const NominatifExcelTable = forwardRef(
     const [validationErrors, setValidationErrors] = useState({});
     const [deletedRows, setDeletedRows] = useState([]); // Track rows to delete on save
     const [originalRows, setOriginalRows] = useState([]); // Track original data from database
+    const [searchModal, setSearchModal] = useState({
+      isOpen: false,
+      rowIndex: null,
+      fieldName: null,
+      fieldLabel: null,
+    });
     const tableRef = useRef(null);
 
     // Initialize with one empty row if no data (create mode only)
@@ -48,31 +55,49 @@ const NominatifExcelTable = forwardRef(
       }
     }, []); // Remove dependency to prevent infinite loop
 
-  // Initial validation for required fields (show errors immediately when fields are empty)
-  React.useEffect(() => {
-    const initialErrors = {};
-    rows.forEach((row, index) => {
-      const rowErrors = {};
-      if (!row.golongan || row.golongan.trim() === "") {
-        rowErrors.golongan = "Golongan harus diisi";
-      }
-      if (!row.eselon || row.eselon.trim() === "") {
-        rowErrors.eselon = "Eselon harus diisi";
-      }
-      if (Object.keys(rowErrors).length > 0) {
-        initialErrors[index] = rowErrors;
-      }
-    });
-    // Only update if errors actually changed to prevent infinite loop
-    setValidationErrors(prev => {
-      const prevStr = JSON.stringify(prev);
-      const newStr = JSON.stringify(initialErrors);
-      if (prevStr !== newStr) {
-        return initialErrors;
-      }
-      return prev;
-    });
-  }, [rows.length]); // Back to length dependency to prevent infinite loop
+    // Initial validation for required fields (show errors immediately when fields are empty)
+    React.useEffect(() => {
+      const initialErrors = {};
+      rows.forEach((row, index) => {
+        const rowErrors = {};
+        if (!row.nama_lengkap || row.nama_lengkap.trim() === "") {
+          rowErrors.nama_lengkap = "Nama Lengkap harus diisi";
+        }
+        if (!row.golongan || row.golongan.trim() === "") {
+          rowErrors.golongan = "Golongan harus diisi";
+        }
+        if (!row.jabatan || row.jabatan.trim() === "") {
+          rowErrors.jabatan = "Jabatan harus diisi";
+        }
+        if (!row.eselon || row.eselon.trim() === "") {
+          rowErrors.eselon = "Eselon harus diisi";
+        }
+        if (!row.asal || row.asal.trim() === "") {
+          rowErrors.asal = "Asal harus diisi";
+        }
+        if (!row.tujuan || row.tujuan.trim() === "") {
+          rowErrors.tujuan = "Tujuan harus diisi";
+        }
+        if (!row.tanggal_pergi || row.tanggal_pergi.trim() === "") {
+          rowErrors.tanggal_pergi = "Tanggal Pergi harus diisi";
+        }
+        if (!row.tanggal_sampai || row.tanggal_sampai.trim() === "") {
+          rowErrors.tanggal_sampai = "Tanggal Sampai harus diisi";
+        }
+        if (Object.keys(rowErrors).length > 0) {
+          initialErrors[index] = rowErrors;
+        }
+      });
+      // Only update if errors actually changed to prevent infinite loop
+      setValidationErrors((prev) => {
+        const prevStr = JSON.stringify(prev);
+        const newStr = JSON.stringify(initialErrors);
+        if (prevStr !== newStr) {
+          return initialErrors;
+        }
+        return prev;
+      });
+    }, [rows.length]); // Back to length dependency to prevent infinite loop
 
     // Update rows when initialData changes (for edit mode)
     React.useEffect(() => {
@@ -131,14 +156,44 @@ const NominatifExcelTable = forwardRef(
       rows.forEach((row, index) => {
         const rowErrors = {};
 
+        // Validate Nama Lengkap - required field
+        if (!row.nama_lengkap || row.nama_lengkap.trim() === "") {
+          rowErrors.nama_lengkap = "Nama Lengkap harus diisi";
+        }
+
         // Validate Golongan - required field
         if (!row.golongan || row.golongan.trim() === "") {
           rowErrors.golongan = "Golongan harus diisi";
         }
 
+        // Validate Jabatan - required field
+        if (!row.jabatan || row.jabatan.trim() === "") {
+          rowErrors.jabatan = "Jabatan harus diisi";
+        }
+
         // Validate Eselon - required field
         if (!row.eselon || row.eselon.trim() === "") {
           rowErrors.eselon = "Eselon harus diisi";
+        }
+
+        // Validate Asal - required field
+        if (!row.asal || row.asal.trim() === "") {
+          rowErrors.asal = "Asal harus diisi";
+        }
+
+        // Validate Tujuan - required field
+        if (!row.tujuan || row.tujuan.trim() === "") {
+          rowErrors.tujuan = "Tujuan harus diisi";
+        }
+
+        // Validate Tgl Pergi - required field
+        if (!row.tanggal_pergi || row.tanggal_pergi.trim() === "") {
+          rowErrors.tanggal_pergi = "Tanggal Pergi harus diisi";
+        }
+
+        // Validate Tgl Sampai - required field
+        if (!row.tanggal_sampai || row.tanggal_sampai.trim() === "") {
+          rowErrors.tanggal_sampai = "Tanggal Sampai harus diisi";
         }
 
         // Only add errors object if there are actual errors
@@ -156,7 +211,7 @@ const NominatifExcelTable = forwardRef(
       console.log("➕ Adding new empty row - all fields should be blank");
 
       const newRow = {
-        id: 'temp_' + Date.now(),
+        id: "temp_" + Date.now(),
         // All fields should be empty for new rows (both create and edit mode)
         nama_lengkap: "",
         golongan: "",
@@ -213,21 +268,43 @@ const NominatifExcelTable = forwardRef(
       console.log("🔄 Updating row:", { id, field, value });
 
       // Real-time validation for required fields
-      if (field === "golongan" || field === "eselon") {
+      const requiredFields = [
+        "nama_lengkap",
+        "golongan",
+        "jabatan",
+        "eselon",
+        "asal",
+        "tujuan",
+        "tanggal_pergi",
+        "tanggal_sampai"
+      ];
+
+      if (requiredFields.includes(field)) {
         const rowIndex = rows.findIndex((row) => row.id === id);
         if (rowIndex !== -1) {
           setValidationErrors((prev) => {
             const newErrors = { ...prev };
             if (!value || value.trim() === "") {
+              const fieldLabels = {
+                nama_lengkap: "Nama Lengkap",
+                golongan: "Golongan",
+                jabatan: "Jabatan",
+                eselon: "Eselon",
+                asal: "Asal",
+                tujuan: "Tujuan",
+                tanggal_pergi: "Tanggal Pergi",
+                tanggal_sampai: "Tanggal Sampai"
+              };
               newErrors[rowIndex] = {
                 ...newErrors[rowIndex],
-                [field]: `${field === "golongan" ? "Golongan" : "Eselon"} harus diisi`,
+                [field]: `${fieldLabels[field]} harus diisi`,
               };
             } else {
               // Remove error if field is filled
               if (newErrors[rowIndex]) {
                 const { [field]: removed, ...rest } = newErrors[rowIndex];
-                newErrors[rowIndex] = Object.keys(rest).length > 0 ? rest : undefined;
+                newErrors[rowIndex] =
+                  Object.keys(rest).length > 0 ? rest : undefined;
               }
             }
             return newErrors;
@@ -321,10 +398,24 @@ const NominatifExcelTable = forwardRef(
       }
     };
 
+    // Handler functions for SBM Reference Modal
+    const openSearchModal = (rowId, fieldName, fieldLabel) => {
+      setSearchModal({
+        isOpen: true,
+        rowIndex: rowId,
+        fieldName: fieldName,
+        fieldLabel: fieldLabel,
+      });
+    };
+
+    const closeSearchModal = () => {
+      setSearchModal((prev) => ({ ...prev, isOpen: false }));
+    };
+
     // Delete row - optimistic delete (frontend only, database update on save)
     const deleteRow = (id) => {
       if (rows.length <= 1) {
-        alert('Minimal harus ada satu baris');
+        alert("Minimal harus ada satu baris");
         return;
       }
 
@@ -333,23 +424,27 @@ const NominatifExcelTable = forwardRef(
 
       if (rowToDelete) {
         // 🔥 DEBUG: Log exact row data being deleted
-        console.log('🎯 DELETE TARGET:', {
+        console.log("🎯 DELETE TARGET:", {
           clickedId: id,
           rowToDeleteData: rowToDelete,
           namaLengkap: rowToDelete.nama_lengkap,
-          allRows: rows.map(r => ({ id: r.id, nama: r.nama_lengkap }))
+          allRows: rows.map((r) => ({ id: r.id, nama: r.nama_lengkap })),
         });
 
         // Check if this is a database row (has numeric ID from database, not temp_id)
-        const isDatabaseRow = !isNaN(id) && !id.toString().startsWith('temp_');
+        const isDatabaseRow = !isNaN(id) && !id.toString().startsWith("temp_");
 
         if (isDatabaseRow) {
           // Mark database row for deletion on save
-          setDeletedRows(prev => [...prev, id]);
-          console.log(`🔄 Row ${id} (${rowToDelete.nama_lengkap}) marked for deletion on save`);
+          setDeletedRows((prev) => [...prev, id]);
+          console.log(
+            `🔄 Row ${id} (${rowToDelete.nama_lengkap}) marked for deletion on save`
+          );
         } else {
           // This is a new row, just remove from local state
-          console.log(`🔄 New row ${id} (${rowToDelete.nama_lengkap}) removed from frontend`);
+          console.log(
+            `🔄 New row ${id} (${rowToDelete.nama_lengkap}) removed from frontend`
+          );
         }
 
         // Remove from frontend state immediately (optimistic delete)
@@ -362,7 +457,7 @@ const NominatifExcelTable = forwardRef(
           delete newErrors[rowIndex];
           // Reindex remaining errors
           const reindexedErrors = {};
-          Object.keys(newErrors).forEach(key => {
+          Object.keys(newErrors).forEach((key) => {
             const newKey = parseInt(key) > rowIndex ? parseInt(key) - 1 : key;
             reindexedErrors[newKey] = newErrors[key];
           });
@@ -764,46 +859,65 @@ const NominatifExcelTable = forwardRef(
 
     // Process rows marked for deletion
     const processDeletedRows = async () => {
-      const user = JSON.parse(localStorage.getItem('user'));
-      const token = user?.token || localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = user?.token || localStorage.getItem("token");
 
       const urlParams = new URLSearchParams(window.location.search);
-      const nominatifId = urlParams.get('id') || rkaDetail?.nominatifId;
+      const nominatifId = urlParams.get("id") || rkaDetail?.nominatifId;
 
       if (!nominatifId) {
-        console.error('Cannot find nominatif ID for deletion');
+        console.error("Cannot find nominatif ID for deletion");
         return false;
       }
 
-      console.log(`🗑️ Processing ${deletedRows.length} rows for deletion:`, deletedRows);
+      console.log(
+        `🗑️ Processing ${deletedRows.length} rows for deletion:`,
+        deletedRows
+      );
 
       // 🔥 DISABLED: Delete each marked row from database - handled by executeDraft
       for (const rowId of deletedRows) {
         try {
-          const response = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/${rowId}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+          const response = await fetch(
+            `http://localhost/api/nominatifs/${nominatifId}/details/${rowId}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
             }
-          });
+          );
 
           if (response.ok) {
             console.log(`✅ Successfully deleted row ${rowId} from database`);
           } else if (response.status === 404) {
-            console.log(`ℹ️ Row ${rowId} already deleted or doesn't exist, skipping...`);
+            console.log(
+              `ℹ️ Row ${rowId} already deleted or doesn't exist, skipping...`
+            );
             // Continue processing even if row doesn't exist
           } else {
             const errorText = await response.text();
-            console.error(`Failed to delete row ${rowId}:`, response.status, errorText);
+            console.error(
+              `Failed to delete row ${rowId}:`,
+              response.status,
+              errorText
+            );
 
             // Show error to user but continue with other deletions
             if (response.status === 422) {
               try {
                 const errorData = JSON.parse(errorText);
-                if (errorData.message === 'Cannot delete rows in submitted nominatif') {
-                  console.warn(`Cannot delete row ${rowId}: nominatif already submitted`);
-                  alert('Tidak dapat menghapus baris pada nominatif yang sudah disubmit');
+                if (
+                  errorData.message ===
+                  "Cannot delete rows in submitted nominatif"
+                ) {
+                  console.warn(
+                    `Cannot delete row ${rowId}: nominatif already submitted`
+                  );
+                  alert(
+                    "Tidak dapat menghapus baris pada nominatif yang sudah disubmit"
+                  );
                   return false; // Stop processing
                 }
               } catch {
@@ -838,11 +952,16 @@ const NominatifExcelTable = forwardRef(
       try {
         // Process deleted rows first (before updating existing data)
         if (deletedRows.length > 0) {
-          console.log(`🗑️ Processing ${deletedRows.length} marked for deletion:`, deletedRows);
+          console.log(
+            `🗑️ Processing ${deletedRows.length} marked for deletion:`,
+            deletedRows
+          );
 
           // 🔥 DISABLED: Direct database deletion - causes double deletion bug
           // Backend executeDraft handles all deletions properly
-          console.log(`ℹ️ SKIPPING DIRECT DELETION - backend executeDraft will handle ${deletedRows.length} marked rows`);
+          console.log(
+            `ℹ️ SKIPPING DIRECT DELETION - backend executeDraft will handle ${deletedRows.length} marked rows`
+          );
           const deleteSuccess = true; // Always succeed - backend handles actual deletion
 
           if (!deleteSuccess) {
@@ -855,15 +974,21 @@ const NominatifExcelTable = forwardRef(
         if (onSave) {
           await onSave(rows);
           // Parent component will handle redirect logic
-          console.log("📝 Draft saved successfully - parent component will handle redirect");
+          console.log(
+            "📝 Draft saved successfully - parent component will handle redirect"
+          );
         }
       } catch (error) {
         console.error("Error saving draft:", error);
 
         // Check if it's just a row not found error (which is okay for deleted rows)
-        if (error.message && error.message.includes('not found')) {
-          console.log("ℹ️ Some rows not found (likely already deleted) - this is okay");
-          alert("Beberapa row tidak ditemukan (mungkin sudah dihapus sebelumnya). Data berhasil disimpan!");
+        if (error.message && error.message.includes("not found")) {
+          console.log(
+            "ℹ️ Some rows not found (likely already deleted) - this is okay"
+          );
+          alert(
+            "Beberapa row tidak ditemukan (mungkin sudah dihapus sebelumnya). Data berhasil disimpan!"
+          );
 
           // Still redirect even with not found errors since deletion succeeded
           const currentPath = window.location.pathname;
@@ -922,1016 +1047,1289 @@ const NominatifExcelTable = forwardRef(
     }, []);
 
     return (
-      <div className="bg-white rounded-lg">
-        {/* Mobile/Tablet Info */}
-        <div className="md:hidden lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <div className="flex items-center space-x-2 text-blue-800">
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p className="text-sm font-medium">
-              Table best viewed on desktop. Swipe horizontally to view all
-              columns.
-            </p>
+      <>
+        <div className="bg-white rounded-lg">
+          {/* Mobile/Tablet Info */}
+          <div className="md:hidden lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2 text-blue-800">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p className="text-sm font-medium">
+                Table best viewed on desktop. Swipe horizontally to view all
+                columns.
+              </p>
+            </div>
           </div>
-        </div>
-        {/* Action Bar */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => addRow()}
-              className="px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="font-medium">Tambah Row</span>
-            </button>
+          {/* Action Bar - Hide in view mode */}
+          {!readOnly && (
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => addRow()}
+                className="px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="font-medium">Tambah Row</span>
+              </button>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={saveDraft}
+                disabled={loading || saving}
+                className="px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-4 h-4" />
+                <span>{saving ? "Menyimpan..." : "Simpan Draft"}</span>
+              </button>
+              <button
+                onClick={submitNominatif}
+                disabled={loading || submitting}
+                className="px-4 py-2 bg-white border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span>{submitting ? "Mengirim..." : "Submit"}</span>
+              </button>
+            </div>
           </div>
+          )}
 
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={saveDraft}
-              disabled={loading || saving}
-              className="px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="w-4 h-4" />
-              <span>{saving ? "Menyimpan..." : "Simpan Draft"}</span>
-            </button>
-            <button
-              onClick={submitNominatif}
-              disabled={loading || submitting}
-              className="px-4 py-2 bg-white border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <CheckCircle className="w-4 h-4" />
-              <span>{submitting ? "Mengirim..." : "Submit"}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Table Container */}
-        <div className="border border-gray-200 rounded-lg">
-          <table className="w-full min-w-[9216px]" ref={tableRef}>
-            {/* Header */}
-            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-              {/* Main Categories Row */}
-              <tr>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">
-                  Aksi
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Nama Lengkap <span className="text-red-500">*</span>
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Golongan <span className="text-red-500">*</span>
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Jabatan <span className="text-red-500">*</span>
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Eselon <span className="text-red-500">*</span>
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Asal <span className="text-red-500">*</span>
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
-                  Tujuan <span className="text-red-500">*</span>
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">
-                  Tgl Pergi <span className="text-red-500">*</span>
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">
-                  Tgl Sampai <span className="text-red-500">*</span>
-                </th>
-                <th
-                  className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="4"
-                >
-                  Transportasi
-                </th>
-                <th
-                  className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="3"
-                >
-                  Penginapan
-                </th>
-                <th
-                  className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="6"
-                >
-                  Uang Harian Meeting
-                </th>
-                <th
-                  className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="6"
-                >
-                  Uang Harian
-                </th>
-                <th
-                  className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
-                  colSpan="6"
-                >
-                  Uang Representasi
-                </th>
-                <th
-                  className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50"
-                  colSpan="1"
-                >
-                  Evidence
-                </th>
-              </tr>
-              {/* Subcategories Row */}
-              <tr className="bg-gray-100 border-b border-gray-300">
-                <td
-                  colSpan="9"
-                  className="px-4 py-2 border-r border-gray-200"
-                ></td>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu Tiket Pesawat NON PP
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual Tiket Pesawat NON PP
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu Taksi
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual Taksi
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Jumlah Malam
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual/Hari
-                </th>
-
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Jumlah Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Jumlah Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Jumlah Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Jumlah Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Jumlah Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Jumlah Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Pagu/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Aktual/Hari
-                </th>
-                <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
-                  Eviden
-                </th>
-              </tr>
-              {/* Meeting Types Row */}
-              <tr className="bg-gray-100 border-b border-gray-300">
-                <td
-                  colSpan="10"
-                  className="px-4 py-2 border-r border-gray-200"
-                ></td>
-                <th
-                  className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="5"
-                ></th>
-                <th
-                  className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="1"
-                ></th>
-                <th
-                  className="pl-1 pr-3 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="3"
-                >
-                  Meeting Fullboard
-                </th>
-                <th
-                  className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="3"
-                >
-                  Meeting Fullday
-                </th>
-                <th
-                  className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="3"
-                >
-                  Luar Kota
-                </th>
-                <th
-                  className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="3"
-                >
-                  Dalam Kota
-                </th>
-                <th
-                  className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="3"
-                >
-                  Representasi Luar Kota
-                </th>
-                <th
-                  className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
-                  colSpan="3"
-                >
-                  Representasi Dalam Kota
-                </th>
-                <th className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200 bg-gray-100">
-                  EVIDENCE
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {rows.map((row, index) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => deleteRow(row.id)}
-                        className={`transition-all duration-200 ${
-                          rows.length <= 1
-                            ? 'text-gray-300 cursor-not-allowed'
-                            : 'text-red-600 hover:text-red-800 hover:scale-110 active:scale-95'
-                        }`}
-                        title="Hapus Baris"
-                        disabled={rows.length <= 1}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 border-r border-gray-200 w-56">
-                    <input
-                      type="text"
-                      value={row.nama_lengkap || ""}
-                      onChange={(e) =>
-                        updateRow(row.id, "nama_lengkap", e.target.value)
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
-                      placeholder="Nama lengkap"
-                    />
-                  </td>
-                  <td className="px-4 py-3 border-r border-gray-200 w-56">
-                    <div className="space-y-1">
-                      {validationErrors[index]?.golongan && (
-                        <div className="text-xs text-red-600 font-medium">
-                          {validationErrors[index].golongan}
-                        </div>
-                      )}
-                      <div className="relative">
-                        <select
-                          value={row.golongan || ""}
-                          onChange={(e) =>
-                            updateRow(row.id, "golongan", e.target.value)
-                          }
-                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:border-gray-500 bg-white ${
-                            validationErrors[index]?.golongan
-                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                              : "border-gray-300 focus:ring-gray-500"
-                          }`}
-                        >
-                          <option value="">Pilih Golongan</option>
-                          <option value="I">I</option>
-                          <option value="II">II</option>
-                          <option value="III">III</option>
-                          <option value="IV">IV</option>
-                          <option value="Non Golongan">Non Golongan</option>
-                        </select>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 border-r border-gray-200 w-56">
-                    <input
-                      type="text"
-                      value={row.jabatan || ""}
-                      onChange={(e) =>
-                        updateRow(row.id, "jabatan", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
-                      placeholder="Jabatan"
-                    />
-                  </td>
-                  <td className="px-4 py-3 border-r border-gray-200 w-56">
-                    <div className="space-y-1">
-                      {validationErrors[index]?.eselon && (
-                        <div className="text-xs text-red-600 font-medium">
-                          {validationErrors[index].eselon}
-                        </div>
-                      )}
-                      <div className="relative">
-                        <select
-                          value={row.eselon || ""}
-                          onChange={(e) =>
-                            updateRow(row.id, "eselon", e.target.value)
-                          }
-                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:border-gray-500 bg-white ${
-                            validationErrors[index]?.eselon
-                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                              : "border-gray-300 focus:ring-gray-500"
-                          }`}
-                        >
-                          <option value="">Pilih Eselon</option>
-                          <option value="I">I</option>
-                          <option value="II">II</option>
-                          <option value="III">III</option>
-                          <option value="IV">IV</option>
-                          <option value="Non Eselon">Non Eselon</option>
-                        </select>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 border-r border-gray-200 w-56">
-                    <input
-                      type="text"
-                      value={row.asal || ""}
-                      onChange={(e) =>
-                        updateRow(row.id, "asal", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
-                      placeholder="Asal"
-                    />
-                  </td>
-                  <td className="px-4 py-3 border-r border-gray-200 w-56">
-                    <input
-                      type="text"
-                      value={row.tujuan || ""}
-                      onChange={(e) =>
-                        updateRow(row.id, "tujuan", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
-                      placeholder="Tujuan"
-                    />
-                  </td>
-                  <td className="px-4 py-3 border-r border-gray-200 w-32">
-                    <input
-                      type="date"
-                      value={row.tanggal_pergi || ""}
-                      onChange={(e) =>
-                        updateRow(row.id, "tanggal_pergi", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
-                    />
-                  </td>
-                  <td className="px-4 py-3 border-r border-gray-200 w-32">
-                    <input
-                      type="date"
-                      value={row.tanggal_sampai || ""}
-                      onChange={(e) =>
-                        updateRow(row.id, "tanggal_sampai", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
-                    />
-                  </td>
-
-                  {/* Transportasi - Pesawat Non-PP */}
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.transport_pesawat_non_pp_pagu
-                          ? `Rp ${
-                              parseFloat(
-                                row.transport_pesawat_non_pp_pagu || 0
-                              ).toLocaleString("id-ID") || ""
-                            }`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "transport_pesawat_non_pp_pagu",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.transport_pesawat_non_pp_aktual
-                          ? `Rp ${
-                              parseFloat(
-                                row.transport_pesawat_non_pp_aktual || 0
-                              ).toLocaleString("id-ID") || ""
-                            }`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "transport_pesawat_non_pp_aktual",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-
-                  {/* Transportasi - Taksi */}
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.transport_taksi_pagu
-                          ? `Rp ${
-                              parseFloat(
-                                row.transport_taksi_pagu || 0
-                              ).toLocaleString("id-ID") || ""
-                            }`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "transport_taksi_pagu",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.transport_taksi_aktual
-                          ? `Rp ${
-                              parseFloat(
-                                row.transport_taksi_aktual || 0
-                              ).toLocaleString("id-ID") || ""
-                            }`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "transport_taksi_aktual",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-
-                  {/* Penginapan */}
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.penginapan_jumlah_malam || ""}
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "penginapan_jumlah_malam",
-                          e.target.value
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.penginapan_pagu_perhari
-                          ? `Rp ${parseFloat(
-                              row.penginapan_pagu_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "penginapan_pagu_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.penginapan_aktual_perhari
-                          ? `Rp ${parseFloat(
-                              row.penginapan_aktual_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "penginapan_aktual_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-      
-                  {/* Uang Harian Fullboard */}
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="number"
-                      min="0"
-                      value={
-                        row.uang_harian_meeting_fullboard_jumlah_hari || ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_meeting_fullboard_jumlah_hari",
-                          e.target.value
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.uang_harian_meeting_fullboard_pagu_perhari
-                          ? `Rp ${parseFloat(
-                              row.uang_harian_meeting_fullboard_pagu_perhari ||
-                                0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_meeting_fullboard_pagu_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.uang_harian_meeting_fullboard_aktual_perhari
-                          ? `Rp ${parseFloat(
-                              row.uang_harian_meeting_fullboard_aktual_perhari ||
-                                0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_meeting_fullboard_aktual_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                
-
-                  {/* Uang Harian Meeting Fullday */}
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.uang_harian_meeting_fullday_jumlah_hari || ""}
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_meeting_fullday_jumlah_hari",
-                          e.target.value
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.uang_harian_meeting_fullday_pagu_perhari
-                          ? `Rp ${parseFloat(
-                              row.uang_harian_meeting_fullday_pagu_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_meeting_fullday_pagu_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.uang_harian_meeting_fullday_aktual_perhari
-                          ? `Rp ${parseFloat(
-                              row.uang_harian_meeting_fullday_aktual_perhari ||
-                                0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_meeting_fullday_aktual_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  
-
-                  {/* Uang Harian Luar Kota */}
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.uang_harian_luar_kota_jumlah_hari || ""}
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_luar_kota_jumlah_hari",
-                          e.target.value
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.uang_harian_luar_kota_pagu_perhari
-                          ? `Rp ${parseFloat(
-                              row.uang_harian_luar_kota_pagu_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_luar_kota_pagu_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.uang_harian_luar_kota_aktual_perhari
-                          ? `Rp ${parseFloat(
-                              row.uang_harian_luar_kota_aktual_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_luar_kota_aktual_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  
-
-                  {/* Uang Harian Dalam Kota */}
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.uang_harian_dalam_kota_jumlah_hari || ""}
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_dalam_kota_jumlah_hari",
-                          e.target.value
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.uang_harian_dalam_kota_pagu_perhari
-                          ? `Rp ${parseFloat(
-                              row.uang_harian_dalam_kota_pagu_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_dalam_kota_pagu_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.uang_harian_dalam_kota_aktual_perhari
-                          ? `Rp ${parseFloat(
-                              row.uang_harian_dalam_kota_aktual_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "uang_harian_dalam_kota_aktual_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  
-
-                  {/* Representasi Luar Kota */}
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.representasi_luar_kota_jumlah_hari || ""}
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "representasi_luar_kota_jumlah_hari",
-                          e.target.value
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.representasi_luar_kota_pagu_perhari
-                          ? `Rp ${parseFloat(
-                              row.representasi_luar_kota_pagu_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "representasi_luar_kota_pagu_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.representasi_luar_kota_aktual_perhari
-                          ? `Rp ${parseFloat(
-                              row.representasi_luar_kota_aktual_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "representasi_luar_kota_aktual_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  
-                  {/* Representasi Dalam Kota */}
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.representasi_dalam_kota_jumlah_hari || ""}
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "representasi_dalam_kota_jumlah_hari",
-                          e.target.value
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.representasi_dalam_kota_pagu_perhari
-                          ? `Rp ${parseFloat(
-                              row.representasi_dalam_kota_pagu_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "representasi_dalam_kota_pagu_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={
-                        row.representasi_dalam_kota_aktual_perhari
-                          ? `Rp ${parseFloat(
-                              row.representasi_dalam_kota_aktual_perhari || 0
-                            ).toLocaleString("id-ID")}`
-                          : ""
-                      }
-                      onChange={(e) =>
-                        updateRow(
-                          row.id,
-                          "representasi_dalam_kota_aktual_perhari",
-                          e.target.value.replace(/[^\d]/g, "")
-                        )
-                      }
-                      className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
-                      placeholder="Rp 0"
-                    />
-                  </td>
-                  
-
-                  {/* Evidence Column - Direct Input */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200 bg-white-50">
-                    {/* Auto Evidence Input Area */}
-                    <div className="w-full max-w-64">
-                      {/* Auto-Processing Input Field */}
-                      <div className="mb-2">
-                        <div className="relative">
-                          <input
-                            type="text"
-                            placeholder="Masukan Link Google Drive"
-                            className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
-                            id={`evidence-input-${row.id}`}
-                            value={
-                              row.evidence_files &&
-                              row.evidence_files.length > 0
-                                ? row.evidence_files[0].evidence_link
-                                : ""
-                            }
-                            onChange={(e) => {
-                              const newLink = e.target.value;
-                              console.log(
-                                `🔧 EVIDENCE INPUT CHANGE - Row ${row.id}:`,
-                                {
-                                  newLink,
-                                  oldValue:
-                                    row.evidence_files?.[0]?.evidence_link ||
-                                    "",
-                                }
-                              );
-
-                              // Update row state with new evidence link
-                              updateRow(row.id, "evidence_link", newLink);
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </td>
+          {/* Table Container */}
+          <div className="border border-gray-200 rounded-lg">
+            <table className="w-full min-w-[9216px]" ref={tableRef}>
+              {/* Header */}
+              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                {/* Main Categories Row */}
+                <tr>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50">
+                    Aksi
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
+                    Nama Lengkap
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
+                    Golongan
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
+                    Jabatan
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
+                    Eselon
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
+                    Asal
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-56 bg-gray-50">
+                    Tujuan
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">
+                    Tgl Pergi
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-32 bg-gray-50">
+                    Tgl Sampai
+                  </th>
+                  <th
+                    className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
+                    colSpan="4"
+                  >
+                    Transportasi
+                  </th>
+                  <th
+                    className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
+                    colSpan="3"
+                  >
+                    Penginapan
+                  </th>
+                  <th
+                    className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
+                    colSpan="6"
+                  >
+                    Uang Harian Meeting
+                  </th>
+                  <th
+                    className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
+                    colSpan="6"
+                  >
+                    Uang Harian
+                  </th>
+                  <th
+                    className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 bg-gray-50"
+                    colSpan="6"
+                  >
+                    Uang Representasi
+                  </th>
+                  <th
+                    className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50"
+                    colSpan="1"
+                  >
+                    Evidence
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                {/* Subcategories Row */}
+                <tr className="bg-gray-100 border-b border-gray-300">
+                  <td
+                    colSpan="9"
+                    className="px-4 py-2 border-r border-gray-200"
+                  ></td>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Pagu Tiket Pesawat NON PP
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Aktual Tiket Pesawat NON PP
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Pagu Taksi
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Aktual Taksi
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Jumlah Malam
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Pagu/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Aktual/Hari
+                  </th>
 
-        {rows.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            <p>Belum ada data. Klik "Tambah Baris" untuk menambahkan data.</p>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Jumlah Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Pagu/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Aktual/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Jumlah Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Pagu/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Aktual/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Jumlah Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Pagu/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Aktual/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Jumlah Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Pagu/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Aktual/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Jumlah Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Pagu/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Aktual/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Jumlah Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Pagu/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Aktual/Hari
+                  </th>
+                  <th className="px-2 py-2 text-xs font-medium text-gray-600 text-center border-r border-gray-200">
+                    Eviden
+                  </th>
+                </tr>
+                {/* Meeting Types Row */}
+                <tr className="bg-gray-100 border-b border-gray-300">
+                  <td
+                    colSpan="10"
+                    className="px-4 py-2 border-r border-gray-200"
+                  ></td>
+                  <th
+                    className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
+                    colSpan="5"
+                  ></th>
+                  <th
+                    className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
+                    colSpan="1"
+                  ></th>
+                  <th
+                    className="pl-1 pr-3 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
+                    colSpan="3"
+                  >
+                    Meeting Fullboard
+                  </th>
+                  <th
+                    className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
+                    colSpan="3"
+                  >
+                    Meeting Fullday
+                  </th>
+                  <th
+                    className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
+                    colSpan="3"
+                  >
+                    Luar Kota
+                  </th>
+                  <th
+                    className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
+                    colSpan="3"
+                  >
+                    Dalam Kota
+                  </th>
+                  <th
+                    className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
+                    colSpan="3"
+                  >
+                    Representasi Luar Kota
+                  </th>
+                  <th
+                    className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200"
+                    colSpan="3"
+                  >
+                    Representasi Dalam Kota
+                  </th>
+                  <th className="px-2 py-2 text-xs font-bold text-gray-700 text-center border-r border-gray-200 bg-gray-100">
+                    EVIDENCE
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {rows.map((row, index) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                      <div className="flex items-center space-x-2">
+                        {!readOnly && (
+                        <button
+                          onClick={() => deleteRow(row.id)}
+                          className={`transition-all duration-200 ${
+                            rows.length <= 1
+                              ? "text-gray-300 cursor-not-allowed"
+                              : "text-red-600 hover:text-red-800 hover:scale-110 active:scale-95"
+                          }`}
+                          title="Hapus Baris"
+                          disabled={rows.length <= 1}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-200 w-56">
+                      <div className="space-y-1">
+                        {validationErrors[index]?.nama_lengkap && (
+                          <div className="text-xs text-red-600 font-medium">
+                            {validationErrors[index].nama_lengkap}
+                          </div>
+                        )}
+                        <input
+                          type="text"
+                          value={row.nama_lengkap || ""}
+                          onChange={(e) =>
+                            updateRow(row.id, "nama_lengkap", e.target.value)
+                          }
+                          disabled={readOnly}
+                          className={`w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-1 ${
+                            validationErrors[index]?.nama_lengkap
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 focus:ring-gray-500 focus:border-gray-500"
+                          }`}
+                          placeholder="Nama lengkap"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-200 w-56">
+                      <div className="space-y-1">
+                        {validationErrors[index]?.golongan && (
+                          <div className="text-xs text-red-600 font-medium">
+                            {validationErrors[index].golongan}
+                          </div>
+                        )}
+                        <div className="relative">
+                          <select
+                            value={row.golongan || ""}
+                            onChange={(e) =>
+                              updateRow(row.id, "golongan", e.target.value)
+                            }
+                            disabled={readOnly}
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:border-gray-500 bg-white ${
+                              validationErrors[index]?.golongan
+                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                : "border-gray-300 focus:ring-gray-500"
+                            }`}
+                          >
+                            <option value="">Pilih Golongan</option>
+                            <option value="I">I</option>
+                            <option value="II">II</option>
+                            <option value="III">III</option>
+                            <option value="IV">IV</option>
+                            <option value="Non Golongan">Non Golongan</option>
+                          </select>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-200 w-56">
+                      <div className="space-y-1">
+                        {validationErrors[index]?.jabatan && (
+                          <div className="text-xs text-red-600 font-medium">
+                            {validationErrors[index].jabatan}
+                          </div>
+                        )}
+                        <input
+                          type="text"
+                          value={row.jabatan || ""}
+                          onChange={(e) =>
+                            updateRow(row.id, "jabatan", e.target.value)
+                          }
+                          disabled={readOnly}
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
+                            validationErrors[index]?.jabatan
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 focus:ring-gray-500 focus:border-gray-500"
+                          }`}
+                          placeholder="Jabatan"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-200 w-56">
+                      <div className="space-y-1">
+                        {validationErrors[index]?.eselon && (
+                          <div className="text-xs text-red-600 font-medium">
+                            {validationErrors[index].eselon}
+                          </div>
+                        )}
+                        <div className="relative">
+                          <select
+                            value={row.eselon || ""}
+                            onChange={(e) =>
+                              updateRow(row.id, "eselon", e.target.value)
+                            }
+                            disabled={readOnly}
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:border-gray-500 bg-white ${
+                              validationErrors[index]?.eselon
+                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                : "border-gray-300 focus:ring-gray-500"
+                            }`}
+                          >
+                            <option value="">Pilih Eselon</option>
+                            <option value="I">I</option>
+                            <option value="II">II</option>
+                            <option value="III">III</option>
+                            <option value="IV">IV</option>
+                            <option value="Non Eselon">Non Eselon</option>
+                          </select>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-200 w-56">
+                      <div className="space-y-1">
+                        {validationErrors[index]?.asal && (
+                          <div className="text-xs text-red-600 font-medium">
+                            {validationErrors[index].asal}
+                          </div>
+                        )}
+                        <input
+                          type="text"
+                          value={row.asal || ""}
+                          onChange={(e) =>
+                            updateRow(row.id, "asal", e.target.value)
+                          }
+                          disabled={readOnly}
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
+                            validationErrors[index]?.asal
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 focus:ring-gray-500 focus:border-gray-500"
+                          }`}
+                          placeholder="Asal"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-200 w-56">
+                      <div className="space-y-1">
+                        {validationErrors[index]?.tujuan && (
+                          <div className="text-xs text-red-600 font-medium">
+                            {validationErrors[index].tujuan}
+                          </div>
+                        )}
+                        <input
+                          type="text"
+                          value={row.tujuan || ""}
+                          onChange={(e) =>
+                            updateRow(row.id, "tujuan", e.target.value)
+                          }
+                          disabled={readOnly}
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
+                            validationErrors[index]?.tujuan
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 focus:ring-gray-500 focus:border-gray-500"
+                          }`}
+                          placeholder="Tujuan"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-200 w-32">
+                      <div className="space-y-1">
+                        {validationErrors[index]?.tanggal_pergi && (
+                          <div className="text-xs text-red-600 font-medium">
+                            {validationErrors[index].tanggal_pergi}
+                          </div>
+                        )}
+                        <input
+                          type="date"
+                          value={row.tanggal_pergi || ""}
+                          onChange={(e) =>
+                            updateRow(row.id, "tanggal_pergi", e.target.value)
+                          }
+                          disabled={readOnly}
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
+                            validationErrors[index]?.tanggal_pergi
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 focus:ring-gray-500 focus:border-gray-500"
+                          }`}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-200 w-32">
+                      <div className="space-y-1">
+                        {validationErrors[index]?.tanggal_sampai && (
+                          <div className="text-xs text-red-600 font-medium">
+                            {validationErrors[index].tanggal_sampai}
+                          </div>
+                        )}
+                        <input
+                          type="date"
+                          value={row.tanggal_sampai || ""}
+                          onChange={(e) =>
+                            updateRow(row.id, "tanggal_sampai", e.target.value)
+                          }
+                          disabled={readOnly}
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
+                            validationErrors[index]?.tanggal_sampai
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 focus:ring-gray-500 focus:border-gray-500"
+                          }`}
+                        />
+                      </div>
+                    </td>
+
+                    {/* Transportasi - Pesawat Non-PP */}
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center">
+                        <input
+                          type="text"
+                          value={
+                            row.transport_pesawat_non_pp_pagu
+                              ? `Rp ${
+                                  parseFloat(
+                                    row.transport_pesawat_non_pp_pagu || 0
+                                  ).toLocaleString("id-ID") || ""
+                                }`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "transport_pesawat_non_pp_pagu",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          disabled={readOnly}
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        {!readOnly && (
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "transport_pesawat_non_pp_pagu",
+                              "Pagu Tiket Pesawat NON PP"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="text"
+                        value={
+                          row.transport_pesawat_non_pp_aktual
+                            ? `Rp ${
+                                parseFloat(
+                                  row.transport_pesawat_non_pp_aktual || 0
+                                ).toLocaleString("id-ID") || ""
+                              }`
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "transport_pesawat_non_pp_aktual",
+                            e.target.value.replace(/[^\d]/g, "")
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="Rp 0"
+                      />
+                    </td>
+
+                    {/* Transportasi - Taksi */}
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={
+                            row.transport_taksi_pagu
+                              ? `Rp ${
+                                  parseFloat(
+                                    row.transport_taksi_pagu || 0
+                                  ).toLocaleString("id-ID") || ""
+                                }`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "transport_taksi_pagu",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          disabled={readOnly}
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        {!readOnly && (
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "transport_taksi_pagu",
+                              "Pagu Taksi"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="text"
+                        value={
+                          row.transport_taksi_aktual
+                            ? `Rp ${
+                                parseFloat(
+                                  row.transport_taksi_aktual || 0
+                                ).toLocaleString("id-ID") || ""
+                              }`
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "transport_taksi_aktual",
+                            e.target.value.replace(/[^\d]/g, "")
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="Rp 0"
+                      />
+                    </td>
+
+                    {/* Penginapan */}
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="number"
+                        min="0"
+                        value={row.penginapan_jumlah_malam || ""}
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "penginapan_jumlah_malam",
+                            e.target.value
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="0"
+                      />
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={
+                            row.penginapan_pagu_perhari
+                              ? `Rp ${parseFloat(
+                                  row.penginapan_pagu_perhari || 0
+                                ).toLocaleString("id-ID")}`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "penginapan_pagu_perhari",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          disabled={readOnly}
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        {!readOnly && (
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "penginapan_pagu_perhari",
+                              "Pagu/Hari Penginapan"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="text"
+                        value={
+                          row.penginapan_aktual_perhari
+                            ? `Rp ${parseFloat(
+                                row.penginapan_aktual_perhari || 0
+                              ).toLocaleString("id-ID")}`
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "penginapan_aktual_perhari",
+                            e.target.value.replace(/[^\d]/g, "")
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="Rp 0"
+                      />
+                    </td>
+
+                    {/* Uang Harian Fullboard */}
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="number"
+                        min="0"
+                        value={
+                          row.uang_harian_meeting_fullboard_jumlah_hari || ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "uang_harian_meeting_fullboard_jumlah_hari",
+                            e.target.value
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="0"
+                      />
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={
+                            row.uang_harian_meeting_fullboard_pagu_perhari
+                              ? `Rp ${parseFloat(
+                                  row.uang_harian_meeting_fullboard_pagu_perhari ||
+                                    0
+                                ).toLocaleString("id-ID")}`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "uang_harian_meeting_fullboard_pagu_perhari",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          disabled={readOnly}
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        {!readOnly && (
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "uang_harian_meeting_fullboard_pagu_perhari",
+                              "Pagu/Hari Fullboard"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="text"
+                        value={
+                          row.uang_harian_meeting_fullboard_aktual_perhari
+                            ? `Rp ${parseFloat(
+                                row.uang_harian_meeting_fullboard_aktual_perhari ||
+                                  0
+                              ).toLocaleString("id-ID")}`
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "uang_harian_meeting_fullboard_aktual_perhari",
+                            e.target.value.replace(/[^\d]/g, "")
+                          )
+                        }
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="Rp 0"
+                      />
+                    </td>
+
+                    {/* Uang Harian Meeting Fullday */}
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="number"
+                        min="0"
+                        value={
+                          row.uang_harian_meeting_fullday_jumlah_hari || ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "uang_harian_meeting_fullday_jumlah_hari",
+                            e.target.value
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="0"
+                      />
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={
+                            row.uang_harian_meeting_fullday_pagu_perhari
+                              ? `Rp ${parseFloat(
+                                  row.uang_harian_meeting_fullday_pagu_perhari ||
+                                    0
+                                ).toLocaleString("id-ID")}`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "uang_harian_meeting_fullday_pagu_perhari",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          disabled={readOnly}
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        {!readOnly && (
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "uang_harian_meeting_fullday_pagu_perhari",
+                              "Pagu/Hari Fullday"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="text"
+                        value={
+                          row.uang_harian_meeting_fullday_aktual_perhari
+                            ? `Rp ${parseFloat(
+                                row.uang_harian_meeting_fullday_aktual_perhari ||
+                                  0
+                              ).toLocaleString("id-ID")}`
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "uang_harian_meeting_fullday_aktual_perhari",
+                            e.target.value.replace(/[^\d]/g, "")
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="Rp 0"
+                      />
+                    </td>
+
+                    {/* Uang Harian Luar Kota */}
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="number"
+                        min="0"
+                        value={row.uang_harian_luar_kota_jumlah_hari || ""}
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "uang_harian_luar_kota_jumlah_hari",
+                            e.target.value
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="0"
+                      />
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={
+                            row.uang_harian_luar_kota_pagu_perhari
+                              ? `Rp ${parseFloat(
+                                  row.uang_harian_luar_kota_pagu_perhari || 0
+                                ).toLocaleString("id-ID")}`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "uang_harian_luar_kota_pagu_perhari",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          disabled={readOnly}
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        {!readOnly && (
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "uang_harian_luar_kota_pagu_perhari",
+                              "Pagu/Hari Luar Kota"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="text"
+                        value={
+                          row.uang_harian_luar_kota_aktual_perhari
+                            ? `Rp ${parseFloat(
+                                row.uang_harian_luar_kota_aktual_perhari || 0
+                              ).toLocaleString("id-ID")}`
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "uang_harian_luar_kota_aktual_perhari",
+                            e.target.value.replace(/[^\d]/g, "")
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="Rp 0"
+                      />
+                    </td>
+
+                    {/* Uang Harian Dalam Kota */}
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="number"
+                        min="0"
+                        value={row.uang_harian_dalam_kota_jumlah_hari || ""}
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "uang_harian_dalam_kota_jumlah_hari",
+                            e.target.value
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="0"
+                      />
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={
+                            row.uang_harian_dalam_kota_pagu_perhari
+                              ? `Rp ${parseFloat(
+                                  row.uang_harian_dalam_kota_pagu_perhari || 0
+                                ).toLocaleString("id-ID")}`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "uang_harian_dalam_kota_pagu_perhari",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          disabled={readOnly}
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        {!readOnly && (
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "uang_harian_dalam_kota_pagu_perhari",
+                              "Pagu/Hari Dalam Kota"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="text"
+                        value={
+                          row.uang_harian_dalam_kota_aktual_perhari
+                            ? `Rp ${parseFloat(
+                                row.uang_harian_dalam_kota_aktual_perhari || 0
+                              ).toLocaleString("id-ID")}`
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "uang_harian_dalam_kota_aktual_perhari",
+                            e.target.value.replace(/[^\d]/g, "")
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="Rp 0"
+                      />
+                    </td>
+
+                    {/* Representasi Luar Kota */}
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="number"
+                        min="0"
+                        value={row.representasi_luar_kota_jumlah_hari || ""}
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "representasi_luar_kota_jumlah_hari",
+                            e.target.value
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="0"
+                      />
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={
+                            row.representasi_luar_kota_pagu_perhari
+                              ? `Rp ${parseFloat(
+                                  row.representasi_luar_kota_pagu_perhari || 0
+                                ).toLocaleString("id-ID")}`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "representasi_luar_kota_pagu_perhari",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          disabled={readOnly}
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        {!readOnly && (
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "representasi_luar_kota_pagu_perhari",
+                              "Pagu/Hari Representasi Luar Kota"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="text"
+                        value={
+                          row.representasi_luar_kota_aktual_perhari
+                            ? `Rp ${parseFloat(
+                                row.representasi_luar_kota_aktual_perhari || 0
+                              ).toLocaleString("id-ID")}`
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "representasi_luar_kota_aktual_perhari",
+                            e.target.value.replace(/[^\d]/g, "")
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="Rp 0"
+                      />
+                    </td>
+
+                    {/* Representasi Dalam Kota */}
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="number"
+                        min="0"
+                        value={row.representasi_dalam_kota_jumlah_hari || ""}
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "representasi_dalam_kota_jumlah_hari",
+                            e.target.value
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="0"
+                      />
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={
+                            row.representasi_dalam_kota_pagu_perhari
+                              ? `Rp ${parseFloat(
+                                  row.representasi_dalam_kota_pagu_perhari || 0
+                                ).toLocaleString("id-ID")}`
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateRow(
+                              row.id,
+                              "representasi_dalam_kota_pagu_perhari",
+                              e.target.value.replace(/[^\d]/g, "")
+                            )
+                          }
+                          disabled={readOnly}
+                          className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                          placeholder="Rp 0"
+                        />
+                        {!readOnly && (
+                        <button
+                          onClick={() =>
+                            openSearchModal(
+                              row.id,
+                              "representasi_dalam_kota_pagu_perhari",
+                              "Pagu/Hari Representasi Dalam Kota"
+                            )
+                          }
+                          className="ml-2 p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Cari referensi Master SBM"
+                          tabIndex={-1}
+                        >
+                          <Search className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r border-gray-200">
+                      <input
+                        type="text"
+                        value={
+                          row.representasi_dalam_kota_aktual_perhari
+                            ? `Rp ${parseFloat(
+                                row.representasi_dalam_kota_aktual_perhari || 0
+                              ).toLocaleString("id-ID")}`
+                            : ""
+                        }
+                        onChange={(e) =>
+                          updateRow(
+                            row.id,
+                            "representasi_dalam_kota_aktual_perhari",
+                            e.target.value.replace(/[^\d]/g, "")
+                          )
+                        }
+                        disabled={readOnly}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-right"
+                        placeholder="Rp 0"
+                      />
+                    </td>
+
+                    {/* Evidence Column - Direct Input */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200 bg-white-50">
+                      {/* Auto Evidence Input Area */}
+                      <div className="w-full max-w-64">
+                        {/* Auto-Processing Input Field */}
+                        <div className="mb-2">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Masukan Link Google Drive"
+                              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                              id={`evidence-input-${row.id}`}
+                              value={
+                                row.evidence_files &&
+                                row.evidence_files.length > 0
+                                  ? row.evidence_files[0].evidence_link
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                const newLink = e.target.value;
+                                console.log(
+                                  `🔧 EVIDENCE INPUT CHANGE - Row ${row.id}:`,
+                                  {
+                                    newLink,
+                                    oldValue:
+                                      row.evidence_files?.[0]?.evidence_link ||
+                                      "",
+                                  }
+                                );
+
+                                // Update row state with new evidence link
+                                updateRow(row.id, "evidence_link", newLink);
+                              }}
+                              disabled={readOnly}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
 
-        {/* Summary Info */}
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">Total Baris:</span> {rows.length}
+          {rows.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              <p>Belum ada data. Klik "Tambah Baris" untuk menambahkan data.</p>
+            </div>
+          )}
+
+          {/* Summary Info */}
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">Total Baris:</span>{" "}
+                  {rows.length}
+                </div>
+              </div>
+              <div className="flex items-center space-x-6 text-sm">
+                <div className="text-gray-600">
+                  <span className="font-medium">Total Pagu:</span>
+                  <span className="ml-2 font-semibold text-blue-600">
+                    Rp {totals.total_pagu.toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <div className="text-gray-600">
+                  <span className="font-medium">Total Aktual:</span>
+                  <span className="ml-2 font-semibold text-green-600">
+                    Rp {totals.total_aktual.toLocaleString("id-ID")}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="flex items-center space-x-6 text-sm">
-              <div className="text-gray-600">
-                <span className="font-medium">Total Pagu:</span>
-                <span className="ml-2 font-semibold text-blue-600">
-                  Rp {totals.total_pagu.toLocaleString("id-ID")}
-                </span>
-              </div>
-              <div className="text-gray-600">
-                <span className="font-medium">Total Aktual:</span>
-                <span className="ml-2 font-semibold text-green-600">
-                  Rp {totals.total_aktual.toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
-      </div>
+
+        <SBMReferensiModal
+          isOpen={searchModal.isOpen}
+          onClose={closeSearchModal}
+          fieldName={searchModal.fieldName}
+          fieldLabel={searchModal.fieldLabel}
+        />
+      </>
     );
   }
 );

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Database } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
-const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }) => {
+const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange, enableRowExpand = true }) => {
   const [expandedRow, setExpandedRow] = useState(null);
 
   const items = data.data || [];
@@ -100,7 +100,7 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="w-10"></th>
+                  {enableRowExpand && <th className="w-10"></th>}
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase w-16">No</th>
                   {headers.map(header => (
                     <th
@@ -124,22 +124,24 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
                   return (
                     <React.Fragment key={itemId}>
                       <tr className="hover:bg-blue-50 transition-colors">
-                        <td className="px-4 py-3">
-                          <button
-                            onClick={() => toggleRow(itemId)}
-                            className="text-gray-400 hover:text-blue-600 transition-colors"
-                          >
-                            {expandedRow === itemId ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            )}
-                          </button>
-                        </td>
+                        {enableRowExpand && (
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => toggleRow(itemId)}
+                              className="text-gray-400 hover:text-blue-600 transition-colors"
+                            >
+                              {expandedRow === itemId ? (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              )}
+                            </button>
+                          </td>
+                        )}
                         <td className="px-4 py-3 text-sm text-gray-600">
                           {(meta.current_page - 1) * meta.per_page + index + 1}
                         </td>
@@ -149,7 +151,7 @@ const SBMTable = ({ data, loading, sort, onSort, onPageChange, onPerPageChange }
                           </td>
                         ))}
                       </tr>
-                      {expandedRow === itemId && (
+                      {enableRowExpand && expandedRow === itemId && (
                         <tr>
                           <td colSpan={headers.length + 2} className="px-4 py-4 bg-gray-50">
                             <div className="space-y-2 text-sm">
