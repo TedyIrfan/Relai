@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, Eye, Users, FileX, Globe, Clock, X } from 'lucide-react';
 import Notifikasi from '../components/Notifikasi';
 import { consoleError } from '../utils/logger';
+import api from '../services/api';
 
 const TABS = {
   NOMINATIF: 'nominatif',
@@ -36,67 +37,54 @@ const AllStatusNominatif = () => {
 
         // Fetch both data if tab is ALL or if specific tab is selected
         if (activeTab === TABS.NOMINATIF || activeTab === TABS.ALL) {
-          const nomResponse = await fetch('http://localhost/api/nominatifs-new/all', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const nomResponse = await api.get('/nominatifs-new/all');
 
-          if (nomResponse.ok) {
-            const data = await nomResponse.json();
-            let nominatifArray = [];
+          // Axios returns data directly
+          const data = nomResponse.data;
+          let nominatifArray = [];
 
-            if (Array.isArray(data)) {
-              nominatifArray = data;
-            } else if (data && Array.isArray(data.data)) {
-              nominatifArray = data.data;
-            } else if (data && typeof data === 'object' && data.data) {
-              if (Array.isArray(data.data.data)) {
-                nominatifArray = data.data.data;
-              } else {
-                const possibleArrays = Object.values(data.data).filter(val => Array.isArray(val));
-                if (possibleArrays.length > 0) {
-                  nominatifArray = possibleArrays[0];
-                }
+          if (Array.isArray(data)) {
+            nominatifArray = data;
+          } else if (data && Array.isArray(data.data)) {
+            nominatifArray = data.data;
+          } else if (data && typeof data === 'object' && data.data) {
+            if (Array.isArray(data.data.data)) {
+              nominatifArray = data.data.data;
+            } else {
+              const possibleArrays = Object.values(data.data).filter(val => Array.isArray(val));
+              if (possibleArrays.length > 0) {
+                nominatifArray = possibleArrays[0];
               }
             }
-
-            setNominatifs(nominatifArray);
           }
+
+          setNominatifs(nominatifArray);
         }
 
         if (activeTab === TABS.NON_NOMINATIF || activeTab === TABS.ALL) {
-          const nonNomResponse = await fetch('http://localhost/api/non-nominatifs/all', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const nonNomResponse = await api.get('/non-nominatifs/all');
 
-          if (nonNomResponse.ok) {
-            const data = await nonNomResponse.json();
-            let nonNominatifArray = [];
+          // Axios returns data directly
+          const data = nonNomResponse.data;
+          let nonNominatifArray = [];
 
-            if (Array.isArray(data)) {
-              nonNominatifArray = data;
-            } else if (data && Array.isArray(data.data)) {
-              nonNominatifArray = data.data;
-            } else if (data && typeof data === 'object' && data.data) {
-              if (Array.isArray(data.data.data)) {
-                nonNominatifArray = data.data.data;
-              } else {
-                const possibleArrays = Object.values(data.data).filter(val => Array.isArray(val));
-                if (possibleArrays.length > 0) {
-                  nonNominatifArray = possibleArrays[0];
-                }
+          if (Array.isArray(data)) {
+            nonNominatifArray = data;
+          } else if (data && Array.isArray(data.data)) {
+            nonNominatifArray = data.data;
+          } else if (data && typeof data === 'object' && data.data) {
+            if (Array.isArray(data.data.data)) {
+              nonNominatifArray = data.data.data;
+            } else {
+              const possibleArrays = Object.values(data.data).filter(val => Array.isArray(val));
+              if (possibleArrays.length > 0) {
+                nonNominatifArray = possibleArrays[0];
               }
             }
-
-            setNonNominatifs(nonNominatifArray);
           }
-        }
 
+          setNonNominatifs(nonNominatifArray);
+        }
       } catch (error) {
         consoleError('Error fetching data:', error);
         setNominatifs([]);

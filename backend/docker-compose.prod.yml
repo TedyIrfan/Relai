@@ -101,6 +101,24 @@ services:
     profiles:
       - admin  # Only start with: docker-compose --profile admin up
 
+  # Portainer - Docker management UI
+  # Optional: Only start with --profile admin flag
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: relai-portainer-prod
+    restart: unless-stopped
+    command: --host=unix:///var/run/docker.sock
+    ports:
+      - "${PORTAINER_PORT:-9443}:9443"
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - relai-network
+    profiles:
+      - admin  # Only start with: docker-compose --profile admin up
+
 volumes:
   postgres_data:
     driver: local
@@ -109,6 +127,8 @@ volumes:
   redis_data:
     driver: local
   pgadmin_data:
+    driver: local
+  portainer_data:
     driver: local
 
 networks:

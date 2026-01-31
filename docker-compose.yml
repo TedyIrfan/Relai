@@ -82,12 +82,28 @@ services:
     depends_on:
       - postgres
 
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: relai-portainer-dev
+    restart: unless-stopped
+    command: --host=unix:///var/run/docker.sock
+    ports:
+      - "9443:9443"
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - relai-network
+
 volumes:
   postgres_data:
     driver: local
   redis_data:
     driver: local
   pgadmin_data:
+    driver: local
+  portainer_data:
     driver: local
 
 networks:

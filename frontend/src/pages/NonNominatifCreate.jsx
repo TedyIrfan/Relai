@@ -5,6 +5,7 @@ import nonNominatifService from '../services/nonNominatifService';
 import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
 import { consoleError, consoleWarn } from '../utils/logger';
+import api from '../services/api';
 
 const NonNominatifCreate = () => {
   const navigate = useNavigate();
@@ -45,32 +46,29 @@ const NonNominatifCreate = () => {
     const fetchRKAList = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost/api/rka-details');
+        const response = await api.get('/rka-details');
 
-        if (response.ok) {
-          const data = await response.json();
-          let rkaArray = [];
+        // Axios returns data directly
+        const data = response.data;
+        let rkaArray = [];
 
-          if (Array.isArray(data)) {
-            rkaArray = data;
-          } else if (data && Array.isArray(data.data)) {
-            rkaArray = data.data;
-          } else if (data && Array.isArray(data.results)) {
-            rkaArray = data.results;
-          } else if (data && Array.isArray(data.rka_details)) {
-            rkaArray = data.rka_details;
-          } else if (data && typeof data === 'object') {
-            const possibleArrays = Object.values(data).filter(val => Array.isArray(val));
-            if (possibleArrays.length > 0) {
-              rkaArray = possibleArrays[0];
-            }
+        if (Array.isArray(data)) {
+          rkaArray = data;
+        } else if (data && Array.isArray(data.data)) {
+          rkaArray = data.data;
+        } else if (data && Array.isArray(data.results)) {
+          rkaArray = data.results;
+        } else if (data && Array.isArray(data.rka_details)) {
+          rkaArray = data.rka_details;
+        } else if (data && typeof data === 'object') {
+          const possibleArrays = Object.values(data).filter(val => Array.isArray(val));
+          if (possibleArrays.length > 0) {
+            rkaArray = possibleArrays[0];
           }
+        }
 
-          if (Array.isArray(rkaArray)) {
-            setRkaList(rkaArray);
-          } else {
-            setRkaList([]);
-          }
+        if (Array.isArray(rkaArray)) {
+          setRkaList(rkaArray);
         } else {
           setRkaList([]);
         }

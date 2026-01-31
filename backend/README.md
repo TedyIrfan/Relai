@@ -112,4 +112,6 @@ php artisan l5-swagger:generate
 
 ---
 
+---
+
 [Full Project README](../README.md)

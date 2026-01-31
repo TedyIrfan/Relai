@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { masterRKAColumns, formatRupiah, getKategoriColor } from '../../data/anggaranADummy';
+import api from '../../services/api';
 
 const MasterRKATable = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,17 +18,11 @@ const MasterRKATable = () => {
         const params = new URLSearchParams();
         if (selectedKategori) params.append('kategori', selectedKategori);
 
-        const response = await fetch(`http://localhost:80/api/rka-details?${params}`);
+        const response = await api.get(`/rka-details?${params}`);
 
-        if (response.ok) {
-          const data = await response.json();
-          setRkaData(data);
-          setUseAPI(true);
-        } else {
-          console.error('API Error:', response.statusText);
-          setRkaData([]);
-          setUseAPI(false);
-        }
+        // Axios returns data directly in response.data
+        setRkaData(response.data);
+        setUseAPI(true);
       } catch (error) {
         console.error('API Error:', error);
         setRkaData([]);

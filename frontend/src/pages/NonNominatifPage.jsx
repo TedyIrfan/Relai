@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, useSearchParams } from 'react-rout
 import { ArrowLeft, Save, Send, FileText, AlertCircle, Plus, X, Link2, Loader2 } from 'lucide-react';
 import useNotification from '../hooks/useNotification';
 import { consoleLog, consoleError, consoleWarn } from '../utils/logger';
+import api from '../services/api';
 
 const NonNominatifPage = () => {
   const { rkaId } = useParams();
@@ -60,26 +61,21 @@ const NonNominatifPage = () => {
         }
 
         consoleLog('Fetching RKA list to find ID:', rkaId);
-        const response = await fetch('http://localhost/api/rka-details', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await api.get('/rka-details');
 
-        if (response.ok) {
-          const data = await response.json();
-          consoleLog('RKA List Response:', data);
+        // Axios returns data directly
+        const data = response.data;
+        consoleLog('RKA List Response:', data);
 
-          // Handle different response structures
-          let rkaArray = [];
-          if (Array.isArray(data)) {
-            rkaArray = data;
-          } else if (data && Array.isArray(data.data)) {
-            rkaArray = data.data;
-          } else if (data && Array.isArray(data.results)) {
-            rkaArray = data.results;
-          }
+        // Handle different response structures
+        let rkaArray = [];
+        if (Array.isArray(data)) {
+          rkaArray = data;
+        } else if (data && Array.isArray(data.data)) {
+          rkaArray = data.data;
+        } else if (data && Array.isArray(data.results)) {
+          rkaArray = data.results;
+        }
 
           // Find RKA by ID
           const rkaDetail = rkaArray.find(rka => rka.id == rkaId);

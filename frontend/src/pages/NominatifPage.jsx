@@ -5,6 +5,7 @@ import NominatifExcelTable from '../components/tables/NominatifExcelTable';
 import { nominatifService } from '../services/nominatifService';
 import useNotification from '../hooks/useNotification';
 import { consoleLog, consoleError, consoleWarn } from '../utils/logger';
+import api from '../services/api';
 
 const NominatifPage = () => {
   const { rkaId } = useParams();
@@ -66,40 +67,32 @@ const NominatifPage = () => {
         }
 
         consoleLog('Fetching RKA list to find ID:', rkaId);
-        const response = await fetch('http://localhost/api/rka-details', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await api.get('/rka-details');
 
-        if (response.ok) {
-          const data = await response.json();
-          consoleLog('RKA List Response:', data);
+        // Axios returns data directly
+        const data = response.data;
+        consoleLog('RKA List Response:', data);
 
-          // Handle different response structures
-          let rkaArray = [];
-          if (Array.isArray(data)) {
-            rkaArray = data;
-          } else if (data && Array.isArray(data.data)) {
-            rkaArray = data.data;
-          } else if (data && Array.isArray(data.results)) {
-            rkaArray = data.results;
-          }
+        // Handle different response structures
+        let rkaArray = [];
+        if (Array.isArray(data)) {
+          rkaArray = data;
+        } else if (data && Array.isArray(data.data)) {
+          rkaArray = data.data;
+        } else if (data && Array.isArray(data.results)) {
+          rkaArray = data.results;
+        }
 
-          // Find RKA by ID
-          const rkaDetail = rkaArray.find(rka => rka.id == rkaId);
+        // Find RKA by ID
+        const rkaDetail = rkaArray.find(rka => rka.id == rkaId);
 
-          if (rkaDetail) {
-            consoleLog('Found RKA:', rkaDetail);
-            setRkaDetail(rkaDetail);
-          } else {
-            consoleError('RKA not found with ID:', rkaId);
-            consoleLog('Available RKA IDs:', rkaArray.map(r => r.id));
-            setError('RKA tidak ditemukan');
-          }
+        if (rkaDetail) {
+          consoleLog('Found RKA:', rkaDetail);
+          setRkaDetail(rkaDetail);
         } else {
-          setError('Gagal memuat data RKA');
+          consoleError('RKA not found with ID:', rkaId);
+          consoleLog('Available RKA IDs:', rkaArray.map(r => r.id));
+          setError('RKA tidak ditemukan');
         }
       } catch (error) {
         setError('Terjadi kesalahan saat memuat data');

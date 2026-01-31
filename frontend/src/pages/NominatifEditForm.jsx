@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search, Edit3, Save, Send, Clock, CheckCircle } from 'lucide-react';
 import useNotification from '../hooks/useNotification';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
+import api from '../services/api';
 
 const NominatifEditForm = () => {
   const { id } = useParams(); // Get nominatif ID from URL
@@ -260,27 +261,21 @@ const NominatifEditForm = () => {
         console.log('🎯 RKA ID set:', rkaId);
 
         // Fetch RKA list
-        const rkaResponse = await fetch('http://localhost/api/rka-details', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const rkaResponse = await api.get('/rka-details');
 
-        if (rkaResponse.ok) {
-          const data = await rkaResponse.json();
-          let rkaArray = [];
+        // Axios returns data directly
+        const data = rkaResponse.data;
+        let rkaArray = [];
 
-          if (Array.isArray(data)) {
-            rkaArray = data;
-          } else if (data?.data && Array.isArray(data.data)) {
-            rkaArray = data.data;
-          }
+        if (Array.isArray(data)) {
+          rkaArray = data;
+        } else if (data?.data && Array.isArray(data.data)) {
+          rkaArray = data.data;
+        }
 
-          if (rkaArray.length > 0) {
-            setRkaList(rkaArray);
-            console.log('✅ RKA List loaded:', rkaArray.length);
-          }
+        if (rkaArray.length > 0) {
+          setRkaList(rkaArray);
+          console.log('✅ RKA List loaded:', rkaArray.length);
         }
 
       } catch (error) {

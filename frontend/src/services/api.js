@@ -5,7 +5,7 @@ import axios from 'axios';
 // Production: /api (relative path for same-domain requests)
 const API_URL = import.meta.env.VITE_API_BASE_URL
   ? `${import.meta.env.VITE_API_BASE_URL}`
-  : (import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:80/api');
+  : (import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:8000/api');
 
 const api = axios.create({
   baseURL: API_URL,

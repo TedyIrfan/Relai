@@ -463,6 +463,131 @@ docker-compose -f docker-compose.prod.yml exec app php artisan db:seed --force
 
 ---
 
+## 🔄 Development ↔ Production Switch
+
+### Development Mode
+
+Untuk coding, testing, dan debugging dengan hot-reload:
+
+```bash
+# Terminal 1 - Backend
+docker compose up -d
+
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+```
+
+**Access:**
+- Frontend: http://localhost:5174
+- Backend API: http://localhost:8000/api
+- Swagger: http://localhost:8000/docs
+- PgAdmin: http://localhost:5050
+- Portainer: http://localhost:9443
+
+**Features:**
+- ✅ Hot reload (edit code → langsung berubah)
+- ✅ Debug mode ON
+- ✅ Detail error messages
+
+---
+
+### Production Mode
+
+Untuk deployment, demo client, atau simulasi production:
+
+```bash
+# 1. Build frontend
+cd frontend && npm run build && cd ..
+
+# 2. Setup production env
+cd backend
+cp .env.prod.example .env
+# Edit .env - Set APP_KEY, passwords!
+
+# 3. Stop development (if running)
+docker compose down
+
+# 4. Start production
+docker-compose -f backend/docker-compose.prod.yml --profile admin up -d
+
+# 5. Run migrations
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate --force
+docker-compose -f backend/docker-compose.prod.yml exec app php artisan db:seed --force
+```
+
+**Access:**
+- Application: http://localhost
+- API: http://localhost/api
+- Swagger: http://localhost/docs
+- Portainer: https://localhost:9443
+
+**Features:**
+- ✅ Single port (80)
+- ✅ Optimized & built
+- ✅ Production-ready
+
+---
+
+### Switch: Development → Production
+
+```bash
+# 1. Stop development
+docker compose down
+
+# 2. Build frontend
+cd frontend && npm run build && cd ..
+
+# 3. Switch env file
+cd backend
+cp .env.prod.example .env
+# Edit .env with production values
+
+# 4. Start production
+docker-compose -f docker-compose.prod.yml --profile admin up -d
+
+# 5. Run migrations
+docker-compose -f docker-compose.prod.yml exec app php artisan migrate --force
+```
+
+---
+
+### Switch: Production → Development
+
+```bash
+# 1. Stop production
+docker-compose -f backend/docker-compose.prod.yml down
+
+# 2. Switch env file
+cd backend
+cp .env.dev.example .env
+# Edit .env with development values
+
+# 3. Start development
+docker compose up -d
+
+# 4. Start frontend
+cd ../frontend && npm run dev
+```
+
+---
+
+### Quick Reference
+
+| | Development | Production |
+|---|---|---|
+| **Command** | `docker compose up` | `docker-compose -f backend/docker-compose.prod.yml up -d` |
+| **Frontend** | `npm run dev` | Built (Nginx) |
+| **Port** | 5174 / 8000 | 80 |
+| **Hot Reload** | ✅ | ❌ |
+| **Debug** | ✅ ON | ❌ OFF |
+| **Database** | `relai_backend` | `relai` |
+| **Env File** | `.env.dev.example` | `.env.prod.example` |
+| **Edit Code** | Real-time | Rebuild needed |
+
+---
+
+---
+
 ## 📖 Documentation
 
 | Dokumentasi | Deskripsi |

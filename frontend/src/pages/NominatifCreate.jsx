@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, ChevronDown, AlertCircle, ArrowLeft, Search } from 'lucide-react';
+import api from '../services/api';
 
 const NominatifCreate = () => {
   const navigate = useNavigate();
@@ -32,36 +33,13 @@ const NominatifCreate = () => {
     const fetchRKAList = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost/api/rka-details');
+        const response = await api.get('/rka-details');
 
-        if (response.ok) {
-          const data = await response.json();
-          let rkaArray = [];
-
-          if (Array.isArray(data)) {
-            rkaArray = data;
-          } else if (data && Array.isArray(data.data)) {
-            rkaArray = data.data;
-          } else if (data && Array.isArray(data.results)) {
-            rkaArray = data.results;
-          } else if (data && Array.isArray(data.rka_details)) {
-            rkaArray = data.rka_details;
-          } else if (data && typeof data === 'object') {
-            const possibleArrays = Object.values(data).filter(val => Array.isArray(val));
-            if (possibleArrays.length > 0) {
-              rkaArray = possibleArrays[0];
-            }
-          }
-
-          if (Array.isArray(rkaArray)) {
-            setRkaList(rkaArray);
-          } else {
-            setRkaList([]);
-          }
-        } else {
-          setRkaList([]);
-        }
+        // Axios returns data directly in response.data
+        const data = response.data;
+        setRkaList(Array.isArray(data) ? data : []);
       } catch (error) {
+        console.error('Error fetching RKA list:', error);
         setRkaList([]);
       } finally {
         setLoading(false);
