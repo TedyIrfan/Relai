@@ -156,16 +156,10 @@ const NonNominatifPage = () => {
         return;
       }
 
-      // TODO: Update API endpoint when backend is ready
-      const response = await fetch(`http://localhost/api/non-nominatifs/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.get(`/non-nominatifs/${id}`);
+      const data = response.data;
 
-      if (response.ok) {
-        const data = await response.json();
+      if (true) {
         consoleLog('✅ Data loaded successfully:', data);
         setNonNominatif(data);
 
@@ -255,24 +249,20 @@ const NonNominatifPage = () => {
         evidences: evidenceList
       };
 
-      // TODO: Update API endpoint when backend is ready
-      const url = isEditMode
-        ? `http://localhost/api/non-nominatifs/${specificNominatifId}`
-        : 'http://localhost/api/non-nominatifs';
+      const endpoint = isEditMode
+        ? `/non-nominatifs/${specificNominatifId}`
+        : '/non-nominatifs';
 
-      const method = isEditMode ? 'PUT' : 'POST';
+      let response;
+      if (isEditMode) {
+        response = await api.put(endpoint, payload);
+      } else {
+        response = await api.post(endpoint, payload);
+      }
 
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      const data = response.data;
 
-      if (response.ok) {
-        const data = await response.json();
+      if (true) {
         showSuccess('Non-nominatif berhasil disimpan sebagai draft');
 
         // Redirect to list after save
@@ -327,20 +317,10 @@ const NonNominatifPage = () => {
       };
 
       // TODO: Update API endpoint when backend is ready
-      const url = isEditMode
-        ? `http://localhost/api/non-nominatifs/${specificNominatifId}/submit`
-        : `http://localhost/api/non-nominatifs/${specificNominatifId}/submit`;
+      const endpoint = `/non-nominatifs/${specificNominatifId}/submit`;
+      const response = await api.post(endpoint, payload);
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
+      if (true) {
         showSuccess('Non-nominatif berhasil dikirim');
 
         // Redirect to list after submit

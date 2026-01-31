@@ -1,11 +1,18 @@
 import axios from 'axios';
 
 // Use environment variable for API base URL
-// Development: http://localhost:80/api
+// Development: http://localhost:8000/api
 // Production: /api (relative path for same-domain requests)
+
+// Debug: Log env variables
+console.log('🔍 MODE:', import.meta.env.MODE);
+console.log('🔍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+
 const API_URL = import.meta.env.VITE_API_BASE_URL
   ? `${import.meta.env.VITE_API_BASE_URL}`
   : (import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:8000/api');
+
+console.log('🔍 Final API_URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,

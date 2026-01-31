@@ -5,6 +5,7 @@ import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
 import nonNominatifService from '../services/nonNominatifService';
 import { consoleLog, consoleError, consoleWarn } from '../utils/logger';
+import api from '../services/api';
 
 const NonNominatif = () => {
   const navigate = useNavigate();
@@ -158,15 +159,9 @@ const NonNominatif = () => {
       // Close dialog immediately for better UX
       handleCloseDialog();
 
-      const response = await fetch(`http://localhost/api/non-nominatifs/${deleteId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      await api.delete(`/non-nominatifs/${deleteId}`);
 
-      if (response.ok) {
+      if (true) {
         // Optimized state update - find and remove specific item
         setNonNominatifs(prevNonNominatifs => {
           const index = prevNonNominatifs.findIndex(nom => nom.id === deleteId);

@@ -147,31 +147,19 @@ const NominatifPage = () => {
       if (specificNominatifId && specificNominatifId !== 'undefined') {
         consoleLog(`🔍 EDIT MODE: Fetching specific nominatif ID: ${specificNominatifId}`);
         try {
-          const response = await fetch(`http://localhost/api/nominatifs-new/${specificNominatifId}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const result = await api.get(`/nominatifs-new/${specificNominatifId}`);
+          // Handle response structure
+          const data = result.data?.data?.nominatif || result.data?.data;
 
-          if (response.ok) {
-            const result = await response.json();
-            // Handle response structure
-            const data = result.data?.nominatif || result.data;
-
-            if (data && data.id) {
-              consoleLog('✅ Data loaded successfully:', data);
-              setNominatif(data);
-              setIsEditMode(true);
-              // Set viewMode based on status OR if coming from All Status Nominatif URL parameter
-              setViewMode(data.status === 'submitted' || isViewModeFromURL);
-              await loadNominatifDetailRows(data.id);
-            } else {
-              throw new Error('Data nominatif tidak valid atau kosong');
-            }
+          if (data && data.id) {
+            consoleLog('✅ Data loaded successfully:', data);
+            setNominatif(data);
+            setIsEditMode(true);
+            // Set viewMode based on status OR if coming from All Status Nominatif URL parameter
+            setViewMode(data.status === 'submitted' || isViewModeFromURL);
+            await loadNominatifDetailRows(data.id);
           } else {
-            const errText = await response.text();
-            throw new Error(`Gagal memuat data nominatif (Status: ${response.status})`);
+            throw new Error('Data nominatif tidak valid atau kosong');
           }
         } catch (err) {
           consoleError('❌ Fatal Error loading nominatif:', err);
@@ -200,15 +188,8 @@ const NominatifPage = () => {
     const fetchNominatifData = async () => {
       try {
         const token = getToken();
-        const response = await fetch(`http://localhost/api/nominatifs-new`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
+        const response = await api.get('/nominatifs-new');
+        const data = response.data;
           consoleLog('API Response Structure:', data);
           consoleLog('Data type:', typeof data);
           consoleLog('Data keys:', Object.keys(data));
@@ -283,7 +264,6 @@ const NominatifPage = () => {
 
           consoleLog('Final filtered data:', filteredData);
           setNominatifData(filteredData);
-        }
       } catch (error) {
         consoleError('Error fetching nominatif data:', error);
       }
@@ -299,16 +279,8 @@ const NominatifPage = () => {
   // Load existing detail rows for edit mode
   const loadNominatifDetailRows = async (nominatifId) => {
     try {
-      const token = getToken();
-      const response = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const detailsData = await response.json();
+      const response = await api.get(`/nominatifs/${nominatifId}/details`);
+      const detailsData = response.data;
         consoleLog('📋 Raw API response details:', detailsData);
 
         if (detailsData.data && detailsData.data.length > 0) {
@@ -324,16 +296,11 @@ const NominatifPage = () => {
         const tableData = await Promise.all(
           detailsData.data.map(async (detail) => {
             // Get biaya data for this detail
-            const biayaResponse = await fetch(`http://localhost/api/nominatifs/details/${detail.id}/biaya`, {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            });
+            const biayaResponse = await api.get(`/nominatifs/details/${detail.id}/biaya`);
 
             let biayaData = {};
-            if (biayaResponse.ok) {
-              const biayaResult = await biayaResponse.json();
+            if (biayaResponse.status === 200) {
+              const biayaResult = biayaResponse.data;
               consoleLog(`🔍 DEBUG: Biaya data for detail ${detail.id}:`, biayaResult);
               biayaData = biayaResult.data || {};
               consoleLog(`🔍 DEBUG: Extracted biayaData:`, biayaData);
@@ -440,7 +407,6 @@ const NominatifPage = () => {
         }
 
         setNominatifData(tableData);
-      }
     } catch (error) {
       consoleError('Error loading detail rows:', error);
     }
@@ -489,47 +455,25 @@ const NominatifPage = () => {
   
       // Conditional API call based on SAFEY NET logic
       const apiMethod = isRealEditMode ? 'PUT' : 'POST';
-      let apiUrl = isRealEditMode
-        ? `http://localhost/api/nominatifs-new/${activeNominatifId}`  // Edit existing
-        : 'http://localhost/api/nominatifs-new'; // Create new
-
-      // CRITICAL FIX: Prevent "undefined" in URL
-      if (apiUrl.includes('undefined')) {
-        consoleError('🚨 CRITICAL: Attempted to send request to undefined URL:', apiUrl);
-        consoleLog('Dump state:', { isEditMode, nominatif, activeNominatifId });
-        
-        if (isRealEditMode && activeNominatifId) {
-             // Force fix URL if ID exists
-             apiUrl = `http://localhost/api/nominatifs-new/${activeNominatifId}`;
-             consoleLog('✅ URL fixed manually:', apiUrl);
-        } else {
-             throw new Error('Terjadi kesalahan sistem: ID Nominatif hilang. Silakan refresh halaman.');
-        }
-      }
-
-      consoleLog(`📡 API ${apiMethod} to: ${apiUrl}`);
+      const apiEndpoint = isRealEditMode
+        ? `/nominatifs-new/${activeNominatifId}`  // Edit existing
+        : '/nominatifs-new'; // Create new
 
       // Validate ID before PUT
       if (apiMethod === 'PUT' && !activeNominatifId) {
         throw new Error('Gagal update: ID Nominatif tidak ditemukan dalam state maupun URL');
       }
 
-      const nominatifResponse = await fetch(apiUrl, {
-        method: apiMethod,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(nominatifPayload)
-      });
+      consoleLog(`📡 API ${apiMethod} to: ${apiEndpoint}`);
 
-      if (!nominatifResponse.ok) {
-        const errorText = await nominatifResponse.text();
-        consoleError(`Nominatif ${apiMethod} failed:`, errorText);
-        throw new Error(`Gagal ${isEditMode ? 'update' : 'membuat'} nominatif: ${nominatifResponse.status} - ${errorText}`);
+      let nominatifResponse;
+      if (apiMethod === 'PUT') {
+        nominatifResponse = await api.put(apiEndpoint, nominatifPayload);
+      } else {
+        nominatifResponse = await api.post(apiEndpoint, nominatifPayload);
       }
 
-      const nominatifResult = await nominatifResponse.json();
+      const nominatifResult = nominatifResponse.data;
       const nominatifId = nominatifResult.data.id;
     
       // 🔥 COLLECT EVIDENCE FROM INPUT FIELDS - Get current evidence data
@@ -601,29 +545,12 @@ const NominatifPage = () => {
         consoleLog('🔍 VALIDATION STEP: Validating draft data...');
 
         // Step 1: Validate draft data (no database changes)
-        const validateResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/validate`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            rows: updatedDetailRowsData,
-            deleted_rows: tableRef.current?.getDeletedRows() || [] // 🔥 SEND DELETED ROWS TO BACKEND
-          })
+        const validateResponse = await api.post(`/nominatifs/${nominatifId}/details/validate`, {
+          rows: updatedDetailRowsData,
+          deleted_rows: tableRef.current?.getDeletedRows() || []
         });
 
-        if (!validateResponse.ok) {
-          const errorText = await validateResponse.text();
-          consoleError('❌ Validation FAILED:', {
-            status: validateResponse.status,
-            statusText: validateResponse.statusText,
-            errorText: errorText
-          });
-          throw new Error(`Gagal validasi data: ${validateResponse.status} - ${errorText}`);
-        }
-
-        const validationResult = await validateResponse.json();
+        const validationResult = validateResponse.data;
         consoleLog('✅ Validation result:', validationResult);
 
         if (!validationResult.success) {
@@ -634,29 +561,20 @@ const NominatifPage = () => {
 
         // Step 2: Execute draft data (actual database changes)
         consoleLog('💾 EXECUTION STEP: Saving validated data to database...');
-        const executeResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/execute`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            rows: updatedDetailRowsData,
-            deleted_rows: tableRef.current?.getDeletedRows() || [] // 🔥 SEND DELETED ROWS TO BACKEND
-          })
+        const executeResponse = await api.post(`/nominatifs/${nominatifId}/details/execute`, {
+          rows: updatedDetailRowsData,
+          deleted_rows: tableRef.current?.getDeletedRows() || []
         });
 
-        if (!executeResponse.ok) {
-          const errorText = await executeResponse.text();
+        if (executeResponse.status !== 200) {
           consoleError('❌ Execution FAILED:', {
             status: executeResponse.status,
-            statusText: executeResponse.statusText,
-            errorText: errorText
+            data: executeResponse.data
           });
-          throw new Error(`Gagal menyimpan data: ${executeResponse.status} - ${errorText}`);
+          throw new Error(`Gagal menyimpan data: ${executeResponse.status}`);
         }
 
-        const executeResult = await executeResponse.json();
+        const executeResult = executeResponse.data;
         consoleLog('✅ Execution result:', executeResult);
 
         if (!executeResult.success) {
@@ -670,22 +588,8 @@ const NominatifPage = () => {
         // CREATE MODE: Create new detail rows
         consoleLog('CREATE MODE: Creating new detail rows');
 
-        const bulkDetailResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/bulk`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ rows: detailRowsData })
-        });
-
-        if (!bulkDetailResponse.ok) {
-          const errorText = await bulkDetailResponse.text();
-          consoleError('Bulk detail creation failed:', errorText);
-          throw new Error(`Gagal membuat detail rows: ${bulkDetailResponse.status} - ${errorText}`);
-        }
-
-        const detailResult = await bulkDetailResponse.json();
+        const bulkDetailResponse = await api.post(`/nominatifs/${nominatifId}/details/bulk`, { rows: detailRowsData });
+        const detailResult = bulkDetailResponse.data;
         createdDetailRows = detailResult.data;
       }
 
@@ -804,23 +708,14 @@ const NominatifPage = () => {
                   nominatif_detail_row_id: detailRowId,
                 };
 
-                const token = getToken();
-                const evidenceResponse = await fetch(`http://localhost/api/nominatifs/${nominatifId}/details/${detailRowId}/evidence`, {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(evidenceData)
-                });
+                const evidenceResponse = await api.post(`/nominatifs/${nominatifId}/details/${detailRowId}/evidence`, evidenceData);
 
-                if (!evidenceResponse.ok) {
-                  const errorText = await evidenceResponse.text();
-                  consoleError(`Evidence save failed for row ${index}, evidence ${fileIndex + 1}:`, errorText);
+                if (evidenceResponse.status !== 200) {
+                  consoleError(`Evidence save failed for row ${index}, evidence ${fileIndex + 1}:`, evidenceResponse.statusText);
                   return null;
                 }
 
-                const result = await evidenceResponse.json();
+                const result = evidenceResponse.data;
                 consoleLog(`✅ Evidence ${fileIndex + 1} saved successfully for row ${index}:`, result);
                 return result;
               }
@@ -887,18 +782,8 @@ const NominatifPage = () => {
         consoleLog('📤 Submitting existing nominatif ID:', currentNominatifId);
       } else {
         // Create mode: get the latest nominatif with current RKA ID
-        const nominatifListResponse = await fetch('http://localhost/api/nominatifs-new', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!nominatifListResponse.ok) {
-          throw new Error('Gagal mengambil data nominatif untuk submit');
-        }
-
-        const nominatifList = await nominatifListResponse.json();
+        const nominatifListResponse = await api.get('/nominatifs-new');
+        const nominatifList = nominatifListResponse.data;
         const dataArray = Array.isArray(nominatifList) ? nominatifList : nominatifList.data || [];
 
         // Find the nominatif with current RKA ID that's still draft
@@ -913,44 +798,29 @@ const NominatifPage = () => {
       }
 
       // Then submit
-      const response = await fetch(`http://localhost/api/nominatifs-new/${currentNominatifId}/submit`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await api.post(`/nominatifs-new/${currentNominatifId}/submit`);
+      const result = response.data;
+
+      // Show success notification with details
+      showSuccess('Nominatif berhasil dikirim!', {
+        duration: 3000
       });
 
-      if (response.ok) {
-        const result = await response.json();
-
-        // Show success notification with details
-        showSuccess('Nominatif berhasil dikirim!', {
-          duration: 3000
-        });
-
-        // Show budget details in notification
-        if (result.anggaran_updated) {
-          showSuccess(
-            `SP2D: ${formatRupiah(result.anggaran_updated.sp2d_amount)} | ` +
-            `Tersisa: ${formatRupiah(result.anggaran_updated.rka_anggaran_tersisa)}`,
-            { duration: 5000 }
-          );
-        }
-
-        // Auto refresh dan redirect
-        setTimeout(() => {
-          navigate('/nominatif');
-          // Force refresh RKA data by triggering a custom event
-          window.dispatchEvent(new CustomEvent('rkaDataUpdated'));
-        }, 2000);
-      } else {
-        const errorText = await response.text();
-        showError(`Gagal mengirim nominatif: ${response.status} - ${errorText}`, {
-          duration: 0 // Don't auto-close error notifications
-        });
-        throw new Error(`Gagal mengirim nominatif: ${response.status} - ${errorText}`);
+      // Show budget details in notification
+      if (result.anggaran_updated) {
+        showSuccess(
+          `SP2D: ${formatRupiah(result.anggaran_updated.sp2d_amount)} | ` +
+          `Tersisa: ${formatRupiah(result.anggaran_updated.rka_anggaran_tersisa)}`,
+          { duration: 5000 }
+        );
       }
+
+      // Auto refresh dan redirect
+      setTimeout(() => {
+        navigate('/nominatif');
+        // Force refresh RKA data by triggering a custom event
+        window.dispatchEvent(new CustomEvent('rkaDataUpdated'));
+      }, 2000);
     } catch (error) {
       setError(error.message || 'Gagal mengirim data');
       consoleError('❌ Submit error:', error);

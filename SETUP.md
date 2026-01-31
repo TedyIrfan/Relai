@@ -15,10 +15,10 @@
 
 ## 🎯 Pilih Mode
 
-| Mode | Untuk | Hot Reload | Debug | Port |
-|------|-------|------------|-------|------|
-| **Development** | Coding, testing, debug | ✅ | ✅ | 5174 / 8000 |
-| **Production** | Deployment, demo client | ❌ | ❌ | 80 |
+| Mode            | Untuk                   | Hot Reload | Debug | Port        |
+| --------------- | ----------------------- | ---------- | ----- | ----------- |
+| **Development** | Coding, testing, debug  | ✅         | ✅    | 5174 / 8000 |
+| **Production**  | Deployment, demo client | ❌         | ❌    | 80          |
 
 ---
 
@@ -46,6 +46,7 @@ nano .env  # optional
 ```
 
 **Default .env untuk development:**
+
 ```env
 APP_ENV=local
 APP_DEBUG=true
@@ -65,6 +66,7 @@ docker compose ps
 ```
 
 **Expected output:**
+
 ```
 NAME                  STATUS          PORTS
 relai-app-dev         Up              9000/tcp
@@ -93,19 +95,19 @@ npm run dev
 
 ```bash
 # Dari root directory
-docker compose exec app php artisan migrate --force
-docker compose exec app php artisan db:seed --force
+docker compose exec app php artisan migrate
+docker compose exec app php artisan db:seed
 ```
 
 ### 6. Akses Application
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:5174 |
-| Backend API | http://localhost:8000/api |
+| Service      | URL                        |
+| ------------ | -------------------------- |
+| Frontend     | http://localhost:5174      |
+| Backend API  | http://localhost:8000/api  |
 | Swagger Docs | http://localhost:8000/docs |
-| PgAdmin | http://localhost:5050 |
-| Portainer | http://localhost:9443 |
+| PgAdmin      | http://localhost:5050      |
+| Portainer    | http://localhost:9443      |
 
 ### 7. Login Credentials
 
@@ -219,6 +221,7 @@ docker-compose -f docker-compose.prod.yml ps
 ```
 
 **Expected output:**
+
 ```
 NAME                  STATUS              PORTS
 relai-app-prod        Up (healthy)        9000/tcp
@@ -243,13 +246,13 @@ docker-compose -f docker-compose.prod.yml exec app php artisan migrate:fresh --s
 
 ### 7. Akses Application
 
-| Service | URL |
-|---------|-----|
-| Application (Frontend + Backend) | http://localhost |
-| API | http://localhost/api |
-| Swagger Docs | http://localhost/docs |
-| Portainer | https://localhost:9443 |
-| PgAdmin | http://localhost:5050 |
+| Service                          | URL                    |
+| -------------------------------- | ---------------------- |
+| Application (Frontend + Backend) | http://localhost       |
+| API                              | http://localhost/api   |
+| Swagger Docs                     | http://localhost/docs  |
+| Portainer                        | https://localhost:9443 |
+| PgAdmin                          | http://localhost:5050  |
 
 ---
 
@@ -301,22 +304,23 @@ cd ../frontend && npm run dev
 
 ### Development vs Production
 
-| | Development | Production |
-|---|---|---|
-| **Command** | `docker compose up` | `docker-compose -f backend/docker-compose.prod.yml up -d` |
-| **Frontend** | `npm run dev` | Built (`npm run build`) |
-| **Port** | 5174 / 8000 | 80 |
-| **Hot Reload** | ✅ Yes | ❌ No |
-| **Debug Mode** | ✅ ON | ❌ OFF |
-| **Database** | `relai_backend` | `relai` |
-| **DB User** | `sail` | `postgres` |
-| **Env File** | `.env.dev.example` | `.env.prod.example` |
-| **Terminal** | 2 (backend + frontend) | 1 |
-| **Edit Code** | Real-time | Rebuild needed |
+|                | Development            | Production                                                |
+| -------------- | ---------------------- | --------------------------------------------------------- |
+| **Command**    | `docker compose up`    | `docker-compose -f backend/docker-compose.prod.yml up -d` |
+| **Frontend**   | `npm run dev`          | Built (`npm run build`)                                   |
+| **Port**       | 5174 / 8000            | 80                                                        |
+| **Hot Reload** | ✅ Yes                 | ❌ No                                                     |
+| **Debug Mode** | ✅ ON                  | ❌ OFF                                                    |
+| **Database**   | `relai_backend`        | `relai`                                                   |
+| **DB User**    | `sail`                 | `postgres`                                                |
+| **Env File**   | `.env.dev.example`     | `.env.prod.example`                                       |
+| **Terminal**   | 2 (backend + frontend) | 1                                                         |
+| **Edit Code**  | Real-time              | Rebuild needed                                            |
 
 ### Commands Reference
 
 **Development:**
+
 ```bash
 # Start
 docker compose up -d
@@ -333,6 +337,7 @@ docker compose exec app php artisan migrate
 ```
 
 **Production:**
+
 ```bash
 # Start
 docker-compose -f backend/docker-compose.prod.yml --profile admin up -d
@@ -354,6 +359,7 @@ docker-compose -f backend/docker-compose.prod.yml exec app php artisan migrate -
 ### Port already in use
 
 **Development (port 8000):**
+
 ```bash
 # Windows
 netstat -ano | findstr :8000
@@ -365,6 +371,7 @@ sudo kill -9 {PID}
 ```
 
 **Production (port 80):**
+
 ```bash
 # Windows
 netstat -ano | findstr :80
@@ -387,11 +394,13 @@ npm run build
 ### Database connection error
 
 **Development:**
+
 ```bash
 docker compose restart postgres
 ```
 
 **Production:**
+
 ```bash
 docker-compose -f backend/docker-compose.prod.yml restart postgres
 ```
@@ -399,11 +408,13 @@ docker-compose -f backend/docker-compose.prod.yml restart postgres
 ### CORS error (Development only)
 
 Pastikan di `frontend/src/services/api.js`:
+
 ```javascript
-'http://localhost:8000/api'  // Port 8000, bukan 80
+"http://localhost:8000/api"; // Port 8000, bukan 80
 ```
 
 Dan di `backend/config/cors.php`:
+
 ```php
 'allowed_origins' => ['http://localhost:5173', 'http://localhost:5174']
 ```
@@ -423,12 +434,12 @@ Dan di `backend/config/cors.php`:
 
 ## 📚 Related Documentation
 
-| Dokumentasi | Deskripsi |
-|-------------|-----------|
-| [README.md](./README.md) | Main project documentation |
-| [README-CICD.md](./README-CICD.md) | CI/CD pipeline documentation |
-| [backend/README.md](./backend/README.md) | Backend API documentation |
+| Dokumentasi                              | Deskripsi                    |
+| ---------------------------------------- | ---------------------------- |
+| [README.md](./README.md)                 | Main project documentation   |
+| [README-CICD.md](./README-CICD.md)       | CI/CD pipeline documentation |
+| [backend/README.md](./backend/README.md) | Backend API documentation    |
 
 ---
 
-*Last updated: 2026-01-31*
+_Last updated: 2026-01-31_

@@ -4,6 +4,7 @@ import { FileText, Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Eye } from 
 import Notifikasi from '../components/Notifikasi';
 import KonfirmasiDialog from '../components/KonfirmasiDialog';
 import { consoleError } from '../utils/logger';
+import api from '../services/api';
 
 const Nominatif = () => {
   const navigate = useNavigate();
@@ -36,15 +37,10 @@ const Nominatif = () => {
           return;
         }
 
-        const response = await fetch('http://localhost/api/nominatifs-new', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await api.get('/nominatifs-new');
+        const data = response.data;
 
-        if (response.ok) {
-          const data = await response.json();
+        if (true) {
 
           // Handle different response structures
           let nominatifArray = [];
@@ -75,13 +71,10 @@ const Nominatif = () => {
           if (Array.isArray(nominatifArray)) {
             setNominatifs(nominatifArray);
             setIsDataLoaded(true);
-            } else {
-              setNominatifs([]);
+          } else {
+            setNominatifs([]);
             setIsDataLoaded(true);
           }
-        } else {
-          consoleError('API Error:', response.status, response.statusText);
-          setNominatifs([]);
         }
       } catch (error) {
         consoleError('Error fetching nominatifs:', error);
@@ -163,15 +156,9 @@ const Nominatif = () => {
       // Close dialog immediately for better UX
       handleCloseDialog();
 
-      const response = await fetch(`http://localhost/api/nominatifs-new/${deleteId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      await api.delete(`/nominatifs-new/${deleteId}`);
 
-      if (response.ok) {
+      if (true) {
         // Optimized state update - find and remove specific item
         setNominatifs(prevNominatifs => {
           const index = prevNominatifs.findIndex(nom => nom.id === deleteId);
@@ -233,16 +220,9 @@ const Nominatif = () => {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost/api/nominatifs-new/${nominatifId}/submit`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      await api.post(`/nominatifs-new/${nominatifId}/submit`);
 
-      if (response.ok) {
+      if (true) {
         // Tampilkan notifikasi sukses
         if (window.tampilkanNotifikasi) {
           window.tampilkanNotifikasi('Nominatif berhasil dikirim', 'success');

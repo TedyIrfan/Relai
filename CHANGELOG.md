@@ -4,7 +4,7 @@ History perkembangan project RelAI dari awal sampai sekarang.
 
 ---
 
-## 🎯 Project Completion Status - December 2024
+## 🎯 Project Completion Status - December 2025
 
 ### ✅ COMPLETED SYSTEMS (98%)
 
@@ -91,31 +91,26 @@ History perkembangan project RelAI dari awal sampai sekarang.
 ##### ✅ Backend Issues - COMPLETED
 
 - **✅ NominatifDetailRow Edit Not Working**: Fixed!
-
   - Issue: Edit data (Nama, Golongan, Jabatan, dll) tidak tersimpan di database
   - Solution: Model $fillable sudah diperbaiki, Controller update method sudah fix
   - Status: **COMPLETED** - Edit functionality working
 
 - **✅ Duplicate Field Names**: Fixed!
-
   - Issue: Field `nama` dan `person_name` duplikat di tabel
   - Solution: Migration created untuk hapus field `nama`
   - Status: **COMPLETED** - Migration ready to run
 
 - **✅ Evidence System**: Fixed!
-
   - Issue: Saat ini upload gambar, butuhnya Google Drive links dengan preview
   - Solution: Model dan Controller updated untuk Google Drive URL dengan preview functionality
   - Status: **COMPLETED** - Evidence system uses Google Drive with preview
 
 - **✅ Auto-Sort Missing**: Fixed!
-
   - Issue: Saat save draft, data tidak auto-sort by Nama lengkap
   - Solution: Auto-sort by person_name sudah diimplement di controller
   - Status: **COMPLETED** - Auto-sort functionality added
 
 - **✅ Automatic Sync Between Nominatif and RKA**: Fixed!
-
   - Issue: Edit biaya rows di nominatif tidak otomatis update RKA table
   - Solution: Fixed race condition di NominatifBiayaRowController dengan real-time calculation
   - Status: **COMPLETED** - RKA table now auto-syncs with nominatif edits
@@ -227,29 +222,24 @@ Password: eselon1
 #### Backend Fixes Needed
 
 1. **Field Name Synchronization**
-
    - Fix `transport_taksi_pergi_pagu` vs `transportasi_taksi_pergi_pagu` mismatch
    - Enable proper total calculations (currently showing 0.00)
 
 2. **Route Configuration**
-
    - Fix POST/DELETE operations returning Laravel welcome page
    - Enable create/delete detail rows functionality
 
 3. **Calculation Fine-tuning**
-
    - Adjust manual calculation values for accurate results
    - Verify all 21 calculation formulas
 
 #### Frontend Improvements
 
 1. **Penginapan First Save Fix**
-
    - Fix first time save draft not storing penginapan data
    - Ensure nominatifId availability during initial creation
 
 2. **Permission Management**
-
    - Resolve 403 Unauthorized errors on delete operations
    - Implement proper user ownership validation
 
@@ -263,9 +253,9 @@ Password: eselon1
 
 ---
 
-## 🔧 Bug Fixes December 2024 - 100% COMPLETE
+## 🔧 Bug Fixes December 2025 - 100% COMPLETE
 
-### Major Bug Fixes (December 2024):
+### Major Bug Fixes (December 2025):
 
 **✅ Evidence Duplication Bug**
 
@@ -338,7 +328,7 @@ php artisan migrate
 
 ---
 
-## 🔧 Bug Fixes December 13, 2024 - 100% COMPLETE
+## 🔧 Bug Fixes December 13, 2025 - 100% COMPLETE
 
 ### Major UI/UX Improvements & New Features:
 
@@ -418,7 +408,7 @@ php artisan migrate
 
 ---
 
-## 🆕 NON-NOMINATIF SYSTEM - DECEMBER 2024
+## 🆕 NON-NOMINATIF SYSTEM - DECEMBER 2025
 
 ### 📊 Non-Nominatif Overview
 
@@ -717,7 +707,7 @@ CREATE TABLE non_nominatifs (
 - **Optimized Performance**: Single API calls dan reduced notification overhead
 - **Improved UX**: Redirect langsung ke list dengan notif muncul di halaman tujuan
 
-#### 🔧 Recent Enhancements (December 2024)
+#### 🔧 Recent Enhancements (December 2025)
 
 - **Popup Konfirmasi Modern**: Mengganti window.confirm dengan KonfirmasiDialog yang lebih bagus
 - **Tombol Konsistensi**: "Perbarui" → "Simpan Draft", "Perbarui dan Kirim" → "Submit"
@@ -807,4 +797,33 @@ _Status: **PRODUCTION READY (100%)**_
 
 ---
 
-*Last updated: January 30, 2026*
+---
+
+## 🔧 Bug Fixes January 31, 2026 - 100% COMPLETE
+
+### Docker Build & Development Environment Fixes
+
+**✅ Docker Build Context Error**
+
+- **Issue**: `docker compose build` failed with "invalid file request public/storage"
+- **Solution**: Added `public/storage` to `.dockerignore` (symlink tidak support di Docker Windows)
+- **Status**: **COMPLETED** - Docker build sekarang berhasil
+- **Files Modified**: `backend/.dockerignore`
+
+**✅ Nominatif Edit Mode - Axios Response Error**
+
+- **Issue**: Error "executeResponse.json is not a function" saat simpan draft di edit mode
+- **Root Cause**: `api.post()` pakai axios, bukan fetch. Axios tidak punya method `.json()`
+- **Solution**: Ganti `await executeResponse.json()` dengan `executeResponse.data` dan hapus `.text()` call
+- **Status**: **COMPLETED** - Simpan draft di edit mode sekarang working
+- **Files Modified**: `frontend/src/pages/NominatifPage.jsx:569-579`
+
+**✅ Frontend Dependency Clean Install**
+
+- **Issue**: "this.aallowInAnd is not a function" error saat `npm run dev`
+- **Solution**: Clean install `node_modules` dan `package-lock.json`
+- **Status**: **COMPLETED** - Frontend dev server running normal
+
+---
+
+_Last updated: January 31, 2026_

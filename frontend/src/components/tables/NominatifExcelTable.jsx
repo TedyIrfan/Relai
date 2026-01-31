@@ -1,6 +1,7 @@
 import React, { useState, useRef, forwardRef } from "react";
 import { Plus, Trash2, Save, Send, CheckCircle, Search } from "lucide-react";
 import SBMReferensiModal from "../modals/SBMReferensiModal";
+import api from "../../services/api";
 
 // Global CSS untuk menghilangkan arrow buttons dari currency inputs
 const globalStyles = `
@@ -878,18 +879,9 @@ const NominatifExcelTable = forwardRef(
       // 🔥 DISABLED: Delete each marked row from database - handled by executeDraft
       for (const rowId of deletedRows) {
         try {
-          const response = await fetch(
-            `http://localhost/api/nominatifs/${nominatifId}/details/${rowId}`,
-            {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          await api.delete(`/nominatifs/${nominatifId}/details/${rowId}`);
 
-          if (response.ok) {
+          if (true) {
             console.log(`✅ Successfully deleted row ${rowId} from database`);
           } else if (response.status === 404) {
             console.log(

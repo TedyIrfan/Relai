@@ -97,30 +97,18 @@ const NominatifEditForm = () => {
     try {
       setSaving(true);
 
-      const response = await fetch(`http://localhost/api/nominatifs-new/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${getToken()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          deskripsi_perjalanan_dinas: formData.deskripsiPerjalanan,
-          tanggal_mulai: formData.tanggalMulai,
-          tanggal_selesai: formData.tanggalSelesai,
-          rka_detail_id: selectedRKA
-        })
+      const response = await api.put(`/nominatifs-new/${id}`, {
+        deskripsi_perjalanan_dinas: formData.deskripsiPerjalanan,
+        tanggal_mulai: formData.tanggalMulai,
+        tanggal_selesai: formData.tanggalSelesai,
+        rka_detail_id: selectedRKA
       });
 
-      if (response.ok) {
-        showSuccess('Draft berhasil disimpan!');
-        // Delay 1.5 detik agar notifikasi terbaca
-        setTimeout(() => {
-          navigate('/nominatif');
-        }, 1500);
-      } else {
-        const errorData = await response.json();
-        showError(errorData.message || 'Gagal menyimpan draft');
-      }
+      showSuccess('Draft berhasil disimpan!');
+      // Delay 1.5 detik agar notifikasi terbaca
+      setTimeout(() => {
+        navigate('/nominatif');
+      }, 1500);
     } catch (error) {
       showError('Terjadi kesalahan saat menyimpan draft');
     } finally {
@@ -149,31 +137,19 @@ const NominatifEditForm = () => {
 
     try {
       // Save dulu, lalu submit
-      const response = await fetch(`http://localhost/api/nominatifs-new/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${getToken()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          deskripsi_perjalanan_dinas: formData.deskripsiPerjalanan,
-          tanggal_mulai: formData.tanggalMulai,
-          tanggal_selesai: formData.tanggalSelesai,
-          rka_detail_id: selectedRKA,
-          status: 'submitted'
-        })
+      const response = await api.put(`/nominatifs-new/${id}`, {
+        deskripsi_perjalanan_dinas: formData.deskripsiPerjalanan,
+        tanggal_mulai: formData.tanggalMulai,
+        tanggal_selesai: formData.tanggalSelesai,
+        rka_detail_id: selectedRKA,
+        status: 'submitted'
       });
 
-      if (response.ok) {
-        showSuccess('Nominatif berhasil dikirim!');
-        // Delay 1.5 detik agar notifikasi terbaca
-        setTimeout(() => {
-          navigate('/nominatif');
-        }, 1500);
-      } else {
-        const errorData = await response.json();
-        showError(errorData.message || 'Gagal mengirim nominatif');
-      }
+      showSuccess('Nominatif berhasil dikirim!');
+      // Delay 1.5 detik agar notifikasi terbaca
+      setTimeout(() => {
+        navigate('/nominatif');
+      }, 1500);
     } catch (error) {
       showError('Terjadi kesalahan saat mengirim nominatif');
     } finally {
@@ -206,23 +182,8 @@ const NominatifEditForm = () => {
         }
 
         // Step 1: Fetch existing nominatif data
-        console.log('📡 Fetching from:', `http://localhost/api/nominatifs-new/${id}`);
-        const nominatifResponse = await fetch(`http://localhost/api/nominatifs-new/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        console.log('📡 Response status:', nominatifResponse.status);
-
-        if (!nominatifResponse.ok) {
-          const errorText = await nominatifResponse.text();
-          console.error('❌ API Error:', nominatifResponse.status, errorText);
-          throw new Error(`Failed: ${nominatifResponse.status}`);
-        }
-
-        const nominatifData = await nominatifResponse.json();
+        const nominatifResponse = await api.get(`/nominatifs-new/${id}`);
+        const nominatifData = nominatifResponse.data;
         console.log('✅ Raw API Response:', nominatifData);
 
         // Extract actual data from wrapper response
