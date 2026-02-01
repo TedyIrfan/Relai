@@ -59,6 +59,10 @@ DB_PASSWORD=password
 
 ```bash
 # Dari root directory
+# Build dulu (WAJIB! untuk install Redis extension)
+docker compose build
+
+# Start containers
 docker compose up -d
 
 # Cek status
@@ -213,6 +217,9 @@ docker-compose -f docker-compose.prod.yml exec app php artisan key:generate
 ```bash
 cd backend
 
+# Build dulu
+docker-compose -f docker-compose.prod.yml build
+
 # Start production dengan admin tools (Portainer, PgAdmin)
 docker-compose -f docker-compose.prod.yml --profile admin up -d
 
@@ -323,6 +330,7 @@ cd ../frontend && npm run dev
 
 ```bash
 # Start
+docker compose build
 docker compose up -d
 cd frontend && npm run dev
 
@@ -340,6 +348,7 @@ docker compose exec app php artisan migrate
 
 ```bash
 # Start
+docker-compose -f backend/docker-compose.prod.yml build
 docker-compose -f backend/docker-compose.prod.yml --profile admin up -d
 
 # Stop
