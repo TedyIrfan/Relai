@@ -21,7 +21,7 @@ History perkembangan project RelAI dari awal sampai sekarang.
 - Modern auto-layout sidebar (w-16 ↔ w-56) dengan hamburger toggle
 - Header dengan year selector (2023-2026) dan user dropdown
 - Real PostgreSQL integration dengan multi-year data:
-  - 2023: 1.5 MILIAR | 2024: 1.8 MILIAR | 2025: 4.012.497.127.395 | 2026: 2.2 MILIAR
+  - 2023: 1.5 MILIAR | 2025: 1.8 MILIAR | 2025: 4.012.497.127.395 | 2026: 2.2 MILIAR
 - KPI cards dengan progress bars dan real-time updates
 - Lucide icons, smooth animations, responsive design
 
@@ -51,7 +51,7 @@ History perkembangan project RelAI dari awal sampai sekarang.
 - API integration dengan error handling
 - **Seamless budget tracking** - Edit biaya langsung update RKA table otomatis
 
-#### 🔧 Recent Bug Fixes (November 2024) - 100% COMPLETE
+#### 🔧 Recent Bug Fixes (November 2025) - 100% COMPLETE
 
 **Major System Fixes:**
 
@@ -287,7 +287,7 @@ Password: eselon1
 - **Solution**: Fixed race condition di `NominatifBiayaRowController.php:1088-1090` dengan real-time calculation
 - **Status**: **COMPLETED** - RKA table sekarang auto-sync 100% saat edit biaya rows
 
-**✅ Evidence Auto-Update System - DECEMBER 2024**
+**✅ Evidence Auto-Update System - DECEMBER 2025**
 
 - **Issue**: Evidence description di database tidak terupdate saat nama person berubah, tetapi logs menunjukkan success
 - **Solution**: Fixed dual update conflict antara `NominatifDetailRowController` dan `NominatifEvidenceController`
@@ -471,7 +471,7 @@ WHERE id = ?;
 │ │ 5.01.01.001 │ Belanja ATK Kantor   │ │
 │ │ Deskripsi: Pembelian ATK Desember    │ │
 │ │ Dana: Rp 5.000.000                 │ │
-│ │ Status: Draft    | Tgl: 2024-12-14  │ │
+│ │ Status: Draft    | Tgl: 2025-12-14  │ │
 │ │           [Edit] [Delete] [Submit] │ │
 │ └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
@@ -484,7 +484,7 @@ WHERE id = ?;
 │ Buat Non-Nominatif Baru                 │
 │                                         │
 │ Deskripsi Kegiatan: [_____________]     │
-│ Tanggal:           [2024-12-14]        │
+│ Tanggal:           [2025-12-14]        │
 │ Dana Anggaran:     [Rp 5.000.000]     │
 │ Pilih Code RKA:     [Dropdown ▼]       │
 │                                         │
@@ -539,7 +539,7 @@ NonNominatif Model:
     {
       "id": 1,
       "deskripsi_kegiatan": "Pembelian ATK",
-      "tanggal_kegiatan": "2024-12-14",
+      "tanggal_kegiatan": "2025-12-14",
       "dana_anggaran": 5000000,
       "evidence_link": "https://drive.google.com/file/d/...",
       "status": "draft",
@@ -618,7 +618,7 @@ NonNominatif Model:
 ```
 Input:
 - Deskripsi: Pembelian ATK bulanan
-- Tanggal: 2024-12-14
+- Tanggal: 2025-12-14
 - Dana: Rp 5.000.000
 - RKA: 5.01.01.001 (Belanja ATK)
 - Evidence: https://drive.google.com/file/invoice-atk
@@ -633,7 +633,7 @@ Result:
 ```
 Input:
 - Deskripsi: Maintenance AC ruang meeting
-- Tanggal: 2024-12-15
+- Tanggal: 2025-12-15
 - Dana: Rp 2.500.000
 - RKA: 5.02.01.002 (Maintenance Gedung)
 - Evidence: (kosong)

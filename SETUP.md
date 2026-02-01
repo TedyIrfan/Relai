@@ -59,7 +59,7 @@ DB_PASSWORD=password
 
 ```bash
 # Dari root directory
-# Build dulu (WAJIB! untuk install Redis extension)
+# Build dulu
 docker compose build
 
 # Start containers
