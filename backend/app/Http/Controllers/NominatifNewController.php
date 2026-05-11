@@ -525,10 +525,19 @@ class NominatifNewController extends Controller
         // Get RKA details for anggaran update
         $rkaDetail = $nominatif->rkaDetail;
 
-        // Calculate total actual from all rows
-        $totalAktualTrip = $nominatif->detailRows()->get()->sum(function ($row) {
-            return $row->biayaRow?->total_aktual_row ?? 0;
+        // 🔥 NEW: Check if all detail rows have biayaRow before submitting
+        $detailRows = $nominatif->detailRows()->with('biayaRow')->get();
+        $rowsWithoutBiaya = $detailRows->filter(function ($row) {
+            return $row->biayaRow === null;
         });
+
+        if ($rowsWithoutBiaya->isNotEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot submit nominatif. Some detail rows are missing biaya (cost) data. Please complete all cost information before submitting.',
+                'missing_rows' => $rowsWithoutBiaya->pluck('person_name')->implode(', ')
+            ], 422);
+        }
 
         DB::beginTransaction();
         try {
@@ -537,11 +546,11 @@ class NominatifNewController extends Controller
 
             // 🎯 RKA LOGIC: Kosongkan anggaran_berjalan, pindahkan SP2D (selisih)
             // RKA tersisa = Anggaran Layanan - 0 - SP2D baru
-            $totalPaguTrip = $nominatif->detailRows()->get()->sum(function ($row) {
+            $totalPaguTrip = $detailRows->sum(function ($row) {
                 return $row->biayaRow?->total_pagu_row ?? 0;
             });
 
-            $totalAktualTrip = $nominatif->detailRows()->get()->sum(function ($row) {
+            $totalAktualTrip = $detailRows->sum(function ($row) {
                 return $row->biayaRow?->total_aktual_row ?? 0;
             });
 

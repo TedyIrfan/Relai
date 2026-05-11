@@ -1,0 +1,95 @@
+[      99ms] [LOG] 🔍 MODE: production @ http://localhost/assets/index-BB7TKa5q.js:13
+[      99ms] [LOG] 🔍 VITE_API_BASE_URL: /api @ http://localhost/assets/index-BB7TKa5q.js:13
+[      99ms] [LOG] 🔍 Final API_URL: /api @ http://localhost/assets/index-BB7TKa5q.js:13
+[     131ms] [LOG] 📊 BarChart data: [] @ http://localhost/assets/index-BB7TKa5q.js:37
+[     131ms] [LOG] 📊 Raw data: [] @ http://localhost/assets/index-BB7TKa5q.js:37
+[     131ms] [LOG] 📊 Max value: -Infinity @ http://localhost/assets/index-BB7TKa5q.js:37
+[     131ms] [LOG] 📊 Max transformed: -Infinity @ http://localhost/assets/index-BB7TKa5q.js:37
+[     131ms] [LOG] 📊 hasValidData: false @ http://localhost/assets/index-BB7TKa5q.js:37
+[     131ms] [LOG] 📊 BarChart rendering: {dataLength: 0, hasValidData: false, maxDataValue: -Infinity, maxTransformedValue: -Infinity, firstItem: undefined} @ http://localhost/assets/index-BB7TKa5q.js:37
+[     208ms] [LOG] 📊 BarChart data: [] @ http://localhost/assets/index-BB7TKa5q.js:37
+[     208ms] [LOG] 📊 Raw data: [] @ http://localhost/assets/index-BB7TKa5q.js:37
+[     208ms] [LOG] 📊 Max value: -Infinity @ http://localhost/assets/index-BB7TKa5q.js:37
+[     208ms] [LOG] 📊 Max transformed: -Infinity @ http://localhost/assets/index-BB7TKa5q.js:37
+[     208ms] [LOG] 📊 hasValidData: false @ http://localhost/assets/index-BB7TKa5q.js:37
+[     208ms] [LOG] 📊 BarChart rendering: {dataLength: 0, hasValidData: false, maxDataValue: -Infinity, maxTransformedValue: -Infinity, firstItem: undefined} @ http://localhost/assets/index-BB7TKa5q.js:37
+[     298ms] [LOG] 📊 Raw RKA Data: [Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object] @ http://localhost/assets/index-BB7TKa5q.js:37
+[     298ms] [LOG] 📊 RKA Data sample: [Object, Object, Object] @ http://localhost/assets/index-BB7TKa5q.js:37
+[     299ms] [LOG] 📊 First RKA item EXPANDED: {
+  "id": 1,
+  "programDukunganManajemen": "132",
+  "kodeProgram": "1 WA",
+  "layananUmum": "7394",
+  "kodeLayanan1": "EBA",
+  "kodeLayanan2": "962",
+  "layananTataUsaha": "053",
+  "kategoriAnggaran": "A",
+  "codeRka": "524111",
+  "layanan": "Satuan Biaya Tiket Pesawat Perjalanan Dinas Dalam Negeri (PP) Bisnis JAKARTA - JOGJAKARTA [2 ORG x 5 KALI]",
+  "wilayah": "JAWA",
+  "artiKode": "Belanja Perjalanan Dinas Biasa",
+  "sisaPemakaianAnggaran": 91,
+  "status": "OK",
+  "anggaranPerjalanan": "4107000.00",
+  "anggaranLayanan": "373737000.00",
+  "anggaranLayananUsed": 0,
+  "anggaranLayananAvailable": 373737000,
+  "sp2d": 0,
+  "anggaran_berjalan": 0,
+  "anggaran_sp2d": 0,
+  "anggaran_tersisa": 373737000,
+  "sbm": "SBM"
+} @ http://localhost/assets/index-BB7TKa5q.js:37
+[     299ms] [LOG] 📊 First RKA item: {kategori: A, kategoriAnggaran: A, kategori_anggaran: undefined, anggaranLayanan: 373737000, anggaranBerjalan: 0} @ http://localhost/assets/index-BB7TKa5q.js:37
+[     299ms] [LOG] 📊 Kategori Data after grouping: {
+  "A": {
+    "nama": "Kategori A - Dinas Pimpinan",
+    "anggaran": 3432039625,
+    "berjalan": 0,
+    "sp2d": 0,
+    "sisa": 3432039625
+  },
+  "B": {
+    "nama": "Kategori B - Tata Usaha",
+    "anggaran": 1786105415,
+    "berjalan": 0,
+    "sp2d": 0,
+    "sisa": 1786105415
+  },
+  "C": {
+    "nama": "Kategori C - Konferensi",
+    "anggaran": 4007271702275,
+    "berjalan": 0,
+    "sp2d": 0,
+    "sisa": 4007271702275
+  }
+} @ http://localhost/assets/index-BB7TKa5q.js:37
+[     299ms] [LOG] 📊 Kategori Array EXPANDED: [
+  {
+    "nama": "Kategori A - Dinas Pimpinan",
+    "anggaran": 3432039625,
+    "berjalan": 0,
+    "sp2d": 0,
+    "sisa": 3432039625
+  },
+  {
+    "nama": "Kategori B - Tata Usaha",
+    "anggaran": 1786105415,
+    "berjalan": 0,
+    "sp2d": 0,
+    "sisa": 1786105415
+  },
+  {
+    "nama": "Kategori C - Konferensi",
+    "anggaran": 4007271702275,
+    "berjalan": 0,
+    "sp2d": 0,
+    "sisa": 4007271702275
+  }
+] @ http://localhost/assets/index-BB7TKa5q.js:37
+[     301ms] [LOG] 📊 BarChart data: [Object, Object, Object] @ http://localhost/assets/index-BB7TKa5q.js:37
+[     302ms] [LOG] 📊 Raw data: [Object, Object, Object] @ http://localhost/assets/index-BB7TKa5q.js:37
+[     302ms] [LOG] 📊 Max value: 4007271702275 @ http://localhost/assets/index-BB7TKa5q.js:37
+[     302ms] [LOG] 📊 Max transformed: 15883.62395306526 @ http://localhost/assets/index-BB7TKa5q.js:37
+[     302ms] [LOG] 📊 hasValidData: true @ http://localhost/assets/index-BB7TKa5q.js:37
+[     302ms] [LOG] 📊 BarChart rendering: {dataLength: 3, hasValidData: true, maxDataValue: 4007271702275, maxTransformedValue: 15883.62395306526, firstItem: Object} @ http://localhost/assets/index-BB7TKa5q.js:37

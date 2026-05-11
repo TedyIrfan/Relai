@@ -51,6 +51,12 @@ RUN apk add --no-cache \
     intl \
     opcache
 
+# Install Redis extension  
+RUN apk add --no-cache --virtual .redis-build-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .redis-build-deps
+
 # Configure PHP for production
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && echo "opcache.enable=1" >> $PHP_INI_DIR/php.ini \

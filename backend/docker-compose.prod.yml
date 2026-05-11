@@ -37,6 +37,24 @@ services:
     depends_on:
       - app
 
+  queue:
+    image: relai-backend:${IMAGE_TAG:-latest}
+    container_name: relai-queue-prod
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    env_file:
+      - .env
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+    networks:
+      - relai-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
   postgres:
     image: postgres:15-alpine
     container_name: relai-postgres-prod
@@ -65,7 +83,7 @@ services:
     image: redis:7-alpine
     container_name: relai-redis-prod
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispass}
     volumes:
       - redis_data:/data
     networks:

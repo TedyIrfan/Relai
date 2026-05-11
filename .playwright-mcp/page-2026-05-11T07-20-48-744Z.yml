@@ -1,0 +1,74 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - button [ref=e8]:
+      - img [ref=e9]
+    - navigation [ref=e10]:
+      - link "Dashboard" [ref=e11] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e12]
+      - link "Master SBM" [ref=e17] [cursor=pointer]:
+        - /url: /master-sbm
+        - img [ref=e18]
+      - link "Master RKA" [ref=e22] [cursor=pointer]:
+        - /url: /master-rka
+        - img [ref=e23]
+      - link "Nominatif" [ref=e27] [cursor=pointer]:
+        - /url: /nominatif
+        - img [ref=e28]
+      - link "Non Nominatif" [ref=e33] [cursor=pointer]:
+        - /url: /non-nominatif
+        - img [ref=e34]
+      - link "All Status Nominatif" [ref=e37] [cursor=pointer]:
+        - /url: /all-status-nominatif
+        - img [ref=e38]
+    - paragraph [ref=e43]: RelAI
+  - generic [ref=e44]:
+    - banner [ref=e46]:
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - img "Logo Kementerian" [ref=e51]
+            - generic [ref=e52]:
+              - heading "RelAI" [level=1] [ref=e53]
+              - paragraph [ref=e54]: Realisasi Keuangan
+          - button "Tahun 2025" [ref=e57]:
+            - img [ref=e58]
+            - generic [ref=e60]: Tahun 2025
+            - img [ref=e61]
+        - button "User Eselon 1" [ref=e65]:
+          - generic [ref=e66]:
+            - paragraph [ref=e67]: User
+            - paragraph [ref=e68]: Eselon 1
+          - img [ref=e70]
+    - main [ref=e73]:
+      - generic [ref=e75]:
+        - generic [ref=e76]:
+          - heading "Dashboard Overview" [level=1] [ref=e77]
+          - paragraph [ref=e78]: Sistem Realisasi Keuangan Kementerian Koordinator
+        - generic [ref=e79]:
+          - generic [ref=e84]:
+            - img [ref=e85]
+            - generic [ref=e88]:
+              - heading "Total Anggaran" [level=3] [ref=e89]
+              - paragraph [ref=e90]: ...
+          - generic [ref=e95]:
+            - generic [ref=e97]:
+              - img [ref=e98]
+              - generic [ref=e100]:
+                - heading "Anggaran Berjalan" [level=3] [ref=e101]
+                - paragraph [ref=e102]: ...
+            - text: "0"
+          - generic [ref=e107]:
+            - generic [ref=e109]:
+              - img [ref=e110]
+              - generic [ref=e113]:
+                - heading "Anggaran SP2D" [level=3] [ref=e114]
+                - paragraph [ref=e115]: ...
+            - text: "0"
+          - generic [ref=e120]:
+            - generic [ref=e122]:
+              - img [ref=e123]
+              - generic [ref=e128]:
+                - heading "Sisa Anggaran" [level=3] [ref=e129]
+                - paragraph [ref=e130]: ...
+            - text: "0"

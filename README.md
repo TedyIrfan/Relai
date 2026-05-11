@@ -604,6 +604,7 @@ cd ../frontend && npm run dev
 
 - Authentication & Authorization System
 - Dashboard dengan Real-time Data
+- Chart visualization (Recharts - Pie & Bar charts)
 - Master RKA Management
 - Nominatif Perjalanan Dinas System
 - Non-Nominatif System
@@ -613,7 +614,6 @@ cd ../frontend && npm run dev
 
 ### 🔧 In Progress
 
-- Chart visualization (Recharts integration)
 - Advanced filtering & search
 
 ### 📋 Planned

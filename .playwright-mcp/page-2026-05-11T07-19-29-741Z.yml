@@ -1,0 +1,16 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - heading "Selamat Datang di Sistem Realisasi Keuangan" [level=2] [ref=e6]
+      - paragraph [ref=e7]: Aplikasi ini digunakan untuk mengelola data realisasi keuangan.
+    - generic [ref=e8]:
+      - heading "Selamat Datang" [level=3] [ref=e10]
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]: Username *
+          - textbox "Masukkan username" [ref=e14]
+        - generic [ref=e15]:
+          - generic [ref=e16]: Password *
+          - textbox "Masukkan password" [ref=e17]
+        - button "Login" [ref=e18] [cursor=pointer]
+  - img "Logo Kementerian" [ref=e22]

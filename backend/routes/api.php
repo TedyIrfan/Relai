@@ -154,8 +154,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::delete('/penginapan-tambahan-orang/{id}', [PenginapanTambahanOrangController::class, 'destroy']); // DELETE penginapan record
 });
 
-// SBM (Master Standar Biaya Masukan) API Routes (Public - for testing)
-Route::prefix('sbm')->group(function () {
+// SBM (Master Standar Biaya Masukan) API Routes
+Route::middleware('auth:sanctum')->prefix('sbm')->group(function () {
     // Specific routes first (to avoid conflicts with dynamic routes)
     Route::get('/categories', [SbmController::class, 'categories']);           // Get all categories
     Route::get('/summary', [SbmController::class, 'summary']);                  // Get summary statistics
@@ -168,122 +168,32 @@ Route::prefix('sbm')->group(function () {
     Route::get('/{category}', [SbmController::class, 'show']);                  // Get data by category
 });
 
-// Dashboard API Routes (Public - for testing)
-Route::get('/dashboard', [DashboardController::class, 'index']);
-Route::get('/dashboard/{tahun}', [DashboardController::class, 'index']);
-Route::get('/dashboard/kpi', [DashboardController::class, 'kpi']);
-Route::get('/dashboard/charts', [DashboardController::class, 'charts']);
+// Dashboard API Routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/{tahun}', [DashboardController::class, 'index']);
+    Route::get('/dashboard/kpi', [DashboardController::class, 'kpi']);
+    Route::get('/dashboard/charts', [DashboardController::class, 'charts']);
+});
 
-// Seed Data Routes
-Route::get('/seed', [DashboardController::class, 'seedData']);
+// Seed Data Routes (DISABLED IN PRODUCTION)
+// Route::get('/seed', [DashboardController::class, 'seedData']);
 
-// Kategori Anggaran API Routes (Real-time Updates)
-Route::get('/kategori/{tahun}', [DashboardController::class, 'getKategoriByTahun']);
-Route::post('/kategori/{tahun}/{kategori}/update-terpakai', [DashboardController::class, 'updateAnggaranTerpakai']);
-Route::post('/kategori/{tahun}/{kategori}/update-sp2d', [DashboardController::class, 'updateSP2D']);
-Route::post('/kategori/{tahun}/sync', [DashboardController::class, 'syncMainAnggaran']);
+// Kategori Anggaran API Routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/kategori/{tahun}', [DashboardController::class, 'getKategoriByTahun']);
+    Route::post('/kategori/{tahun}/{kategori}/update-terpakai', [DashboardController::class, 'updateAnggaranTerpakai']);
+    Route::post('/kategori/{tahun}/{kategori}/update-sp2d', [DashboardController::class, 'updateSP2D']);
+    Route::post('/kategori/{tahun}/sync', [DashboardController::class, 'syncMainAnggaran']);
+});
 
 // RKA Details API Routes
-Route::get('/rka-details', [RKADetailsController::class, 'index']);
-Route::post('/rka-details/import', [RKADetailsController::class, 'importExcel']);
-Route::get('/rka-details/kategori', [RKADetailsController::class, 'getKategoriList']);
-
-// Debug Routes (No auth required for debugging) - REMOVED (old system)
-// Route::get('/debug/nominatif', [DebugController::class, 'nominatifDebug']);
-// Route::get('/debug/nominatif/{id}', [DebugController::class, 'nominatifDebug']);
-// Route::post('/debug/nominatif/{id}/calculate', [DebugController::class, 'testCalculate']);
-
-
-// Dashboard API Routes (Protected - for production)
-Route::get('/secure/dashboard', [DashboardController::class, 'index'])->middleware('auth:sanctum');
-Route::get('/secure/dashboard/kpi', [DashboardController::class, 'kpi'])->middleware('auth:sanctum');
-Route::get('/secure/dashboard/charts', [DashboardController::class, 'charts'])->middleware('auth:sanctum');
-
-// RKA Details API Routes (Protected - for production)
-Route::get('/secure/rka-details', [RKADetailsController::class, 'index'])->middleware('auth:sanctum');
-Route::post('/secure/rka-details/import', [RKADetailsController::class, 'importExcel'])->middleware('auth:sanctum');
-Route::get('/secure/rka-details/kategori', [RKADetailsController::class, 'getKategoriList'])->middleware('auth:sanctum');
-
-// SBM API Routes (Protected - for production)
-Route::middleware('auth:sanctum')->prefix('secure/sbm')->group(function () {
-    // Specific routes first (to avoid conflicts with dynamic routes)
-    Route::get('/categories', [SbmController::class, 'categories']);           // Get all categories
-    Route::get('/summary', [SbmController::class, 'summary']);                  // Get summary statistics
-    Route::get('/filters/options', [SbmController::class, 'filters']);          // Get filter options (all)
-    Route::get('/filters/{category}', [SbmController::class, 'filtersByCategory']); // Get filter options by category
-    Route::get('/detail/{id}', [SbmController::class, 'detail']);               // Get single record by ID
-
-    // Dynamic routes last (must be at the bottom to avoid catching specific routes)
-    Route::get('/{category}', [SbmController::class, 'show']);                  // Get data by category
+Route::middleware('auth:sanctum')->prefix('rka-details')->group(function () {
+    Route::get('/', [RKADetailsController::class, 'index']);
+    Route::post('/import', [RKADetailsController::class, 'importExcel']);
+    Route::get('/kategori', [RKADetailsController::class, 'getKategoriList']);
 });
 
-// Nominatif API Routes (Protected - for production)
-Route::middleware('auth:sanctum')->prefix('secure')->group(function () {
-    // NEW NOMINATIF SYSTEM (Phase 2) - Separated Tables Architecture
-    Route::prefix('nominatifs-new')->group(function () {
-        Route::get('/', [NominatifNewController::class, 'index']);
-        Route::post('/', [NominatifNewController::class, 'store']);
-        Route::get('/search', [NominatifNewController::class, 'search']);
-        Route::get('/statistics', [NominatifNewController::class, 'statistics']);
-        Route::get('/{id}', [NominatifNewController::class, 'show']);
-        Route::put('/{id}', [NominatifNewController::class, 'update']);
-        Route::delete('/{id}', [NominatifNewController::class, 'destroy']);
-        Route::post('/{id}/submit', [NominatifNewController::class, 'submit']);
-    });
-
-    // Detail Rows (Person + Route Data)
-    Route::prefix('nominatifs/{nominatifId}/details')->group(function () {
-        Route::get('/', [NominatifDetailRowController::class, 'index']);
-        Route::post('/', [NominatifDetailRowController::class, 'store']);
-        Route::post('/validate', [NominatifDetailRowController::class, 'validateDraftData']);
-        Route::post('/execute', [NominatifDetailRowController::class, 'executeDraft']);
-        Route::post('/bulk', [NominatifDetailRowController::class, 'bulkStore']);
-        Route::put('/bulk', [NominatifDetailRowController::class, 'bulkUpdate']);
-        Route::get('/{rowId}', [NominatifDetailRowController::class, 'show']);
-        Route::put('/{rowId}', [NominatifDetailRowController::class, 'update']);
-        Route::delete('/{rowId}', [NominatifDetailRowController::class, 'destroy']);
-    });
-
-    // Biaya Rows (Financial Data)
-    Route::prefix('nominatifs/details/{detailRowId}/biaya')->group(function () {
-        Route::get('/', [NominatifBiayaRowController::class, 'index']);
-        Route::post('/', [NominatifBiayaRowController::class, 'store']);
-        Route::get('/{biayaId}', [NominatifBiayaRowController::class, 'show']);
-        Route::put('/{biayaId}/simplified', [NominatifBiayaRowController::class, 'updateSimplified']);
-        Route::put('/{biayaId}', [NominatifBiayaRowController::class, 'update']);
-        Route::delete('/{biayaId}', [NominatifBiayaRowController::class, 'destroy']);
-    });
-
-    // Evidence (File Upload)
-    Route::prefix('nominatifs/{nominatifId}/evidence')->group(function () {
-        Route::get('/', [NominatifEvidenceController::class, 'index']);
-        Route::get('/all', [NominatifEvidenceController::class, 'getAllEvidence']);
-        Route::get('/{evidenceId}', [NominatifEvidenceController::class, 'show']);
-        Route::put('/{evidenceId}', [NominatifEvidenceController::class, 'update']);
-        Route::delete('/{evidenceId}', [NominatifEvidenceController::class, 'destroy']);
-    });
-
-    // Evidence for specific detail row
-    Route::prefix('nominatifs/{nominatifId}/details/{detailRowId}/evidence')->group(function () {
-        Route::post('/', [NominatifEvidenceController::class, 'storeWithDetailRow']);
-    });
-});
-
-// Dashboard API Routes (Protected - for production) - Additional routes
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/secure/dashboard/{tahun}', [DashboardController::class, 'index']);
-    Route::get('/secure/kategori/{tahun}', [DashboardController::class, 'getKategoriByTahun']);
-    Route::post('/secure/kategori/{tahun}/{kategori}/update-terpakai', [DashboardController::class, 'updateAnggaranTerpakai']);
-    Route::post('/secure/kategori/{tahun}/{kategori}/update-sp2d', [DashboardController::class, 'updateSP2D']);
-    Route::post('/secure/kategori/{tahun}/sync', [DashboardController::class, 'syncMainAnggaran']);
-});
-
-Route::get('/test', function () {
-    return response()->json([
-        'message' => 'API is working!',
-        'timestamp' => now()->toDateTimeString()
-    ]);
-});
-
-// Include new nominatif system routes
+// Include new nominatif system routes (additional routes not in api.php)
+require __DIR__.'/api_nominatifs_new.php';
 require __DIR__.'/api_nominatifs_new.php';

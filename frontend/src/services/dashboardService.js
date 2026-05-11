@@ -1,18 +1,9 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost/api';
+import api from './api';
 
 const dashboardService = {
-  /**
-   * Get complete dashboard data
-   */
   getDashboardData: async () => {
     try {
-      const response = await axios.get(`${API_URL}/dashboard`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await api.get('/dashboard');
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -20,16 +11,9 @@ const dashboardService = {
     }
   },
 
-  /**
-   * Get dashboard data by specific year
-   */
   getDashboardDataByYear: async (year) => {
     try {
-      const response = await axios.get(`${API_URL}/dashboard/${year}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await api.get(`/dashboard/${year}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard data for year:', year, error);
@@ -37,16 +21,9 @@ const dashboardService = {
     }
   },
 
-  /**
-   * Get KPI metrics only
-   */
   getKPIData: async () => {
     try {
-      const response = await axios.get(`${API_URL}/dashboard/kpi`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await api.get('/dashboard/kpi');
       return response.data;
     } catch (error) {
       console.error('Error fetching KPI data:', error);
@@ -54,16 +31,9 @@ const dashboardService = {
     }
   },
 
-  /**
-   * Get chart data only
-   */
   getChartData: async () => {
     try {
-      const response = await axios.get(`${API_URL}/dashboard/charts`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await api.get('/dashboard/charts');
       return response.data;
     } catch (error) {
       console.error('Error fetching chart data:', error);
